@@ -1,0 +1,216 @@
+/* Updated: 2025-10-16T18:05:08.999Z */
+/* Updated: 2025-10-16T17:34:41.786Z */
+/* Updated: 2025-10-16T17:34:37.453Z */
+/* Updated: 2025-10-16T17:17:34.539Z */
+/* Updated: 2025-10-16T17:17:30.439Z */
+/* Updated: 2025-10-16T17:00:40.526Z */
+/* Updated: 2025-10-16T17:00:36.430Z */
+/* Updated: 2025-10-16T16:43:35.376Z */
+/* Updated: 2025-10-16T16:43:30.957Z */
+/* Updated: 2025-10-16T16:26:57.906Z */
+/* Updated: 2025-10-16T16:12:32.388Z */
+/* Updated: 2025-10-16T16:12:28.361Z */
+/* Updated: 2025-10-16T15:56:30.169Z */
+/* Updated: 2025-10-16T15:43:36.108Z */
+/* Updated: 2025-10-16T15:43:32.018Z */
+/* Updated: 2025-10-16T15:11:16.259Z */
+/* Updated: 2025-10-16T03:34:52.953Z */
+/* Updated: 2025-10-16T01:37:32.881Z */
+/* Updated: 2025-10-15T23:01:37.730Z */
+/* Updated: 2025-10-15T22:45:37.313Z */
+/* Updated: 2025-10-15T22:45:33.272Z */
+/* Updated: 2025-10-15T22:28:38.601Z */
+/* Updated: 2025-10-15T22:28:34.533Z */
+/* Updated: 2025-10-15T22:12:32.772Z */
+/* Updated: 2025-10-15T22:12:28.642Z */
+/* Updated: 2025-10-15T21:55:35.514Z */
+/* Updated: 2025-10-15T21:55:31.590Z */
+/* Updated: 2025-10-15T21:38:32.816Z */
+/* Updated: 2025-10-15T21:38:28.616Z */
+/* Updated: 2025-10-15T21:22:23.167Z */
+/* Updated: 2025-10-15T21:07:35.683Z */
+/* Updated: 2025-10-15T21:07:31.899Z */
+/* Updated: 2025-10-15T20:22:38.756Z */
+/* Updated: 2025-10-15T20:11:32.485Z */
+/* Updated: 2025-10-15T20:11:28.149Z */
+/* Updated: 2025-10-15T19:55:32.338Z */
+/* Updated: 2025-10-15T19:55:28.365Z */
+/* Updated: 2025-10-15T19:38:47.121Z */
+/* Updated: 2025-10-15T19:38:34.238Z */
+/* Updated: 2025-10-15T19:22:00.433Z */
+/* Updated: 2025-10-15T19:07:35.651Z */
+/* Updated: 2025-10-15T18:51:14.059Z */
+/* Updated: 2025-10-15T18:36:49.587Z */
+/* Updated: 2025-10-15T16:25:42.753Z */
+/* Updated: 2025-10-15T15:43:44.640Z */
+/* Updated: 2025-10-14T23:52:35.203Z */
+/* Updated: 2025-10-14T23:35:33.490Z */
+/* Updated: 2025-10-14T23:35:29.890Z */
+/* Updated: 2025-10-14T23:18:45.020Z */
+/* Updated: 2025-10-14T23:06:31.892Z */
+/* Updated: 2025-10-14T23:06:27.747Z */
+/* Updated: 2025-10-14T22:47:59.139Z */
+/* Updated: 2025-10-14T19:36:55.538Z */
+/* Updated: 2025-10-14T19:12:08.182Z */
+/* Updated: 2025-10-14T18:44:42.137Z */
+/* Updated: 2025-10-14T05:08:32.852Z */
+/* Updated: 2025-10-14T05:08:29.742Z */
+/* Updated: 2025-10-14T04:52:02.897Z */
+/* Updated: 2025-10-14T04:48:39.265Z */
+/* Updated: 2025-10-14T04:48:36.150Z */
+/* Updated: 2025-10-14T04:32:33.199Z */
+/* Updated: 2025-10-14T04:32:30.161Z */
+/* Updated: 2025-10-14T04:12:51.644Z */
+/* Updated: 2025-10-14T03:41:27.588Z */
+/* Updated: 2025-10-14T02:53:58.468Z */
+/* Updated: 2025-10-14T02:35:32.220Z */
+/* Updated: 2025-10-14T02:21:36.126Z */
+/* Updated: 2025-10-14T02:21:32.743Z */
+/* Updated: 2025-10-14T01:42:04.076Z */
+/* Updated: 2025-10-14T01:39:31.798Z */
+/* Updated: 2025-10-14T01:36:16.139Z */
+/* Updated: 2025-10-14T01:18:49.482Z */
+/* Updated: 2025-10-14T00:26:46.888Z */
+/* Updated: 2025-10-14T00:20:35.150Z */
+/* Updated: 2025-10-13T23:47:23.178Z */
+/* Updated: 2025-10-13T22:47:21.305Z */
+/* Updated: 2025-10-13T21:00:30.759Z */
+
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  --primary: oklch(0.205 0 0);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --accent: oklch(0.97 0 0);
+  --accent-foreground: oklch(0.205 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
+  --destructive-foreground: oklch(0.577 0.245 27.325);
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.708 0 0);
+  --chart-1: oklch(0.646 0.222 41.116);
+  --chart-2: oklch(0.6 0.118 184.704);
+  --chart-3: oklch(0.398 0.07 227.392);
+  --chart-4: oklch(0.828 0.189 84.429);
+  --chart-5: oklch(0.769 0.188 70.08);
+  --radius: 0.625rem;
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.145 0 0);
+  --sidebar-primary: oklch(0.205 0 0);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-ring: oklch(0.708 0 0);
+  --font-geist-sans: "Geist Sans", sans-serif;
+  --font-geist-mono: "Geist Mono", monospace;
+}
+
+.dark {
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.145 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.145 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.985 0 0);
+  --primary-foreground: oklch(0.205 0 0);
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.396 0.141 25.723);
+  --destructive-foreground: oklch(0.637 0.237 25.331);
+  --border: oklch(0.269 0 0);
+  --input: oklch(0.269 0 0);
+  --ring: oklch(0.439 0 0);
+  --chart-1: oklch(0.488 0.243 264.376);
+  --chart-2: oklch(0.696 0.17 162.48);
+  --chart-3: oklch(0.769 0.188 70.08);
+  --chart-4: oklch(0.627 0.265 303.9);
+  --chart-5: oklch(0.645 0.246 16.439);
+  --sidebar: oklch(0.205 0 0);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(0.269 0 0);
+  --sidebar-ring: oklch(0.439 0 0);
+}
+
+@theme inline {
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  
+  html {
+    scroll-behavior: smooth;
+  }
+  
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+/* Hide Next.js error overlay portal */
+nextjs-portal {
+  display: none !important;
+}

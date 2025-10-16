@@ -1,0 +1,53 @@
+{
+  "name": "@evalai/sdk",
+  "version": "1.1.0",
+  "description": "AI Evaluation Platform SDK",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "bin": {
+    "evalai": "./dist/cli/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "vitest"
+  },
+  "keywords": [
+    "ai",
+    "evaluation",
+    "llm",
+    "testing",
+    "observability"
+  ],
+  "dependencies": {
+    "commander": "^12.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0",
+    "vitest": "^1.0.0"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./assertions": {
+      "import": "./dist/assertions.js",
+      "types": "./dist/assertions.d.ts"
+    },
+    "./testing": {
+      "import": "./dist/testing.js",
+      "types": "./dist/testing.d.ts"
+    },
+    "./integrations/openai": {
+      "import": "./dist/integrations/openai.js",
+      "types": "./dist/integrations/openai.d.ts"
+    },
+    "./integrations/anthropic": {
+      "import": "./dist/integrations/anthropic.js",
+      "types": "./dist/integrations/anthropic.d.ts"
+    }
+  }
+}
