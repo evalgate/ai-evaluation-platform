@@ -1,9 +1,10 @@
 import dynamic from 'next/dynamic';
-import React, { ComponentType } from 'react';
+import React, { ComponentType, ReactElement } from 'react';
 
 type DynamicOptions<T> = {
-  loading?: () => JSX.Element | null;
+  loading?: () => ReactElement | null;
   ssr?: boolean;
+  // Add other Next.js dynamic import options as needed
 };
 
 export function dynamicImport<T extends ComponentType<any>>(

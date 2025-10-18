@@ -76,13 +76,9 @@ const nextConfig: NextConfig = {
   // General Next.js optimizations
   poweredByHeader: false,
   reactStrictMode: true,
-  swcMinify: true,
   
   // Performance optimizations
   productionBrowserSourceMaps: false,
-  
-  // Enable React Refresh in development
-  reactRefresh: true,
   
   outputFileTracingRoot: path.resolve(__dirname, '../../'),
   
