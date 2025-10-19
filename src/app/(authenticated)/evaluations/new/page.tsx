@@ -13,7 +13,17 @@ import { ArrowLeft, AlertCircle, Sparkles, CheckCircle2, XCircle, Loader2 } from
 import { useCustomer } from "autumn-js/react"
 import { useSession } from "@/lib/auth-client"
 import { toast } from "sonner"
-import { EvaluationBuilder } from "@/components/evaluation-builder"
+import dynamic from "next/dynamic"
+import { Skeleton } from "@/components/ui/skeleton"
+
+// Lazy load EvaluationBuilder (large component)
+const EvaluationBuilder = dynamic(
+  () => import("@/components/evaluation-builder").then(m => m.EvaluationBuilder),
+  { 
+    ssr: false,
+    loading: () => <Skeleton className="h-96 w-full" />
+  }
+)
 
 type DeploymentStep = {
   id: string

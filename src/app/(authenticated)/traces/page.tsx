@@ -113,7 +113,8 @@ export default function TracesPage() {
     }
 
     if (session?.user) {
-      fetch("/api/traces", {
+      // Add pagination limit
+      fetch("/api/traces?limit=20&offset=0", {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("bearer_token")}`
         }

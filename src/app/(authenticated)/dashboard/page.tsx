@@ -1,12 +1,71 @@
-"use client"
-
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
 import Link from "next/link"
-import { Plus, Activity, FileText, Users } from "lucide-react"
+import { Plus, Activity, FileText } from "lucide-react"
 import { PlanUsageIndicator } from "@/components/plan-usage-indicator"
+import { auth } from "@/lib/auth"
+import { db } from "@/db"
+import { evaluations, traces, evaluationRuns } from "@/db/schema"
+import { eq, desc, gte, sql } from "drizzle-orm"
+import { Suspense } from "react"
+import { Skeleton } from "@/components/ui/skeleton"
+import { headers } from "next/headers"
+import { redirect } from "next/navigation"
 
-export default function DashboardPage() {
+async function getDashboardStats(organizationId: number) {
+  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
+  
+  const [evalCount, traceCount, recentRuns] = await Promise.all([
+    db.select({ count: sql<number>`count(*)` })
+      .from(evaluations)
+      .where(eq(evaluations.organizationId, organizationId)),
+    db.select({ count: sql<number>`count(*)` })
+      .from(traces)
+      .where(eq(traces.organizationId, organizationId)),
+    db.select({ count: sql<number>`count(*)` })
+      .from(evaluationRuns)
+      .where(gte(evaluationRuns.createdAt, sevenDaysAgo))
+  ])
+
+  return {
+    totalEvaluations: evalCount[0]?.count || 0,
+    totalTraces: traceCount[0]?.count || 0,
+    recentRuns: recentRuns[0]?.count || 0
+  }
+}
+
+async function getRecentEvaluationRuns(organizationId: number) {
+  return db.select()
+    .from(evaluationRuns)
+    .orderBy(desc(evaluationRuns.createdAt))
+    .limit(2)
+}
+
+function DashboardSkeleton() {
+  return (
+    <div className="space-y-6 sm:space-y-8">
+      <div>
+        <Skeleton className="h-8 w-48" />
+        <Skeleton className="h-4 w-96 mt-2" />
+      </div>
+      <div className="grid gap-3 sm:gap-4 md:grid-cols-3">
+        {[1, 2, 3].map((i) => (
+          <Skeleton key={i} className="h-32" />
+        ))}
+      </div>
+    </div>
+  )
+}
+
+export default async function DashboardPage() {
+  const session = await auth.api.getSession({ headers: await headers() })
+  
+  if (!session?.user) {
+    redirect("/auth/login")
+  }
+  
+  const organizationId = (session.user as any).organizationId || 1
+  const stats = await getDashboardStats(organizationId)
+  const recentRuns = await getRecentEvaluationRuns(organizationId)
   return (
     <div className="space-y-6 sm:space-y-8">
       {/* Header */}
@@ -18,7 +77,9 @@ export default function DashboardPage() {
       </div>
 
       {/* Usage Indicator */}
-      <PlanUsageIndicator />
+      <Suspense fallback={<Skeleton className="h-24 w-full" />}>
+        <PlanUsageIndicator />
+      </Suspense>
 
       {/* Stats Grid */}
       <div className="grid gap-3 sm:gap-4 md:grid-cols-3">
@@ -28,7 +89,7 @@ export default function DashboardPage() {
             <FileText className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">124</div>
+            <div className="text-2xl font-bold">{stats.totalEvaluations}</div>
             <p className="text-xs text-muted-foreground">Across all types</p>
           </CardContent>
         </Card>
@@ -39,7 +100,7 @@ export default function DashboardPage() {
             <Activity className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">8</div>
+            <div className="text-2xl font-bold">{stats.recentRuns}</div>
             <p className="text-xs text-muted-foreground">In the last 7 days</p>
           </CardContent>
         </Card>
@@ -50,7 +111,7 @@ export default function DashboardPage() {
             <Plus className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">23</div>
+            <div className="text-2xl font-bold">{stats.totalTraces}</div>
             <p className="text-xs text-muted-foreground">Recent traces</p>
           </CardContent>
         </Card>
@@ -91,30 +152,36 @@ export default function DashboardPage() {
         <h3 className="mb-3 sm:mb-4 text-base sm:text-lg font-semibold">Recent Evaluation Runs</h3>
         <Card>
           <CardContent className="p-0">
-            <div className="divide-y divide-border">
-              <div className="p-3 sm:p-4 space-y-2">
-                <p className="font-medium text-sm sm:text-base">Evaluation Run #124</p>
-                <p className="text-xs sm:text-sm text-muted-foreground">
-                  100 cases • 95 passed • 5 failed
-                </p>
-                <span
-                  className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-primary/10 text-primary"
-                >
-                  completed
-                </span>
+            {recentRuns.length > 0 ? (
+              <div className="divide-y divide-border">
+                {recentRuns.map((run) => (
+                  <div key={run.id} className="p-3 sm:p-4 space-y-2">
+                    <p className="font-medium text-sm sm:text-base">Evaluation Run #{run.id}</p>
+                    <p className="text-xs sm:text-sm text-muted-foreground">
+                      {run.totalCases} cases • {run.passedCases || 0} passed • {run.failedCases || 0} failed
+                    </p>
+                    <span
+                      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                        run.status === 'completed' 
+                          ? 'bg-primary/10 text-primary'
+                          : run.status === 'running'
+                          ? 'bg-blue-500/10 text-blue-500'
+                          : 'bg-yellow-500/10 text-yellow-500'
+                      }`}
+                    >
+                      {run.status}
+                    </span>
+                  </div>
+                ))}
               </div>
-              <div className="p-3 sm:p-4 space-y-2">
-                <p className="font-medium text-sm sm:text-base">Evaluation Run #8</p>
-                <p className="text-xs sm:text-sm text-muted-foreground">
-                  50 cases • 48 passed • 2 failed
-                </p>
-                <span
-                  className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-blue-500/10 text-blue-500"
-                >
-                  running
-                </span>
+            ) : (
+              <div className="p-8 text-center text-muted-foreground">
+                <p className="text-sm">No recent evaluation runs</p>
+                <Link href="/evaluations/new" className="text-sm text-primary hover:underline mt-2 inline-block">
+                  Create your first evaluation
+                </Link>
               </div>
-            </div>
+            )}
           </CardContent>
         </Card>
       </div>

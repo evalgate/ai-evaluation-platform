@@ -1,12 +1,13 @@
 import type React from "react"
 import type { Metadata } from "next"
-import { Inter as GeistSans } from "next/font/google"
-import { JetBrains_Mono as GeistMono } from "next/font/google"
+// eslint-disable-next-line import/no-unresolved
+import { GeistSans } from "geist/font/sans"
+// eslint-disable-next-line import/no-unresolved
+import { GeistMono } from "geist/font/mono"
 import { Analytics } from "@vercel/analytics/next"
 import { ThemeProvider } from "@/components/theme-provider"
 import { Toaster } from "@/components/ui/sonner"
 import { Suspense } from "react"
-import { AutumnProvider } from "autumn-js/react"
 import CustomAutumnProvider from "@/lib/autumn-provider"
 import "./globals.css"
 import VisualEditsMessenger from "../visual-edits/VisualEditsMessenger";
@@ -25,8 +26,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className="antialiased">
+    <html lang="en" className={`${GeistSans.variable} ${GeistMono.variable}`}>
+      <body className="antialiased font-sans">
         <ErrorReporter />
         <Script
           src="https://slelguoygbfzlpylpxfs.supabase.co/storage/v1/object/public/scripts//route-messenger.js"

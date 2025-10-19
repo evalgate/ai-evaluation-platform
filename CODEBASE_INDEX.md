@@ -1,11 +1,12 @@
 # AI Evaluation Platform - Complete Codebase Index
 
-**Generated:** Thursday, October 16, 2025  
+**Generated:** Saturday, October 18, 2025  
 **Project:** AI Evaluation Platform  
 **Framework:** Next.js 15.3.5 with React 19, TypeScript, Drizzle ORM  
 **Database:** Turso (LibSQL/SQLite)  
 **Authentication:** better-auth  
-**Billing:** Autumn.js
+**Billing:** Autumn.js  
+**SDK Version:** v1.2.0 (100% API Coverage)
 
 ---
 
@@ -81,6 +82,9 @@ The platform was built with v0.app and is deployed on Vercel with automatic sync
 3. **Retry Logic** - Built-in retry with exponential backoff
 4. **Type Safety** - Comprehensive TypeScript types across SDK and API
 5. **Middleware Auth** - Protected routes with better-auth sessions
+6. **Rate Limiting** - Upstash Redis with tiered limits (free: 100/min, pro: 1000/min, enterprise: 10000/min)
+7. **Error Monitoring** - Sentry integration across server, edge, and instrumentation
+8. **Testing Infrastructure** - Vitest with React Testing Library for unit/integration tests
 
 ---
 
@@ -175,6 +179,8 @@ ai-evaluation-platform/
 │   │   ├── auth.ts
 │   │   ├── autumn-provider.tsx
 │   │   ├── autumn-server.ts
+│   │   ├── rate-limit.ts       # Upstash Redis rate limiting
+│   │   ├── api-rate-limit.ts   # Rate limit middleware
 │   │   ├── evaluation-templates.ts
 │   │   └── utils.ts
 │   │
@@ -212,11 +218,15 @@ ai-evaluation-platform/
 ├── components.json             # shadcn/ui config
 ├── drizzle.config.ts           # Drizzle ORM config
 ├── eslint.config.mjs           # ESLint config
+├── instrumentation.ts          # Sentry instrumentation
 ├── middleware.ts               # Next.js middleware
 ├── next.config.ts              # Next.js config
 ├── package.json
 ├── postcss.config.mjs
+├── sentry.server.config.ts     # Sentry server config
+├── sentry.edge.config.ts       # Sentry edge config
 ├── tsconfig.json
+├── vitest.config.ts            # Vitest test config
 ├── MIGRATION_SUMMARY.md        # Recent migrations
 └── README.md
 ```
@@ -322,6 +332,30 @@ ai-evaluation-platform/
 - `src/lib/autumn-server.ts` - Server-side gating
 - `src/components/autumn/pricing-table.tsx` - Pricing UI
 - `src/components/plan-usage-indicator.tsx` - Usage display
+
+### 7. SDK Integration (v1.2.0)
+
+**Complete API Coverage:**
+
+- 100% endpoint parity with backend APIs
+- Type-safe client with TypeScript
+- Nested API structure for better organization
+- Built-in retry logic and error handling
+
+**Key Features:**
+
+- Zero-config initialization
+- 40+ TypeScript interfaces
+- 20+ assertion helpers
+- Framework integrations (OpenAI, Anthropic)
+- NPM-ready package
+
+**Key Files:**
+
+- `src/packages/sdk/src/client.ts` - Main SDK client
+- `src/packages/sdk/src/types.ts` - All type definitions
+- `src/packages/sdk/README.md` - SDK documentation
+- `src/packages/sdk/CHANGELOG.md` - Version history
 
 ---
 
@@ -678,16 +712,27 @@ apiUsageLogs {
 
 ### Developer
 
+**API Keys:**
+
 - `GET /api/developer/api-keys` - List API keys
 - `POST /api/developer/api-keys` - Create key
-- `DELETE /api/developer/api-keys/[id]` - Delete key
-- `GET /api/developer/api-keys/[id]/usage` - Key usage
+- `PATCH /api/developer/api-keys/[id]` - Update key
+- `DELETE /api/developer/api-keys/[id]` - Revoke key
+- `GET /api/developer/api-keys/[id]/usage` - Key usage stats
+
+**Webhooks:**
+
 - `GET /api/developer/webhooks` - List webhooks
 - `POST /api/developer/webhooks` - Create webhook
+- `GET /api/developer/webhooks/[id]` - Get webhook details
+- `PATCH /api/developer/webhooks/[id]` - Update webhook
 - `DELETE /api/developer/webhooks/[id]` - Delete webhook
-- `GET /api/developer/webhooks/[id]/deliveries` - List deliveries
-- `GET /api/developer/usage` - Usage logs
-- `GET /api/developer/usage/summary` - Usage summary
+- `GET /api/developer/webhooks/[id]/deliveries` - Delivery history
+
+**Usage Analytics:**
+
+- `GET /api/developer/usage` - Detailed usage logs
+- `GET /api/developer/usage/summary` - Usage summary with limits
 
 ### Onboarding
 
@@ -793,8 +838,11 @@ accordion, alert-dialog, alert, aspect-ratio, avatar, background-boxes, badge, b
 
 ### Package: `@evalai/sdk`
 
-**Version:** 1.1.0  
-**Location:** `src/packages/sdk/`
+**Version:** 1.2.0 (🎉 100% API Coverage)  
+**Location:** `src/packages/sdk/`  
+**License:** MIT  
+**Author:** EvalAI Team  
+**NPM Ready:** Yes (with .npmignore and prepublishOnly script)
 
 #### Main Exports
 
@@ -854,12 +902,63 @@ export { Logger } from "./logger";
 // Integrations
 export { traceOpenAI } from "./integrations/openai";
 export { traceAnthropic } from "./integrations/anthropic";
+
+// Types (v1.2.0) - 40+ comprehensive interfaces
+export type {
+  // Core
+  Trace,
+  Span,
+  Evaluation,
+  EvaluationRun,
+  TestCase,
+  TestResult,
+  // Annotations (NEW)
+  Annotation,
+  AnnotationTask,
+  AnnotationItem,
+  CreateAnnotationParams,
+  ListAnnotationsParams,
+  CreateAnnotationTaskParams,
+  ListAnnotationTasksParams,
+  CreateAnnotationItemParams,
+  ListAnnotationItemsParams,
+  // Developer (NEW)
+  APIKey,
+  APIKeyWithSecret,
+  Webhook,
+  WebhookDelivery,
+  CreateAPIKeyParams,
+  UpdateAPIKeyParams,
+  ListAPIKeysParams,
+  CreateWebhookParams,
+  UpdateWebhookParams,
+  ListWebhooksParams,
+  ListWebhookDeliveriesParams,
+  APIKeyUsage,
+  UsageStats,
+  UsageSummary,
+  GetUsageParams,
+  // LLM Judge Extended (NEW)
+  LLMJudgeConfig,
+  LLMJudgeResult,
+  LLMJudgeAlignment,
+  CreateLLMJudgeConfigParams,
+  ListLLMJudgeConfigsParams,
+  ListLLMJudgeResultsParams,
+  GetLLMJudgeAlignmentParams,
+  // Organizations (NEW)
+  Organization,
+  // Templates
+  EvaluationTemplates,
+  FeatureUsage,
+  OrganizationLimits,
+} from "./types";
 ```
 
 #### SDK Files (14 total)
 
-- `client.ts` - Main SDK client with retry logic
-- `assertions.ts` - Assertion library
+- `client.ts` - Main SDK client with complete API coverage
+- `assertions.ts` - 20+ assertion helpers
 - `context.ts` - Context propagation
 - `errors.ts` - Error classes
 - `export.ts` - Data export/import
@@ -869,11 +968,76 @@ export { traceAnthropic } from "./integrations/anthropic";
 - `snapshot.ts` - Snapshot testing
 - `streaming.ts` - Streaming & batch
 - `testing.ts` - Test suite builder
-- `types.ts` - TypeScript types
+- `types.ts` - 40+ TypeScript interfaces
 - `integrations/openai.ts` - OpenAI wrapper
 - `integrations/anthropic.ts` - Anthropic wrapper
 
-#### Usage Example
+#### API Coverage (v1.2.0)
+
+**Traces API** ✅
+
+- `client.traces.create()` - Create traces
+- `client.traces.list()` - List with filters
+- `client.traces.get()` - Get trace details
+- `client.traces.delete()` - Delete trace
+- `client.traces.createSpan()` - Create span
+- `client.traces.listSpans()` - List spans
+
+**Evaluations API** ✅
+
+- `client.evaluations.create()` - Create evaluations
+- `client.evaluations.list()` - List evaluations
+- `client.evaluations.get()` - Get evaluation
+- `client.evaluations.update()` - Update evaluation
+- `client.evaluations.delete()` - Delete evaluation
+- `client.evaluations.createTestCase()` - Create test case
+- `client.evaluations.listTestCases()` - List test cases
+- `client.evaluations.createRun()` - Create run
+- `client.evaluations.listRuns()` - List runs
+- `client.evaluations.getRun()` - Get run details
+
+**LLM Judge API** ✅
+
+- `client.llmJudge.evaluate()` - Run evaluation
+- `client.llmJudge.createConfig()` - Create judge config
+- `client.llmJudge.listConfigs()` - List configs
+- `client.llmJudge.listResults()` - Query results
+- `client.llmJudge.getAlignment()` - Alignment analysis
+
+**Annotations API** ✅ (NEW in v1.2.0)
+
+- `client.annotations.create()` - Create annotation
+- `client.annotations.list()` - List annotations
+- `client.annotations.tasks.create()` - Create task
+- `client.annotations.tasks.list()` - List tasks
+- `client.annotations.tasks.get()` - Get task
+- `client.annotations.tasks.items.create()` - Create item
+- `client.annotations.tasks.items.list()` - List items
+
+**Developer API** ✅ (NEW in v1.2.0)
+
+- **API Keys:**
+  - `client.developer.apiKeys.create()` - Create key
+  - `client.developer.apiKeys.list()` - List keys
+  - `client.developer.apiKeys.update()` - Update key
+  - `client.developer.apiKeys.revoke()` - Revoke key
+  - `client.developer.apiKeys.getUsage()` - Key usage
+- **Webhooks:**
+  - `client.developer.webhooks.create()` - Create webhook
+  - `client.developer.webhooks.list()` - List webhooks
+  - `client.developer.webhooks.get()` - Get webhook
+  - `client.developer.webhooks.update()` - Update webhook
+  - `client.developer.webhooks.delete()` - Delete webhook
+  - `client.developer.webhooks.getDeliveries()` - Delivery history
+- **Usage Analytics:**
+  - `client.developer.getUsage()` - Usage statistics
+  - `client.developer.getUsageSummary()` - Usage summary
+
+**Organizations API** ✅ (NEW in v1.2.0)
+
+- `client.organizations.getCurrent()` - Get current org
+
+#### Usage Examples
 
 ```typescript
 import { AIEvalClient } from "@evalai/sdk";
@@ -888,13 +1052,57 @@ const trace = await client.traces.create({
   metadata: { userId: "456" },
 });
 
-// Run an evaluation
+// Create an evaluation
 const evaluation = await client.evaluations.create({
   name: "Chatbot Quality Test",
   type: "unit_test",
   organizationId: 1,
 });
+
+// Create annotation task (NEW)
+const task = await client.annotations.tasks.create({
+  name: "Label Customer Feedback",
+  description: "Rate helpfulness 1-5",
+  organizationId: 1,
+  type: "classification",
+  totalItems: 100,
+});
+
+// Manage API keys (NEW)
+const apiKey = await client.developer.apiKeys.create({
+  name: "Production API Key",
+  scopes: ["traces:write", "evaluations:read"],
+});
+
+// Create webhook (NEW)
+const webhook = await client.developer.webhooks.create({
+  url: "https://api.example.com/webhooks",
+  events: ["trace.completed", "evaluation.finished"],
+  organizationId: 1,
+});
+
+// Get usage stats (NEW)
+const usage = await client.developer.getUsageSummary({
+  startDate: "2025-10-01",
+  endDate: "2025-10-31",
+});
 ```
+
+#### Package Configuration
+
+**package.json metadata:**
+
+- Keywords: ai, evaluation, llm, testing, observability, tracing, monitoring, annotations, webhooks, developer-tools
+- Exports: Main, assertions, testing, integrations (openai, anthropic)
+- Scripts: build, dev, test, prepublishOnly
+- Repository: git+https://github.com/evalai/platform.git
+
+**Publishing:**
+
+- `.npmignore` configured to exclude source files
+- `prepublishOnly` script ensures fresh build
+- TypeScript declarations (.d.ts) included
+- CLI binary: `evalai` command
 
 ---
 
@@ -968,10 +1176,13 @@ calculateMetrics();
 
 **Key Dependencies:**
 
-- **Framework:** next@15.3.5, react@19, react-dom@19
+- **Framework:** next@15.5.6, react@19, react-dom@19
 - **Database:** drizzle-orm@0.44.6, @libsql/client@0.15.15
 - **Auth:** better-auth@1.3.27
 - **Billing:** autumn-js@0.1.40, atmn@0.0.27
+- **Rate Limiting:** @upstash/ratelimit@2.0.6, @upstash/redis@1.35.6
+- **Monitoring:** @sentry/nextjs@10.20.0
+- **Testing:** vitest@3.2.4, @vitejs/plugin-react@5.0.4
 - **UI:** @radix-ui/\* (20+ components), tailwindcss@4.1.9
 - **Charts:** recharts@3.2.1
 - **Forms:** react-hook-form@7.60.0, zod@3.25.76
@@ -985,7 +1196,10 @@ calculateMetrics();
   "dev": "next dev",
   "build": "next build",
   "start": "next start",
-  "lint": "next lint"
+  "lint": "next lint",
+  "test": "vitest",
+  "test:ui": "vitest --ui",
+  "test:coverage": "vitest --coverage"
 }
 ```
 
@@ -1067,6 +1281,64 @@ const protectedRoutes = [
 - **Team** ($49/seat) - 25K traces, 5 projects, 50 annotations/month
 - **Professional** ($99/seat) - 100K traces, unlimited projects
 
+### Rate Limiting Configuration
+
+**Location:** `src/lib/rate-limit.ts`
+
+**Tiers:**
+
+- **Anonymous:** 10 requests/minute
+- **Free:** 100 requests/minute
+- **Pro:** 1,000 requests/minute
+- **Enterprise:** 10,000 requests/minute
+
+**Features:**
+
+- Upstash Redis with sliding window algorithm
+- Analytics enabled
+- Tiered rate limits based on plan
+- Rate limit headers in responses (X-RateLimit-\*)
+- Middleware wrapper: `src/lib/api-rate-limit.ts`
+
+### Error Monitoring
+
+**Sentry Configuration:**
+
+- `sentry.server.config.ts` - Server-side error tracking
+- `sentry.edge.config.ts` - Edge runtime error tracking
+- `instrumentation.ts` - Global error handler with `onRequestError()`
+
+**Features:**
+
+- Performance monitoring (traces sample rate: 100%)
+- Environment-based configuration
+- Debug mode in development
+- Request error capture with context (URL, method, headers)
+- Production error sanitization
+- Integrated with rate limiting middleware
+
+### Testing Infrastructure
+
+**Vitest Configuration:**
+
+- `vitest.config.ts` - Test runner configuration
+- Environment: jsdom (for React testing)
+- Globals enabled for easy test writing
+- Path aliases configured (@/ = ./src)
+
+**Scripts:**
+
+- `npm test` - Run tests
+- `npm run test:ui` - Interactive test UI
+- `npm run test:coverage` - Coverage reports
+
+**Note:** Playwright for E2E testing is not currently installed. To add it, run:
+
+```bash
+npm install -D @playwright/test
+npx playwright install
+```
+
 ---
 
 ## 🔑 Key Technologies
@@ -1087,21 +1359,27 @@ const protectedRoutes = [
 - **Turso** - Distributed SQLite (LibSQL)
 - **better-auth** - Authentication with sessions
 - **Autumn.js** - Usage-based billing and feature gating
+- **Upstash Redis** - Rate limiting with sliding window
+- **Sentry** - Error monitoring and performance tracking
 
 ### Developer Experience
 
-- **TypeScript SDK** - Type-safe client library
+- **TypeScript SDK** - Type-safe client library (v1.2.0)
 - **Retry Logic** - Exponential backoff
 - **Debug Logger** - Request/response logging
 - **Context Propagation** - Automatic metadata passing
 - **Error Handling** - Custom error classes
 - **Zod Validation** - Runtime type checking
+- **Vitest** - Unit and integration testing
+- **Rate Limiting** - Tiered API limits (10-10K requests/min)
 
-### Deployment
+### Deployment & Infrastructure
 
 - **Vercel** - Hosting and edge functions
 - **v0.app** - Design and deployment sync
 - **GitHub** - Auto-sync from v0 deployments
+- **Upstash** - Redis for distributed rate limiting
+- **Sentry** - Real-time error tracking and monitoring
 
 ---
 
@@ -1112,26 +1390,37 @@ const protectedRoutes = [
 - **TypeScript/TSX:** ~150+ files
 - **SQL Migrations:** 10 files
 - **UI Components:** 57 shadcn/ui components
-- **API Routes:** 30 endpoints
+- **API Routes:** 35+ endpoints
 - **Pages:** 40+ pages
 - **Seed Files:** 14 seed scripts
+- **SDK Files:** 14 core files
 
 ### Lines of Code (Estimated)
 
-- **Total:** ~15,000+ lines
+- **Total:** ~18,000+ lines
 - **Frontend:** ~8,000 lines
 - **Backend:** ~5,000 lines
-- **SDK:** ~2,000 lines
+- **SDK:** ~3,500 lines (v1.2.0)
+- **Types/Config:** ~1,500 lines
 
 ### Database Tables
 
 - **Total:** 23 tables
-- **Auth:** 4 tables
+- **Auth:** 4 tables (better-auth)
 - **Core:** 8 tables
 - **Traces:** 3 tables
 - **Annotations:** 3 tables
 - **Developer:** 4 tables
 - **LLM Judge:** 2 tables
+
+### SDK Coverage (v1.2.0)
+
+- **Total API Endpoints:** 35+
+- **SDK Coverage:** 100% ✅
+- **TypeScript Interfaces:** 40+
+- **API Classes:** 9 (TracesAPI, EvaluationsAPI, LLMJudgeAPI, AnnotationsAPI, AnnotationTasksAPI, AnnotationTaskItemsAPI, DeveloperAPI, APIKeysAPI, WebhooksAPI, OrganizationsAPI)
+- **Assertion Helpers:** 20+
+- **Framework Integrations:** 2 (OpenAI, Anthropic)
 
 ---
 
@@ -1170,13 +1459,23 @@ npm run start
 
 ## 📝 Recent Changes
 
-See `MIGRATION_SUMMARY.md` for details on:
+See `MIGRATION_SUMMARY.md` and `SDK_V1.2.0_IMPLEMENTATION_SUMMARY.md` for details on:
 
 - ✅ Supabase to Drizzle migration (complete)
 - ✅ 20+ evaluation templates added
 - ✅ Drag-and-drop evaluation builder
 - ✅ Server-side feature gating
 - ✅ Per-organization quotas
+- ✅ **Rate Limiting Infrastructure** - Upstash Redis with tiered limits (10-10K req/min)
+- ✅ **Error Monitoring** - Sentry fully configured (server, edge, instrumentation)
+- ✅ **Testing Infrastructure** - Vitest with jsdom environment
+- 🎉 **SDK v1.2.0** - 100% API Coverage (October 18, 2025)
+  - Annotations API (complete human-in-the-loop workflow)
+  - Developer API (API keys, webhooks, usage analytics)
+  - LLM Judge Extended (configs, results, alignment)
+  - Organizations API
+  - 40+ new TypeScript interfaces
+  - NPM-ready with .npmignore and metadata
 
 ---
 
@@ -1188,6 +1487,8 @@ See `MIGRATION_SUMMARY.md` for details on:
 
 ---
 
-**Index Generated:** Thursday, October 16, 2025  
-**Index Version:** 1.0  
-**Codebase Version:** Based on latest deployment
+**Index Generated:** Saturday, October 18, 2025  
+**Index Version:** 1.1  
+**Codebase Version:** Based on latest deployment  
+**SDK Version:** v1.2.0 (100% API Coverage)  
+**Last Updated:** After SDK v1.2.0 release with complete API endpoint coverage

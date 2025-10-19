@@ -5,18 +5,26 @@ import { useSession } from "@/lib/auth-client"
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 import { Activity, Clock, AlertCircle, TrendingUp, BarChart3, Zap } from "lucide-react"
-import {
-  Line,
-  LineChart,
-  Bar,
-  BarChart,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Legend
-} from "recharts"
+import dynamic from "next/dynamic"
+import { Skeleton } from "@/components/ui/skeleton"
+
+// Lazy load Recharts components
+// Import as type "any" to avoid type conflicts with dynamic imports
+const LineChart = dynamic<any>(
+  () => import("recharts").then((mod) => mod.LineChart),
+  { ssr: false }
+)
+const Line = dynamic<any>(() => import("recharts").then((mod) => mod.Line), { ssr: false })
+const BarChart = dynamic<any>(
+  () => import("recharts").then((mod) => mod.BarChart),
+  { ssr: false }
+)
+const Bar = dynamic<any>(() => import("recharts").then((mod) => mod.Bar), { ssr: false })
+const XAxis = dynamic<any>(() => import("recharts").then((mod) => mod.XAxis), { ssr: false })
+const YAxis = dynamic<any>(() => import("recharts").then((mod) => mod.YAxis), { ssr: false })
+const CartesianGrid = dynamic<any>(() => import("recharts").then((mod) => mod.CartesianGrid), { ssr: false })
+const Tooltip = dynamic<any>(() => import("recharts").then((mod) => mod.Tooltip), { ssr: false })
+const ResponsiveContainer = dynamic<any>(() => import("recharts").then((mod) => mod.ResponsiveContainer), { ssr: false })
 
 interface UsageSummary {
   totalRequests: number
