@@ -65,7 +65,7 @@ export function AppHeader({ user, organization }: AppHeaderProps) {
 
       <div className="flex items-center gap-3">
         {!isLoading && (
-          <Link href="/pricing">
+          <Link href="/pricing" prefetch={true}>
             <Button variant="outline" size="sm" className="h-8 gap-2">
               <Sparkles className="h-3.5 w-3.5" />
               <span className="text-sm font-medium">{planName}</span>

@@ -142,6 +142,10 @@ export async function GET(request: NextRequest) {
         start: startDateStr,
         end: endDateStr
       }
+    }, {
+      headers: {
+        'Cache-Control': 'private, max-age=120, stale-while-revalidate=240'
+      }
     });
 
   } catch (error) {

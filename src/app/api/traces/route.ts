@@ -39,7 +39,11 @@ export async function GET(request: NextRequest) {
         .limit(limit)
         .offset(offset);
 
-      return NextResponse.json(results);
+      return NextResponse.json(results, {
+        headers: {
+          'Cache-Control': 'private, max-age=30, stale-while-revalidate=60'
+        }
+      });
     } catch (error) {
       Sentry.captureException(error);
       console.error('GET error:', error);

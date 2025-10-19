@@ -4,6 +4,9 @@ import { Footer } from "@/components/footer"
 import { Target, Users, Zap, Shield } from "lucide-react"
 import { ThemeToggle } from "@/components/theme-toggle"
 
+export const dynamic = 'force-static'
+export const revalidate = 3600 // Revalidate every hour
+
 export default function AboutPage() {
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">

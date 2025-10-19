@@ -36,7 +36,11 @@ export async function GET(request: NextRequest) {
         }, { status: 404 });
       }
 
-      return NextResponse.json(evaluation[0]);
+      return NextResponse.json(evaluation[0], {
+        headers: {
+          'Cache-Control': 'private, max-age=60, stale-while-revalidate=120'
+        }
+      });
     }
 
     // List evaluations with filtering
@@ -72,7 +76,11 @@ export async function GET(request: NextRequest) {
       .limit(limit)
       .offset(offset);
 
-    return NextResponse.json(results);
+    return NextResponse.json(results, {
+      headers: {
+        'Cache-Control': 'private, max-age=30, stale-while-revalidate=60'
+      }
+    });
   } catch (error) {
     console.error('GET error:', error);
     return NextResponse.json({ error: 'Internal server error: ' + error }, { status: 500 });

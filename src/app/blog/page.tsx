@@ -2,6 +2,9 @@ import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { Footer } from "@/components/footer"
+export const dynamic = 'force-static'
+export const revalidate = 3600
+
 import Link from "next/link"
 import { ArrowRight, Calendar } from "lucide-react"
 

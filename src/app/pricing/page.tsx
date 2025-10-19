@@ -1,12 +1,26 @@
 "use client"
 
-import { PricingTable } from "@/components/autumn/pricing-table"
 import { Footer } from "@/components/footer"
 import { Button } from "@/components/ui/button"
 import { useSession } from "@/lib/auth-client"
 import Link from "next/link"
 import { ArrowLeft } from "lucide-react"
 import { ThemeToggle } from "@/components/theme-toggle"
+import dynamic from "next/dynamic"
+import { Skeleton } from "@/components/ui/skeleton"
+
+// Lazy load pricing table to reduce initial bundle size
+const PricingTable = dynamic(
+  () => import("@/components/autumn/pricing-table").then(m => m.PricingTable),
+  { 
+    ssr: false,
+    loading: () => (
+      <div className="py-12">
+        <Skeleton className="h-96 w-full max-w-6xl mx-auto" />
+      </div>
+    )
+  }
+)
 
 export default function PricingPage() {
   const { data: session, isPending } = useSession()

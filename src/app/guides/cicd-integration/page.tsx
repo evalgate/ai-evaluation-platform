@@ -1,3 +1,6 @@
+export const dynamic = 'force-static'
+export const revalidate = false
+
 import { Button } from "@/components/ui/button"
 import { ArrowLeft, GitBranch, CheckCircle2, XCircle } from "lucide-react"
 import Link from "next/link"

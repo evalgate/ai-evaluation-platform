@@ -1,5 +1,8 @@
 import { Footer } from "@/components/footer"
 import { Button } from "@/components/ui/button"
+export const dynamic = 'force-static'
+export const revalidate = false
+
 import Link from "next/link"
 import { ArrowLeft, Activity, Code, Eye } from "lucide-react"
 

@@ -2,6 +2,9 @@ import { Button } from "@/components/ui/button"
 import { ArrowLeft, GitBranch, TrendingUp, AlertCircle } from "lucide-react"
 import Link from "next/link"
 
+export const dynamic = 'force-static'
+export const revalidate = false // Static, only rebuild on deploy
+
 export default function ABTestingGuidePage() {
   return (
     <div className="min-h-screen bg-background">

@@ -34,7 +34,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <SidebarMenu>
             <SidebarMenuItem>
               <SidebarMenuButton asChild>
-                <Link href="/dashboard" className="flex items-center gap-2">
+                <Link href="/dashboard" prefetch={true} className="flex items-center gap-2">
                   <BarChart3 />
                   <span>Dashboard</span>
                 </Link>
@@ -42,7 +42,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             </SidebarMenuItem>
             <SidebarMenuItem>
               <SidebarMenuButton asChild>
-                <Link href="/evaluations" className="flex items-center gap-2">
+                <Link href="/evaluations" prefetch={true} className="flex items-center gap-2">
                   <Beaker />
                   <span>Evaluations</span>
                 </Link>
@@ -50,7 +50,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             </SidebarMenuItem>
             <SidebarMenuItem>
               <SidebarMenuButton asChild>
-                <Link href="/traces" className="flex items-center gap-2">
+                <Link href="/traces" prefetch={true} className="flex items-center gap-2">
                   <FileText />
                   <span>Traces</span>
                 </Link>
