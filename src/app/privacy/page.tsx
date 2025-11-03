@@ -105,11 +105,11 @@ export default function PrivacyPage() {
               <li>Database encryption at rest using AES-256</li>
               <li>Regular security audits and penetration testing</li>
               <li>Role-based access controls and audit logging</li>
-              <li>SOC 2 Type II certified infrastructure</li>
+              <li>Hosted on SOC 2 Type II certified infrastructure providers</li>
             </ul>
             <p className="text-muted-foreground">
               Your data is stored on secure servers located in the United States. 
-              We use AWS and other trusted cloud providers with strict security standards.
+              We use AWS, Vercel, and other trusted cloud providers with SOC 2 Type II certified infrastructure and strict security standards.
             </p>
           </section>
 
@@ -125,6 +125,24 @@ export default function PrivacyPage() {
               <li><strong>Business Transfers:</strong> In connection with a merger, acquisition, or sale of assets</li>
               <li><strong>With Your Consent:</strong> When you explicitly authorize us to share your information</li>
             </ul>
+          </section>
+
+          <section className="mb-8 sm:mb-12">
+            <h2 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4">Data Retention and PII Handling</h2>
+            <p className="text-muted-foreground mb-4">
+              We retain your data only as long as necessary to provide our services and comply with legal obligations:
+            </p>
+            <ul className="list-disc pl-6 text-muted-foreground space-y-2 mb-4">
+              <li><strong>Account Data:</strong> Retained while your account is active and for 90 days after deletion</li>
+              <li><strong>Trace Data:</strong> Retained according to your plan limits; automatically deleted after 90 days for free tier, 1 year for paid plans</li>
+              <li><strong>Evaluation Results:</strong> Retained for the duration of your subscription plus 90 days</li>
+              <li><strong>PII in Traces:</strong> We do not automatically scan or redact PII from trace data. You are responsible for ensuring compliance with data protection regulations when sending trace data containing PII</li>
+              <li><strong>Backups:</strong> Backup data is retained for 30 days and then permanently deleted</li>
+            </ul>
+            <p className="text-muted-foreground">
+              Upon account deletion, all associated data is permanently removed from our production systems within 30 days, 
+              and from backups within 60 days.
+            </p>
           </section>
 
           <section className="mb-8 sm:mb-12">

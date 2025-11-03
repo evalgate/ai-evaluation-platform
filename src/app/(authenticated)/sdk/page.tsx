@@ -1,22 +1,26 @@
-"use client"
-
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import { Copy, Check, Terminal, Sparkles, Zap, Shield } from "lucide-react"
-import { useState } from "react"
+import { Terminal, Sparkles, Zap, Shield, ExternalLink } from "lucide-react"
 import Link from "next/link"
-import { useSession } from "@/lib/auth-client"
+import { CopyButton } from "@/components/copy-button"
+import type { Metadata } from "next"
+
+export const metadata: Metadata = {
+  title: "SDK Documentation - AI Evaluation Platform",
+  description: "Production-ready TypeScript SDK for tracing, testing, and monitoring your LLM applications. Built for developers who ship fast.",
+  openGraph: {
+    title: "SDK Documentation - AI Evaluation Platform",
+    description: "Production-ready TypeScript SDK for tracing, testing, and monitoring your LLM applications.",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "SDK Documentation - AI Evaluation Platform",
+    description: "Production-ready TypeScript SDK for tracing, testing, and monitoring your LLM applications.",
+  },
+}
 
 export default function SDKPage() {
-  const { data: session } = useSession()
-  const [copiedCode, setCopiedCode] = useState<string | null>(null)
-
-  const copyCode = (code: string, id: string) => {
-    navigator.clipboard.writeText(code)
-    setCopiedCode(id)
-    setTimeout(() => setCopiedCode(null), 2000)
-  }
-
   const installCode = "npm install @evalai/sdk"
   
   const quickStartCode = `import { AIEvalClient } from '@evalai/sdk'
@@ -83,13 +87,27 @@ await suite.run(client)`
           Production-ready SDK for tracing, testing, and monitoring your LLM applications.
           Built for developers who ship fast.
         </p>
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+        <div className="flex flex-col sm:flex-row gap-4 justify-center mb-4">
           <Button size="lg" asChild>
             <Link href="/developer">Get API Key</Link>
           </Button>
           <Button size="lg" variant="outline" asChild>
             <Link href="/api-reference">View API docs</Link>
           </Button>
+          <Button size="lg" variant="outline" asChild>
+            <a href="https://www.npmjs.com/package/@evalai/sdk" target="_blank" rel="noopener noreferrer">
+              <ExternalLink className="h-4 w-4 mr-2" />
+              View on npm
+            </a>
+          </Button>
+        </div>
+        <div className="flex gap-2 justify-center">
+          <a href="https://www.npmjs.com/package/@evalai/sdk" target="_blank" rel="noopener noreferrer">
+            <img src="https://img.shields.io/npm/v/@evalai/sdk.svg" alt="npm version" />
+          </a>
+          <a href="https://www.npmjs.com/package/@evalai/sdk" target="_blank" rel="noopener noreferrer">
+            <img src="https://img.shields.io/npm/dm/@evalai/sdk.svg" alt="npm downloads" />
+          </a>
         </div>
       </div>
 
@@ -127,18 +145,10 @@ await suite.run(client)`
           <pre className="font-mono text-sm overflow-x-auto">
             <code>{installCode}</code>
           </pre>
-          <Button
-            size="icon"
-            variant="ghost"
+          <CopyButton 
+            code={installCode}
             className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
-            onClick={() => copyCode(installCode, "install")}
-          >
-            {copiedCode === "install" ? (
-              <Check className="h-4 w-4 text-green-500" />
-            ) : (
-              <Copy className="h-4 w-4" />
-            )}
-          </Button>
+          />
         </div>
       </Card>
 
@@ -152,18 +162,10 @@ await suite.run(client)`
           <pre className="font-mono text-sm overflow-x-auto">
             <code>{envCode}</code>
           </pre>
-          <Button
-            size="icon"
-            variant="ghost"
+          <CopyButton 
+            code={envCode}
             className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
-            onClick={() => copyCode(envCode, "env")}
-          >
-            {copiedCode === "env" ? (
-              <Check className="h-4 w-4 text-green-500" />
-            ) : (
-              <Copy className="h-4 w-4" />
-            )}
-          </Button>
+          />
         </div>
         <div className="mt-4 p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
           <p className="text-sm text-blue-600 dark:text-blue-400">
@@ -179,18 +181,10 @@ await suite.run(client)`
           <pre className="font-mono text-sm overflow-x-auto">
             <code>{quickStartCode}</code>
           </pre>
-          <Button
-            size="icon"
-            variant="ghost"
+          <CopyButton 
+            code={quickStartCode}
             className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
-            onClick={() => copyCode(quickStartCode, "quickstart")}
-          >
-            {copiedCode === "quickstart" ? (
-              <Check className="h-4 w-4 text-green-500" />
-            ) : (
-              <Copy className="h-4 w-4" />
-            )}
-          </Button>
+          />
         </div>
       </Card>
 
@@ -204,18 +198,10 @@ await suite.run(client)`
           <pre className="font-mono text-sm overflow-x-auto">
             <code>{frameworkCode}</code>
           </pre>
-          <Button
-            size="icon"
-            variant="ghost"
+          <CopyButton 
+            code={frameworkCode}
             className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
-            onClick={() => copyCode(frameworkCode, "framework")}
-          >
-            {copiedCode === "framework" ? (
-              <Check className="h-4 w-4 text-green-500" />
-            ) : (
-              <Copy className="h-4 w-4" />
-            )}
-          </Button>
+          />
         </div>
       </Card>
 
@@ -229,18 +215,10 @@ await suite.run(client)`
           <pre className="font-mono text-sm overflow-x-auto">
             <code>{testSuiteCode}</code>
           </pre>
-          <Button
-            size="icon"
-            variant="ghost"
+          <CopyButton 
+            code={testSuiteCode}
             className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
-            onClick={() => copyCode(testSuiteCode, "testsuite")}
-          >
-            {copiedCode === "testsuite" ? (
-              <Check className="h-4 w-4 text-green-500" />
-            ) : (
-              <Copy className="h-4 w-4" />
-            )}
-          </Button>
+          />
         </div>
       </Card>
 

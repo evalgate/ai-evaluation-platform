@@ -40,8 +40,30 @@ export function Footer() {
             </ul>
           </div>
         </div>
-        <div className="mt-8 sm:mt-12 border-t border-border pt-8 text-center text-sm text-muted-foreground">
-          <p>© {new Date().getFullYear()} AI Evaluation Platform. All rights reserved.</p>
+        <div className="mt-8 sm:mt-12 border-t border-border pt-8">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+            <p className="text-sm text-muted-foreground">
+              © {new Date().getFullYear()} AI Evaluation Platform. All rights reserved.
+            </p>
+            <div className="flex gap-2 items-center">
+              <a 
+                href="https://www.npmjs.com/package/@evalai/sdk" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="opacity-70 hover:opacity-100 transition-opacity"
+              >
+                <img src="https://img.shields.io/npm/v/@evalai/sdk.svg" alt="npm version" className="h-5" />
+              </a>
+              <a 
+                href="https://www.npmjs.com/package/@evalai/sdk" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="opacity-70 hover:opacity-100 transition-opacity"
+              >
+                <img src="https://img.shields.io/npm/dm/@evalai/sdk.svg" alt="npm downloads" className="h-5" />
+              </a>
+            </div>
+          </div>
         </div>
       </div>
     </footer>

@@ -1,13 +1,29 @@
-"use client"
-
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { ThemeToggle } from "@/components/theme-toggle"
 import { Footer } from "@/components/footer"
-import { useSession } from "@/lib/auth-client"
-
+import { APIReferenceHeader } from "./api-reference-header"
 import Link from "next/link"
-import { Code, FileText, Zap } from "lucide-react"
+import { Code, FileText, Zap, Copy } from "lucide-react"
+import { CopyButton } from "@/components/copy-button"
+import type { Metadata } from "next"
+
+export const metadata: Metadata = {
+  title: "API Reference - AI Evaluation Platform",
+  description: "Complete REST API documentation for programmatic access to the platform. Includes authentication, rate limits, and endpoint details.",
+  openGraph: {
+    title: "API Reference - AI Evaluation Platform",
+    description: "Complete REST API documentation for programmatic access to the platform.",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "API Reference - AI Evaluation Platform",
+    description: "Complete REST API documentation for programmatic access to the platform.",
+  },
+}
+
+// Use environment variable or default to production URL
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://v0-ai-evaluation-platform-nu.vercel.app"
 
 const apiSections = [
   {
@@ -60,37 +76,13 @@ const methodColors: Record<string, string> = {
 }
 
 export default function APIReferencePage() {
-  const { data: session } = useSession()
+  const curlExample = `curl ${API_BASE_URL}/api/evaluations \\
+  -H "Authorization: Bearer YOUR_API_KEY"`
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">
       {/* Header */}
-      <header className="border-b border-border">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 py-3 sm:py-4">
-          <div className="flex items-center justify-between gap-3">
-            <Link href="/">
-              <h1 className="text-base sm:text-xl font-bold truncate">AI Evaluation Platform</h1>
-            </Link>
-            <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
-              <ThemeToggle />
-              {session?.user ? (
-                <Button asChild size="sm" className="h-9">
-                  <Link href="/dashboard">Dashboard</Link>
-                </Button>
-              ) : (
-                <>
-                  <Button variant="ghost" asChild size="sm" className="h-9 hidden sm:flex">
-                    <Link href="/auth/login">Sign in</Link>
-                  </Button>
-                  <Button asChild size="sm" className="h-9">
-                    <Link href="/auth/sign-up">Get started</Link>
-                  </Button>
-                </>
-              )}
-            </div>
-          </div>
-        </div>
-      </header>
+      <APIReferenceHeader />
 
       {/* Main Content */}
       <main className="flex-1">
@@ -129,14 +121,18 @@ export default function APIReferencePage() {
             <Card className="p-5 sm:p-6">
               <h2 className="text-xl sm:text-2xl font-semibold mb-3 sm:mb-4">Authentication</h2>
               <p className="text-sm sm:text-base text-muted-foreground mb-4">
-                All API requests require authentication using a bearer token:
+                All API requests require authentication using a bearer token. Get your API key from the{" "}
+                <Link href="/developer" className="text-primary underline">Developer Dashboard</Link>.
               </p>
-              <div className="bg-muted p-4 rounded-lg font-mono text-xs sm:text-sm overflow-x-auto">
-                <code>
-                  curl https://api.example.com/api/evaluations \<br />
-                  &nbsp;&nbsp;-H "Authorization: Bearer YOUR_API_KEY"
-                </code>
+              <div className="bg-muted p-4 rounded-lg font-mono text-xs sm:text-sm overflow-x-auto relative group">
+                <code className="whitespace-pre">{curlExample}</code>
+                <div className="absolute top-2 right-2">
+                  <CopyButton code={curlExample} />
+                </div>
               </div>
+              <p className="text-sm text-muted-foreground mt-4">
+                <strong>Base URL:</strong> <code className="bg-muted px-2 py-1 rounded">{API_BASE_URL}</code>
+              </p>
             </Card>
           </section>
 

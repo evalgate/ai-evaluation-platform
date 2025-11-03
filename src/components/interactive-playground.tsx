@@ -19,7 +19,7 @@ interface PlaygroundProps {
   onSignupPrompt?: () => void;
 }
 
-export function InteractivePlayground({ onSignupPrompt }: PlaygroundProps) {
+export function InteractivePlayground({ onSignupPrompt }: PlaygroundProps = {}) {
   const [selectedScenario, setSelectedScenario] = useState<string | null>(null);
   const [isRunning, setIsRunning] = useState(false);
   const [results, setResults] = useState<any>(null);
@@ -146,13 +146,13 @@ Breakdown:
       {/* Hero Section */}
       <div className="text-center space-y-4">
         <Badge variant="secondary" className="text-sm">
-          No signup required
+          Try demos instantly—no signup
         </Badge>
         <h2 className="text-4xl font-bold tracking-tight">
           Try AI Evaluation in 30 Seconds
         </h2>
         <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-          Choose a scenario below and see real evaluation results instantly
+          Choose a scenario below and see real evaluation results instantly. Sign up to save results and use the API.
         </p>
       </div>
 
