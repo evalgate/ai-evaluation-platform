@@ -22,10 +22,25 @@ export const metadata: Metadata = {
   },
 }
 
+// TypeScript interfaces
+interface APIEndpoint {
+  method: string
+  path: string
+  description: string
+  example?: string
+  response?: string
+}
+
+interface APISection {
+  title: string
+  description: string
+  endpoints: APIEndpoint[]
+}
+
 // Use environment variable or default to production URL
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://v0-ai-evaluation-platform-nu.vercel.app"
 
-const apiSections = [
+const apiSections: APISection[] = [
   {
     title: "Evaluations API",
     description: "Create, run, and manage evaluations programmatically",
