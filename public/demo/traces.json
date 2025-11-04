@@ -1,0 +1,47 @@
+{
+  "traces": [
+    {
+      "id": "trace_001",
+      "name": "Chat Completion - Product Query",
+      "traceId": "trace-1705320000000",
+      "status": "completed",
+      "totalLatency": 1250,
+      "totalCost": 0.0012,
+      "spanCount": 2,
+      "created_at": "2024-01-15T10:00:00Z",
+      "metadata": {
+        "model": "gpt-4",
+        "userId": "demo_user_1"
+      }
+    },
+    {
+      "id": "trace_002",
+      "name": "RAG Query - Documentation",
+      "traceId": "trace-1705233600000",
+      "status": "completed",
+      "totalLatency": 1850,
+      "totalCost": 0.0024,
+      "spanCount": 3,
+      "created_at": "2024-01-14T10:00:00Z",
+      "metadata": {
+        "model": "gpt-4",
+        "userId": "demo_user_2"
+      }
+    },
+    {
+      "id": "trace_003",
+      "name": "Code Generation Request",
+      "traceId": "trace-1705147200000",
+      "status": "completed",
+      "totalLatency": 2680,
+      "totalCost": 0.0038,
+      "spanCount": 2,
+      "created_at": "2024-01-13T10:00:00Z",
+      "metadata": {
+        "model": "gpt-4",
+        "language": "javascript"
+      }
+    }
+  ],
+  "total": 3
+}

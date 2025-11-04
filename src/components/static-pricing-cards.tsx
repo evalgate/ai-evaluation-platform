@@ -166,6 +166,11 @@ export function PricingRateLimits() {
       <p className="text-xs text-muted-foreground mt-4">
         Rate limits align with your plan tier. Contact us for higher limits.
       </p>
+      <div className="mt-4 p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
+        <p className="text-sm font-medium text-yellow-800 dark:text-yellow-200">
+          <strong>After limits:</strong> Requests return HTTP 429 unless overage billing is enabled in your plan.
+        </p>
+      </div>
     </Card>
   )
 }

@@ -1,0 +1,76 @@
+{
+  "configs": [
+    {
+      "id": "judge_001",
+      "name": "Factuality Judge",
+      "description": "Evaluates whether LLM outputs are factually accurate",
+      "model": "gpt-4",
+      "prompt": "Rate the factual accuracy of this response on a scale of 0-1.",
+      "criteria": [
+        "Factual correctness",
+        "No hallucinations",
+        "Verifiable claims"
+      ],
+      "created_at": "2024-01-10T08:00:00Z"
+    },
+    {
+      "id": "judge_002",
+      "name": "Relevance Judge",
+      "description": "Checks if responses are relevant to the input query",
+      "model": "gpt-4",
+      "prompt": "Rate how relevant this response is to the query on a scale of 0-1.",
+      "criteria": [
+        "Addresses the question",
+        "Stays on topic",
+        "Provides useful information"
+      ],
+      "created_at": "2024-01-10T08:30:00Z"
+    },
+    {
+      "id": "judge_003",
+      "name": "Coherence Judge",
+      "description": "Evaluates logical flow and consistency",
+      "model": "gpt-4",
+      "prompt": "Rate the coherence and logical consistency on a scale of 0-1.",
+      "criteria": [
+        "Logical flow",
+        "Internal consistency",
+        "Clear structure"
+      ],
+      "created_at": "2024-01-10T09:00:00Z"
+    }
+  ],
+  "results": [
+    {
+      "id": "result_001",
+      "configId": "judge_001",
+      "input": "What is photosynthesis?",
+      "output": "Photosynthesis is the process by which plants convert sunlight into energy.",
+      "score": 0.92,
+      "reasoning": "Accurate and concise explanation of photosynthesis.",
+      "pass": true,
+      "evaluated_at": "2024-01-15T11:00:00Z"
+    },
+    {
+      "id": "result_002",
+      "configId": "judge_002",
+      "input": "Explain quantum computing",
+      "output": "Quantum computers use qubits that can be in superposition.",
+      "score": 0.88,
+      "reasoning": "Relevant but could provide more context.",
+      "pass": true,
+      "evaluated_at": "2024-01-15T11:05:00Z"
+    },
+    {
+      "id": "result_003",
+      "configId": "judge_003",
+      "input": "How does AI work?",
+      "output": "AI uses algorithms and data to learn patterns and make predictions.",
+      "score": 0.85,
+      "reasoning": "Coherent explanation with good logical flow.",
+      "pass": true,
+      "evaluated_at": "2024-01-15T11:10:00Z"
+    }
+  ],
+  "total": 3
+}

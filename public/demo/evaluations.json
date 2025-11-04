@@ -1,0 +1,59 @@
+{
+  "evaluations": [
+    {
+      "id": "eval_001",
+      "name": "Chatbot Accuracy Test",
+      "type": "chatbot",
+      "status": "completed",
+      "overall": 0.87,
+      "metrics": {
+        "factuality": 0.90,
+        "toxicity": 0.02,
+        "relevance": 0.88
+      },
+      "items": 10,
+      "passed": 8,
+      "failed": 2,
+      "avgLatency": 1172,
+      "totalCost": 0.0113,
+      "created_at": "2024-01-15T10:30:00Z"
+    },
+    {
+      "id": "eval_002",
+      "name": "RAG Hallucination Check",
+      "type": "rag",
+      "status": "completed",
+      "overall": 0.82,
+      "metrics": {
+        "hallucination_score": 0.935,
+        "relevance": 0.915,
+        "groundedness": 0.925
+      },
+      "items": 10,
+      "passed": 8,
+      "failed": 2,
+      "avgLatency": 1596,
+      "totalCost": 0.0208,
+      "created_at": "2024-01-14T14:20:00Z"
+    },
+    {
+      "id": "eval_003",
+      "name": "Code Generation Quality",
+      "type": "codegen",
+      "status": "completed",
+      "overall": 0.79,
+      "metrics": {
+        "syntax_valid": 1.0,
+        "test_pass": 0.885,
+        "style_score": 0.825
+      },
+      "items": 10,
+      "passed": 9,
+      "failed": 1,
+      "avgLatency": 2364,
+      "totalCost": 0.0332,
+      "created_at": "2024-01-13T09:15:00Z"
+    }
+  ],
+  "total": 3
+}

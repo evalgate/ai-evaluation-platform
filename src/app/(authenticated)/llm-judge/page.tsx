@@ -6,6 +6,7 @@ import { Brain, TrendingUp, AlertCircle, Plus, Sparkles, MessageSquare, Shield, 
 import { useSession } from "@/lib/auth-client"
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
+import Link from "next/link"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
@@ -137,8 +138,18 @@ export default function LLMJudgePage() {
   const [costQualityBalance, setCostQualityBalance] = useState("balanced")
 
   useEffect(() => {
+    // If not authenticated, load demo data
     if (!isPending && !session?.user) {
-      router.push("/auth/login")
+      fetch("/api/demo/judge")
+        .then(res => res.json())
+        .then(data => {
+          setJudgeResults(data.results || [])
+          setJudgeConfigs(data.configs || [])
+          setIsLoading(false)
+        })
+        .catch(() => {
+          setIsLoading(false)
+        })
       return
     }
 
@@ -234,9 +245,11 @@ export default function LLMJudgePage() {
     }
   }
 
-  if (isPending || !session?.user) {
+  if (isPending) {
     return null
   }
+
+  const isDemo = !session?.user
 
   // Calculate stats
   const avgScore =
@@ -249,6 +262,17 @@ export default function LLMJudgePage() {
 
   return (
     <div className="space-y-4 sm:space-y-6 w-full">
+      {isDemo && (
+        <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+          <p className="text-sm text-blue-600 dark:text-blue-400">
+            <strong>👁️ Demo Mode:</strong> You're viewing a read-only demo project.{" "}
+            <Link href="/auth/sign-up" className="underline font-semibold">
+              Sign up
+            </Link>{" "}
+            to create your own LLM judge configurations and duplicate this workspace.
+          </p>
+        </div>
+      )}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold">LLM Judge</h1>
