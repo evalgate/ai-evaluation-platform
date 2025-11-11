@@ -5,10 +5,14 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
-import { ArrowLeft, Play, Plus, FileText } from "lucide-react"
+import { ArrowLeft, Play, Plus, FileText, Download, Copy } from "lucide-react"
 import { useSession } from "@/lib/auth-client"
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
+import { AIQualityScoreCard } from "@/components/ai-quality-score-card"
+import { calculateQualityScore, type EvaluationStats } from "@/lib/ai-quality-score"
+import { toast } from "sonner"
+import { formatExportData, generateExportFilename, getExportDescription, validateExportData, type EvaluationType } from "@/lib/export-templates"
 
 // Update type
 type PageProps = {
@@ -23,6 +27,7 @@ export default function EvaluationDetailPage({ params }: PageProps) {
   const [testCases, setTestCases] = useState<any[]>([])
   const [runs, setRuns] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [qualityScore, setQualityScore] = useState<any>(null)
 
   useEffect(() => {
     if (!isPending && !session?.user) {
@@ -59,11 +64,183 @@ export default function EvaluationDetailPage({ params }: PageProps) {
       })
         .then(res => res.json())
         .then(data => {
-          setRuns(data.runs || [])
+          const fetchedRuns = data.runs || []
+          setRuns(fetchedRuns)
+          
+          // Calculate quality score from runs
+          if (fetchedRuns.length > 0) {
+            const latestRun = fetchedRuns[0]
+            const stats: EvaluationStats = {
+              totalEvaluations: latestRun.total_tests || 0,
+              passedEvaluations: latestRun.passed_tests || 0,
+              failedEvaluations: (latestRun.total_tests || 0) - (latestRun.passed_tests || 0),
+              averageLatency: latestRun.average_latency || 1000,
+              averageCost: latestRun.average_cost || 0.01,
+              averageScore: latestRun.passed_tests && latestRun.total_tests 
+                ? (latestRun.passed_tests / latestRun.total_tests) * 100 
+                : 0,
+              consistencyScore: latestRun.consistency_score || 85
+            }
+            const score = calculateQualityScore(stats)
+            setQualityScore(score)
+          }
+          
           setIsLoading(false)
         })
     }
   }, [session, isPending, router, id])  // Changed from params.id to id
+  
+  const handleCopyResults = () => {
+    if (!qualityScore || !evaluation) return
+    
+    const latestRun = runs[0]
+    const summary = `
+Evaluation Results: ${evaluation.name}
+Grade: ${qualityScore.grade} (${qualityScore.overall}/100)
+
+Summary:
+- Total Tests: ${latestRun?.total_tests || 0}
+- Passed: ${latestRun?.passed_tests || 0}
+- Failed: ${(latestRun?.total_tests || 0) - (latestRun?.passed_tests || 0)}
+- Pass Rate: ${latestRun?.total_tests ? Math.round((latestRun.passed_tests / latestRun.total_tests) * 100) : 0}%
+
+Quality Metrics:
+- Accuracy: ${qualityScore.metrics.accuracy}/100
+- Safety: ${qualityScore.metrics.safety}/100
+- Latency: ${qualityScore.metrics.latency}/100
+- Cost: ${qualityScore.metrics.cost}/100
+- Consistency: ${qualityScore.metrics.consistency}/100
+
+Key Insights:
+${qualityScore.insights.map((i: string) => `- ${i}`).join('\n')}
+
+Recommendations:
+${qualityScore.recommendations.map((r: string) => `- ${r}`).join('\n')}
+    `.trim()
+
+    navigator.clipboard.writeText(summary)
+    toast.success('Results copied to clipboard!')
+  }
+
+  const handleExport = () => {
+    if (!qualityScore || !evaluation) return
+    
+    const latestRun = runs[0]
+    
+    // Base export data
+    const baseData = {
+      evaluation: {
+        id: evaluation.id,
+        name: evaluation.name,
+        description: evaluation.description,
+        type: evaluation.type as EvaluationType,
+        category: evaluation.category,
+        created_at: evaluation.created_at
+      },
+      timestamp: new Date().toISOString(),
+      summary: {
+        totalTests: latestRun?.total_tests || 0,
+        passed: latestRun?.passed_tests || 0,
+        failed: (latestRun?.total_tests || 0) - (latestRun?.passed_tests || 0),
+        passRate: latestRun?.total_tests 
+          ? `${Math.round((latestRun.passed_tests / latestRun.total_tests) * 100)}%` 
+          : '0%'
+      },
+      qualityScore: qualityScore
+    }
+    
+    // Type-specific additional data
+    const additionalData = getAdditionalExportData(evaluation.type, testCases, runs, latestRun)
+    
+    // Format based on template type
+    const exportData = formatExportData(baseData, additionalData)
+    
+    // Validate export data
+    const validation = validateExportData(exportData)
+    if (!validation.valid) {
+      console.warn('Export data incomplete:', validation.missingFields)
+    }
+    
+    // Generate filename
+    const filename = generateExportFilename(
+      evaluation.name,
+      evaluation.type as EvaluationType,
+      evaluation.category
+    )
+    
+    // Create and download file
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = filename
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+    
+    const description = getExportDescription(evaluation.type as EvaluationType)
+    toast.success('Results exported successfully!', {
+      description: description
+    })
+  }
+  
+  // Helper function to get type-specific export data
+  const getAdditionalExportData = (type: string, testCases: any[], runs: any[], latestRun: any) => {
+    switch (type) {
+      case 'unit_test':
+        return {
+          testResults: testCases.map((tc: any) => ({
+            id: tc.id,
+            name: tc.name,
+            input: tc.input,
+            expected_output: tc.expected_output,
+            actual_output: tc.actual_output,
+            passed: tc.passed || false,
+            execution_time_ms: tc.execution_time_ms,
+            error_message: tc.error_message
+          })),
+          codeValidation: latestRun?.code_validation
+        }
+      
+      case 'human_eval':
+        return {
+          evaluations: latestRun?.human_evaluations || [],
+          criteria: evaluation?.human_eval_criteria || [],
+          interRaterReliability: latestRun?.inter_rater_reliability
+        }
+      
+      case 'model_eval':
+        return {
+          judgeEvaluations: latestRun?.judge_evaluations || [],
+          judgePrompt: evaluation?.judge_prompt || '',
+          judgeModel: evaluation?.judge_model || 'gpt-4',
+          aggregateMetrics: latestRun?.aggregate_metrics
+        }
+      
+      case 'ab_test':
+        return {
+          variants: evaluation?.variants || [],
+          results: runs.map((run: any) => ({
+            variant_id: run.variant_id,
+            variant_name: run.variant_name,
+            test_count: run.total_tests,
+            success_rate: run.passed_tests / run.total_tests,
+            average_latency: run.average_latency,
+            average_cost: run.average_cost,
+            quality_score: run.quality_score
+          })),
+          statisticalSignificance: latestRun?.statistical_significance,
+          comparison: latestRun?.comparison
+        }
+      
+      default:
+        return {
+          testResults: testCases,
+          recentRuns: runs.slice(0, 5)
+        }
+    }
+  }
 
   if (isPending || !session?.user || isLoading || !evaluation) {
     return null
@@ -104,10 +281,24 @@ export default function EvaluationDetailPage({ params }: PageProps) {
             </div>
             <p className="text-sm sm:text-base text-muted-foreground">{evaluation.description || "No description provided"}</p>
           </div>
-          <Button size="sm" className="w-full sm:w-auto">
-            <Play className="mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
-            Run Evaluation
-          </Button>
+          <div className="flex gap-2 w-full sm:w-auto">
+            {qualityScore && (
+              <>
+                <Button variant="outline" size="sm" onClick={handleCopyResults} className="flex-1 sm:flex-none">
+                  <Copy className="mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                  Copy
+                </Button>
+                <Button variant="outline" size="sm" onClick={handleExport} className="flex-1 sm:flex-none">
+                  <Download className="mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                  Export
+                </Button>
+              </>
+            )}
+            <Button size="sm" className="flex-1 sm:flex-none">
+              <Play className="mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              Run
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -142,6 +333,11 @@ export default function EvaluationDetailPage({ params }: PageProps) {
           </CardContent>
         </Card>
       </div>
+
+      {/* Quality Score Card */}
+      {qualityScore && (
+        <AIQualityScoreCard score={qualityScore} />
+      )}
 
       {/* Test Cases */}
       <div>

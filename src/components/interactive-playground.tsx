@@ -155,15 +155,26 @@ export function InteractivePlayground({ onSignupPrompt }: PlaygroundProps = {}) 
   const handleCopyResults = () => {
     const summary = `
 Evaluation Results: ${results.name}
-Total Tests: ${results.results.totalTests}
-Passed: ${results.results.passed}
-Failed: ${results.results.failed}
-Quality Score: ${results.qualityScore.overall}/100
+Grade: ${results.qualityScore.grade} (${results.qualityScore.overall}/100)
 
-Breakdown:
-- Accuracy: ${results.qualityScore.accuracy}/100
-- Relevance: ${results.qualityScore.relevance}/100
-- Consistency: ${results.qualityScore.consistency}/100
+Summary:
+- Total Tests: ${results.results.totalTests}
+- Passed: ${results.results.passed}
+- Failed: ${results.results.failed}
+- Pass Rate: ${Math.round((results.results.passed / results.results.totalTests) * 100)}%
+
+Quality Metrics:
+- Accuracy: ${results.qualityScore.metrics.accuracy}/100
+- Safety: ${results.qualityScore.metrics.safety}/100
+- Latency: ${results.qualityScore.metrics.latency}/100
+- Cost: ${results.qualityScore.metrics.cost}/100
+- Consistency: ${results.qualityScore.metrics.consistency}/100
+
+Key Insights:
+${results.qualityScore.insights.map((i: string) => `- ${i}`).join('\n')}
+
+Recommendations:
+${results.qualityScore.recommendations.map((r: string) => `- ${r}`).join('\n')}
     `.trim();
 
     navigator.clipboard.writeText(summary);
@@ -171,10 +182,11 @@ Breakdown:
   };
 
   const handleExport = () => {
-    // Create a clean summary for export
+    // Create comprehensive export data
     const exportData = {
       name: results.name,
       timestamp: new Date().toISOString(),
+      scenario: selectedScenario,
       summary: {
         totalTests: results.results.totalTests,
         passed: results.results.passed,
@@ -183,10 +195,28 @@ Breakdown:
       },
       qualityScore: {
         overall: results.qualityScore.overall,
-        accuracy: results.qualityScore.accuracy,
-        relevance: results.qualityScore.relevance,
-        consistency: results.qualityScore.consistency
-      }
+        grade: results.qualityScore.grade,
+        metrics: {
+          accuracy: results.qualityScore.metrics.accuracy,
+          safety: results.qualityScore.metrics.safety,
+          latency: results.qualityScore.metrics.latency,
+          cost: results.qualityScore.metrics.cost,
+          consistency: results.qualityScore.metrics.consistency
+        },
+        trend: results.qualityScore.trend,
+        insights: results.qualityScore.insights,
+        recommendations: results.qualityScore.recommendations
+      },
+      testResults: results.results.tests.map((test: any) => ({
+        id: test.id,
+        status: test.status,
+        input: test.input || test.query || test.task,
+        expected: test.expected,
+        actual: test.actual || test.generated,
+        score: test.score,
+        notes: test.notes,
+        context: test.context
+      }))
     };
 
     // Create downloadable JSON file
