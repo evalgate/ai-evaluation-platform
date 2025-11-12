@@ -1,0 +1,18 @@
+{
+  "demos": [
+    {
+      "id": "chatbot-demo",
+      "name": "AI Chatbot Quality Evaluation",
+      "description": "Comprehensive evaluation of chatbot responses for accuracy, safety, and user experience",
+      "type": "unit_test",
+      "category": "unit_tests",
+      "published_at": "2025-11-11T20:00:00Z",
+      "summary": {
+        "totalTests": 50,
+        "passed": 45,
+        "failed": 5,
+        "passRate": "90%"
+      }
+    }
+  ]
+}

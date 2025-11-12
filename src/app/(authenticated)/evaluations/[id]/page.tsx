@@ -13,6 +13,7 @@ import { AIQualityScoreCard } from "@/components/ai-quality-score-card"
 import { calculateQualityScore, type EvaluationStats } from "@/lib/ai-quality-score"
 import { toast } from "sonner"
 import { formatExportData, generateExportFilename, getExportDescription, validateExportData, type EvaluationType } from "@/lib/export-templates"
+import { ExportModal, type ExportOptions } from "@/components/export-modal"
 
 // Update type
 type PageProps = {
@@ -28,6 +29,7 @@ export default function EvaluationDetailPage({ params }: PageProps) {
   const [runs, setRuns] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [qualityScore, setQualityScore] = useState<any>(null)
+  const [exportModalOpen, setExportModalOpen] = useState(false)
 
   useEffect(() => {
     if (!isPending && !session?.user) {
@@ -122,8 +124,8 @@ ${qualityScore.recommendations.map((r: string) => `- ${r}`).join('\n')}
     toast.success('Results copied to clipboard!')
   }
 
-  const handleExport = () => {
-    if (!qualityScore || !evaluation) return
+  const handleExportWithOptions = async (options: ExportOptions): Promise<string | null> => {
+    if (!qualityScore || !evaluation) return null
     
     const latestRun = runs[0]
     
@@ -161,14 +163,49 @@ ${qualityScore.recommendations.map((r: string) => `- ${r}`).join('\n')}
       console.warn('Export data incomplete:', validation.missingFields)
     }
     
-    // Generate filename
+    // If publishing as demo, call API
+    if (options.publishAsDemo) {
+      try {
+        const response = await fetch(`/api/evaluations/${id}/publish`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            exportData,
+            customShareId: options.customShareId,
+          }),
+        })
+        
+        if (!response.ok) {
+          const error = await response.json()
+          throw new Error(error.error || 'Failed to publish')
+        }
+        
+        const result = await response.json()
+        
+        // Also download the file
+        downloadExportFile(exportData, evaluation)
+        
+        return result.shareId
+      } catch (error) {
+        console.error('Publish error:', error)
+        throw error
+      }
+    } else {
+      // Just download the file
+      downloadExportFile(exportData, evaluation)
+      return null
+    }
+  }
+  
+  const downloadExportFile = (exportData: any, evaluation: any) => {
     const filename = generateExportFilename(
       evaluation.name,
       evaluation.type as EvaluationType,
       evaluation.category
     )
     
-    // Create and download file
     const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
@@ -178,11 +215,6 @@ ${qualityScore.recommendations.map((r: string) => `- ${r}`).join('\n')}
     a.click()
     document.body.removeChild(a)
     URL.revokeObjectURL(url)
-    
-    const description = getExportDescription(evaluation.type as EvaluationType)
-    toast.success('Results exported successfully!', {
-      description: description
-    })
   }
   
   // Helper function to get type-specific export data
@@ -288,7 +320,7 @@ ${qualityScore.recommendations.map((r: string) => `- ${r}`).join('\n')}
                   <Copy className="mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
                   Copy
                 </Button>
-                <Button variant="outline" size="sm" onClick={handleExport} className="flex-1 sm:flex-none">
+                <Button variant="outline" size="sm" onClick={() => setExportModalOpen(true)} className="flex-1 sm:flex-none">
                   <Download className="mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
                   Export
                 </Button>
@@ -443,6 +475,14 @@ ${qualityScore.recommendations.map((r: string) => `- ${r}`).join('\n')}
           </Card>
         )}
       </div>
+
+      {/* Export Modal */}
+      <ExportModal
+        open={exportModalOpen}
+        onOpenChange={setExportModalOpen}
+        evaluationName={evaluation?.name || 'Evaluation'}
+        onExport={handleExportWithOptions}
+      />
     </div>
   )
 }
