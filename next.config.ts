@@ -74,16 +74,15 @@ const nextConfig: NextConfig = {
   // Performance optimizations
   productionBrowserSourceMaps: false,
   
-  // Only enable component tagger in development (for visual editing)
-  ...(process.env.NODE_ENV === 'development' ? {
-    turbopack: {
-      rules: {
-        "*.{jsx,tsx}": {
-          loaders: [LOADER],
-        },
+  // Turbopack configuration (required in Next.js 16 when webpack config exists)
+  // Only enable component tagger loader in development (for visual editing)
+  turbopack: process.env.NODE_ENV === 'development' ? {
+    rules: {
+      "*.{jsx,tsx}": {
+        loaders: [LOADER],
       },
     },
-  } : {}),
+  } : {},
 }
 
 // Apply Sentry and Axiom configurations
