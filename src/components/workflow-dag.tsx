@@ -21,6 +21,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
+import { Badge } from '@/components/ui/badge'
 
 // ============================================================================
 // TYPES
@@ -35,6 +36,10 @@ export interface WorkflowNode {
   status?: 'pending' | 'running' | 'completed' | 'failed'
   durationMs?: number
   cost?: string
+  // Governance data (optional)
+  requiresApproval?: boolean
+  blocked?: boolean
+  governanceReasons?: string[]
 }
 
 export interface WorkflowEdge {
@@ -312,11 +317,23 @@ function DAGNode({
                   </span>
                   <StatusIcon status={node.status} />
                 </div>
-                {showLabel && (
-                  <span className="text-[10px] text-muted-foreground truncate ml-6">
-                    {node.type}
-                  </span>
-                )}
+                <div className="flex items-center gap-1 ml-6">
+                  {showLabel && (
+                    <span className="text-[10px] text-muted-foreground truncate">
+                      {node.type}
+                    </span>
+                  )}
+                  {node.requiresApproval && (
+                    <Badge variant="outline" className="h-4 px-1 text-[8px] bg-amber-500/10 text-amber-600 border-amber-500/30">
+                      Approval
+                    </Badge>
+                  )}
+                  {node.blocked && (
+                    <Badge variant="outline" className="h-4 px-1 text-[8px] bg-red-500/10 text-red-600 border-red-500/30">
+                      Blocked
+                    </Badge>
+                  )}
+                </div>
               </div>
             </foreignObject>
           </g>
@@ -340,6 +357,22 @@ function DAGNode({
               <pre className="text-xs bg-muted p-1 rounded mt-1 max-h-20 overflow-auto">
                 {JSON.stringify(node.config, null, 2)}
               </pre>
+            )}
+            {node.requiresApproval && (
+              <p className="text-xs text-amber-600 mt-1">⚠️ Requires human approval</p>
+            )}
+            {node.blocked && (
+              <p className="text-xs text-red-600 mt-1">🚫 Execution blocked</p>
+            )}
+            {node.governanceReasons && node.governanceReasons.length > 0 && (
+              <div className="text-xs mt-1">
+                <p className="font-medium">Governance reasons:</p>
+                <ul className="list-disc list-inside text-muted-foreground">
+                  {node.governanceReasons.map((reason, i) => (
+                    <li key={i}>{reason}</li>
+                  ))}
+                </ul>
+              </div>
             )}
           </div>
         </TooltipContent>

@@ -327,6 +327,10 @@ export const workflows = sqliteTable('workflows', {
   definition: text('definition', { mode: 'json' }).notNull(), // DAG structure with nodes and edges
   version: integer('version').default(1),
   status: text('status').notNull().default('draft'), // 'draft', 'active', 'archived'
+  // SLA Configuration
+  slaLatencyMs: integer('sla_latency_ms'), // Maximum allowed latency in milliseconds
+  slaCostDollars: text('sla_cost_dollars'), // Maximum allowed cost per run (decimal as string)
+  slaErrorRate: integer('sla_error_rate'), // Maximum allowed error rate (0-100)
   createdBy: text('created_by').references(() => user.id).notNull(),
   createdAt: text('created_at').notNull(),
   updatedAt: text('updated_at').notNull(),

@@ -4,7 +4,7 @@
  */
 
 import { db } from '@/db';
-import { benchmarks, agentConfigs, benchmarkResults, workflowRuns } from '@/db/schema';
+import { benchmarks, agentConfigs, benchmarkResults, workflowRuns, workflows } from '@/db/schema';
 import { eq, and, desc, sql, asc } from 'drizzle-orm';
 
 // ============================================================================
@@ -474,3 +474,165 @@ class BenchmarkService {
 }
 
 export const benchmarkService = new BenchmarkService();
+
+// ============================================================================
+// SLA VIOLATION CHECKING
+// ============================================================================
+
+export interface SLAViolation {
+  type: 'latency' | 'cost' | 'error_rate';
+  threshold: number | string;
+  actual: number | string;
+  severity: 'warning' | 'critical';
+  message: string;
+}
+
+export interface SLACheckResult {
+  workflowRunId: number;
+  violations: SLAViolation[];
+  passed: boolean;
+  checkedAt: string;
+}
+
+/**
+ * Check SLA violations for a workflow run
+ */
+export async function checkSLAViolations(workflowRunId: number): Promise<SLACheckResult> {
+  const run = await db
+    .select({
+      run: workflowRuns,
+      workflow: workflows,
+    })
+    .from(workflowRuns)
+    .leftJoin(workflows, eq(workflowRuns.workflowId, workflows.id))
+    .where(eq(workflowRuns.id, workflowRunId))
+    .limit(1);
+
+  if (run.length === 0) {
+    return {
+      workflowRunId,
+      violations: [],
+      passed: true,
+      checkedAt: new Date().toISOString(),
+    };
+  }
+
+  const { run: workflowRun, workflow } = run[0];
+  const violations: SLAViolation[] = [];
+
+  // Check latency SLA
+  if (workflow?.slaLatencyMs && workflowRun.totalDurationMs) {
+    if (workflowRun.totalDurationMs > workflow.slaLatencyMs) {
+      const overagePercent = ((workflowRun.totalDurationMs - workflow.slaLatencyMs) / workflow.slaLatencyMs) * 100;
+      violations.push({
+        type: 'latency',
+        threshold: workflow.slaLatencyMs,
+        actual: workflowRun.totalDurationMs,
+        severity: overagePercent > 50 ? 'critical' : 'warning',
+        message: `Latency ${workflowRun.totalDurationMs}ms exceeds SLA threshold of ${workflow.slaLatencyMs}ms (${overagePercent.toFixed(1)}% over)`,
+      });
+    }
+  }
+
+  // Check cost SLA
+  if (workflow?.slaCostDollars && workflowRun.totalCost) {
+    const slaCost = parseFloat(workflow.slaCostDollars);
+    const actualCost = parseFloat(workflowRun.totalCost);
+    if (actualCost > slaCost) {
+      const overagePercent = ((actualCost - slaCost) / slaCost) * 100;
+      violations.push({
+        type: 'cost',
+        threshold: workflow.slaCostDollars,
+        actual: workflowRun.totalCost,
+        severity: overagePercent > 50 ? 'critical' : 'warning',
+        message: `Cost $${actualCost.toFixed(4)} exceeds SLA threshold of $${slaCost.toFixed(4)} (${overagePercent.toFixed(1)}% over)`,
+      });
+    }
+  }
+
+  // Check error rate SLA (calculated from workflow history)
+  if (workflow?.slaErrorRate && workflow.id) {
+    const recentRuns = await db
+      .select({
+        status: workflowRuns.status,
+      })
+      .from(workflowRuns)
+      .where(eq(workflowRuns.workflowId, workflow.id))
+      .orderBy(desc(workflowRuns.startedAt))
+      .limit(100);
+
+    if (recentRuns.length >= 10) {
+      const failedCount = recentRuns.filter(r => r.status === 'failed').length;
+      const errorRate = (failedCount / recentRuns.length) * 100;
+      
+      if (errorRate > workflow.slaErrorRate) {
+        violations.push({
+          type: 'error_rate',
+          threshold: workflow.slaErrorRate,
+          actual: Math.round(errorRate),
+          severity: errorRate > workflow.slaErrorRate * 1.5 ? 'critical' : 'warning',
+          message: `Error rate ${errorRate.toFixed(1)}% exceeds SLA threshold of ${workflow.slaErrorRate}% (last ${recentRuns.length} runs)`,
+        });
+      }
+    }
+  }
+
+  return {
+    workflowRunId,
+    violations,
+    passed: violations.length === 0,
+    checkedAt: new Date().toISOString(),
+  };
+}
+
+/**
+ * Get SLA status summary for a workflow
+ */
+export async function getWorkflowSLAStatus(workflowId: number): Promise<{
+  workflow: { id: number; name: string; slaLatencyMs: number | null; slaCostDollars: string | null; slaErrorRate: number | null };
+  recentViolations: number;
+  complianceRate: number;
+  lastChecked: string;
+}> {
+  const workflow = await db
+    .select()
+    .from(workflows)
+    .where(eq(workflows.id, workflowId))
+    .limit(1);
+
+  if (workflow.length === 0) {
+    throw new Error(`Workflow ${workflowId} not found`);
+  }
+
+  const recentRuns = await db
+    .select()
+    .from(workflowRuns)
+    .where(eq(workflowRuns.workflowId, workflowId))
+    .orderBy(desc(workflowRuns.startedAt))
+    .limit(50);
+
+  let violationCount = 0;
+  for (const run of recentRuns) {
+    const result = await checkSLAViolations(run.id);
+    if (!result.passed) {
+      violationCount++;
+    }
+  }
+
+  const complianceRate = recentRuns.length > 0 
+    ? ((recentRuns.length - violationCount) / recentRuns.length) * 100 
+    : 100;
+
+  return {
+    workflow: {
+      id: workflow[0].id,
+      name: workflow[0].name,
+      slaLatencyMs: workflow[0].slaLatencyMs,
+      slaCostDollars: workflow[0].slaCostDollars,
+      slaErrorRate: workflow[0].slaErrorRate,
+    },
+    recentViolations: violationCount,
+    complianceRate: Math.round(complianceRate * 10) / 10,
+    lastChecked: new Date().toISOString(),
+  };
+}
