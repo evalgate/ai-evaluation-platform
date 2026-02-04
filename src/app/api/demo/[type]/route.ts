@@ -5,12 +5,12 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import chatbotData from '@/../../public/demo/chatbot.json';
-import ragData from '@/../../public/demo/rag.json';
-import codegenData from '@/../../public/demo/codegen.json';
-import evaluationsData from '@/../../public/demo/evaluations.json';
-import tracesData from '@/../../public/demo/traces.json';
-import judgeData from '@/../../public/demo/judge.json';
+import chatbotData from '../../../../../public/demo/chatbot.json';
+import ragData from '../../../../../public/demo/rag.json';
+import codegenData from '../../../../../public/demo/codegen.json';
+import evaluationsData from '../../../../../public/demo/evaluations.json';
+import tracesData from '../../../../../public/demo/traces.json';
+import judgeData from '../../../../../public/demo/judge.json';
 
 export const runtime = 'edge';
 

@@ -3,7 +3,7 @@ import { withAxiom } from "next-axiom"
 import type { NextConfig } from 'next'
 import path from "node:path";
 
-const LOADER = path.resolve(__dirname, 'src/visual-edits/component-tagger-loader.js');
+const LOADER = path.resolve(__dirname, 'src/visual-edits/component-tagger-loader.cjs');
 
 /** @type {import('next').NextConfig} */
 const nextConfig: NextConfig = {
@@ -65,12 +65,6 @@ const nextConfig: NextConfig = {
   typescript: {
     // Set to false to enable type checking during build
     ignoreBuildErrors: false,
-  },
-  
-  // ESLint configuration
-  eslint: {
-    // Set to false to enable ESLint during build
-    ignoreDuringBuilds: false,
   },
   
   // General Next.js optimizations

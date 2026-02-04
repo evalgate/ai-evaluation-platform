@@ -5,7 +5,7 @@
  */
 
 import { NextResponse } from 'next/server';
-import ragData from '@/../../public/demo/rag.json';
+import ragData from '../../../../../public/demo/rag.json';
 
 export const runtime = 'edge';
 

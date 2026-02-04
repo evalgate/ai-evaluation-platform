@@ -5,7 +5,7 @@
  */
 
 import { NextResponse } from 'next/server';
-import codegenData from '@/../../public/demo/codegen.json';
+import codegenData from '../../../../../public/demo/codegen.json';
 
 export const runtime = 'edge';
 
