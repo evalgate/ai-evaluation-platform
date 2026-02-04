@@ -161,7 +161,12 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
         }
       }
 
-      const updated = await workflowService.update(workflowId, organizationId, validation.data);
+      const updateData = {
+        ...validation.data,
+        // Convert null to undefined for description (service expects string | undefined)
+        description: validation.data.description ?? undefined,
+      };
+      const updated = await workflowService.update(workflowId, organizationId, updateData);
 
       if (!updated) {
         return NextResponse.json({
