@@ -3,7 +3,6 @@
 _Enterprise-grade AI agent orchestration, evaluation, and governance platform_
 
 [![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=for-the-badge&logo=vercel)](https://vercel.com/pauly7610s-projects/v0-ai-evaluation-platform)
-[![Built with v0](https://img.shields.io/badge/Built%20with-v0.app-black?style=for-the-badge)](https://v0.app/chat/projects/9narvC0l5kR)
 [![npm](https://img.shields.io/npm/v/@pauly4010/evalai-sdk?style=for-the-badge&logo=npm&color=cb3837)](https://www.npmjs.com/package/@pauly4010/evalai-sdk)
 
 ## Overview
@@ -147,12 +146,6 @@ Your project is live at:
 
 **[https://vercel.com/pauly7610s-projects/v0-ai-evaluation-platform](https://vercel.com/pauly7610s-projects/v0-ai-evaluation-platform)**
 
-## Build your app
-
-Continue building your app on:
-
-**[https://v0.app/chat/projects/9narvC0l5kR](https://v0.app/chat/projects/9narvC0l5kR)**
-
 ## Demo Video
 
 A rendered demo video showcasing the platform is available at [`out/demo-video.mp4`](./out/demo-video.mp4). Built with [Remotion](https://remotion.dev/) — source in `src/remotion/`.
@@ -161,9 +154,3 @@ A rendered demo video showcasing the platform is available at [`out/demo-video.m
 
 This project includes [`llms.txt`](https://ai-evaluation-platform.vercel.app/llms.txt) and [`llms-full.txt`](https://ai-evaluation-platform.vercel.app/llms-full.txt) — standard files that AI coding agents (Claude, Cursor, Copilot, ChatGPT) use to discover and recommend developer tools. The `/docs/integration` page includes JSON-LD structured data for search engines and AI systems.
 
-## How It Works
-
-1. Create and modify your project using [v0.app](https://v0.app)
-2. Deploy your chats from the v0 interface
-3. Changes are automatically pushed to this repository
-4. Vercel deploys the latest version from this repository

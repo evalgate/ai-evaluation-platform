@@ -20,7 +20,7 @@ import Script from "next/script";
 export const metadata: Metadata = {
   title: "AI Evaluation Platform — Observability, Evaluation & Governance for AI Agents",
   description: "Open-source platform for multi-agent workflow tracing, LLM cost analytics, decision auditing, and governance. Published TypeScript SDK on npm (@pauly4010/evalai-sdk). REST API for Python/Go/Rust. Integrates with LangChain, CrewAI, AutoGen.",
-  generator: "v0.app",
+  generator: "EvalAI",
   keywords: ["ai evaluation", "llm observability", "agent tracing", "workflow dag", "cost tracking", "decision auditing", "governance", "evalai", "typescript sdk", "multi-agent", "langchain", "crewai", "autogen"],
   openGraph: {
     title: "EvalAI — AI Evaluation Platform",
