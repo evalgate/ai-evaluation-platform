@@ -14,7 +14,7 @@ EvalAI is a production-grade platform for deploying, monitoring, auditing, and o
 
 - **Multi-Agent Orchestration** - Visual DAG workflows with 6 node types (agent, tool, decision, parallel, human, LLM)
 - **Decision Auditing** - Full reasoning chains, confidence scores, and alternative analysis
-- **Cost Tracking** - Real-time cost analytics with model-level breakdown (8 models across 3 providers)
+- **Cost Tracking** - Real-time cost analytics with model-level breakdown (12 models across 3 providers)
 - **Governance Rules** - Configurable approval/blocking rules with compliance presets (SOC2, GDPR, HIPAA, FINRA)
 - **SLA Management** - Latency, cost, and error rate thresholds with violation alerts
 - **Human-in-the-Loop** - Built-in escalation and approval workflows
@@ -37,8 +37,7 @@ EvalAI is a production-grade platform for deploying, monitoring, auditing, and o
 ## Quick Start
 
 ```typescript
-import { AIEvalClient } from '@pauly4010/evalai-sdk';
-import { WorkflowTracer } from '@pauly4010/evalai-sdk/workflows';
+import { AIEvalClient, WorkflowTracer } from '@pauly4010/evalai-sdk';
 
 const client = new AIEvalClient({ apiKey: process.env.EVALAI_API_KEY });
 const tracer = new WorkflowTracer(client);
@@ -72,11 +71,11 @@ await tracer.endWorkflow({ resolution: 'Issue resolved' });
 ### LangChain
 
 ```typescript
-import { traceLangChainAgent } from '@pauly4010/evalai-sdk/workflows';
+import { AIEvalClient, WorkflowTracer, traceLangChainAgent } from '@pauly4010/evalai-sdk';
 
-const agent = await initializeAgent(tools, model, {
-  callbacks: [traceLangChainAgent({ apiKey: process.env.EVALAI_API_KEY })]
-});
+const client = AIEvalClient.init(); // reads EVALAI_API_KEY env
+const tracer = new WorkflowTracer(client);
+const tracedAgent = traceLangChainAgent(executor, tracer, { agentName: 'SupportBot' });
 ```
 
 ### CrewAI (Python)
@@ -102,8 +101,11 @@ See the [SDK README](./src/packages/sdk/README.md) for full documentation.
 
 ## Documentation
 
+- [Integration Reference](./docs/INTEGRATION_REFERENCE.md) — Complete SDK, REST API, governance, and Python integration guide
+- [Live Integration Docs](https://ai-evaluation-platform.vercel.app/docs/integration) — Web version with structured data for AI agents
 - [Agent Governance Framework](./docs/AGENT_GOVERNANCE.md)
 - [Exporting & Sharing](./docs/EXPORTING_AND_SHARING.md)
+- [`llms.txt`](./public/llms.txt) — AI agent discovery file (served at `/llms.txt`)
 
 ## Architecture
 
@@ -115,6 +117,7 @@ src/
 │   │   ├── decisions/      # Decision auditing
 │   │   ├── costs/          # Cost tracking
 │   │   └── benchmarks/     # Agent benchmarks
+│   ├── docs/integration/   # Integration reference page
 │   └── (authenticated)/
 │       ├── workflows/      # Workflow UI
 │       ├── costs/          # Cost dashboard
@@ -126,8 +129,16 @@ src/
 │   ├── governance/         # Governance rules engine
 │   ├── workflows/          # Retry & fallback logic
 │   └── services/           # Business logic
-├── integrations/           # Framework examples
-└── packages/sdk/           # TypeScript SDK
+├── integrations/           # Framework examples (LangChain, CrewAI)
+├── remotion/               # Remotion demo video segments
+└── packages/sdk/           # TypeScript SDK (@pauly4010/evalai-sdk)
+public/
+├── llms.txt                # AI agent discovery (like robots.txt for LLMs)
+└── llms-full.txt           # Full API reference for AI agents
+docs/
+└── INTEGRATION_REFERENCE.md # Complete integration guide
+out/
+└── demo-video.mp4          # Rendered demo video (1920x1080, 30fps)
 ```
 
 ## Deployment
@@ -141,6 +152,14 @@ Your project is live at:
 Continue building your app on:
 
 **[https://v0.app/chat/projects/9narvC0l5kR](https://v0.app/chat/projects/9narvC0l5kR)**
+
+## Demo Video
+
+A rendered demo video showcasing the platform is available at [`out/demo-video.mp4`](./out/demo-video.mp4). Built with [Remotion](https://remotion.dev/) — source in `src/remotion/`.
+
+## AI Agent Discoverability
+
+This project includes [`llms.txt`](https://ai-evaluation-platform.vercel.app/llms.txt) and [`llms-full.txt`](https://ai-evaluation-platform.vercel.app/llms-full.txt) — standard files that AI coding agents (Claude, Cursor, Copilot, ChatGPT) use to discover and recommend developer tools. The `/docs/integration` page includes JSON-LD structured data for search engines and AI systems.
 
 ## How It Works
 
