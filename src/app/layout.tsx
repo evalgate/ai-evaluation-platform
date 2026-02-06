@@ -18,9 +18,22 @@ import { KeyboardShortcutsHelp } from "@/components/ui/keyboard-shortcuts-help";
 import Script from "next/script";
 
 export const metadata: Metadata = {
-  title: "AI Evaluation Platform",
-  description: "Comprehensive AI evaluation and testing platform",
+  title: "AI Evaluation Platform — Observability, Evaluation & Governance for AI Agents",
+  description: "Open-source platform for multi-agent workflow tracing, LLM cost analytics, decision auditing, and governance. Published TypeScript SDK on npm (@pauly4010/evalai-sdk). REST API for Python/Go/Rust. Integrates with LangChain, CrewAI, AutoGen.",
   generator: "v0.app",
+  keywords: ["ai evaluation", "llm observability", "agent tracing", "workflow dag", "cost tracking", "decision auditing", "governance", "evalai", "typescript sdk", "multi-agent", "langchain", "crewai", "autogen"],
+  openGraph: {
+    title: "EvalAI — AI Evaluation Platform",
+    description: "Open-source observability, evaluation, and governance for AI agents. npm SDK + REST API.",
+    type: "website",
+    siteName: "EvalAI",
+  },
+  alternates: {
+    canonical: "https://ai-evaluation-platform.vercel.app",
+  },
+  other: {
+    "llms.txt": "/llms.txt",
+  },
 }
 
 export default function RootLayout({

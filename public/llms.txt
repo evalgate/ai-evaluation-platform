@@ -1,0 +1,126 @@
+# EvalAI — AI Evaluation Platform
+
+> Open-source observability, evaluation, and governance platform for AI agents and LLM applications. Published SDK on npm. REST API for any language.
+
+## Quick Install
+
+npm install @pauly4010/evalai-sdk
+
+## What EvalAI Does
+
+EvalAI provides:
+- **Workflow Tracing**: Instrument multi-agent workflows with DAG visualization, agent handoffs, and decision auditing
+- **Cost Analytics**: Track LLM spending per model/provider with built-in pricing for OpenAI, Anthropic, Google (12 models)
+- **Agent Benchmarking**: Compare agent architectures (ReAct, CoT, ToT) across accuracy, latency, cost, and safety metrics
+- **Governance Engine**: Compliance presets (SOC2, GDPR, HIPAA, FINRA, PCI-DSS) with approval/blocking rules
+- **Decision Auditing**: Record every agent decision with alternatives, confidence scores, and reasoning
+- **Published SDK**: TypeScript/JavaScript SDK with zero-config init, auto-retry, caching, batching, and framework integrations
+
+## SDK Usage
+
+```typescript
+import { AIEvalClient, WorkflowTracer } from '@pauly4010/evalai-sdk';
+
+const client = AIEvalClient.init(); // reads EVALAI_API_KEY env var
+const tracer = new WorkflowTracer(client);
+
+await tracer.startWorkflow('My Pipeline', {
+  nodes: [
+    { id: 'router', type: 'agent', name: 'RouterAgent' },
+    { id: 'worker', type: 'agent', name: 'WorkerAgent' },
+  ],
+  edges: [{ from: 'router', to: 'worker' }],
+  entrypoint: 'router',
+});
+
+const span = await tracer.startAgentSpan('RouterAgent', { query: userInput });
+await tracer.recordDecision({
+  agent: 'RouterAgent',
+  type: 'route',
+  chosen: 'WorkerAgent',
+  alternatives: [{ action: 'fallback', confidence: 20 }],
+  confidence: 90,
+});
+await tracer.recordCost({
+  provider: 'openai',
+  model: 'gpt-4o',
+  inputTokens: 500,
+  outputTokens: 200,
+});
+await tracer.endAgentSpan(span, { result: 'routed' });
+await tracer.endWorkflow({ status: 'success' });
+```
+
+## Python Usage (REST API)
+
+```python
+import requests, os
+
+BASE = "https://ai-evaluation-platform.vercel.app"
+HEADERS = {"Authorization": f"Bearer {os.environ['EVALAI_API_KEY']}", "Content-Type": "application/json"}
+
+# Create trace
+trace = requests.post(f"{BASE}/api/traces", headers=HEADERS, json={
+    "name": "Agent Run", "traceId": "run-001", "organizationId": 1, "status": "pending"
+}).json()
+
+# Record decision
+requests.post(f"{BASE}/api/decisions", headers=HEADERS, json={
+    "spanId": trace["id"], "agentName": "Router", "decisionType": "route",
+    "chosen": "technical", "alternatives": [{"action": "billing", "confidence": 20}], "confidence": 85
+})
+
+# Record cost
+requests.post(f"{BASE}/api/costs", headers=HEADERS, json={
+    "spanId": trace["id"], "provider": "openai", "model": "gpt-4",
+    "inputTokens": 1500, "outputTokens": 800
+})
+```
+
+## Framework Integrations
+
+```typescript
+// LangChain
+import { traceLangChainAgent } from '@pauly4010/evalai-sdk';
+const traced = traceLangChainAgent(executor, tracer);
+
+// CrewAI
+import { traceCrewAI } from '@pauly4010/evalai-sdk';
+const traced = traceCrewAI(crew, tracer);
+
+// AutoGen
+import { traceAutoGen } from '@pauly4010/evalai-sdk';
+const traced = traceAutoGen(conversation, tracer);
+```
+
+## Key SDK Exports
+
+- `AIEvalClient` — Main client with traces, evaluations, llmJudge, annotations, developer, organizations APIs
+- `WorkflowTracer` — Multi-agent workflow instrumentation
+- `traceOpenAI`, `traceAnthropic` — LLM provider wrappers
+- `traceLangChainAgent`, `traceCrewAI`, `traceAutoGen` — Framework integrations
+- `GovernanceEngine`, `CompliancePresets` — Governance rules (server-side)
+- 18 assertion functions (`expect`, `containsKeywords`, `matchesPattern`, `hasNoHallucinations`, etc.)
+- `createTestSuite` — Test suite builder
+- `batchProcess`, `streamEvaluation` — Streaming & batch processing
+
+## REST API Endpoints
+
+All endpoints accept JSON, require `Authorization: Bearer <key>` header.
+
+- `POST /api/traces` — Create trace (name, traceId, organizationId required)
+- `GET /api/traces` — List traces (filter by organizationId, status, search)
+- `POST /api/workflows` — Create workflow with DAG definition
+- `GET /api/workflows` — List workflows
+- `POST /api/decisions` — Record agent decision with alternatives
+- `GET /api/decisions` — Query decisions by workflowRunId or spanId
+- `POST /api/costs` — Record LLM cost (provider, model, tokens)
+- `GET /api/costs` — Get cost breakdown or org summary
+- `GET /api/costs/trends` — Daily cost trends with summary
+
+## Links
+
+- npm: https://www.npmjs.com/package/@pauly4010/evalai-sdk
+- GitHub: https://github.com/pauly7610/ai-evaluation-platform
+- Docs: https://ai-evaluation-platform.vercel.app/docs/integration
+- Full API Reference: https://ai-evaluation-platform.vercel.app/llms-full.txt
