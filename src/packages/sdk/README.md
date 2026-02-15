@@ -503,7 +503,30 @@ console.log("Status:", org.status);
 
 ## Changelog
 
-### v1.2.1 (Latest - Bug Fixes)
+### v1.3.0 (Latest)
+
+- **Workflow Tracing** — Multi-agent orchestration with full lifecycle instrumentation
+  - `WorkflowTracer` class with `startWorkflow`, `endWorkflow`, `startAgentSpan`, `endAgentSpan`
+  - `createWorkflowTracer` convenience factory
+  - `traceWorkflowStep` generic wrapper for any async function
+  - Agent handoff recording (`delegation`, `escalation`, `parallel`, `fallback`)
+  - Decision auditing with alternatives, confidence scores, reasoning, and context factors
+  - Cost tracking per span/workflow with automatic pricing (16+ models)
+  - Cost breakdown by category (`llm`, `tool`, `embedding`, `other`)
+- **Framework Integrations** — Wrap popular multi-agent frameworks:
+  - `traceLangChainAgent` — wraps `.invoke()` and `.call()` with auto-tracing
+  - `traceCrewAI` — wraps `.kickoff()` with workflow start/end
+  - `traceAutoGen` — wraps `.initiate_chat()` with workflow start/end
+- **Performance Utilities**
+  - `RequestCache` with configurable TTL (`CacheTTL` presets)
+  - `PaginatedIterator` / `createPaginatedIterator` / `autoPaginate` for cursor-based pagination
+  - `RequestBatcher` for batching API calls
+  - `RateLimiter` client-side rate limit handling
+- **Cost Tracking Types** — `CostRecord`, `CostBreakdown`, `ProviderPricing` interfaces
+- **Agent Decision Auditing Types** — `AgentDecision`, `DecisionAlternative`, `RecordDecisionParams` interfaces
+- **Benchmark Types** — `Benchmark`, `BenchmarkResult`, `AgentConfig` interfaces
+
+### v1.2.1 (Bug Fixes)
 
 - 🐛 **Critical Fixes**
   - Fixed CLI import paths for proper npm package distribution
@@ -563,6 +586,5 @@ MIT
 
 ## Support
 
-- Documentation: https://docs.evalai.com
-- Issues: https://github.com/evalai/sdk/issues
-- Discord: https://discord.gg/evalai
+- Documentation: https://ai-evaluation-platform.vercel.app/documentation
+- Issues: https://github.com/pauly7610/ai-evaluation-platform/issues

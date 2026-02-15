@@ -99,7 +99,7 @@
 - Added npm badges to footer (version and downloads)
 - Added "View on npm" button to SDK page
 - Added npm badges to SDK page hero section
-- All badges link to https://www.npmjs.com/package/@evalai/sdk
+- All badges link to https://www.npmjs.com/package/@pauly4010/evalai-sdk
 
 **Result:** Better npm package visibility across the site.
 
@@ -144,7 +144,7 @@
 
 ## Package Naming Note
 
-The current package name is `@evalai/sdk`. The user mentioned potential conflict with the existing "EvalAI" open-source project (Cloud-CV). Consider renaming to something like:
+The current package name is `@pauly4010/evalai-sdk`. The user mentioned potential conflict with the existing "EvalAI" open-source project (Cloud-CV). Consider renaming to something like:
 - `@aieval/platform-sdk`
 - `@ai-evaluation/sdk`
 - `@evalplatform/sdk`

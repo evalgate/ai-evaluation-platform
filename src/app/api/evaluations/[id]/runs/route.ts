@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/db';
 import { evaluationRuns } from '@/db/schema';
 import { eq, desc, and } from 'drizzle-orm';
+import { getCurrentUser } from '@/lib/auth';
+import { evaluationService } from '@/lib/services/evaluation.service';
+import { logger } from '@/lib/logger';
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -27,7 +30,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     }
     
     // Apply all conditions at once
-    let query = db.select()
+    const query = db.select()
       .from(evaluationRuns)
       .where(conditions.length > 1 ? and(...conditions) : conditions[0]);
 
@@ -38,13 +41,18 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
 
     return NextResponse.json(runs);
   } catch (error) {
-    console.error('GET error:', error);
-    return NextResponse.json({ error: 'Internal server error: ' + error }, { status: 500 });
+    logger.error({ error, route: '/api/evaluations/[id]/runs', method: 'GET' }, 'Error fetching runs');
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const currentUser = await getCurrentUser(request as NextRequest);
+    if (!currentUser) {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    }
+
     const { id } = await params;
     const evaluationId = parseInt(id);
 
@@ -55,30 +63,20 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       }, { status: 400 });
     }
 
-    const body = await request.json();
-    const { status, totalCases, passedCases, failedCases } = body;
+    // Use the evaluation service to run the evaluation (fetches test cases, executes, writes results)
+    const organizationId = 1; // Default org — in production, derive from user
+    const run = await evaluationService.run(evaluationId, organizationId);
 
-    const now = new Date().toISOString();
-    const runData: any = {
-      evaluationId,
-      status: status || 'pending',
-      totalCases: totalCases || 0,
-      passedCases: passedCases || 0,
-      failedCases: failedCases || 0,
-      createdAt: now,
-    };
-
-    if (status === 'running') {
-      runData.startedAt = now;
+    if (!run) {
+      return NextResponse.json({ 
+        error: 'Evaluation not found',
+        code: 'NOT_FOUND' 
+      }, { status: 404 });
     }
 
-    const newRun = await db.insert(evaluationRuns)
-      .values(runData)
-      .returning();
-
-    return NextResponse.json(newRun[0], { status: 201 });
+    return NextResponse.json(run, { status: 201 });
   } catch (error) {
-    console.error('POST error:', error);
-    return NextResponse.json({ error: 'Internal server error: ' + error }, { status: 500 });
+    logger.error({ error, route: '/api/evaluations/[id]/runs', method: 'POST' }, 'Error creating run');
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

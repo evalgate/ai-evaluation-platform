@@ -43,12 +43,12 @@ const docSections = [
   },
   {
     icon: Users,
-    title: "Use Cases",
-    description: "Learn from real-world examples",
+    title: "Resources",
+    description: "SDK changelog, WebMCP, and more",
     links: [
-      { label: "Chatbot Evaluation", href: "/guides/chatbot-evaluation" },
-      { label: "RAG Evaluation", href: "/guides/rag-evaluation" },
-      { label: "Code Generation", href: "/guides/code-generation" }
+      { label: "Changelog", href: "/changelog" },
+      { label: "Tracing Setup", href: "/guides/tracing-setup" },
+      { label: "SDK Reference", href: "/sdk" }
     ]
   }
 ]

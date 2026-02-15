@@ -3,6 +3,7 @@ import { db } from '@/db'
 import { llmJudgeResults, humanAnnotations } from '@/db/schema'
 import { eq } from 'drizzle-orm'
 import { getCurrentUser } from '@/lib/auth'
+import { logger } from '@/lib/logger'
 
 // Helper function to calculate alignment
 function calculateAlignment(judgeScore: number | null, humanRating: number | null): number {
@@ -31,29 +32,33 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Evaluation run ID required" }, { status: 400 })
     }
 
-    // Fetch LLM judge results for this evaluation run
+    const runId = parseInt(evaluationRunId)
+
+    // Fetch LLM judge results for this evaluation run using the correct FK column
     const judgeResults = await db
       .select()
       .from(llmJudgeResults)
-      .where(eq(llmJudgeResults.id, parseInt(evaluationRunId)))
+      .where(eq(llmJudgeResults.evaluationRunId, runId))
 
     // Fetch human annotations for this evaluation run
     const annotations = await db
       .select()
       .from(humanAnnotations)
-      .where(eq(humanAnnotations.evaluationRunId, parseInt(evaluationRunId)))
+      .where(eq(humanAnnotations.evaluationRunId, runId))
 
-    // Calculate alignment for matching test cases
+    // Calculate alignment for matching test cases using the shared testCaseId
     const alignmentData = []
 
     for (const judgeResult of judgeResults) {
-      const humanAnnotation = annotations.find((h: any) => h.testCaseId === judgeResult.id)
+      const humanAnnotation = annotations.find(
+        (h) => h.testCaseId === judgeResult.testCaseId
+      )
 
       if (humanAnnotation) {
         const alignment = calculateAlignment(judgeResult.score, humanAnnotation.rating)
 
         alignmentData.push({
-          testCaseId: judgeResult.id,
+          testCaseId: judgeResult.testCaseId,
           judgeScore: judgeResult.score,
           humanRating: humanAnnotation.rating,
           alignment,
@@ -81,7 +86,7 @@ export async function GET(request: NextRequest) {
       },
     })
   } catch (error) {
-    console.error("Error calculating alignment:", error)
+    logger.error({ error, route: '/api/llm-judge/alignment' }, "Error calculating alignment")
     return NextResponse.json({ error: error instanceof Error ? error.message : "Unknown error" }, { status: 500 })
   }
 }

@@ -89,7 +89,7 @@ class EvalAITracer:
         self,
         api_key: str,
         organization_id: Optional[int] = None,
-        base_url: str = 'https://api.evalai.dev',
+        base_url: str = 'https://ai-evaluation-platform.vercel.app',
         debug: bool = False
     ):
         self.api_key = api_key

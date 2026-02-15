@@ -10,10 +10,12 @@ npm install @pauly4010/evalai-sdk
 
 EvalAI provides:
 - **Workflow Tracing**: Instrument multi-agent workflows with DAG visualization, agent handoffs, and decision auditing
-- **Cost Analytics**: Track LLM spending per model/provider with built-in pricing for OpenAI, Anthropic, Google (12 models)
+- **Evaluation Engine**: 50+ evaluation templates, createTestSuite runner, 20 Expectation methods + 21 standalone assertion functions
+- **Cost Analytics**: Track LLM spending per model/provider with built-in pricing for OpenAI, Anthropic, Google (12+ models)
 - **Agent Benchmarking**: Compare agent architectures (ReAct, CoT, ToT) across accuracy, latency, cost, and safety metrics
 - **Governance Engine**: Compliance presets (SOC2, GDPR, HIPAA, FINRA, PCI-DSS) with approval/blocking rules
 - **Decision Auditing**: Record every agent decision with alternatives, confidence scores, and reasoning
+- **Interactive Playground**: Test your own AI outputs with assertions — no signup required
 - **Published SDK**: TypeScript/JavaScript SDK with zero-config init, auto-retry, caching, batching, and framework integrations
 
 ## SDK Usage
@@ -49,6 +51,26 @@ await tracer.recordCost({
 });
 await tracer.endAgentSpan(span, { result: 'routed' });
 await tracer.endWorkflow({ status: 'success' });
+```
+
+## Evaluation with Assertions
+
+```typescript
+import { createTestSuite, expect } from '@pauly4010/evalai-sdk';
+
+const suite = createTestSuite('Customer Support Bot', {
+  executor: async (input) => await callMyLLM(input),
+  cases: [{
+    input: 'What is your refund policy?',
+    assertions: [
+      (output) => expect(output).toContainKeywords(['refund', '30 days']),
+      (output) => expect(output).toNotContainPII(),
+      (output) => expect(output).toBeProfessional(),
+    ]
+  }]
+});
+
+const { total, passed, failed } = await suite.run();
 ```
 
 ## Python Usage (REST API)
@@ -96,31 +118,101 @@ const traced = traceAutoGen(conversation, tracer);
 ## Key SDK Exports
 
 - `AIEvalClient` — Main client with traces, evaluations, llmJudge, annotations, developer, organizations APIs
-- `WorkflowTracer` — Multi-agent workflow instrumentation
+- `WorkflowTracer`, `createWorkflowTracer` — Multi-agent workflow instrumentation
+- `createTestSuite` — Test suite builder with executor, cases, and assertion support
+- `expect` — Assertion factory with 20 built-in methods (toContainKeywords, toNotContainPII, toBeProfessional, toBeValidJSON, toNotHallucinate, toHaveSentiment, etc.)
+- 21 standalone assertion functions (`containsKeywords`, `matchesPattern`, `hasNoHallucinations`, `notContainsPII`, `hasNoToxicity`, etc.)
 - `traceOpenAI`, `traceAnthropic` — LLM provider wrappers
 - `traceLangChainAgent`, `traceCrewAI`, `traceAutoGen` — Framework integrations
-- `GovernanceEngine`, `CompliancePresets` — Governance rules (server-side)
-- 18 assertion functions (`expect`, `containsKeywords`, `matchesPattern`, `hasNoHallucinations`, etc.)
-- `createTestSuite` — Test suite builder
+- `RequestCache`, `PaginatedIterator`, `RequestBatcher` — Performance utilities
 - `batchProcess`, `streamEvaluation` — Streaming & batch processing
+- `GovernanceEngine`, `CompliancePresets` — Governance rules (server-side only, not in npm package)
 
 ## REST API Endpoints
 
-All endpoints accept JSON, require `Authorization: Bearer <key>` header.
+All endpoints accept JSON. Authenticated endpoints require `Authorization: Bearer <key>` header.
 
+### Traces
 - `POST /api/traces` — Create trace (name, traceId, organizationId required)
 - `GET /api/traces` — List traces (filter by organizationId, status, search)
+- `GET /api/traces/:id` — Get single trace
+- `DELETE /api/traces` — Delete traces
+- `POST /api/traces/:id/spans` — Create span within a trace
+- `GET /api/traces/:id/spans` — List spans for a trace
+
+### Evaluations
+- `POST /api/evaluations` — Create evaluation (name, type required)
+- `GET /api/evaluations` — List evaluations
+- `GET /api/evaluations/:id` — Get single evaluation
+- `PATCH /api/evaluations/:id` — Update evaluation
+- `DELETE /api/evaluations/:id` — Delete evaluation
+- `POST /api/evaluations/:id/runs` — Create and execute an evaluation run
+- `GET /api/evaluations/:id/runs` — List runs for an evaluation
+- `GET /api/evaluations/:id/runs/:runId` — Get single run result
+- `POST /api/evaluations/:id/test-cases` — Add test cases
+- `GET /api/evaluations/:id/test-cases` — List test cases
+- `DELETE /api/evaluations/:id/test-cases` — Delete test cases
+- `POST /api/evaluations/:id/publish` — Publish evaluation
+- `DELETE /api/evaluations/:id/publish` — Unpublish evaluation
+- `GET /api/evaluation-templates` — List evaluation templates (public, no auth)
+
+### LLM Judge
+- `POST /api/llm-judge/evaluate` — Run LLM-as-judge evaluation
+- `GET /api/llm-judge/configs` — List judge configurations
+- `POST /api/llm-judge/configs` — Create judge config
+- `GET /api/llm-judge/results` — List judge results
+- `GET /api/llm-judge/alignment` — Get LLM-human alignment metrics
+
+### Workflows
 - `POST /api/workflows` — Create workflow with DAG definition
 - `GET /api/workflows` — List workflows
+- `GET /api/workflows/:id` — Get single workflow
+- `PUT /api/workflows/:id` — Update workflow
+- `DELETE /api/workflows/:id` — Delete workflow
+- `POST /api/workflows/:id/runs` — Create workflow run
+- `GET /api/workflows/:id/runs` — List workflow runs
+- `POST /api/workflows/:id/handoffs` — Record agent handoff
+- `GET /api/workflows/:id/handoffs` — List handoffs
+
+### Decisions & Costs
 - `POST /api/decisions` — Record agent decision with alternatives
 - `GET /api/decisions` — Query decisions by workflowRunId or spanId
+- `GET /api/decisions/stats` — Decision statistics
 - `POST /api/costs` — Record LLM cost (provider, model, tokens)
 - `GET /api/costs` — Get cost breakdown or org summary
 - `GET /api/costs/trends` — Daily cost trends with summary
+- `GET /api/costs/pricing` — Get model pricing table
+- `POST /api/costs/pricing` — Update model pricing
+
+### Benchmarks
+- `POST /api/benchmarks` — Create benchmark
+- `GET /api/benchmarks` — List benchmarks
+- `GET /api/benchmarks/:id` — Get benchmark details
+- `DELETE /api/benchmarks/:id` — Delete benchmark
+- `POST /api/benchmarks/:id/results` — Submit benchmark results
+- `GET /api/benchmarks/:id/leaderboard` — Get benchmark leaderboard
+
+### Demo (public, no auth)
+- `POST /api/demo/custom-eval` — Run assertions on custom AI input/output (rate-limited)
+- `GET /api/demo/chatbot` — Chatbot demo data
+- `GET /api/demo/rag` — RAG demo data
+- `GET /api/demo/codegen` — Code generation demo data
+
+## WebMCP Tool Contracts
+
+EvalAI supports Google's Web Model Context Protocol (WebMCP) for AI agent discoverability.
+When visiting the site in a WebMCP-enabled browser, the following tools are registered via `navigator.modelContext.registerTool()`:
+
+- `list_evaluation_templates` — List evaluation templates by category from both quick-start (6) and full catalog (50+)
+- `create_evaluation` — Create a new evaluation (unit_test, human_eval, model_eval, ab_test). Requires auth.
+- `run_evaluation` — Execute an evaluation run with real test case execution. Requires auth.
+- `get_evaluation_results` — Fetch run results with pass/fail metrics. Requires auth.
+- `get_quality_score` — Get quality score for an evaluation based on latest run (pass rate, case counts). Requires auth.
 
 ## Links
 
 - npm: https://www.npmjs.com/package/@pauly4010/evalai-sdk
 - GitHub: https://github.com/pauly7610/ai-evaluation-platform
-- Docs: https://ai-evaluation-platform.vercel.app/docs/integration
+- Docs: https://ai-evaluation-platform.vercel.app/documentation
+- API Reference: https://ai-evaluation-platform.vercel.app/api-reference
 - Full API Reference: https://ai-evaluation-platform.vercel.app/llms-full.txt

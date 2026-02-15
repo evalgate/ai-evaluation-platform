@@ -282,7 +282,7 @@ export function generateShareableLink(
   organizationId: number,
   evaluationId: number
 ): string {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://evalai.com';
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://ai-evaluation-platform.vercel.app';
   return `${baseUrl}/share/${organizationId}/${evaluationId}`;
 }
 

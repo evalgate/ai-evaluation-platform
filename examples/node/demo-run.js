@@ -8,7 +8,7 @@
  *   npm run demo
  */
 
-import { AIEvalClient } from '@evalai/sdk';
+import { AIEvalClient } from '@pauly4010/evalai-sdk';
 import fs from 'fs';
 import dotenv from 'dotenv';
 

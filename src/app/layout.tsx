@@ -15,6 +15,7 @@ import ErrorReporter from "@/components/ErrorReporter";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { SkipToContent } from "@/components/ui/skip-to-content";
 import { KeyboardShortcutsHelp } from "@/components/ui/keyboard-shortcuts-help";
+import { WebMCPProvider } from "@/components/webmcp-provider";
 import Script from "next/script";
 
 export const metadata: Metadata = {
@@ -68,6 +69,7 @@ export default function RootLayout({
           </ThemeProvider>
         </Suspense>
         <Analytics />
+        <WebMCPProvider />
         <VisualEditsMessenger />
       </body>
     </html>

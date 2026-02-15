@@ -36,12 +36,12 @@ export default function TracingSetupPage() {
             <h2>Installation</h2>
             <p>Install the AI Evaluation Platform SDK in your project:</p>
             <div className="bg-muted p-4 rounded-lg font-mono text-sm my-4">
-              npm install @evalai/sdk
+              npm install @pauly4010/evalai-sdk
             </div>
             <p>Or with other package managers:</p>
             <div className="bg-muted p-4 rounded-lg font-mono text-sm my-4">
-              yarn add @evalai/sdk<br />
-              pnpm add @evalai/sdk
+              yarn add @pauly4010/evalai-sdk<br />
+              pnpm add @pauly4010/evalai-sdk
             </div>
 
             <h2>Environment Setup</h2>
@@ -55,12 +55,12 @@ EVALAI_ORGANIZATION_ID=your_org_id_here`}
             </p>
 
             <h2>Basic Setup</h2>
-            <p>Initialize the SDK client:</p>
+            <p>Initialize the SDK client and tracer:</p>
             <div className="bg-muted p-4 rounded-lg font-mono text-sm my-4 overflow-x-auto">
-              {`import { AIEvalClient } from '@evalai/sdk'
+              {`import { AIEvalClient, WorkflowTracer } from '@pauly4010/evalai-sdk'
 
-// Auto-loads from environment variables
-const client = AIEvalClient.init()`}
+const client = new AIEvalClient({ apiKey: process.env.EVALAI_API_KEY })
+const tracer = new WorkflowTracer(client)`}
             </div>
 
             <h2>Creating Traces</h2>
@@ -102,41 +102,39 @@ const span = await client.traces.createSpan(trace.id, {
             <h2>Nested Traces (Spans)</h2>
             <p>For complex workflows with multiple LLM calls, use nested spans:</p>
             <div className="bg-muted p-4 rounded-lg font-mono text-sm my-4 overflow-x-auto">
-              {`await aiEval.trace({ name: 'rag-pipeline' }, async (parentTrace) => {
-  // Step 1: Generate embedding
-  const embedding = await parentTrace.span({ name: 'embed-query' }, async () => {
-    return await openai.embeddings.create({...});
-  });
+              {`import { traceWorkflowStep } from '@pauly4010/evalai-sdk'
 
-  // Step 2: Retrieve documents
-  const docs = await parentTrace.span({ name: 'retrieve-docs' }, async () => {
-    return await vectorDb.search(embedding);
-  });
+await tracer.startWorkflow('RAG Pipeline');
 
-  // Step 3: Generate response
-  const response = await parentTrace.span({ name: 'generate-response' }, async () => {
-    return await openai.chat.completions.create({...});
-  });
+const embedding = await traceWorkflowStep(tracer, 'embed-query', async () => {
+  return await openai.embeddings.create({...});
+});
 
-  return response;
-});`}
+const docs = await traceWorkflowStep(tracer, 'retrieve-docs', async () => {
+  return await vectorDb.search(embedding);
+});
+
+const response = await traceWorkflowStep(tracer, 'generate-response', async () => {
+  return await openai.chat.completions.create({...});
+});
+
+await tracer.endWorkflow({ status: 'success' });`}
             </div>
 
             <h2>Adding Custom Metadata</h2>
             <p>Enrich traces with business context:</p>
             <div className="bg-muted p-4 rounded-lg font-mono text-sm my-4 overflow-x-auto">
-              {`await aiEval.trace({
-  name: 'content-generation',
-  metadata: {
-    userId: user.id,
-    contentType: 'blog-post',
-    targetAudience: 'developers',
-    keywords: ['AI', 'evaluation', 'testing']
-  },
-  tags: ['production', 'content-gen']
-}, async () => {
-  // Your LLM call here
-});`}
+              {`await tracer.startWorkflow('content-generation', undefined, {
+  userId: user.id,
+  contentType: 'blog-post',
+  targetAudience: 'developers',
+  keywords: ['AI', 'evaluation', 'testing']
+});
+
+const span = await tracer.startAgentSpan('ContentAgent', { input: '...' });
+// Your LLM call here
+await tracer.endAgentSpan(span, { result: '...' });
+await tracer.endWorkflow({ status: 'success' });`}
             </div>
 
             <h2>Viewing Traces</h2>

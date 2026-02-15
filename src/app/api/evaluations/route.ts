@@ -6,7 +6,7 @@ import { evaluationService } from '@/lib/services/evaluation.service';
 import { validateRequest } from '@/lib/validation';
 import { z } from 'zod';
 import { db } from '@/db';
-import { evaluations } from '@/db/schema';
+import { evaluations, testCases } from '@/db/schema';
 
 export async function GET(request: NextRequest) {
   return withRateLimit(request, async (req) => {
@@ -179,7 +179,56 @@ export async function POST(request: Request) {
       customMetrics: customMetrics ? JSON.stringify(customMetrics) : null,
     }).returning().get()
 
+    // Extract and persist test cases from template config
     if (newEvaluation) {
+      try {
+        const templates = body.config?.templates || body.templates || [];
+        const allTestCases: Array<{ name: string; input: string; expectedOutput?: string; metadata?: any }> = [];
+
+        // Collect test cases from templates
+        for (const template of templates) {
+          const tcs = template.testCases || template.template?.testCases || [];
+          for (const tc of tcs) {
+            allTestCases.push({
+              name: tc.name || tc.label || `Test Case`,
+              input: typeof tc.input === 'string' ? tc.input : JSON.stringify(tc.input || ''),
+              expectedOutput: typeof tc.expectedOutput === 'string' ? tc.expectedOutput : JSON.stringify(tc.expectedOutput || ''),
+              metadata: tc.metadata ? JSON.stringify(tc.metadata) : null,
+            });
+          }
+        }
+
+        // Also check for top-level testCases array
+        const topLevelCases = body.testCases || [];
+        for (const tc of topLevelCases) {
+          allTestCases.push({
+            name: tc.name || `Test Case`,
+            input: typeof tc.input === 'string' ? tc.input : JSON.stringify(tc.input || ''),
+            expectedOutput: typeof tc.expectedOutput === 'string' ? tc.expectedOutput : JSON.stringify(tc.expectedOutput || ''),
+            metadata: tc.metadata ? JSON.stringify(tc.metadata) : null,
+          });
+        }
+
+        if (allTestCases.length > 0) {
+          await db.insert(testCases).values(
+            allTestCases.map((tc) => ({
+              evaluationId: newEvaluation.id,
+              name: tc.name,
+              input: tc.input,
+              expectedOutput: tc.expectedOutput || null,
+              metadata: tc.metadata || null,
+              createdAt: now,
+            }))
+          );
+          logger.info('Test cases persisted from templates', { 
+            evaluationId: newEvaluation.id, 
+            count: allTestCases.length 
+          });
+        }
+      } catch (tcError) {
+        logger.warn('Failed to persist template test cases', { error: tcError, evaluationId: newEvaluation.id });
+      }
+
       // Track the evaluation creation event
       await trackFeature({
         userId,

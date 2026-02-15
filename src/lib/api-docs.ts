@@ -11,7 +11,7 @@ export const openApiSpec = {
     description: 'Comprehensive API for AI model evaluation, testing, and monitoring',
     contact: {
       name: 'API Support',
-      email: 'support@evalai.com',
+      url: 'https://github.com/pauly7610/ai-evaluation-platform/issues',
     },
   },
   servers: [
@@ -20,7 +20,7 @@ export const openApiSpec = {
       description: 'Development server',
     },
     {
-      url: 'https://api.evalai.com',
+      url: 'https://ai-evaluation-platform.vercel.app',
       description: 'Production server',
     },
   ],

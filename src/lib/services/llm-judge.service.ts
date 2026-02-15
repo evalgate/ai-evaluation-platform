@@ -276,28 +276,169 @@ export class LLMJudgeService {
   }
 
   /**
-   * Call LLM provider API
+   * Determine the provider from a model name string
+   * @private
+   */
+  private getProviderFromModel(model: string): 'openai' | 'anthropic' | 'google' {
+    const m = model.toLowerCase();
+    if (m.includes('gpt') || m.includes('o1') || m.includes('o3') || m.includes('davinci') || m.includes('turbo')) return 'openai';
+    if (m.includes('claude') || m.includes('haiku') || m.includes('sonnet') || m.includes('opus')) return 'anthropic';
+    if (m.includes('gemini') || m.includes('palm') || m.includes('bard')) return 'google';
+    // Default to OpenAI
+    return 'openai';
+  }
+
+  /**
+   * Call LLM provider API to evaluate
    * @private
    */
   private async callLLMProvider(
     config: any,
     prompt: string
   ): Promise<JudgementResult> {
-    logger.info('Calling LLM provider', { provider: config.provider, model: config.model });
+    const provider = this.getProviderFromModel(config.model);
+    logger.info('Calling LLM provider', { provider, model: config.model });
 
-    // TODO: Implement actual LLM provider integration
-    // For now, return mock result
-    const mockScore = Math.floor(Math.random() * 40) + 60; // 60-100
-    
+    const systemPrompt = 'You are an expert AI evaluator. Respond ONLY with valid JSON in this exact format: {"score": <0-100>, "reasoning": "<explanation>", "passed": <true/false>}. Do not include any other text.';
+
+    try {
+      if (provider === 'openai') {
+        const apiKey = process.env.OPENAI_API_KEY;
+        if (!apiKey) {
+          logger.warn('OPENAI_API_KEY not set, falling back to simple scoring');
+          return this.fallbackScoring(prompt);
+        }
+
+        const response = await fetch('https://api.openai.com/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${apiKey}`,
+          },
+          body: JSON.stringify({
+            model: config.model || 'gpt-4o-mini',
+            messages: [
+              { role: 'system', content: systemPrompt },
+              { role: 'user', content: prompt },
+            ],
+            temperature: 0.1,
+            max_tokens: 500,
+          }),
+        });
+
+        if (!response.ok) {
+          const errorBody = await response.text();
+          logger.error({ status: response.status, body: errorBody }, 'OpenAI API error');
+          return this.fallbackScoring(prompt);
+        }
+
+        const data = await response.json();
+        const content = data.choices?.[0]?.message?.content || '';
+        return this.parseJudgementResponse(content, provider, config.model);
+
+      } else if (provider === 'anthropic') {
+        const apiKey = process.env.ANTHROPIC_API_KEY;
+        if (!apiKey) {
+          logger.warn('ANTHROPIC_API_KEY not set, falling back to simple scoring');
+          return this.fallbackScoring(prompt);
+        }
+
+        const response = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': apiKey,
+            'anthropic-version': '2023-06-01',
+          },
+          body: JSON.stringify({
+            model: config.model || 'claude-3-5-haiku-latest',
+            max_tokens: 500,
+            system: systemPrompt,
+            messages: [
+              { role: 'user', content: prompt },
+            ],
+          }),
+        });
+
+        if (!response.ok) {
+          const errorBody = await response.text();
+          logger.error({ status: response.status, body: errorBody }, 'Anthropic API error');
+          return this.fallbackScoring(prompt);
+        }
+
+        const data = await response.json();
+        const content = data.content?.[0]?.text || '';
+        return this.parseJudgementResponse(content, provider, config.model);
+
+      } else {
+        // Google or unsupported — fallback
+        logger.warn('Unsupported provider, falling back to simple scoring', { provider });
+        return this.fallbackScoring(prompt);
+      }
+    } catch (error) {
+      logger.error({ error, provider, model: config.model }, 'LLM provider call failed');
+      return this.fallbackScoring(prompt);
+    }
+  }
+
+  /**
+   * Parse a JSON judgement response from LLM
+   * @private
+   */
+  private parseJudgementResponse(
+    content: string,
+    provider: string,
+    model: string
+  ): JudgementResult {
+    try {
+      // Try to extract JSON from the response
+      const jsonMatch = content.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        const parsed = JSON.parse(jsonMatch[0]);
+        return {
+          score: Math.min(100, Math.max(0, Number(parsed.score) || 0)),
+          reasoning: String(parsed.reasoning || 'No reasoning provided'),
+          passed: Boolean(parsed.passed),
+          details: { provider, model, timestamp: new Date().toISOString() },
+        };
+      }
+    } catch (parseError) {
+      logger.warn('Failed to parse LLM judge response as JSON', { parseError, content });
+    }
+
+    // Fallback: try to extract a score from the text
+    const scoreMatch = content.match(/(\d{1,3})\s*(?:\/\s*100|%|out of 100)/i);
+    const score = scoreMatch ? Math.min(100, parseInt(scoreMatch[1])) : 50;
+
     return {
-      score: mockScore,
-      reasoning: 'Mock evaluation reasoning. TODO: Implement actual LLM provider integration.',
-      passed: mockScore >= 70,
-      details: {
-        provider: config.provider,
-        model: config.model,
-        timestamp: new Date().toISOString(),
-      },
+      score,
+      reasoning: content.slice(0, 500),
+      passed: score >= 70,
+      details: { provider, model, timestamp: new Date().toISOString(), rawResponse: true },
+    };
+  }
+
+  /**
+   * Fallback scoring when no LLM API key is available — uses simple heuristics
+   * @private
+   */
+  private fallbackScoring(prompt: string): JudgementResult {
+    // Basic heuristic: check if output section is non-empty and reasonably long
+    const outputMatch = prompt.match(/# Output to Evaluate\n([\s\S]*?)(?:\n# |$)/);
+    const output = outputMatch?.[1]?.trim() || '';
+    const expectedMatch = prompt.match(/# Expected Output\n([\s\S]*?)(?:\n# |$)/);
+    const expected = expectedMatch?.[1]?.trim() || '';
+
+    let score = 50; // Base score
+    if (output.length > 0) score += 20;
+    if (output.length > 50) score += 10;
+    if (expected && output.toLowerCase().includes(expected.toLowerCase().slice(0, 20))) score += 20;
+
+    return {
+      score: Math.min(100, score),
+      reasoning: 'Scored using heuristic fallback (no LLM API key configured). Set OPENAI_API_KEY or ANTHROPIC_API_KEY for real evaluation.',
+      passed: score >= 70,
+      details: { provider: 'fallback', model: 'heuristic', timestamp: new Date().toISOString() },
     };
   }
 

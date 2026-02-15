@@ -439,7 +439,7 @@ export default function DeveloperDashboardPage() {
             </div>
             <div>
               <div className="font-semibold mb-1">2. Install SDK</div>
-              <code className="text-xs bg-background/50 px-2 py-1 rounded">npm install @evalai/sdk</code>
+              <code className="text-xs bg-background/50 px-2 py-1 rounded">npm install @pauly4010/evalai-sdk</code>
             </div>
             <div>
               <div className="font-semibold mb-1">3. Add to .env</div>
@@ -681,12 +681,12 @@ export default function DeveloperDashboardPage() {
             <div className="space-y-2">
               <Label className="text-base font-semibold">Step 2: Install the SDK</Label>
               <div className="bg-muted p-3 rounded-md">
-                <code className="text-sm">npm install @evalai/sdk</code>
+                <code className="text-sm">npm install @pauly4010/evalai-sdk</code>
                 <Button
                   size="sm"
                   variant="ghost"
                   className="ml-2"
-                  onClick={() => copyToClipboard("npm install @evalai/sdk")}
+                  onClick={() => copyToClipboard("npm install @pauly4010/evalai-sdk")}
                 >
                   <Copy className="h-3 w-3" />
                 </Button>
@@ -721,7 +721,7 @@ export default function DeveloperDashboardPage() {
               <Label className="text-base font-semibold">Step 4: Initialize the Client</Label>
               <div className="bg-muted p-3 rounded-md">
                 <pre className="text-sm overflow-x-auto">
-{`import { AIEvalClient } from '@evalai/sdk'
+{`import { AIEvalClient } from '@pauly4010/evalai-sdk'
 
 // Auto-loads from environment variables
 const client = AIEvalClient.init()
@@ -736,7 +736,7 @@ const trace = await client.traces.create({
                   size="sm"
                   variant="ghost"
                   className="mt-2"
-                  onClick={() => copyToClipboard(`import { AIEvalClient } from '@evalai/sdk'\n\nconst client = AIEvalClient.init()\n\nconst trace = await client.traces.create({\n  name: 'My First Trace',\n  traceId: 'trace-001'\n})`)}
+                  onClick={() => copyToClipboard(`import { AIEvalClient } from '@pauly4010/evalai-sdk'\n\nconst client = AIEvalClient.init()\n\nconst trace = await client.traces.create({\n  name: 'My First Trace',\n  traceId: 'trace-001'\n})`)}
                 >
                   <Copy className="h-3 w-3 mr-2" />
                   Copy Code

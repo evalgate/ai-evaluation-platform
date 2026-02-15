@@ -9,7 +9,7 @@
  */
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.decodeCursor = exports.encodeCursor = exports.autoPaginate = exports.createPaginatedIterator = exports.PaginatedIterator = exports.CacheTTL = exports.RequestCache = exports.RateLimiter = exports.batchRead = exports.streamEvaluation = exports.batchProcess = exports.importData = exports.exportData = exports.compareSnapshots = exports.saveSnapshot = exports.compareWithSnapshot = exports.snapshot = exports.TestSuite = exports.createTestSuite = exports.ContextManager = exports.withContext = exports.getContext = exports.createContext = exports.hasValidCodeSyntax = exports.containsAllRequiredFields = exports.followsInstructions = exports.hasNoToxicity = exports.respondedWithinTime = exports.hasFactualAccuracy = exports.containsLanguage = exports.hasReadabilityScore = exports.matchesSchema = exports.hasNoHallucinations = exports.isValidURL = exports.isValidEmail = exports.withinRange = exports.similarTo = exports.hasSentiment = exports.notContainsPII = exports.containsJSON = exports.hasLength = exports.matchesPattern = exports.containsKeywords = exports.expect = exports.NetworkError = exports.ValidationError = exports.AuthenticationError = exports.RateLimitError = exports.EvalAIError = exports.AIEvalClient = void 0;
-exports.EvaluationTemplates = exports.traceAnthropic = exports.traceOpenAI = exports.Logger = exports.RequestBatcher = void 0;
+exports.EvaluationTemplates = exports.traceAutoGen = exports.traceCrewAI = exports.traceLangChainAgent = exports.traceWorkflowStep = exports.createWorkflowTracer = exports.WorkflowTracer = exports.traceAnthropic = exports.traceOpenAI = exports.Logger = exports.RequestBatcher = void 0;
 // Main SDK exports
 var client_1 = require("./client");
 Object.defineProperty(exports, "AIEvalClient", { enumerable: true, get: function () { return client_1.AIEvalClient; } });
@@ -94,6 +94,15 @@ var openai_1 = require("./integrations/openai");
 Object.defineProperty(exports, "traceOpenAI", { enumerable: true, get: function () { return openai_1.traceOpenAI; } });
 var anthropic_1 = require("./integrations/anthropic");
 Object.defineProperty(exports, "traceAnthropic", { enumerable: true, get: function () { return anthropic_1.traceAnthropic; } });
+// Workflow tracing (Orchestration Layer)
+var workflows_1 = require("./workflows");
+Object.defineProperty(exports, "WorkflowTracer", { enumerable: true, get: function () { return workflows_1.WorkflowTracer; } });
+Object.defineProperty(exports, "createWorkflowTracer", { enumerable: true, get: function () { return workflows_1.createWorkflowTracer; } });
+Object.defineProperty(exports, "traceWorkflowStep", { enumerable: true, get: function () { return workflows_1.traceWorkflowStep; } });
+// Framework integrations
+Object.defineProperty(exports, "traceLangChainAgent", { enumerable: true, get: function () { return workflows_1.traceLangChainAgent; } });
+Object.defineProperty(exports, "traceCrewAI", { enumerable: true, get: function () { return workflows_1.traceCrewAI; } });
+Object.defineProperty(exports, "traceAutoGen", { enumerable: true, get: function () { return workflows_1.traceAutoGen; } });
 // New exports for v1.1.0
 var types_1 = require("./types");
 Object.defineProperty(exports, "EvaluationTemplates", { enumerable: true, get: function () { return types_1.EvaluationTemplates; } });

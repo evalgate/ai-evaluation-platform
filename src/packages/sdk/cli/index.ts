@@ -51,7 +51,7 @@ program
     )
     
     // Create example evaluation file
-    const exampleEval = `import { AIEvalClient, createTestSuite, expect } from '@evalai/sdk'
+    const exampleEval = `import { AIEvalClient, createTestSuite, expect } from '@pauly4010/evalai-sdk'
 
 const client = AIEvalClient.init()
 

@@ -249,7 +249,7 @@ await fetch('/api/evaluations/eval-123/publish?shareId=my-custom-id', {
 ### SDK Methods (Future)
 
 ```typescript
-import { EvaluationClient } from '@your-platform/sdk'
+import { EvaluationClient } from '@pauly4010/evalai-sdk'
 
 const client = new EvaluationClient({ apiKey: 'your-key' })
 
@@ -499,10 +499,8 @@ A: Yes, all test inputs, outputs, and metadata are included.
 
 Need help with exports or sharing?
 
-- 📧 Email: support@yourplatform.com
-- 💬 Discord: [Join our community](https://discord.gg/yourplatform)
-- 📚 Docs: [Full documentation](https://docs.yourplatform.com)
-- 🐛 Issues: [GitHub Issues](https://github.com/yourplatform/issues)
+- 📚 Docs: [Full documentation](https://ai-evaluation-platform.vercel.app/documentation)
+- 🐛 Issues: [GitHub Issues](https://github.com/pauly7610/ai-evaluation-platform/issues)
 
 ---
 

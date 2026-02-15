@@ -4,7 +4,7 @@
  * 
  * @example
  * ```typescript
- * import { WorkflowTracer } from '@evalai/sdk';
+ * import { WorkflowTracer } from '@pauly4010/evalai-sdk';
  * 
  * const tracer = new WorkflowTracer(client, { organizationId: 123 });
  * 

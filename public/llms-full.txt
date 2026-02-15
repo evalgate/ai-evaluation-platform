@@ -190,16 +190,20 @@ interface WorkflowDefinition {
 | openai/gpt-4-turbo | 10.00 | 30.00 |
 | openai/gpt-4o | 5.00 | 15.00 |
 | openai/gpt-4o-mini | 0.15 | 0.60 |
+| openai/gpt-4.5-preview | 75.00 | 150.00 |
 | openai/gpt-3.5-turbo | 0.50 | 1.50 |
 | anthropic/claude-3-opus | 15.00 | 75.00 |
 | anthropic/claude-3-sonnet | 3.00 | 15.00 |
 | anthropic/claude-3-haiku | 0.25 | 1.25 |
 | anthropic/claude-3.5-sonnet | 3.00 | 15.00 |
+| anthropic/claude-3.5-haiku | 0.80 | 4.00 |
 | google/gemini-pro | 0.50 | 1.50 |
 | google/gemini-1.5-pro | 3.50 | 10.50 |
 | google/gemini-1.5-flash | 0.075 | 0.30 |
+| google/gemini-2.0-flash | 0.10 | 0.40 |
+| google/gemini-2.0-pro | 5.00 | 15.00 |
 
-Unknown models default to $1.00 / $3.00 per million tokens.
+Unknown models default to $1.00 / $3.00 per million tokens. Use `POST /api/costs/pricing` to add custom model pricing.
 
 ## Framework Integrations
 
@@ -221,8 +225,9 @@ import { traceWorkflowStep } from '@pauly4010/evalai-sdk';
 const result = await traceWorkflowStep(tracer, 'AgentName', async () => doWork(), { input });
 ```
 
-## Assertion Functions (18 total)
+## Assertion Functions (21 standalone + 20 Expectation methods)
 
+### Standalone assertion functions
 ```typescript
 import { expect, containsKeywords, matchesPattern, hasLength, containsJSON,
   notContainsPII, hasSentiment, similarTo, withinRange, isValidEmail,
@@ -232,38 +237,116 @@ import { expect, containsKeywords, matchesPattern, hasLength, containsJSON,
 } from '@pauly4010/evalai-sdk';
 ```
 
+### Expectation methods (via `expect(output)`)
+`toEqual`, `toContain`, `toContainKeywords`, `toNotContain`, `toMatchPattern`, `toHaveLength`,
+`toNotContainPII`, `toBeProfessional`, `toNotHallucinate`,
+`toBeValidJSON`, `toMatchJSON`, `toContainCode`,
+`toHaveSentiment`, `toHaveProperGrammar`,
+`toBeFasterThan`, `toBeGreaterThan`, `toBeLessThan`, `toBeBetween`, `toBeTruthy`, `toBeFalsy`
+
+### createTestSuite
+```typescript
+import { createTestSuite, expect } from '@pauly4010/evalai-sdk';
+
+const suite = createTestSuite('My Eval', {
+  executor: async (input) => await callMyLLM(input),
+  cases: [{
+    input: 'What is your refund policy?',
+    assertions: [
+      (output) => expect(output).toContainKeywords(['refund', '30 days']),
+      (output) => expect(output).toNotContainPII(),
+      (output) => expect(output).toBeProfessional(),
+    ]
+  }]
+});
+
+const { total, passed, failed, results } = await suite.run();
+```
+
 ## REST API Endpoints
 
 Base URL: Your deployed app URL
-Auth: `Authorization: Bearer <API_KEY>`
+Auth: `Authorization: Bearer <API_KEY>` (unless marked public)
 Content-Type: `application/json`
 
-### POST /api/traces
-```json
-{ "name": "string (required)", "traceId": "string (required)", "organizationId": "int (required)", "status": "pending|success|error", "durationMs": "int", "metadata": "{}" }
-```
+### Traces
+- `POST /api/traces` — `{ "name": "str (required)", "traceId": "str (required)", "organizationId": "int (required)", "status": "pending|success|error", "durationMs": "int", "metadata": "{}" }`
+- `GET /api/traces` — List traces (filter by organizationId, status, search)
+- `GET /api/traces/:id` — Get single trace with spans
+- `DELETE /api/traces` — Delete traces
+- `POST /api/traces/:id/spans` — Create span within a trace
+- `GET /api/traces/:id/spans` — List spans for a trace
 
-### POST /api/workflows
-```json
-{ "name": "string 1-255 (required)", "description": "string max 1000", "organizationId": "int (required)", "definition": { "nodes": [{"id": "str", "type": "agent|tool|decision|parallel|human|llm", "name": "str"}], "edges": [{"from": "str", "to": "str", "condition": "str"}], "entrypoint": "str" }, "status": "draft|active|archived" }
-```
+### Evaluations
+- `POST /api/evaluations` — `{ "name": "str (required)", "type": "unit_test|human_eval|model_eval|ab_test (required)", "description": "str", "config": "{}" }`
+- `GET /api/evaluations` — List evaluations
+- `GET /api/evaluations/:id` — Get single evaluation
+- `PATCH /api/evaluations/:id` — Update evaluation
+- `DELETE /api/evaluations/:id` — Delete evaluation
+- `POST /api/evaluations/:id/runs` — Execute evaluation run
+- `GET /api/evaluations/:id/runs` — List runs
+- `GET /api/evaluations/:id/runs/:runId` — Get single run
+- `POST /api/evaluations/:id/test-cases` — Add test cases
+- `GET /api/evaluations/:id/test-cases` — List test cases
+- `DELETE /api/evaluations/:id/test-cases` — Delete test cases
+- `POST /api/evaluations/:id/publish` — Publish evaluation
+- `DELETE /api/evaluations/:id/publish` — Unpublish evaluation
+- `GET /api/evaluation-templates` — List evaluation templates (public, no auth, rate-limited)
 
-### POST /api/decisions
-```json
-{ "spanId": "int (required)", "workflowRunId": "int", "agentName": "string (required)", "decisionType": "action|tool|delegate|respond|route (required)", "chosen": "string (required)", "alternatives": [{"action": "str", "confidence": "0-100", "reasoning": "str"}], "reasoning": "str", "confidence": "0-100", "inputContext": "{}" }
-```
+### LLM Judge
+- `POST /api/llm-judge/evaluate` — Run LLM-as-judge evaluation
+- `GET /api/llm-judge/configs` — List judge configurations
+- `POST /api/llm-judge/configs` — Create judge config
+- `PUT /api/llm-judge/configs` — Update judge config
+- `DELETE /api/llm-judge/configs` — Delete judge config
+- `GET /api/llm-judge/results` — List judge results
+- `GET /api/llm-judge/alignment` — Get LLM-human alignment metrics
 
-### POST /api/costs
-```json
-{ "spanId": "int (required)", "workflowRunId": "int", "provider": "string (required)", "model": "string (required)", "inputTokens": "int (required)", "outputTokens": "int (required)", "category": "llm|tool|embedding|other", "isRetry": "bool" }
-```
+### Workflows
+- `POST /api/workflows` — `{ "name": "str 1-255 (required)", "description": "str max 1000", "organizationId": "int (required)", "definition": { "nodes": [...], "edges": [...], "entrypoint": "str" }, "status": "draft|active|archived" }`
+- `GET /api/workflows` — List workflows
+- `GET /api/workflows/:id` — Get single workflow
+- `PUT /api/workflows/:id` — Update workflow
+- `DELETE /api/workflows/:id` — Delete workflow
+- `POST /api/workflows/:id/runs` — Create workflow run
+- `GET /api/workflows/:id/runs` — List workflow runs
+- `GET /api/workflows/:id/runs/:runId` — Get single run
+- `PUT /api/workflows/:id/runs/:runId` — Update run status
+- `POST /api/workflows/:id/handoffs` — Record agent handoff
+- `GET /api/workflows/:id/handoffs` — List handoffs
 
-### GET /api/costs/trends?organizationId={id}&startDate={YYYY-MM-DD}&endDate={YYYY-MM-DD}
-Returns daily cost trends with summary (totalCost, totalTokens, totalRequests, avgDailyCost).
+### Decisions
+- `POST /api/decisions` — `{ "spanId": "int (required)", "agentName": "str (required)", "decisionType": "action|tool|delegate|respond|route (required)", "chosen": "str (required)", "alternatives": [...], "confidence": "0-100" }`
+- `GET /api/decisions` — Query decisions by workflowRunId or spanId
+- `GET /api/decisions/stats` — Decision statistics
 
-## Governance Engine
+### Costs
+- `POST /api/costs` — `{ "spanId": "int (required)", "provider": "str (required)", "model": "str (required)", "inputTokens": "int (required)", "outputTokens": "int (required)", "category": "llm|tool|embedding|other" }`
+- `GET /api/costs` — Get cost breakdown or org summary
+- `GET /api/costs/trends?organizationId={id}&startDate={YYYY-MM-DD}&endDate={YYYY-MM-DD}` — Daily trends
+- `GET /api/costs/pricing` — Get model pricing table
+- `POST /api/costs/pricing` — Update model pricing
+
+### Benchmarks
+- `POST /api/benchmarks` — Create benchmark
+- `GET /api/benchmarks` — List benchmarks
+- `GET /api/benchmarks/:id` — Get benchmark details
+- `DELETE /api/benchmarks/:id` — Delete benchmark
+- `POST /api/benchmarks/:id/results` — Submit benchmark results
+- `GET /api/benchmarks/:id/leaderboard` — Get benchmark leaderboard
+
+### Demo (public, no auth, rate-limited)
+- `POST /api/demo/custom-eval` — Run assertions on custom AI input/output
+- `GET /api/demo/chatbot` — Chatbot demo data
+- `GET /api/demo/rag` — RAG hallucination demo data
+- `GET /api/demo/codegen` — Code generation demo data
+
+## Governance Engine (Server-Side Only)
+
+> **Note**: GovernanceEngine, CompliancePresets, and createComplianceGovernance are server-side only imports from the platform codebase (`@/lib/governance/rules`). They are NOT exported from the `@pauly4010/evalai-sdk` npm package.
 
 ```typescript
+// Server-side only — not available in the npm SDK
 import { GovernanceEngine, CompliancePresets, createComplianceGovernance } from '@/lib/governance/rules';
 
 const engine = new GovernanceEngine({
@@ -290,8 +373,28 @@ Compliance presets: BASIC, SOC2, GDPR, HIPAA, FINRA_4511, PCI_DSS
 | Multi-agent DAG viz | Yes | No | No | No |
 | Decision auditing | Yes | No | No | No |
 | Governance presets | Yes (6) | No | No | No |
-| Cost tracking | Yes (12 models) | Yes | Yes | Yes |
+| Cost tracking | Yes (16+ models) | Yes | Yes | Yes |
 | npm SDK | Yes | Yes | Yes | Yes |
 | Python REST | Yes | Yes | Yes | Yes |
 | Framework integrations | LangChain, CrewAI, AutoGen | LangChain | OpenAI | LangChain |
 | Self-hostable | Yes | No | Yes | No |
+| WebMCP tools | Yes (5) | No | No | No |
+| Eval templates | Yes (80+) | No | No | Yes |
+| LLM Judge | Yes | No | No | Yes |
+| Human evaluation | Yes | No | No | No |
+| IAA metrics | Yes | No | No | No |
+
+## WebMCP Tool Contracts
+
+EvalAI supports Google's Web Model Context Protocol (WebMCP) for AI agent discoverability.
+When visiting the site in a WebMCP-enabled browser, the following tools are registered via `navigator.modelContext.registerTool()`:
+
+| Tool | Description | Auth |
+|------|-------------|------|
+| `list_evaluation_templates` | List evaluation templates from quick-start (6) and full catalog (50+), filterable by category and limit | No |
+| `create_evaluation` | Create a new evaluation (unit_test, human_eval, model_eval, ab_test) | Yes |
+| `run_evaluation` | Execute an evaluation run with real test case execution | Yes |
+| `get_evaluation_results` | Fetch run results with pass/fail metrics | Yes |
+| `get_quality_score` | Get quality score from latest run (pass rate, case counts) | Yes |
+
+Each tool accepts JSON input and returns JSON output with proper error handling. Tools that require auth will return appropriate error messages if the user is not signed in.

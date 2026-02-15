@@ -156,7 +156,7 @@ export default function PrivacyPage() {
               <li><strong>Opt-out:</strong> Unsubscribe from marketing communications</li>
             </ul>
             <p className="text-muted-foreground mt-4">
-              To exercise these rights, contact us at <a href="mailto:privacy@aievalplatform.com" className="text-blue-500 hover:underline">privacy@aievalplatform.com</a>
+              To exercise these rights, contact us at <a href="https://github.com/pauly7610/ai-evaluation-platform/issues" className="text-blue-500 hover:underline">GitHub Issues</a>
             </p>
           </section>
 
@@ -212,7 +212,7 @@ export default function PrivacyPage() {
             </p>
             <div className="rounded-lg border border-border bg-card p-6">
               <p className="text-sm mb-2">
-                <strong>Email:</strong> <a href="mailto:privacy@aievalplatform.com" className="text-blue-500 hover:underline">privacy@aievalplatform.com</a>
+                <strong>Email:</strong> <a href="https://github.com/pauly7610/ai-evaluation-platform/issues" className="text-blue-500 hover:underline">GitHub Issues</a>
               </p>
               <p className="text-sm mb-2">
                 <strong>Address:</strong> AI Evaluation Platform, Inc.<br />
@@ -220,7 +220,7 @@ export default function PrivacyPage() {
                 San Francisco, CA 94103
               </p>
               <p className="text-sm">
-                <strong>Data Protection Officer:</strong> <a href="mailto:dpo@aievalplatform.com" className="text-blue-500 hover:underline">dpo@aievalplatform.com</a>
+                <strong>Data Protection Officer:</strong> <a href="https://github.com/pauly7610/ai-evaluation-platform/issues" className="text-blue-500 hover:underline">GitHub Issues</a>
               </p>
             </div>
           </section>

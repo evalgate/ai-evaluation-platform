@@ -1,43 +1,58 @@
 /**
  * Evaluation Templates Page
  * Browse and copy ready-to-use evaluation templates
+ * Two-tier layout: Featured quick-start templates + full 50+ template catalog
  */
 
 import { evaluationTemplates, getTemplatesByCategory } from '@/lib/evaluation-templates-library';
 import { TemplateCard } from '@/components/template-card';
+import {
+  COMPREHENSIVE_TEMPLATES,
+  TEMPLATE_CATEGORIES,
+  getTemplatesByCategory as getCatalogTemplatesByCategory,
+} from '@/lib/evaluation-templates';
+import { CatalogTemplateCard, type CatalogTemplateData } from '@/components/catalog-template-card';
 import { Metadata } from 'next';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
-import { Search, Copy, Zap, BookOpen } from 'lucide-react';
+import { Search, Copy, Zap, Layers } from 'lucide-react';
 
 export const metadata: Metadata = {
   title: 'Evaluation Templates | EvalAI',
-  description: 'Ready-to-use evaluation templates for chatbots, RAG systems, code generation, and more. Copy, customize, and run in minutes.',
+  description: `${COMPREHENSIVE_TEMPLATES.length + evaluationTemplates.length}+ ready-to-use evaluation templates across 17 categories. Chatbots, RAG, adversarial testing, LLM judge, and more.`,
 };
 
+const featuredCategories = [
+  { id: 'all', name: 'All Templates', count: evaluationTemplates.length },
+  { id: 'chatbot', name: 'Chatbots', count: getTemplatesByCategory('chatbot').length },
+  { id: 'rag', name: 'RAG Systems', count: getTemplatesByCategory('rag').length },
+  { id: 'code-gen', name: 'Code Generation', count: getTemplatesByCategory('code-gen').length },
+  { id: 'content', name: 'Content', count: getTemplatesByCategory('content').length },
+  { id: 'classification', name: 'Classification', count: getTemplatesByCategory('classification').length },
+];
+
+/** Strip the icon (React component function) to make templates serializable for client components */
+function toSerializable(template: { icon?: any; [key: string]: any }): CatalogTemplateData {
+  const { icon, ...rest } = template;
+  return rest as CatalogTemplateData;
+}
+
 export default function TemplatesPage() {
-  const categories = [
-    { id: 'all', name: 'All Templates', count: evaluationTemplates.length },
-    { id: 'chatbot', name: 'Chatbots', count: getTemplatesByCategory('chatbot').length },
-    { id: 'rag', name: 'RAG Systems', count: getTemplatesByCategory('rag').length },
-    { id: 'code-gen', name: 'Code Generation', count: getTemplatesByCategory('code-gen').length },
-    { id: 'content', name: 'Content', count: getTemplatesByCategory('content').length },
-    { id: 'classification', name: 'Classification', count: getTemplatesByCategory('classification').length },
-  ];
+  const totalTemplates = COMPREHENSIVE_TEMPLATES.length + evaluationTemplates.length;
 
   return (
     <div className="container mx-auto px-4 py-12 space-y-12">
       {/* Hero */}
       <div className="text-center space-y-4">
         <Badge variant="secondary" className="text-sm">
-          {evaluationTemplates.length} Templates
+          {totalTemplates}+ Templates
         </Badge>
         <h1 className="text-4xl font-bold tracking-tight">
           Evaluation Templates
         </h1>
         <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-          Copy/paste ready templates for common AI evaluation scenarios. Start testing in under 2 minutes.
+          Copy/paste ready templates for common AI evaluation scenarios. From chatbots to adversarial testing, LLM judges to production monitoring.
         </p>
       </div>
 
@@ -56,10 +71,10 @@ export default function TemplatesPage() {
           description="Production evaluations"
         />
         <StatCard
-          icon={<BookOpen className="h-5 w-5" />}
-          label="Use Cases"
-          value="6+"
-          description="Categories covered"
+          icon={<Layers className="h-5 w-5" />}
+          label="Categories"
+          value="17"
+          description="Across all eval types"
         />
         <StatCard
           icon={<Search className="h-5 w-5" />}
@@ -69,34 +84,88 @@ export default function TemplatesPage() {
         />
       </div>
 
-      {/* Templates */}
-      <Tabs defaultValue="all" className="w-full">
-        <TabsList className="grid w-full grid-cols-6">
-          {categories.map((cat) => (
-            <TabsTrigger key={cat.id} value={cat.id} className="text-xs md:text-sm">
-              {cat.name} ({cat.count})
-            </TabsTrigger>
-          ))}
-        </TabsList>
+      {/* Featured Quick Start Templates */}
+      <section className="space-y-6">
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight">Quick Start Templates</h2>
+          <p className="text-muted-foreground mt-1">
+            Copy-paste ready code examples to get started in minutes
+          </p>
+        </div>
 
-        <TabsContent value="all" className="mt-8">
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {evaluationTemplates.map((template) => (
-              <TemplateCard key={template.id} template={template} />
+        <Tabs defaultValue="all" className="w-full">
+          <TabsList className="grid w-full grid-cols-6">
+            {featuredCategories.map((cat) => (
+              <TabsTrigger key={cat.id} value={cat.id} className="text-xs md:text-sm">
+                {cat.name} ({cat.count})
+              </TabsTrigger>
             ))}
-          </div>
-        </TabsContent>
+          </TabsList>
 
-        {categories.slice(1).map((cat) => (
-          <TabsContent key={cat.id} value={cat.id} className="mt-8">
+          <TabsContent value="all" className="mt-8">
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {getTemplatesByCategory(cat.id as any).map((template) => (
+              {evaluationTemplates.map((template) => (
                 <TemplateCard key={template.id} template={template} />
               ))}
             </div>
           </TabsContent>
-        ))}
-      </Tabs>
+
+          {featuredCategories.slice(1).map((cat) => (
+            <TabsContent key={cat.id} value={cat.id} className="mt-8">
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {getTemplatesByCategory(cat.id as any).map((template) => (
+                  <TemplateCard key={template.id} template={template} />
+                ))}
+              </div>
+            </TabsContent>
+          ))}
+        </Tabs>
+      </section>
+
+      {/* Full Template Catalog */}
+      <section className="space-y-6">
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight">All Templates</h2>
+          <p className="text-muted-foreground mt-1">
+            Browse {COMPREHENSIVE_TEMPLATES.length}+ templates across every evaluation category
+          </p>
+        </div>
+
+        <Tabs defaultValue="catalog-all" className="w-full">
+          <TabsList className="flex flex-wrap gap-1 h-auto p-1">
+            <TabsTrigger value="catalog-all" className="text-xs">
+              All ({COMPREHENSIVE_TEMPLATES.length})
+            </TabsTrigger>
+            {TEMPLATE_CATEGORIES.map((cat) => {
+              const count = getCatalogTemplatesByCategory(cat.id).length;
+              return (
+                <TabsTrigger key={cat.id} value={`catalog-${cat.id}`} className="text-xs">
+                  {cat.name} ({count})
+                </TabsTrigger>
+              );
+            })}
+          </TabsList>
+
+          <TabsContent value="catalog-all" className="mt-8">
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {COMPREHENSIVE_TEMPLATES.map((template) => (
+                <CatalogTemplateCard key={template.id} template={toSerializable(template)} />
+              ))}
+            </div>
+          </TabsContent>
+
+          {TEMPLATE_CATEGORIES.map((cat) => (
+            <TabsContent key={cat.id} value={`catalog-${cat.id}`} className="mt-8">
+              <p className="text-sm text-muted-foreground mb-6">{cat.description}</p>
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {getCatalogTemplatesByCategory(cat.id).map((template) => (
+                  <CatalogTemplateCard key={template.id} template={toSerializable(template)} />
+                ))}
+              </div>
+            </TabsContent>
+          ))}
+        </Tabs>
+      </section>
 
       {/* CTA */}
       <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
@@ -104,14 +173,16 @@ export default function TemplatesPage() {
           <div className="text-center space-y-4">
             <h2 className="text-3xl font-bold">Need a custom template?</h2>
             <p className="text-muted-foreground max-w-2xl mx-auto">
-              We can help you create evaluation templates tailored to your specific use case.
+              Contribute your own evaluation templates or request new ones through GitHub.
             </p>
             <div className="flex gap-4 justify-center">
               <a
-                href="/contact"
+                href="https://github.com/pauly7610/ai-evaluation-platform/pulls"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="px-6 py-3 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
               >
-                Contact Us
+                Open a PR
               </a>
               <a
                 href="/documentation"
@@ -150,4 +221,3 @@ function StatCard({ icon, label, value, description }: {
     </Card>
   );
 }
-

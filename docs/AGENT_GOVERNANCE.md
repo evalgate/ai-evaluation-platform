@@ -372,7 +372,7 @@ const workflow = {
 ### LangChain
 
 ```typescript
-import { traceLangChainAgent } from '@evalai/sdk/workflows';
+import { traceLangChainAgent } from '@pauly4010/evalai-sdk/workflows';
 
 const agent = await initializeAgent(tools, model, {
   callbacks: [traceLangChainAgent({
@@ -408,7 +408,7 @@ result = crew.kickoff()
 ### AutoGen
 
 ```typescript
-import { traceAutoGen } from '@evalai/sdk/workflows';
+import { traceAutoGen } from '@pauly4010/evalai-sdk/workflows';
 
 const tracedConversation = traceAutoGen(conversation, tracer, {
   conversationName: 'CodeReview'
@@ -480,6 +480,6 @@ interface GovernanceResult {
 
 ## Support
 
-- **Documentation**: https://docs.evalai.dev/governance
-- **API Reference**: https://api.evalai.dev/docs
-- **Support**: support@evalai.dev
+- **Documentation**: https://ai-evaluation-platform.vercel.app/documentation
+- **API Reference**: https://ai-evaluation-platform.vercel.app/api-reference
+- **Support**: https://github.com/pauly7610/ai-evaluation-platform/issues

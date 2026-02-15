@@ -189,6 +189,8 @@ export const llmJudgeConfigs = sqliteTable('llm_judge_configs', {
 export const llmJudgeResults = sqliteTable('llm_judge_results', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   configId: integer('config_id').references(() => llmJudgeConfigs.id).notNull(),
+  evaluationRunId: integer('evaluation_run_id').references(() => evaluationRuns.id),
+  testCaseId: integer('test_case_id').references(() => testCases.id),
   input: text('input').notNull(),
   output: text('output').notNull(),
   score: integer('score'),

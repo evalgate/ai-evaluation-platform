@@ -9,7 +9,7 @@
     "trace": "node trace-example.js"
   },
   "dependencies": {
-    "@evalai/sdk": "^1.0.0",
+    "@pauly4010/evalai-sdk": "^1.0.0",
     "dotenv": "^16.3.1"
   },
   "keywords": [

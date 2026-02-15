@@ -243,7 +243,7 @@ const score = calculateQualityScore(stats, previousStats);
 9. ✅ Write blog posts featuring templates
 10. ✅ Create video tutorials for each template
 11. ✅ Add "Deploy to Vercel" buttons on templates
-12. ✅ Build community around templates (Discord)
+12. ✅ Build community around templates (GitHub Discussions)
 
 ---
 
@@ -442,11 +442,11 @@ P.S. - If you like what you see, we have a free trial waiting for you.
 
 ## 🤝 Community Engagement
 
-### Discord Channels
+### GitHub Community
 
-- #playground-feedback
-- #template-showcase
-- #quality-scores
+- GitHub Issues for feedback and bug reports
+- GitHub Discussions for template showcases
+- GitHub PRs for contributions
 
 ### Content Ideas
 

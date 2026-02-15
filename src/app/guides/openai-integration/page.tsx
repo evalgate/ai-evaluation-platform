@@ -30,16 +30,16 @@ export default function OpenAIIntegrationGuide() {
         <div className="prose prose-sm sm:prose-base max-w-none">
           <h2>Installation</h2>
           <div className="bg-muted p-4 rounded-lg font-mono text-sm my-4">
-            npm install openai @evalai/sdk
+            npm install openai @pauly4010/evalai-sdk
           </div>
 
           <h2>Basic Setup</h2>
           <div className="bg-muted p-4 rounded-lg font-mono text-sm my-4 overflow-x-auto">
 {`import OpenAI from 'openai'
-import { AIEvalClient, traceOpenAI } from '@evalai/sdk'
+import { AIEvalClient, WorkflowTracer, traceOpenAI, traceWorkflowStep } from '@pauly4010/evalai-sdk'
 
-// Initialize EvalAI client (auto-loads from env vars)
-const client = AIEvalClient.init()
+const client = new AIEvalClient({ apiKey: process.env.EVALAI_API_KEY })
+const tracer = new WorkflowTracer(client)
 
 // Wrap OpenAI client for automatic tracing
 const openai = traceOpenAI(new OpenAI(), client)`}
@@ -137,97 +137,76 @@ const vector = embedding.data[0].embedding`}
 
           <h3>Multi-Turn Conversations</h3>
           <div className="bg-muted p-4 rounded-lg font-mono text-sm my-4 overflow-x-auto">
-{`// Track entire conversation
-await aiEval.trace({
-  name: 'multi-turn-conversation',
-  metadata: { sessionId: 'session_456' }
-}, async (traceContext) => {
-  
-  const messages = [];
-  
-  // Turn 1
-  messages.push({ role: 'user', content: 'Hello!' });
-  const response1 = await traceContext.span(
-    { name: 'turn-1' },
-    () => openai.chat.completions.create({ model: 'gpt-4', messages })
-  );
-  messages.push(response1.choices[0].message);
-  
-  // Turn 2
-  messages.push({ role: 'user', content: 'Tell me a joke' });
-  const response2 = await traceContext.span(
-    { name: 'turn-2' },
-    () => openai.chat.completions.create({ model: 'gpt-4', messages })
-  );
-  messages.push(response2.choices[0].message);
-  
-  return messages;
-});`}
+{`import { traceWorkflowStep } from '@pauly4010/evalai-sdk'
+
+await tracer.startWorkflow('multi-turn-conversation', undefined, { sessionId: 'session_456' });
+
+const messages = [];
+
+// Turn 1
+messages.push({ role: 'user', content: 'Hello!' });
+const response1 = await traceWorkflowStep(tracer, 'turn-1', () =>
+  openai.chat.completions.create({ model: 'gpt-4', messages })
+);
+messages.push(response1.choices[0].message);
+
+// Turn 2
+messages.push({ role: 'user', content: 'Tell me a joke' });
+const response2 = await traceWorkflowStep(tracer, 'turn-2', () =>
+  openai.chat.completions.create({ model: 'gpt-4', messages })
+);
+messages.push(response2.choices[0].message);
+
+await tracer.endWorkflow({ status: 'success' });`}
           </div>
 
           <h3>Retry Logic with Tracing</h3>
           <div className="bg-muted p-4 rounded-lg font-mono text-sm my-4 overflow-x-auto">
 {`async function callOpenAIWithRetry(messages, maxRetries = 3) {
-  return await aiEval.trace({
-    name: 'openai-with-retry',
-    metadata: { maxRetries }
-  }, async (traceContext) => {
-    
-    for (let attempt = 1; attempt <= maxRetries; attempt++) {
-      try {
-        return await traceContext.span(
-          { name: \`attempt-\${attempt}\` },
-          () => openai.chat.completions.create({
-            model: 'gpt-4',
-            messages
-          })
-        );
-      } catch (error) {
-        if (attempt === maxRetries) throw error;
-        
-        // Log retry in trace
-        traceContext.logEvent({
-          name: 'retry',
-          metadata: { 
-            attempt,
-            error: error.message,
-            waitTime: Math.pow(2, attempt) * 1000
-          }
-        });
-        
-        await new Promise(r => setTimeout(r, Math.pow(2, attempt) * 1000));
+  await tracer.startWorkflow('openai-with-retry', undefined, { maxRetries });
+
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      const result = await traceWorkflowStep(
+        tracer,
+        \`attempt-\${attempt}\`,
+        () => openai.chat.completions.create({ model: 'gpt-4', messages })
+      );
+      await tracer.endWorkflow({ status: 'success' });
+      return result;
+    } catch (error) {
+      if (attempt === maxRetries) {
+        await tracer.endWorkflow({ status: 'failed', error: error.message });
+        throw error;
       }
+      await new Promise(r => setTimeout(r, Math.pow(2, attempt) * 1000));
     }
-  });
+  }
 }`}
           </div>
 
           <h3>Parallel Requests</h3>
           <div className="bg-muted p-4 rounded-lg font-mono text-sm my-4 overflow-x-auto">
-{`// Generate multiple variations in parallel
-const variations = await aiEval.trace({
-  name: 'generate-variations',
-  metadata: { count: 3 }
-}, async (traceContext) => {
-  
-  const prompts = [
-    'Write a formal email...',
-    'Write a casual email...',
-    'Write a brief email...'
-  ];
-  
-  return await Promise.all(
-    prompts.map((prompt, i) =>
-      traceContext.span(
-        { name: \`variation-\${i + 1}\` },
-        () => openai.chat.completions.create({
-          model: 'gpt-4',
-          messages: [{ role: 'user', content: prompt }]
-        })
-      )
+{`await tracer.startWorkflow('generate-variations', undefined, { count: 3 });
+
+const prompts = [
+  'Write a formal email...',
+  'Write a casual email...',
+  'Write a brief email...'
+];
+
+const variations = await Promise.all(
+  prompts.map((prompt, i) =>
+    traceWorkflowStep(tracer, \`variation-\${i + 1}\`, () =>
+      openai.chat.completions.create({
+        model: 'gpt-4',
+        messages: [{ role: 'user', content: prompt }]
+      })
     )
-  );
-});`}
+  )
+);
+
+await tracer.endWorkflow({ status: 'success' });`}
           </div>
 
           <h2>Evaluation Integration</h2>
@@ -249,43 +228,41 @@ const variations = await aiEval.trace({
 
 // Run evaluation
 for (const testCase of testCases) {
-  const result = await aiEval.trace({
-    name: 'test-case',
-    metadata: testCase.metadata
-  }, async () => {
-    return await openai.chat.completions.create({
+  await tracer.startWorkflow('test-case', undefined, testCase.metadata);
+  const result = await traceWorkflowStep(tracer, 'llm-call', () =>
+    openai.chat.completions.create({
       model: 'gpt-4',
       messages: [{ role: 'user', content: testCase.input.prompt }]
-    });
-  });
-  
+    })
+  );
+  await tracer.endWorkflow({ status: 'success' });
+
   const output = result.choices[0].message.content;
-  const passed = testCase.expectedOutput.contains 
+  const passed = testCase.expectedOutput.contains
     ? output.toLowerCase().includes(testCase.expectedOutput.contains)
     : output === testCase.expectedOutput.exact;
-  
+
   console.log(\`Test \${testCase.metadata.category}: \${passed ? '✓' : '✗'}\`);
 }`}
           </div>
 
           <h3>A/B Testing Models</h3>
           <div className="bg-muted p-4 rounded-lg font-mono text-sm my-4 overflow-x-auto">
-{`// Compare GPT-4 vs GPT-3.5-turbo
-async function abTestModels(prompt) {
+{`async function abTestModels(prompt) {
   const variant = Math.random() < 0.5 ? 'gpt-4' : 'gpt-3.5-turbo';
-  
-  return await aiEval.trace({
-    name: 'model-ab-test',
-    metadata: { 
-      variant,
-      experimentId: 'gpt4-vs-gpt35'
-    }
-  }, async () => {
-    return await openai.chat.completions.create({
+
+  await tracer.startWorkflow('model-ab-test', undefined, {
+    variant,
+    experimentId: 'gpt4-vs-gpt35'
+  });
+  const result = await traceWorkflowStep(tracer, 'llm-call', () =>
+    openai.chat.completions.create({
       model: variant,
       messages: [{ role: 'user', content: prompt }]
-    });
-  });
+    })
+  );
+  await tracer.endWorkflow({ status: 'success' });
+  return result;
 }
 
 // Analyze results in dashboard to compare:
@@ -299,20 +276,19 @@ async function abTestModels(prompt) {
 
           <h3>1. Add Contextual Metadata</h3>
           <div className="bg-muted p-4 rounded-lg font-mono text-sm my-4 overflow-x-auto">
-{`await aiEval.trace({
-  name: 'content-generation',
-  metadata: {
-    userId: user.id,
-    contentType: 'blog-post',
-    targetAudience: 'developers',
-    tone: 'professional',
-    model: 'gpt-4',
-    temperature: 0.7,
-    maxTokens: 2000
-  }
-}, async () => {
-  // OpenAI call
-});`}
+{`await tracer.startWorkflow('content-generation', undefined, {
+  userId: user.id,
+  contentType: 'blog-post',
+  targetAudience: 'developers',
+  tone: 'professional',
+  model: 'gpt-4',
+  temperature: 0.7,
+  maxTokens: 2000
+});
+const span = await tracer.startAgentSpan('ContentAgent', { input: '...' });
+// OpenAI call
+await tracer.endAgentSpan(span, { result: '...' });
+await tracer.endWorkflow({ status: 'success' });`}
           </div>
 
           <h3>2. Track Token Usage</h3>
@@ -326,14 +302,16 @@ async function abTestModels(prompt) {
           <h3>3. Monitor for Errors</h3>
           <div className="bg-muted p-4 rounded-lg font-mono text-sm my-4 overflow-x-auto">
 {`try {
-  await aiEval.trace({ name: 'api-call' }, async () => {
-    return await openai.chat.completions.create({...});
-  });
+  await tracer.startWorkflow('api-call');
+  const result = await traceWorkflowStep(tracer, 'llm-call', () =>
+    openai.chat.completions.create({...})
+  );
+  await tracer.endWorkflow({ status: 'success' });
+  return result;
 } catch (error) {
-  // Error automatically logged in trace
+  await tracer.endWorkflow({ status: 'failed', error: error.message });
   console.error('OpenAI error:', error.message);
-  
-  // Track error type for alerting
+
   if (error.status === 429) {
     // Rate limit hit
   } else if (error.status === 500) {

@@ -61,7 +61,7 @@ export default function QuickStartPage() {
                   <li>4. Enter a name (e.g., "Development Key")</li>
                   <li>5. Select the scopes you need (start with all for testing)</li>
                   <li>6. Click "Create Key"</li>
-                  <li>7. <strong>Copy and save your API key immediately</strong> - you won't see it again!</li>
+                  <li>7. <strong>Copy and save your API key immediately</strong> - you won&apos;t see it again!</li>
                 </ol>
                 <div className="mt-4 p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
                   <p className="text-sm text-yellow-600 dark:text-yellow-500">
@@ -88,7 +88,7 @@ export default function QuickStartPage() {
                 <div className="space-y-3">
                   <div className="bg-muted p-4 rounded-lg font-mono text-sm">
                     <div className="flex items-center justify-between">
-                      <span>npm install @evalai/sdk</span>
+                      <span>npm install @pauly4010/evalai-sdk</span>
                       <Button size="sm" variant="ghost">
                         <Copy className="h-3 w-3" />
                       </Button>
@@ -96,7 +96,7 @@ export default function QuickStartPage() {
                   </div>
                   <div className="bg-muted p-4 rounded-lg font-mono text-sm">
                     <div className="flex items-center justify-between">
-                      <span>yarn add @evalai/sdk</span>
+                      <span>yarn add @pauly4010/evalai-sdk</span>
                       <Button size="sm" variant="ghost">
                         <Copy className="h-3 w-3" />
                       </Button>
@@ -104,7 +104,7 @@ export default function QuickStartPage() {
                   </div>
                   <div className="bg-muted p-4 rounded-lg font-mono text-sm">
                     <div className="flex items-center justify-between">
-                      <span>pnpm add @evalai/sdk</span>
+                      <span>pnpm add @pauly4010/evalai-sdk</span>
                       <Button size="sm" variant="ghost">
                         <Copy className="h-3 w-3" />
                       </Button>
@@ -162,7 +162,7 @@ EVALAI_ORGANIZATION_ID=your_org_id_here`}</pre>
                   Import and initialize the SDK in your code:
                 </p>
                 <div className="bg-muted p-4 rounded-lg font-mono text-sm mb-4">
-                  <pre>{`import { AIEvalClient } from '@evalai/sdk'
+                  <pre>{`import { AIEvalClient } from '@pauly4010/evalai-sdk'
 
 // Auto-loads from environment variables
 const client = AIEvalClient.init()
@@ -225,6 +225,49 @@ console.log('Span created:', span.id)`}</pre>
             </Card>
           </div>
 
+          {/* Step 6: Write Your First Eval */}
+          <div className="mb-8">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground font-bold">
+                6
+              </div>
+              <h2 className="text-2xl font-bold">Write Your First Eval</h2>
+            </div>
+            <Card>
+              <CardContent className="pt-6">
+                <p className="text-muted-foreground mb-4">
+                  Now that you can trace, let&apos;s evaluate. The SDK includes a test suite runner with 20+ built-in assertions designed for LLM outputs.
+                </p>
+                <div className="bg-muted p-4 rounded-lg font-mono text-sm mb-4">
+                  <pre>{`import { createTestSuite, expect } from '@pauly4010/evalai-sdk';
+
+const suite = createTestSuite('My First Eval', {
+  executor: async (input) => await myLLM(input),
+  cases: [{
+    input: 'Summarize this document...',
+    assertions: [
+      (output) => expect(output).toHaveLength({ min: 50, max: 500 }),
+      (output) => expect(output).toNotContainPII(),
+      (output) => expect(output).toHaveSentiment('neutral'),
+    ]
+  }]
+});
+
+const { total, passed, failed } = await suite.run();
+console.log(\`Results: \${passed}/\${total} passed\`);`}</pre>
+                </div>
+                <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+                  <p className="text-sm text-blue-600 dark:text-blue-400">
+                    <strong>Explore all 20+ assertions</strong> including hallucination detection, JSON validation, and profanity checks.{' '}
+                    <Link href="/sdk#assertions" className="underline hover:no-underline">
+                      View the full assertion library &rarr;
+                    </Link>
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
           {/* Next Steps */}
           <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
             <CardHeader>
@@ -233,27 +276,27 @@ console.log('Span created:', span.id)`}</pre>
                 Next Steps
               </CardTitle>
               <CardDescription>
-                Now that you're set up, explore these features:
+                Now that you&apos;re set up, explore these features:
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="grid md:grid-cols-2 gap-4">
+                <Link href="/sdk#assertions" className="block">
+                  <Card className="h-full hover:bg-accent transition-colors cursor-pointer">
+                    <CardContent className="pt-6">
+                      <h3 className="font-semibold mb-2">Assertion Library</h3>
+                      <p className="text-sm text-muted-foreground">
+                        20+ built-in assertions for LLM outputs
+                      </p>
+                    </CardContent>
+                  </Card>
+                </Link>
                 <Link href="/guides/openai-integration" className="block">
                   <Card className="h-full hover:bg-accent transition-colors cursor-pointer">
                     <CardContent className="pt-6">
                       <h3 className="font-semibold mb-2">OpenAI Integration</h3>
                       <p className="text-sm text-muted-foreground">
                         Automatically trace OpenAI calls
-                      </p>
-                    </CardContent>
-                  </Card>
-                </Link>
-                <Link href="/guides/evaluation-types" className="block">
-                  <Card className="h-full hover:bg-accent transition-colors cursor-pointer">
-                    <CardContent className="pt-6">
-                      <h3 className="font-semibold mb-2">Create Evaluations</h3>
-                      <p className="text-sm text-muted-foreground">
-                        Set up automated testing
                       </p>
                     </CardContent>
                   </Card>

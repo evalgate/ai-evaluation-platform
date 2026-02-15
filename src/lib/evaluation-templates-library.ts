@@ -28,7 +28,7 @@ export const evaluationTemplates: EvaluationTemplate[] = [
     category: 'chatbot',
     difficulty: 'beginner',
     estimatedTime: '2 minutes',
-    code: `import { AIEvalClient } from '@evalai/sdk';
+    code: `import { AIEvalClient } from '@pauly4010/evalai-sdk';
 
 const client = AIEvalClient.init();
 
@@ -70,7 +70,7 @@ async function evaluateChatbot() {
   }
 
   console.log('✅ Evaluation complete! View results at:');
-  console.log(\`https://evalai.com/traces/\${trace.id}\`);
+  console.log(\`https://ai-evaluation-platform.vercel.app/traces/\${trace.id}\`);
 }`,
     testCases: [
       {
@@ -105,7 +105,7 @@ Total: 0-100 points`
     category: 'chatbot',
     difficulty: 'intermediate',
     estimatedTime: '5 minutes',
-    code: `import { AIEvalClient } from '@evalai/sdk';
+    code: `import { AIEvalClient } from '@pauly4010/evalai-sdk';
 
 const client = AIEvalClient.init();
 
@@ -176,7 +176,7 @@ Target: 100% pass rate`
     category: 'rag',
     difficulty: 'intermediate',
     estimatedTime: '5 minutes',
-    code: `import { AIEvalClient } from '@evalai/sdk';
+    code: `import { AIEvalClient } from '@pauly4010/evalai-sdk';
 
 const client = AIEvalClient.init();
 
@@ -249,7 +249,7 @@ Target: 100% accuracy (no hallucinations)`
     category: 'rag',
     difficulty: 'advanced',
     estimatedTime: '10 minutes',
-    code: `import { AIEvalClient } from '@evalai/sdk';
+    code: `import { AIEvalClient } from '@pauly4010/evalai-sdk';
 
 const client = AIEvalClient.init();
 
@@ -312,7 +312,7 @@ Score (0-10):\`;
     category: 'code-gen',
     difficulty: 'advanced',
     estimatedTime: '10 minutes',
-    code: `import { AIEvalClient } from '@evalai/sdk';
+    code: `import { AIEvalClient } from '@pauly4010/evalai-sdk';
 import { execSync } from 'child_process';
 
 const client = AIEvalClient.init();
@@ -374,7 +374,7 @@ async function runCodeTests(code: string): Promise<boolean> {
     category: 'content',
     difficulty: 'beginner',
     estimatedTime: '3 minutes',
-    code: `import { AIEvalClient } from '@evalai/sdk';
+    code: `import { AIEvalClient } from '@pauly4010/evalai-sdk';
 
 const client = AIEvalClient.init();
 
@@ -430,7 +430,7 @@ async function evaluateContent() {
     category: 'classification',
     difficulty: 'beginner',
     estimatedTime: '2 minutes',
-    code: `import { AIEvalClient } from '@evalai/sdk';
+    code: `import { AIEvalClient } from '@pauly4010/evalai-sdk';
 
 const client = AIEvalClient.init();
 

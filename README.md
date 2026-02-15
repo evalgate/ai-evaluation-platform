@@ -1,156 +1,197 @@
-# AI Evaluation Platform
+# AI Evaluation Platform (EvalAI)
 
-_Enterprise-grade AI agent orchestration, evaluation, and governance platform_
-
-[![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=for-the-badge&logo=vercel)](https://vercel.com/pauly7610s-projects/v0-ai-evaluation-platform)
-[![npm](https://img.shields.io/npm/v/@pauly4010/evalai-sdk?style=for-the-badge&logo=npm&color=cb3837)](https://www.npmjs.com/package/@pauly4010/evalai-sdk)
+[![npm](https://img.shields.io/npm/v/@pauly4010/evalai-sdk?style=flat-square&logo=npm&color=cb3837)](https://www.npmjs.com/package/@pauly4010/evalai-sdk)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](https://opensource.org/licenses/MIT)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](https://github.com/pauly7610/ai-evaluation-platform/pulls)
 
 ## Overview
 
-EvalAI is a production-grade platform for deploying, monitoring, auditing, and optimizing multi-agent AI systems with full governance and cost visibility.
+**Evaluations are the language of GenAI.** AI Evaluation Platform (EvalAI) is built on the conviction that rigorous, repeatable evaluation is what separates production-ready AI systems from experimental prototypes. Without evals, you're flying blind—with them, you can ship with confidence.
 
-### Key Features
+EvalAI is a production-grade platform for multi-agent orchestration, evaluation, governance, cost tracking, and benchmarking. It supports **four evaluation types**: Unit Tests (automated assertions), Human Evaluation (expert annotation), Model Evaluation (LLM-as-judge), and A/B Testing. Choose from **80+ evaluation templates** spanning chatbots, RAG systems, code generation, adversarial testing, and industry-specific scenarios. The visual evaluation builder lets you compose evals without code, while the quality score dashboard surfaces pass rates, IAA metrics, and LLM-human alignment at a glance.
 
-- **Multi-Agent Orchestration** - Visual DAG workflows with 6 node types (agent, tool, decision, parallel, human, LLM)
-- **Decision Auditing** - Full reasoning chains, confidence scores, and alternative analysis
-- **Cost Tracking** - Real-time cost analytics with model-level breakdown (12 models across 3 providers)
-- **Governance Rules** - Configurable approval/blocking rules with compliance presets (SOC2, GDPR, HIPAA, FINRA)
-- **SLA Management** - Latency, cost, and error rate thresholds with violation alerts
-- **Human-in-the-Loop** - Built-in escalation and approval workflows
-- **Agent Benchmarks** - Leaderboards and architecture comparison
+For human evaluation, EvalAI computes **Interannotator Agreement (IAA)** metrics—Cohen's Kappa and Fleiss's Kappa—so you can measure annotation quality and reliability. The **LLM-Human Alignment** analysis compares LLM judge scores to human ratings, helping you calibrate automated evaluation against ground truth. A full **TypeScript SDK** (`@pauly4010/evalai-sdk`) provides programmatic access to evaluations, traces, and workflows. **WebMCP** (Web Model Context Protocol) support enables AI agents to discover and integrate with the platform.
 
-## Comparison vs. Alternatives
+**Live demo:** [https://ai-evaluation-platform.vercel.app](https://ai-evaluation-platform.vercel.app)
 
-| Feature | EvalAI | LangSmith | PromptLayer | Weights & Biases |
-|---------|--------|-----------|-------------|------------------|
-| **Multi-Agent Orchestration** | ✅ Full DAG visualization | ⚠️ Basic traces | ❌ No | ⚠️ Experiments only |
-| **Decision Auditing** | ✅ Reasoning + alternatives | ⚠️ Limited | ❌ No | ❌ No |
-| **Cost Per Workflow** | ✅ Real-time tracking | ❌ No | ✅ Yes | ❌ No |
-| **Governance Rules** | ✅ Configurable + presets | ❌ No | ❌ No | ❌ No |
-| **Agent Benchmarks** | ✅ Leaderboards | ⚠️ Manual | ❌ No | ✅ Yes |
-| **Human-in-the-Loop** | ✅ Built-in escalation | ❌ No | ❌ No | ❌ No |
-| **SLA Monitoring** | ✅ Latency/cost/error | ❌ No | ❌ No | ⚠️ Custom |
-| **Retry & Fallback** | ✅ Circuit breaker | ❌ No | ❌ No | ❌ No |
-| **Compliance Presets** | ✅ SOC2/GDPR/HIPAA/FINRA | ❌ No | ❌ No | ❌ No |
+## Key Features
+
+### Evaluation
+- **Four evaluation types:** Unit Tests, Human Evaluation, LLM Judge, A/B Testing
+- **80+ evaluation templates** across chatbots, RAG, code-gen, adversarial, multimodal, and industry domains
+- **Visual evaluation builder** — compose evals with drag-and-drop, no code required
+- **Quality score dashboard** — pass rates, trends, and drill-down into failures
+- **Interannotator Agreement (IAA)** — Cohen's Kappa, Fleiss's Kappa for human eval quality
+- **LLM-Human Alignment** — compare LLM judge scores to human ratings
+
+### Multi-Agent Orchestration
+- **DAG workflows** — visual DAG with agent, tool, decision, parallel, human, and LLM nodes
+- **Agent handoffs** — delegation, escalation, and collaboration patterns
+- **Decision auditing** — full reasoning chains, confidence scores, and alternative analysis
+
+### Cost Tracking
+- **Per-token costs** — real-time tracking across OpenAI, Anthropic, Google (12+ models)
+- **Provider pricing** — built-in pricing tables, budget alerts, and cost breakdowns
+
+### Benchmarking
+- **Agent comparison** — side-by-side runs across accuracy, latency, cost, safety
+- **Leaderboard** — standardized metrics and statistical significance
+
+### Developer Experience
+- **Full TypeScript SDK** — `@pauly4010/evalai-sdk` with traces, evaluations, LLM judge, webhooks
+- **API keys** — scoped keys for CI/CD and production
+- **Webhooks** — event notifications for runs, evaluations, and traces
+- **CLI** — `evalai` for local runs and batch evaluation
+
+### AI Agent Discoverability
+- **llms.txt** — AI agent discovery file (like robots.txt for LLMs)
+- **WebMCP tool contracts** — structured tool definitions for AI agent integration
 
 ## Quick Start
-
-```typescript
-import { AIEvalClient, WorkflowTracer } from '@pauly4010/evalai-sdk';
-
-const client = new AIEvalClient({ apiKey: process.env.EVALAI_API_KEY });
-const tracer = new WorkflowTracer(client);
-
-// Start a workflow
-await tracer.startWorkflow('Customer Support Pipeline');
-
-// Record agent decisions
-await tracer.recordDecision({
-  agent: 'RouterAgent',
-  type: 'route',
-  chosen: 'technical_support',
-  alternatives: [{ action: 'billing', confidence: 0.2 }],
-  confidence: 85
-});
-
-// Track costs
-await tracer.recordCost({
-  provider: 'openai',
-  model: 'gpt-4',
-  inputTokens: 500,
-  outputTokens: 200
-});
-
-// End workflow
-await tracer.endWorkflow({ resolution: 'Issue resolved' });
-```
-
-## Framework Integrations
-
-### LangChain
-
-```typescript
-import { AIEvalClient, WorkflowTracer, traceLangChainAgent } from '@pauly4010/evalai-sdk';
-
-const client = AIEvalClient.init(); // reads EVALAI_API_KEY env
-const tracer = new WorkflowTracer(client);
-const tracedAgent = traceLangChainAgent(executor, tracer, { agentName: 'SupportBot' });
-```
-
-### CrewAI (Python)
-
-```python
-from evalai.workflows import trace_crewai
-
-@trace_crewai(workflow_name='market_research')
-class MarketResearchCrew:
-    # Your crew definition
-    pass
-```
-
-## SDK
-
-The official SDK is published on npm:
 
 ```bash
 npm install @pauly4010/evalai-sdk
 ```
 
-See the [SDK README](./src/packages/sdk/README.md) for full documentation.
+```typescript
+import { AIEvalClient, createTestSuite, expect } from '@pauly4010/evalai-sdk';
 
-## Documentation
+const client = new AIEvalClient({ apiKey: process.env.EVALAI_API_KEY });
 
-- [Integration Reference](./docs/INTEGRATION_REFERENCE.md) — Complete SDK, REST API, governance, and Python integration guide
-- [Live Integration Docs](https://ai-evaluation-platform.vercel.app/docs/integration) — Web version with structured data for AI agents
-- [Agent Governance Framework](./docs/AGENT_GOVERNANCE.md)
-- [Exporting & Sharing](./docs/EXPORTING_AND_SHARING.md)
-- [`llms.txt`](./public/llms.txt) — AI agent discovery file (served at `/llms.txt`)
+// Create a test suite
+const suite = createTestSuite('chatbot-quality', {
+  cases: [
+    {
+      input: 'What is your refund policy?',
+      assertions: [
+        (output) => expect(output).toContainKeywords(['refund', 'return', 'policy']),
+        (output) => expect(output).toHaveSentiment('neutral'),
+        (output) => expect(output).toNotContainPII(),
+        (output) => expect(output).toHaveLength({ min: 50, max: 500 }),
+      ]
+    }
+  ],
+  executor: async (input) => await yourLLM(input)
+});
+
+const results = await suite.run();
+console.log(`${results.passed}/${results.total} tests passed`);
+```
+
+## Evaluation System
+
+| Type | Description |
+|------|-------------|
+| **Unit Tests** | Automated assertions (keywords, sentiment, PII, length, schema) — run in CI, no human required |
+| **Human Evaluation** | Expert annotation with custom criteria, scales, and comparative ranking |
+| **Model Evaluation (LLM Judge)** | LLM-as-judge for correctness, relevance, safety, hallucination, coherence |
+| **A/B Testing** | Prompt variation, model comparison, and production experimentation |
+
+Templates cover unit tests, advanced unit tests (multimodal, temporal, resource), adversarial (jailbreak, hallucination stress, bias), multimodal, agent eval, human eval, LLM judge, RAGAS/G-Eval, production monitoring, industry-specific (customer support, financial, medical, legal, RAG), prompt optimization, chain-of-thought, context window, model steering, regression, and confidence calibration.
+
+The **visual evaluation builder** lets you select templates, add test cases, configure criteria, and run evals from the UI. **IAA metrics** (Cohen's Kappa, Fleiss's Kappa) quantify annotator agreement for human evals. **LLM-Human Alignment** analysis shows how well your LLM judge correlates with human ratings, so you can tune automated evaluation.
+
+## Local Development
+
+### Prerequisites
+
+- Node.js >= 18
+- pnpm >= 10 (`npm install -g pnpm`)
+
+### Setup
+
+```bash
+# Clone the repository
+git clone https://github.com/pauly7610/ai-evaluation-platform.git
+cd ai-evaluation-platform
+
+# Install dependencies
+pnpm install
+
+# Copy environment variables and fill in required values
+cp .env.example .env
+
+# Run database migrations
+pnpm drizzle-kit push
+
+# Start development server
+pnpm dev
+```
+
+The app will be available at [http://localhost:3000](http://localhost:3000).
+
+> **Note:** The SDK package (`@pauly4010/evalai-sdk`) is published to npm separately. For SDK consumers, `npm install @pauly4010/evalai-sdk` is the correct install command.
 
 ## Architecture
 
 ```
-src/
-├── app/                    # Next.js pages and API routes
-│   ├── api/
-│   │   ├── workflows/      # Workflow CRUD + runs
-│   │   ├── decisions/      # Decision auditing
-│   │   ├── costs/          # Cost tracking
-│   │   └── benchmarks/     # Agent benchmarks
-│   ├── docs/integration/   # Integration reference page
-│   └── (authenticated)/
-│       ├── workflows/      # Workflow UI
-│       ├── costs/          # Cost dashboard
-│       └── benchmarks/     # Benchmark leaderboards
-├── components/
-│   ├── workflow-dag.tsx    # DAG visualization
-│   └── decision-tree.tsx   # Decision tree component
-├── lib/
-│   ├── governance/         # Governance rules engine
-│   ├── workflows/          # Retry & fallback logic
-│   └── services/           # Business logic
-├── integrations/           # Framework examples (LangChain, CrewAI)
-├── remotion/               # Remotion demo video segments
-└── packages/sdk/           # TypeScript SDK (@pauly4010/evalai-sdk)
-public/
-├── llms.txt                # AI agent discovery (like robots.txt for LLMs)
-└── llms-full.txt           # Full API reference for AI agents
-docs/
-└── INTEGRATION_REFERENCE.md # Complete integration guide
-out/
-└── demo-video.mp4          # Rendered demo video (1920x1080, 30fps)
+ai-evaluation-platform/
+├── src/app/              # Next.js App Router pages
+│   ├── api/              # REST API routes (55+ endpoints)
+│   │   ├── evaluations/ # Eval CRUD, runs, test-cases, publish
+│   │   ├── llm-judge/   # LLM Judge evaluate, configs, alignment
+│   │   ├── traces/      # Distributed tracing + spans
+│   │   ├── workflows/   # DAG workflows, runs, handoffs
+│   │   ├── costs/       # Per-token cost tracking + pricing
+│   │   ├── decisions/   # Agent decision auditing
+│   │   ├── benchmarks/  # Agent benchmarking + leaderboard
+│   │   └── demo/        # Public demo endpoints (playground, custom-eval)
+│   ├── (authenticated)/ # Protected pages (dashboard, evals, workflows, costs, benchmarks)
+│   └── guides/          # Documentation guides (13 guides)
+├── src/packages/sdk/    # TypeScript SDK (@pauly4010/evalai-sdk) v1.3.0
+├── src/components/      # React components (26+ app components)
+│   └── ui/              # shadcn/ui primitives (57 components)
+├── src/lib/             # Core services, utilities, templates
+│   ├── services/        # Business logic (evaluation, llm-judge, webhook)
+│   └── governance/      # Compliance engine (SOC2, GDPR, HIPAA, FINRA, PCI-DSS)
+├── src/db/              # Database layer (Drizzle ORM schema, 33 tables)
+├── src/__tests__/       # Test files (Vitest)
+├── public/              # Static assets + llms.txt + llms-full.txt
+└── drizzle/             # Database migrations (9 migration files)
 ```
 
-## Deployment
+## Comparison
 
-Your project is live at:
-
-**[https://vercel.com/pauly7610s-projects/v0-ai-evaluation-platform](https://vercel.com/pauly7610s-projects/v0-ai-evaluation-platform)**
-
-## Demo Video
-
-A rendered demo video showcasing the platform is available at [`out/demo-video.mp4`](./out/demo-video.mp4). Built with [Remotion](https://remotion.dev/) — source in `src/remotion/`.
+| Feature | EvalAI | Langfuse | Braintrust | Promptfoo | Custom |
+|---------|--------|----------|------------|-----------|--------|
+| **Eval Templates** | ✅ 80+ | ⚠️ Limited | ⚠️ Some | ✅ Yes | ❌ Build yourself |
+| **LLM Judge** | ✅ Built-in | ❌ No | ✅ Yes | ✅ Yes | ❌ Build yourself |
+| **Human Eval** | ✅ Full | ⚠️ Basic | ✅ Yes | ❌ No | ❌ Build yourself |
+| **IAA Metrics** | ✅ Cohen's, Fleiss's | ❌ No | ⚠️ Limited | ❌ No | ❌ Build yourself |
+| **Multi-Agent** | ✅ DAG workflows | ⚠️ Traces | ⚠️ Traces | ❌ No | ❌ Build yourself |
+| **Cost Tracking** | ✅ Per-token | ✅ Yes | ✅ Yes | ❌ No | ❌ Build yourself |
+| **Decision Audit** | ✅ Full | ⚠️ Limited | ⚠️ Limited | ❌ No | ❌ Build yourself |
+| **WebMCP** | ✅ Yes | ❌ No | ❌ No | ❌ No | ❌ No |
+| **Visual Builder** | ✅ Yes | ⚠️ Limited | ⚠️ Limited | ⚠️ CLI-focused | ❌ No |
+| **Quality Score** | ✅ Dashboard | ⚠️ Basic | ✅ Yes | ⚠️ Basic | ❌ No |
 
 ## AI Agent Discoverability
 
-This project includes [`llms.txt`](https://ai-evaluation-platform.vercel.app/llms.txt) and [`llms-full.txt`](https://ai-evaluation-platform.vercel.app/llms-full.txt) — standard files that AI coding agents (Claude, Cursor, Copilot, ChatGPT) use to discover and recommend developer tools. The `/docs/integration` page includes JSON-LD structured data for search engines and AI systems.
+EvalAI publishes **llms.txt** and **WebMCP tool contracts** so AI coding agents (Claude, Cursor, Copilot, ChatGPT) can discover and recommend the platform. The llms.txt file is served at [https://ai-evaluation-platform.vercel.app/llms.txt](https://ai-evaluation-platform.vercel.app/llms.txt). WebMCP exposes structured tool definitions for programmatic agent integration.
 
+## Tech Stack
+
+- **Next.js 15** — App Router, server components
+- **React 19** — UI
+- **TypeScript** — End-to-end type safety
+- **Drizzle ORM** — Database layer
+- **LibSQL / Turso** — SQLite-compatible database
+- **Tailwind CSS** — Styling
+- **shadcn/ui** — Component library
+
+## Contributing
+
+Contributions are welcome! Please use `pnpm` for all local development. Run tests with `pnpm test` before submitting.
+
+```bash
+pnpm install        # Install dependencies
+pnpm dev            # Start dev server
+pnpm test           # Run tests
+pnpm build          # Production build
+```
+
+Open an issue or submit a pull request at [https://github.com/pauly7610/ai-evaluation-platform](https://github.com/pauly7610/ai-evaluation-platform).
+
+## License
+
+MIT
