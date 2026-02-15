@@ -16,7 +16,7 @@ This directory contains practical examples for using the AI Evaluation Platform 
    ```
 
 3. **Get your API key:**
-   - Go to [Developer Dashboard](https://ai-evaluation-platform.vercel.app/developer)
+   - Go to [Developer Dashboard](https://v0-ai-evaluation-platform-nu.vercel.app/developer)
    - Scroll to API Keys section
    - Click "Create API Key"
    - Copy the key to your `.env` file
@@ -150,9 +150,9 @@ const result = await client.evaluations.create({
 
 ## Learn More
 
-- [SDK Documentation](https://ai-evaluation-platform.vercel.app/sdk)
-- [API Reference](https://ai-evaluation-platform.vercel.app/api-reference)
-- [Guides](https://ai-evaluation-platform.vercel.app/guides)
+- [SDK Documentation](https://v0-ai-evaluation-platform-nu.vercel.app/sdk)
+- [API Reference](https://v0-ai-evaluation-platform-nu.vercel.app/api-reference)
+- [Guides](https://v0-ai-evaluation-platform-nu.vercel.app/guides)
 
 ## Support
 

@@ -586,5 +586,5 @@ MIT
 
 ## Support
 
-- Documentation: https://ai-evaluation-platform.vercel.app/documentation
+- Documentation: https://v0-ai-evaluation-platform-nu.vercel.app/documentation
 - Issues: https://github.com/pauly7610/ai-evaluation-platform/issues

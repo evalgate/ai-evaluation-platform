@@ -70,7 +70,7 @@ async function evaluateChatbot() {
   }
 
   console.log('✅ Evaluation complete! View results at:');
-  console.log(\`https://ai-evaluation-platform.vercel.app/traces/\${trace.id}\`);
+  console.log(\`https://v0-ai-evaluation-platform-nu.vercel.app/traces/\${trace.id}\`);
 }`,
     testCases: [
       {

@@ -499,7 +499,7 @@ A: Yes, all test inputs, outputs, and metadata are included.
 
 Need help with exports or sharing?
 
-- 📚 Docs: [Full documentation](https://ai-evaluation-platform.vercel.app/documentation)
+- 📚 Docs: [Full documentation](https://v0-ai-evaluation-platform-nu.vercel.app/documentation)
 - 🐛 Issues: [GitHub Issues](https://github.com/pauly7610/ai-evaluation-platform/issues)
 
 ---

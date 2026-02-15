@@ -22,7 +22,7 @@ This directory contains practical examples for using the AI Evaluation Platform 
    ```
 
 4. **Get your API key:**
-   - Go to [Developer Dashboard](https://ai-evaluation-platform.vercel.app/developer)
+   - Go to [Developer Dashboard](https://v0-ai-evaluation-platform-nu.vercel.app/developer)
    - Scroll to API Keys section
    - Click "Create API Key"
    - Copy the key to your `.env` file
@@ -76,8 +76,8 @@ jobs:
 
 ## Learn More
 
-- [SDK Documentation](https://ai-evaluation-platform.vercel.app/sdk)
-- [API Reference](https://ai-evaluation-platform.vercel.app/api-reference)
+- [SDK Documentation](https://v0-ai-evaluation-platform-nu.vercel.app/sdk)
+- [API Reference](https://v0-ai-evaluation-platform-nu.vercel.app/api-reference)
 - [Python SDK on PyPI](https://pypi.org/project/evalai-sdk/)
 
 ## Support

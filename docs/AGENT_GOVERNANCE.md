@@ -480,6 +480,6 @@ interface GovernanceResult {
 
 ## Support
 
-- **Documentation**: https://ai-evaluation-platform.vercel.app/documentation
-- **API Reference**: https://ai-evaluation-platform.vercel.app/api-reference
+- **Documentation**: https://v0-ai-evaluation-platform-nu.vercel.app/documentation
+- **API Reference**: https://v0-ai-evaluation-platform-nu.vercel.app/api-reference
 - **Support**: https://github.com/pauly7610/ai-evaluation-platform/issues

@@ -20,7 +20,7 @@ export const openApiSpec = {
       description: 'Development server',
     },
     {
-      url: 'https://ai-evaluation-platform.vercel.app',
+      url: 'https://v0-ai-evaluation-platform-nu.vercel.app',
       description: 'Production server',
     },
   ],

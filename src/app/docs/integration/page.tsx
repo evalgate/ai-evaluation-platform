@@ -448,7 +448,7 @@ const result = engine.evaluate(decision);
               </p>
               <CodeBlock lang="python">{`import requests, os, time
 
-BASE = "https://ai-evaluation-platform.vercel.app"
+BASE = "https://v0-ai-evaluation-platform-nu.vercel.app"
 HEADERS = {
     "Authorization": f"Bearer {os.environ['EVALAI_API_KEY']}",
     "Content-Type": "application/json"

@@ -12,7 +12,7 @@ EvalAI is a production-grade platform for multi-agent orchestration, evaluation,
 
 For human evaluation, EvalAI computes **Interannotator Agreement (IAA)** metrics—Cohen's Kappa and Fleiss's Kappa—so you can measure annotation quality and reliability. The **LLM-Human Alignment** analysis compares LLM judge scores to human ratings, helping you calibrate automated evaluation against ground truth. A full **TypeScript SDK** (`@pauly4010/evalai-sdk`) provides programmatic access to evaluations, traces, and workflows. **WebMCP** (Web Model Context Protocol) support enables AI agents to discover and integrate with the platform.
 
-**Live demo:** [https://ai-evaluation-platform.vercel.app](https://ai-evaluation-platform.vercel.app)
+**Live demo:** [https://v0-ai-evaluation-platform-nu.vercel.app](https://v0-ai-evaluation-platform-nu.vercel.app)
 
 ## Key Features
 
@@ -167,7 +167,7 @@ ai-evaluation-platform/
 
 ## AI Agent Discoverability
 
-EvalAI publishes **llms.txt** and **WebMCP tool contracts** so AI coding agents (Claude, Cursor, Copilot, ChatGPT) can discover and recommend the platform. The llms.txt file is served at [https://ai-evaluation-platform.vercel.app/llms.txt](https://ai-evaluation-platform.vercel.app/llms.txt). WebMCP exposes structured tool definitions for programmatic agent integration.
+EvalAI publishes **llms.txt** and **WebMCP tool contracts** so AI coding agents (Claude, Cursor, Copilot, ChatGPT) can discover and recommend the platform. The llms.txt file is served at [https://v0-ai-evaluation-platform-nu.vercel.app/llms.txt](https://v0-ai-evaluation-platform-nu.vercel.app/llms.txt). WebMCP exposes structured tool definitions for programmatic agent integration.
 
 ## Tech Stack
 

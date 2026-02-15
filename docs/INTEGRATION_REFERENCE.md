@@ -322,7 +322,7 @@ const result = await traceWorkflowStep(tracer, 'MyAgent', async () => {
 
 ## 2. REST API Contracts
 
-**Base URL**: Your deployed app (e.g., `https://ai-evaluation-platform.vercel.app`)
+**Base URL**: Your deployed app (e.g., `https://v0-ai-evaluation-platform-nu.vercel.app`)
 **Auth**: `Authorization: Bearer <API_KEY>` header on all requests
 **Content-Type**: `application/json`
 
@@ -644,7 +644,7 @@ from evalai_tracer import EvalAITracer, Decision, DecisionAlternative, CostRecor
 tracer = EvalAITracer(
     api_key=os.environ['EVALAI_API_KEY'],
     organization_id=123,
-    base_url='https://ai-evaluation-platform.vercel.app',
+    base_url='https://v0-ai-evaluation-platform-nu.vercel.app',
     debug=True
 )
 
@@ -725,7 +725,7 @@ If you don't want to copy the full example, here's the minimal HTTP pattern:
 ```python
 import requests
 
-BASE_URL = "https://ai-evaluation-platform.vercel.app"
+BASE_URL = "https://v0-ai-evaluation-platform-nu.vercel.app"
 HEADERS = {
     "Authorization": f"Bearer {os.environ['EVALAI_API_KEY']}",
     "Content-Type": "application/json"

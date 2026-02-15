@@ -138,6 +138,6 @@ import { COMPREHENSIVE_TEMPLATES, type EvaluationTemplate as CatalogTemplate } f
 
 ## Key URLs
 
-- Live site: https://ai-evaluation-platform.vercel.app
+- Live site: https://v0-ai-evaluation-platform-nu.vercel.app
 - GitHub: https://github.com/pauly7610/ai-evaluation-platform
 - npm: https://www.npmjs.com/package/@pauly4010/evalai-sdk

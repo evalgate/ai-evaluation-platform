@@ -37,7 +37,7 @@
     "url": "git+https://github.com/pauly7610/ai-evaluation-platform.git",
     "directory": "src/packages/sdk"
   },
-  "homepage": "https://ai-evaluation-platform.vercel.app",
+  "homepage": "https://v0-ai-evaluation-platform-nu.vercel.app",
   "bugs": {
     "url": "https://github.com/pauly7610/ai-evaluation-platform/issues"
   },

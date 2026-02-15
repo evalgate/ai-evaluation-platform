@@ -30,7 +30,7 @@ export const metadata: Metadata = {
     siteName: "EvalAI",
   },
   alternates: {
-    canonical: "https://ai-evaluation-platform.vercel.app",
+    canonical: "https://v0-ai-evaluation-platform-nu.vercel.app",
   },
   other: {
     "llms.txt": "/llms.txt",

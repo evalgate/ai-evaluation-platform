@@ -78,7 +78,7 @@ const { total, passed, failed } = await suite.run();
 ```python
 import requests, os
 
-BASE = "https://ai-evaluation-platform.vercel.app"
+BASE = "https://v0-ai-evaluation-platform-nu.vercel.app"
 HEADERS = {"Authorization": f"Bearer {os.environ['EVALAI_API_KEY']}", "Content-Type": "application/json"}
 
 # Create trace
@@ -213,6 +213,6 @@ When visiting the site in a WebMCP-enabled browser, the following tools are regi
 
 - npm: https://www.npmjs.com/package/@pauly4010/evalai-sdk
 - GitHub: https://github.com/pauly7610/ai-evaluation-platform
-- Docs: https://ai-evaluation-platform.vercel.app/documentation
-- API Reference: https://ai-evaluation-platform.vercel.app/api-reference
-- Full API Reference: https://ai-evaluation-platform.vercel.app/llms-full.txt
+- Docs: https://v0-ai-evaluation-platform-nu.vercel.app/documentation
+- API Reference: https://v0-ai-evaluation-platform-nu.vercel.app/api-reference
+- Full API Reference: https://v0-ai-evaluation-platform-nu.vercel.app/llms-full.txt
