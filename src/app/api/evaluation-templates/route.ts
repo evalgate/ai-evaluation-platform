@@ -13,10 +13,13 @@ import {
   TEMPLATE_CATEGORIES,
 } from '@/lib/evaluation-templates';
 
-/** Strip non-serializable icon field from catalog templates */
-function serializeTemplate(template: Record<string, any>) {
-  const { icon, ...rest } = template;
-  return rest;
+interface SerializedTemplate {
+  id: string;
+  name: string;
+  description: string;
+  category: string;
+  source: 'featured' | 'catalog';
+  [key: string]: unknown;
 }
 
 export async function GET(request: NextRequest) {
@@ -27,23 +30,22 @@ export async function GET(request: NextRequest) {
       const limitParam = searchParams.get('limit');
       const limit = limitParam ? parseInt(limitParam, 10) : undefined;
 
-      // Merge both template libraries
-      // Featured templates (from evaluation-templates-library.ts) get a source tag
-      const featured = evaluationTemplates.map((t) => ({
+      // Featured templates (from evaluation-templates-library.ts)
+      const featured: SerializedTemplate[] = evaluationTemplates.map((t) => ({
         ...t,
         source: 'featured' as const,
         type: 'unit_test' as const,
         complexity: t.difficulty,
       }));
 
-      // Catalog templates (from evaluation-templates.ts) get icon stripped
-      let catalog = COMPREHENSIVE_TEMPLATES.map((t) => ({
-        ...serializeTemplate(t),
-        source: 'catalog' as const,
-      }));
+      // Catalog templates (from evaluation-templates.ts) with icon stripped
+      const catalog: SerializedTemplate[] = COMPREHENSIVE_TEMPLATES.map((t) => {
+        const { icon, ...rest } = t;
+        return { ...rest, source: 'catalog' as const };
+      });
 
       // Combine
-      let allTemplates = [...featured, ...catalog];
+      let allTemplates: SerializedTemplate[] = [...featured, ...catalog];
 
       // Filter by category if provided
       if (category) {
