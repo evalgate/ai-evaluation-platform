@@ -52,7 +52,7 @@
     "@remotion/bundler": "^4.0.419",
     "@remotion/cli": "^4.0.419",
     "@remotion/renderer": "^4.0.419",
-    "@sentry/nextjs": "^10.20.0",
+    "@sentry/nextjs": "10",
     "@supabase/ssr": "^0.7.0",
     "@supabase/supabase-js": "^2.75.0",
     "@upstash/ratelimit": "^2.0.6",
@@ -97,7 +97,6 @@
     "zod": "3.25.76"
   },
   "devDependencies": {
-    "baseline-browser-mapping": "^2.9.0",
     "@eslint/eslintrc": "^3.3.1",
     "@tailwindcss/postcss": "^4.1.9",
     "@testing-library/react": "^16.3.0",
@@ -107,6 +106,7 @@
     "@typescript-eslint/eslint-plugin": "^8.46.1",
     "@typescript-eslint/parser": "^8.46.1",
     "@vitejs/plugin-react": "^5.0.4",
+    "baseline-browser-mapping": "^2.9.0",
     "concurrently": "^9.2.1",
     "critters": "^0.0.25",
     "eslint": "^9.37.0",

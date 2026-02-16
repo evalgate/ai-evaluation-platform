@@ -108,8 +108,9 @@ cd ai-evaluation-platform
 # Install dependencies
 pnpm install
 
-# Copy environment variables and fill in required values
-cp .env.example .env
+# Copy environment variables and fill in secrets
+cp .env.example .env.local
+# Edit .env.local with your Turso, OAuth, and auth secrets
 
 # Run database migrations
 pnpm drizzle-kit push
@@ -171,7 +172,7 @@ EvalAI publishes **llms.txt** and **WebMCP tool contracts** so AI coding agents 
 
 ## Tech Stack
 
-- **Next.js 15** — App Router, server components
+- **Next.js 16** — App Router, server components
 - **React 19** — UI
 - **TypeScript** — End-to-end type safety
 - **Drizzle ORM** — Database layer

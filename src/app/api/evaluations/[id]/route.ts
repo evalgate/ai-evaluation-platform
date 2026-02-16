@@ -1,19 +1,21 @@
 import { NextResponse, NextRequest } from "next/server"
 import { db } from '@/db'
 import { evaluations, testCases, evaluationTestCases, evaluationRuns, testResults, user } from '@/db/schema'
-import { eq } from 'drizzle-orm'
-import { getCurrentUser } from '@/lib/auth'
+import { eq, and } from 'drizzle-orm'
+import { requireAuthWithOrg } from '@/lib/autumn-server'
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const currentUser = await getCurrentUser(request)
-    const { id } = await params
-
-    if (!currentUser) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    const authResult = await requireAuthWithOrg(request)
+    if (!authResult.authenticated) {
+      const data = await authResult.response.json()
+      return NextResponse.json(data, { status: authResult.response.status })
     }
 
-    // Fetch evaluation with test cases and user info
+    const { userId, organizationId } = authResult
+    const { id } = await params
+
+    // Fetch evaluation with test cases and user info - ORG SCOPED
     const evaluationData = await db
       .select({
         evaluation: evaluations,
@@ -25,13 +27,14 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       })
       .from(evaluations)
       .leftJoin(user, eq(evaluations.createdBy, user.id))
-      .where(eq(evaluations.id, parseInt(id)))
+      .where(and(eq(evaluations.id, parseInt(id)), eq(evaluations.organizationId, organizationId)))
       .limit(1)
 
     if (evaluationData.length === 0) {
       return NextResponse.json({ error: "Evaluation not found" }, { status: 404 })
     }
 
+    // Fetch test cases for this evaluation - ORG SCOPED
     // Fetch test cases for this evaluation
     const evalTestCases = await db
       .select()
@@ -54,12 +57,14 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const currentUser = await getCurrentUser(request)
-    const { id } = await params
-
-    if (!currentUser) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    const authResult = await requireAuthWithOrg(request)
+    if (!authResult.authenticated) {
+      const data = await authResult.response.json()
+      return NextResponse.json(data, { status: authResult.response.status })
     }
+
+    const { userId, organizationId } = authResult
+    const { id } = await params
 
     const body = await request.json()
     const { name, description, config } = body
@@ -73,7 +78,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
         description: description !== undefined ? description : undefined,
         updatedAt: now,
       })
-      .where(eq(evaluations.id, parseInt(id)))
+      .where(and(eq(evaluations.id, parseInt(id)), eq(evaluations.organizationId, organizationId)))
       .returning()
 
     if (updated.length === 0) {
@@ -89,18 +94,20 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
 export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const currentUser = await getCurrentUser(request)
-    const { id } = await params
-
-    if (!currentUser) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    const authResult = await requireAuthWithOrg(request)
+    if (!authResult.authenticated) {
+      const data = await authResult.response.json()
+      return NextResponse.json(data, { status: authResult.response.status })
     }
 
-    // First check the evaluation exists
+    const { userId, organizationId } = authResult
+    const { id } = await params
+
+    // First check the evaluation exists - ORG SCOPED
     const existing = await db
       .select({ id: evaluations.id })
       .from(evaluations)
-      .where(eq(evaluations.id, parseInt(id)))
+      .where(and(eq(evaluations.id, parseInt(id)), eq(evaluations.organizationId, organizationId)))
       .limit(1);
 
     if (existing.length === 0) {
@@ -120,8 +127,8 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
     // 3. Delete test cases (both tables)
     await db.delete(testCases).where(eq(testCases.evaluationId, evalId));
     await db.delete(evaluationTestCases).where(eq(evaluationTestCases.evaluationId, evalId));
-    // 4. Delete the evaluation itself
-    await db.delete(evaluations).where(eq(evaluations.id, evalId));
+    // 4. Delete the evaluation itself - ORG SCOPED
+    await db.delete(evaluations).where(and(eq(evaluations.id, evalId), eq(evaluations.organizationId, organizationId)));
 
     return NextResponse.json({ success: true })
   } catch (error) {

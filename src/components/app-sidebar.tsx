@@ -123,7 +123,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             </SidebarMenuItem>
             <SidebarMenuItem>
               <SidebarMenuButton asChild>
-                <Link href="/sdk" className="flex items-center gap-2">
+                <Link href="/developer/sdk" className="flex items-center gap-2">
                   <Package />
                   <span>SDK</span>
                 </Link>

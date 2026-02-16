@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/db';
 import { traces } from '@/db/schema';
 import { eq, like, and, desc } from 'drizzle-orm';
-import { requireFeature, trackFeature } from '@/lib/autumn-server';
+import { requireFeature, trackFeature, requireAuthWithOrg } from '@/lib/autumn-server';
 import { withRateLimit } from '@/lib/api-rate-limit';
 import { getRateLimitTier } from '@/lib/rate-limit';
 import { sanitizeSearchInput } from '@/lib/validation';
@@ -11,21 +11,20 @@ import * as Sentry from '@sentry/nextjs';
 export async function GET(request: NextRequest) {
   return withRateLimit(request, async (req: NextRequest) => {
     try {
+      const authResult = await requireAuthWithOrg(req);
+      if (!authResult.authenticated) {
+        const data = await authResult.response.json();
+        return NextResponse.json(data, { status: authResult.response.status });
+      }
+
       const { searchParams } = new URL(req.url);
       const limit = Math.min(parseInt(searchParams.get('limit') || '50'), 100);
       const offset = parseInt(searchParams.get('offset') || '0');
-      const organizationId = searchParams.get('organizationId');
       const status = searchParams.get('status');
       const search = searchParams.get('search');
 
-      const conditions = [];
-
-      if (organizationId) {
-        const parsedOrgId = parseInt(organizationId);
-        if (!isNaN(parsedOrgId)) {
-          conditions.push(eq(traces.organizationId, parsedOrgId));
-        }
-      }
+      // ALWAYS scope by authenticated org — never trust query param
+      const conditions = [eq(traces.organizationId, authResult.organizationId)];
 
       if (status) {
         conditions.push(eq(traces.status, status));
@@ -77,11 +76,19 @@ export async function POST(request: NextRequest) {
 
     try {
       const body = await req.json();
-      const { name, traceId, organizationId, status, durationMs, metadata } = body;
+      const { name, traceId, status, durationMs, metadata } = body;
 
-      if (!name || !traceId || !organizationId) {
+      // Resolve org from auth context
+      const authResult = await requireAuthWithOrg(req);
+      if (!authResult.authenticated) {
+        const data = await authResult.response.json();
+        return NextResponse.json(data, { status: authResult.response.status });
+      }
+      const organizationId = authResult.organizationId;
+
+      if (!name || !traceId) {
         return NextResponse.json({ 
-          error: "Name, traceId, and organizationId are required",
+          error: "Name and traceId are required",
           code: "MISSING_REQUIRED_FIELDS" 
         }, { status: 400 });
       }
@@ -117,7 +124,7 @@ export async function POST(request: NextRequest) {
         idempotencyKey: `trace-${newTrace[0].id}-${Date.now()}`,
       });
 
-// Track per-organization trace usage
+      // Track per-organization trace usage
       await trackFeature({
         userId,
         featureId: 'traces_per_project',
@@ -159,9 +166,16 @@ export async function DELETE(request: NextRequest) {
         }, { status: 400 });
       }
 
+      // Scope delete by org
+      const authResult = await requireAuthWithOrg(req);
+      if (!authResult.authenticated) {
+        const data = await authResult.response.json();
+        return NextResponse.json(data, { status: authResult.response.status });
+      }
+
       const existing = await db.select()
         .from(traces)
-        .where(eq(traces.id, parseInt(id)))
+        .where(and(eq(traces.id, parseInt(id)), eq(traces.organizationId, authResult.organizationId)))
         .limit(1);
 
       if (existing.length === 0) {
@@ -172,7 +186,7 @@ export async function DELETE(request: NextRequest) {
       }
 
       await db.delete(traces)
-        .where(eq(traces.id, parseInt(id)));
+        .where(and(eq(traces.id, parseInt(id)), eq(traces.organizationId, authResult.organizationId)));
 
       return NextResponse.json({ message: 'Trace deleted successfully' });
     } catch (error) {

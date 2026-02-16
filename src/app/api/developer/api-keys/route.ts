@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/db';
 import { apiKeys, organizationMembers } from '@/db/schema';
 import { eq, and, desc, isNull } from 'drizzle-orm';
-import { getCurrentUser } from '@/lib/auth';
+import { requireAuthWithOrg } from '@/lib/autumn-server';
 import { withRateLimit } from '@/lib/api-rate-limit';
 import { logger } from '@/lib/logger';
 import crypto from 'crypto';
@@ -10,10 +10,12 @@ import crypto from 'crypto';
 export async function POST(request: NextRequest) {
   return withRateLimit(request, async (req) => {
     try {
-    const user = await getCurrentUser(request);
-    if (!user) {
-      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    const authResult = await requireAuthWithOrg(request);
+    if (!authResult.authenticated) {
+      const data = await authResult.response.json();
+      return NextResponse.json(data, { status: authResult.response.status });
     }
+    const organizationId = authResult.organizationId;
 
     const body = await request.json();
     
@@ -34,14 +36,6 @@ export async function POST(request: NextRequest) {
         code: "MISSING_NAME" 
       }, { status: 400 });
     }
-
-    // Derive organizationId from user's membership (app-layer RLS)
-    const memberships = await db
-      .select()
-      .from(organizationMembers)
-      .where(eq(organizationMembers.userId, user.id))
-      .limit(1);
-    const organizationId = memberships.length > 0 ? memberships[0].organizationId : null;
 
     if (!organizationId) {
       return NextResponse.json({ 
@@ -91,7 +85,7 @@ export async function POST(request: NextRequest) {
 
     // Insert the API key into database
     const newApiKey = await db.insert(apiKeys).values({
-      userId: user.id,
+      userId: authResult.userId,
       organizationId,
       keyHash,
       keyPrefix,
@@ -130,15 +124,15 @@ export async function POST(request: NextRequest) {
 export async function GET(request: NextRequest) {
   return withRateLimit(request, async (req) => {
     try {
-    const user = await getCurrentUser(request);
-    if (!user) {
-      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    const authResult = await requireAuthWithOrg(request);
+    if (!authResult.authenticated) {
+      const data = await authResult.response.json();
+      return NextResponse.json(data, { status: authResult.response.status });
     }
 
     const { searchParams } = new URL(request.url);
     
     // Parse query parameters
-    const organizationIdParam = searchParams.get('organizationId');
     const limit = Math.min(parseInt(searchParams.get('limit') || '20'), 100);
     const offset = parseInt(searchParams.get('offset') || '0');
 
@@ -157,20 +151,11 @@ export async function GET(request: NextRequest) {
       }, { status: 400 });
     }
 
-    // Build query with user filter
-    let whereConditions = [eq(apiKeys.userId, user.id)];
-
-    // Add organization filter if provided
-    if (organizationIdParam) {
-      const organizationId = parseInt(organizationIdParam);
-      if (isNaN(organizationId)) {
-        return NextResponse.json({ 
-          error: "Organization ID must be a valid number",
-          code: "INVALID_ORGANIZATION_ID" 
-        }, { status: 400 });
-      }
-      whereConditions.push(eq(apiKeys.organizationId, organizationId));
-    }
+    // Build query — scope by auth user + org
+    const whereConditions = [
+      eq(apiKeys.userId, authResult.userId),
+      eq(apiKeys.organizationId, authResult.organizationId),
+    ];
 
     // Execute query
     const results = await db.select({

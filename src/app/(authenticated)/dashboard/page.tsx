@@ -36,6 +36,8 @@ async function getDashboardStats(organizationId: number) {
 async function getRecentEvaluationRuns(organizationId: number) {
   return db.select()
     .from(evaluationRuns)
+    .innerJoin(evaluations, eq(evaluationRuns.evaluationId, evaluations.id))
+    .where(eq(evaluations.organizationId, organizationId))
     .orderBy(desc(evaluationRuns.createdAt))
     .limit(2)
 }
@@ -154,25 +156,28 @@ export default async function DashboardPage() {
           <CardContent className="p-0">
             {recentRuns.length > 0 ? (
               <div className="divide-y divide-border">
-                {recentRuns.map((run) => (
-                  <div key={run.id} className="p-3 sm:p-4 space-y-2">
-                    <p className="font-medium text-sm sm:text-base">Evaluation Run #{run.id}</p>
-                    <p className="text-xs sm:text-sm text-muted-foreground">
-                      {run.totalCases} cases • {run.passedCases || 0} passed • {run.failedCases || 0} failed
-                    </p>
-                    <span
-                      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                        run.status === 'completed' 
-                          ? 'bg-primary/10 text-primary'
-                          : run.status === 'running'
-                          ? 'bg-blue-500/10 text-blue-500'
-                          : 'bg-yellow-500/10 text-yellow-500'
-                      }`}
-                    >
-                      {run.status}
-                    </span>
-                  </div>
-                ))}
+                {recentRuns.map((row) => {
+                  const { evaluation_runs: run } = row
+                  return (
+                    <div key={run.id} className="p-3 sm:p-4 space-y-2">
+                      <p className="font-medium text-sm sm:text-base">Evaluation Run #{run.id}</p>
+                      <p className="text-xs sm:text-sm text-muted-foreground">
+                        {run.totalCases} cases • {run.passedCases || 0} passed • {run.failedCases || 0} failed
+                      </p>
+                      <span
+                        className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                          run.status === 'completed' 
+                            ? 'bg-primary/10 text-primary'
+                            : run.status === 'running'
+                            ? 'bg-blue-500/10 text-blue-500'
+                            : 'bg-yellow-500/10 text-yellow-500'
+                        }`}
+                      >
+                        {run.status}
+                      </span>
+                    </div>
+                  )
+                })}
               </div>
             ) : (
               <div className="p-8 text-center text-muted-foreground">

@@ -12,11 +12,19 @@ export const authClient = createAuthClient({
       }
     },
     onRequest: (ctx) => {
-      if (typeof window !== 'undefined') {
-        const token = localStorage.getItem("bearer_token")
-        if (token) {
-          ctx.headers.set("Authorization", `Bearer ${token}`)
+      try {
+        if (typeof window !== 'undefined') {
+          const token = localStorage.getItem("bearer_token")
+          if (token) {
+            if (ctx.headers instanceof Headers) {
+              ctx.headers.set("Authorization", `Bearer ${token}`)
+            } else if (ctx.headers && typeof ctx.headers === 'object') {
+              (ctx.headers as Record<string, string>)["Authorization"] = `Bearer ${token}`
+            }
+          }
         }
+      } catch (e) {
+        console.error("[auth-client] onRequest error:", e)
       }
       return ctx
     }
@@ -31,9 +39,22 @@ export function useSession() {
   const fetchSession = async () => {
     try {
       setIsPending(true)
-      const res = await authClient.getSession()
-      setSession(res.data)
-      setError(null)
+      // Direct fetch bypasses broken authClient wrapper
+      const res = await fetch("/api/auth/get-session", {
+        credentials: "include",
+        headers: {
+          ...(typeof window !== "undefined" && localStorage.getItem("bearer_token")
+            ? { Authorization: `Bearer ${localStorage.getItem("bearer_token")}` }
+            : {}),
+        },
+      })
+      if (res.ok) {
+        const data = await res.json()
+        setSession(data)
+        setError(null)
+      } else {
+        setSession(null)
+      }
     } catch (err) {
       console.error("Session fetch error:", err)
       setSession(null)

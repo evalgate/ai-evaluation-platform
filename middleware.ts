@@ -40,6 +40,17 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  // Matcher that never matches = middleware disabled. Regex matcher causes Vercel Edge failure.
-  matcher: ["/__middleware-disabled-unused-path"],
+  matcher: [
+    "/dashboard/:path*",
+    "/evaluations/:path*",
+    "/traces/:path*",
+    "/annotations/:path*",
+    "/llm-judge/:path*",
+    "/developer/:path*",
+    "/settings/:path*",
+    "/workflows/:path*",
+    "/benchmarks/:path*",
+    "/costs/:path*",
+    "/prompts/:path*",
+  ],
 }

@@ -1,0 +1,426 @@
+// src/lib/services/provider-keys.service.ts
+import { db } from '@/db';
+import { providerKeys, organizations } from '@/db/schema';
+import { eq, and } from 'drizzle-orm';
+import { logger } from '@/lib/logger';
+import { encryption, KeyManager } from '@/lib/security/encryption';
+import { z } from 'zod';
+
+export const createProviderKeySchema = z.object({
+  provider: z.string().min(1),
+  keyName: z.string().min(1).max(255),
+  keyType: z.enum(['api_key', 'oauth_token', 'service_account']),
+  apiKey: z.string().min(1),
+  metadata: z.record(z.any()).optional(),
+});
+
+export const updateProviderKeySchema = z.object({
+  keyName: z.string().min(1).max(255).optional(),
+  metadata: z.record(z.any()).optional(),
+  isActive: z.boolean().optional(),
+});
+
+export type CreateProviderKeyInput = z.infer<typeof createProviderKeySchema>;
+export type UpdateProviderKeyInput = z.infer<typeof updateProviderKeySchema>;
+
+export interface DecryptedProviderKey {
+  id: number;
+  organizationId: number;
+  provider: string;
+  keyName: string;
+  keyType: string;
+  keyPrefix: string;
+  decryptedKey: string;
+  metadata: Record<string, any>;
+  isActive: boolean;
+  lastUsedAt: string | null;
+  expiresAt: string | null;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/**
+ * Provider Keys Service
+ * Manages encrypted third-party API keys for organizations.
+ */
+export class ProviderKeysService {
+  /**
+   * Create a new encrypted provider key.
+   */
+  async createProviderKey(
+    organizationId: number,
+    input: CreateProviderKeyInput,
+    createdBy: string
+  ): Promise<{
+    id: number;
+    provider: string;
+    keyName: string;
+    keyType: string;
+    keyPrefix: string;
+  }> {
+    logger.info('Creating provider key', { organizationId, provider: input.provider, keyName: input.keyName });
+
+    // Verify organization exists
+    const [org] = await db
+      .select()
+      .from(organizations)
+      .where(eq(organizations.id, organizationId))
+      .limit(1);
+
+    if (!org) {
+      throw new Error('Organization not found');
+    }
+
+    // Generate encryption key for this organization (or use existing)
+    const encryptionKey = await this.getOrCreateEncryptionKey(organizationId);
+
+    // Encrypt the API key
+    const encrypted = encryption.encrypt(input.apiKey, encryptionKey);
+
+    // Generate key prefix (first few characters for identification)
+    const keyPrefix = input.apiKey.substring(0, 4) + '...';
+
+    // Save to database
+    const [result] = await db.insert(providerKeys).values({
+      organizationId,
+      provider: input.provider,
+      keyName: input.keyName,
+      keyType: input.keyType,
+      encryptedKey: encrypted.encrypted,
+      keyPrefix,
+      iv: encrypted.iv,
+      tag: encrypted.tag,
+      metadata: JSON.stringify(input.metadata || {}),
+      isActive: true,
+      createdBy,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    }).returning({
+      id: providerKeys.id,
+      provider: providerKeys.provider,
+      keyName: providerKeys.keyName,
+      keyType: providerKeys.keyType,
+      keyPrefix: providerKeys.keyPrefix,
+    });
+
+    logger.info('Provider key created successfully', { 
+      id: result.id, 
+      organizationId, 
+      provider: result.provider 
+    });
+
+    return result;
+  }
+
+  /**
+   * List provider keys for an organization.
+   */
+  async listProviderKeys(
+    organizationId: number,
+    options?: {
+      provider?: string;
+      includeInactive?: boolean;
+    }
+  ): Promise<Array<{
+    id: number;
+    provider: string;
+    keyName: string;
+    keyType: string;
+    keyPrefix: string;
+    isActive: boolean | null;
+    lastUsedAt: string | null;
+    expiresAt: string | null;
+    createdAt: string;
+    updatedAt: string;
+  }>> {
+    const { provider, includeInactive = false } = options || {};
+
+    const conditions = [eq(providerKeys.organizationId, organizationId)];
+    if (provider) {
+      conditions.push(eq(providerKeys.provider, provider));
+    }
+    if (!includeInactive) {
+      conditions.push(eq(providerKeys.isActive, true as any));
+    }
+
+    return db
+      .select({
+        id: providerKeys.id,
+        provider: providerKeys.provider,
+        keyName: providerKeys.keyName,
+        keyType: providerKeys.keyType,
+        keyPrefix: providerKeys.keyPrefix,
+        isActive: providerKeys.isActive,
+        lastUsedAt: providerKeys.lastUsedAt,
+        expiresAt: providerKeys.expiresAt,
+        createdAt: providerKeys.createdAt,
+        updatedAt: providerKeys.updatedAt,
+      })
+      .from(providerKeys)
+      .where(and(...conditions))
+      .orderBy(providerKeys.createdAt);
+  }
+
+  /**
+   * Get a decrypted provider key.
+   */
+  async getProviderKey(
+    organizationId: number,
+    keyId: number
+  ): Promise<DecryptedProviderKey | null> {
+    const [key] = await db
+      .select()
+      .from(providerKeys)
+      .where(and(
+        eq(providerKeys.id, keyId),
+        eq(providerKeys.organizationId, organizationId)
+      ))
+      .limit(1);
+
+    if (!key) {
+      return null;
+    }
+
+    // Get encryption key for this organization
+    const encryptionKey = await this.getEncryptionKey(organizationId);
+    if (!encryptionKey) {
+      throw new Error('Encryption key not found for organization');
+    }
+
+    // Decrypt the API key
+    const decrypted = encryption.decrypt(
+      {
+        encrypted: key.encryptedKey,
+        iv: key.iv,
+        tag: key.tag,
+      },
+      encryptionKey
+    );
+
+    if (!decrypted.success) {
+      throw new Error(`Failed to decrypt provider key: ${decrypted.error}`);
+    }
+
+    // Update last used timestamp
+    await db.update(providerKeys)
+      .set({ lastUsedAt: new Date().toISOString() })
+      .where(eq(providerKeys.id, keyId));
+
+    return {
+      id: key.id,
+      organizationId: key.organizationId,
+      provider: key.provider,
+      keyName: key.keyName,
+      keyType: key.keyType,
+      keyPrefix: key.keyPrefix,
+      decryptedKey: decrypted.decrypted,
+      metadata: typeof key.metadata === 'string' ? JSON.parse(key.metadata) : (key.metadata || {}),
+      isActive: key.isActive ?? true,
+      lastUsedAt: key.lastUsedAt,
+      expiresAt: key.expiresAt,
+      createdBy: key.createdBy,
+      createdAt: key.createdAt,
+      updatedAt: key.updatedAt,
+    };
+  }
+
+  /**
+   * Get active provider key for a specific provider.
+   */
+  async getActiveProviderKey(
+    organizationId: number,
+    provider: string
+  ): Promise<DecryptedProviderKey | null> {
+    const [key] = await db
+      .select()
+      .from(providerKeys)
+      .where(and(
+        eq(providerKeys.organizationId, organizationId),
+        eq(providerKeys.provider, provider),
+        eq(providerKeys.isActive, true)
+      ))
+      .orderBy(providerKeys.createdAt)
+      .limit(1);
+
+    if (!key) {
+      return null;
+    }
+
+    return this.getProviderKey(organizationId, key.id);
+  }
+
+  /**
+   * Update a provider key.
+   */
+  async updateProviderKey(
+    organizationId: number,
+    keyId: number,
+    input: UpdateProviderKeyInput
+  ): Promise<{
+    id: number;
+    keyName: string;
+    metadata: Record<string, any>;
+    isActive: boolean;
+    updatedAt: string;
+  }> {
+    const [existing] = await db
+      .select()
+      .from(providerKeys)
+      .where(and(
+        eq(providerKeys.id, keyId),
+        eq(providerKeys.organizationId, organizationId)
+      ))
+      .limit(1);
+
+    if (!existing) {
+      throw new Error('Provider key not found');
+    }
+
+    const updateData: any = {
+      updatedAt: new Date().toISOString(),
+    };
+
+    if (input.keyName !== undefined) {
+      updateData.keyName = input.keyName;
+    }
+
+    if (input.metadata !== undefined) {
+      updateData.metadata = JSON.stringify(input.metadata);
+    }
+
+    if (input.isActive !== undefined) {
+      updateData.isActive = input.isActive;
+    }
+
+    const [result] = await db.update(providerKeys)
+      .set(updateData)
+      .where(eq(providerKeys.id, keyId))
+      .returning({
+        id: providerKeys.id,
+        keyName: providerKeys.keyName,
+        metadata: providerKeys.metadata,
+        isActive: providerKeys.isActive,
+        updatedAt: providerKeys.updatedAt,
+      });
+
+    logger.info('Provider key updated', { keyId, organizationId });
+
+    return {
+      id: result.id,
+      keyName: result.keyName,
+      metadata: typeof result.metadata === 'string' ? JSON.parse(result.metadata) : (result.metadata || {}),
+      isActive: result.isActive ?? true,
+      updatedAt: result.updatedAt,
+    };
+  }
+
+  /**
+   * Delete a provider key.
+   */
+  async deleteProviderKey(organizationId: number, keyId: number): Promise<void> {
+    const [existing] = await db
+      .select()
+      .from(providerKeys)
+      .where(and(
+        eq(providerKeys.id, keyId),
+        eq(providerKeys.organizationId, organizationId)
+      ))
+      .limit(1);
+
+    if (!existing) {
+      throw new Error('Provider key not found');
+    }
+
+    await db.delete(providerKeys).where(eq(providerKeys.id, keyId));
+
+    logger.info('Provider key deleted', { keyId, organizationId });
+  }
+
+  /**
+   * Get or create encryption key for an organization.
+   */
+  private async getOrCreateEncryptionKey(organizationId: number): Promise<string> {
+    // For now, use a simple key derivation based on organization ID
+    // In production, this should be stored securely (e.g., in environment variables or a key management service)
+    const baseKey = process.env.PROVIDER_KEY_ENCRYPTION_KEY || 'default-encryption-key-change-in-production';
+    const salt = `org-${organizationId}`;
+    
+    return encryption.deriveKey(baseKey, salt, 10000);
+  }
+
+  /**
+   * Get encryption key for an organization.
+   */
+  private async getEncryptionKey(organizationId: number): Promise<string | null> {
+    try {
+      return await this.getOrCreateEncryptionKey(organizationId);
+    } catch (error) {
+      logger.error('Failed to get encryption key', { organizationId, error });
+      return null;
+    }
+  }
+
+  /**
+   * Validate provider key format.
+   */
+  validateProviderKey(provider: string, apiKey: string): boolean {
+    const patterns: Record<string, RegExp> = {
+      'openai': /^sk-[A-Za-z0-9]{48}$/,
+      'anthropic': /^sk-ant-api03-[A-Za-z0-9_-]{95}$/,
+      'google': /^[A-Za-z0-9_-]{39}$/,
+      'cohere': /^[A-Za-z0-9]{40}$/,
+      'huggingface': /^hf_[A-Za-z0-9]{34}$/,
+    };
+
+    const pattern = patterns[provider];
+    if (!pattern) {
+      // For unknown providers, just check basic requirements
+      return apiKey.length >= 20;
+    }
+
+    return pattern.test(apiKey);
+  }
+
+  /**
+   * Get provider key statistics.
+   */
+  async getProviderKeyStats(organizationId: number): Promise<{
+    totalKeys: number;
+    activeKeys: number;
+    keysByProvider: Record<string, number>;
+    recentlyUsed: number;
+  }> {
+    const keys = await db
+      .select({
+        provider: providerKeys.provider,
+        isActive: providerKeys.isActive,
+        lastUsedAt: providerKeys.lastUsedAt,
+      })
+      .from(providerKeys)
+      .where(eq(providerKeys.organizationId, organizationId));
+
+    const totalKeys = keys.length;
+    const activeKeys = keys.filter(k => k.isActive).length;
+    
+    const keysByProvider: Record<string, number> = {};
+    keys.forEach(key => {
+      keysByProvider[key.provider] = (keysByProvider[key.provider] || 0) + 1;
+    });
+
+    const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    const recentlyUsed = keys.filter(k => 
+      k.lastUsedAt && new Date(k.lastUsedAt) > oneWeekAgo
+    ).length;
+
+    return {
+      totalKeys,
+      activeKeys,
+      keysByProvider,
+      recentlyUsed,
+    };
+  }
+}
+
+// Export singleton instance
+export const providerKeysService = new ProviderKeysService();

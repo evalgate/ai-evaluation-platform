@@ -115,6 +115,8 @@ export const evaluationRuns = sqliteTable('evaluation_runs', {
   totalCases: integer('total_cases').default(0),
   passedCases: integer('passed_cases').default(0),
   failedCases: integer('failed_cases').default(0),
+  processedCount: integer('processed_count').default(0), // Heartbeat counter for progress tracking
+  traceLog: text('trace_log', { mode: 'json' }), // Full journey JSON with messages array
   startedAt: text('started_at'),
   completedAt: text('completed_at'),
   createdAt: text('created_at').notNull(),
@@ -226,6 +228,26 @@ export const webhooks = sqliteTable('webhooks', {
   updatedAt: text('updated_at').notNull(),
 });
 
+// Provider Keys for per-org encrypted third-party API keys
+export const providerKeys = sqliteTable('provider_keys', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  organizationId: integer('organization_id').references(() => organizations.id).notNull(),
+  provider: text('provider').notNull(), // 'openai', 'anthropic', 'google', etc.
+  keyName: text('key_name').notNull(),
+  encryptedKey: text('encrypted_key').notNull(), // AES-256-GCM encrypted key
+  keyType: text('key_type').notNull(), // 'api_key', 'oauth_token', 'service_account'
+  keyPrefix: text('key_prefix').notNull(), // First few characters for identification
+  iv: text('iv').notNull(), // Initialization vector for decryption
+  tag: text('tag').notNull(), // Authentication tag for integrity
+  metadata: text('metadata', { mode: 'json' }), // Additional key information
+  isActive: integer('is_active', { mode: 'boolean' }).default(true),
+  lastUsedAt: text('last_used_at'),
+  expiresAt: text('expires_at'), // Optional expiry date
+  createdBy: text('created_by').references(() => user.id).notNull(),
+  createdAt: text('created_at').notNull(),
+  updatedAt: text('updated_at').notNull(),
+});
+
 export const webhookDeliveries = sqliteTable('webhook_deliveries', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   webhookId: integer('webhook_id').references(() => webhooks.id).notNull(),
@@ -281,6 +303,8 @@ export const testResults = sqliteTable('test_results', {
   score: integer('score'),
   error: text('error'),
   durationMs: integer('duration_ms'),
+  messages: text('messages', { mode: 'json' }), // Raw LLM messages array for each turn
+  toolCalls: text('tool_calls', { mode: 'json' }), // Tool arguments and outputs per turn
   createdAt: text('created_at').notNull(),
 });
 
@@ -471,5 +495,54 @@ export const benchmarkResults = sqliteTable('benchmark_results', {
   toolUseEfficiency: integer('tool_use_efficiency'), // 0-100
   customMetrics: text('custom_metrics', { mode: 'json' }),
   runCount: integer('run_count').default(1),
+  createdAt: text('created_at').notNull(),
+});
+
+// ============================================
+// VIRAL FEATURES - Priority 5 Tables
+// ============================================
+
+// Golden Sets for One-Click Regression (CI/CD for Prompts)
+export const goldenSets = sqliteTable('golden_sets', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  evaluationId: integer('evaluation_id').references(() => evaluations.id).notNull(),
+  organizationId: integer('organization_id').references(() => organizations.id).notNull(),
+  name: text('name').notNull().default('Default Golden Set'),
+  testCaseIds: text('test_case_ids', { mode: 'json' }).notNull(), // number[] — the 5 most important
+  lastStatus: text('last_status').default('unknown'),             // 'passed', 'failed', 'unknown'
+  lastRunAt: text('last_run_at'),
+  passThreshold: integer('pass_threshold').default(70),           // Minimum score to pass (0-100)
+  createdAt: text('created_at').notNull(),
+  updatedAt: text('updated_at').notNull(),
+});
+
+// Arena Matches for LLM Battle Arena (Social Proof)
+export const arenaMatches = sqliteTable('arena_matches', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  organizationId: integer('organization_id').references(() => organizations.id).notNull(),
+  prompt: text('prompt').notNull(),
+  winnerId: text('winner_id').notNull(),
+  winnerLabel: text('winner_label').notNull(),
+  judgeReasoning: text('judge_reasoning'),
+  results: text('results', { mode: 'json' }).notNull(), // ArenaResult[]
+  scores: text('scores', { mode: 'json' }),              // { "GPT-4o": 87, "Claude": 92 }
+  createdBy: text('created_by').references(() => user.id).notNull(),
+  createdAt: text('created_at').notNull(),
+});
+
+// Report Cards for Shareable Evaluation Certificates (Marketing Asset)
+export const reportCards = sqliteTable('report_cards', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  evaluationId: integer('evaluation_id').references(() => evaluations.id).notNull(),
+  evaluationRunId: integer('evaluation_run_id').references(() => evaluationRuns.id).notNull(),
+  organizationId: integer('organization_id').references(() => organizations.id).notNull(),
+  slug: text('slug').notNull().unique(),                   // Public URL: /report/abc123
+  title: text('title').notNull(),
+  description: text('description'),
+  isPublic: integer('is_public', { mode: 'boolean' }).default(true),
+  reportData: text('report_data', { mode: 'json' }).notNull(), // Snapshot of scores/results
+  expiresAt: text('expires_at'),                           // Optional expiry
+  viewCount: integer('view_count').default(0),
+  createdBy: text('created_by').references(() => user.id).notNull(),
   createdAt: text('created_at').notNull(),
 });

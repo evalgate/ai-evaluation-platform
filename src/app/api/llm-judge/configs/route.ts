@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/db';
 import { llmJudgeConfigs } from '@/db/schema';
 import { eq, like, and, desc } from 'drizzle-orm';
-import { getCurrentUser } from '@/lib/auth';
+import { requireAuthWithOrg } from '@/lib/autumn-server';
 import { withRateLimit } from '@/lib/api-rate-limit';
 import { logger } from '@/lib/logger';
 import { sanitizeSearchInput } from '@/lib/validation';
@@ -10,89 +10,83 @@ import { sanitizeSearchInput } from '@/lib/validation';
 export async function GET(request: NextRequest) {
   return withRateLimit(request, async (req) => {
     try {
-    const user = await getCurrentUser(request);
-    if (!user) {
-      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
-    }
-
-    const searchParams = request.nextUrl.searchParams;
-    const id = searchParams.get('id');
-
-    // Single record fetch
-    if (id) {
-      if (isNaN(parseInt(id))) {
-        return NextResponse.json({ 
-          error: "Valid ID is required",
-          code: "INVALID_ID" 
-        }, { status: 400 });
+      const authResult = await requireAuthWithOrg(request);
+      if (!authResult.authenticated) {
+        const data = await authResult.response.json();
+        return NextResponse.json(data, { status: authResult.response.status });
       }
 
-      const config = await db.select()
+      const searchParams = request.nextUrl.searchParams;
+      const id = searchParams.get('id');
+
+      // Single record fetch — scoped by org
+      if (id) {
+        if (isNaN(parseInt(id))) {
+          return NextResponse.json({ 
+            error: "Valid ID is required",
+            code: "INVALID_ID" 
+          }, { status: 400 });
+        }
+
+        const config = await db.select()
+          .from(llmJudgeConfigs)
+          .where(and(eq(llmJudgeConfigs.id, parseInt(id)), eq(llmJudgeConfigs.organizationId, authResult.organizationId)))
+          .limit(1);
+
+        if (config.length === 0) {
+          return NextResponse.json({ 
+            error: 'LLM judge config not found',
+            code: 'CONFIG_NOT_FOUND' 
+          }, { status: 404 });
+        }
+
+        return NextResponse.json(config[0], { status: 200 });
+      }
+
+      // List with pagination and filtering
+      const limit = Math.min(parseInt(searchParams.get('limit') || '20'), 100);
+      const offset = parseInt(searchParams.get('offset') || '0');
+      const model = searchParams.get('model');
+      const search = searchParams.get('search');
+
+      // Build filter conditions — always scope by auth org
+      const conditions = [eq(llmJudgeConfigs.organizationId, authResult.organizationId)];
+
+      if (model) {
+        conditions.push(eq(llmJudgeConfigs.model, model));
+      }
+
+      if (search) {
+        const safeSearch = sanitizeSearchInput(search);
+        if (safeSearch) {
+          conditions.push(like(llmJudgeConfigs.name, `%${safeSearch}%`));
+        }
+      }
+
+      // Build and execute the query with all conditions
+      const results = await db.select()
         .from(llmJudgeConfigs)
-        .where(eq(llmJudgeConfigs.id, parseInt(id)))
-        .limit(1);
+        .where(conditions.length > 0 ? and(...conditions) : undefined)
+        .orderBy(desc(llmJudgeConfigs.updatedAt))
+        .limit(limit)
+        .offset(offset);
 
-      if (config.length === 0) {
-        return NextResponse.json({ 
-          error: 'LLM judge config not found',
-          code: 'CONFIG_NOT_FOUND' 
-        }, { status: 404 });
-      }
-
-      return NextResponse.json(config[0], { status: 200 });
+      return NextResponse.json(results, { status: 200 });
+    } catch (error) {
+      logger.error({ error, route: '/api/llm-judge/configs', method: 'GET' }, 'Error fetching LLM judge configs');
+      return NextResponse.json({ 
+        error: 'Internal server error' 
+      }, { status: 500 });
     }
-
-    // List with pagination and filtering
-    const limit = Math.min(parseInt(searchParams.get('limit') || '20'), 100);
-    const offset = parseInt(searchParams.get('offset') || '0');
-    const organizationId = searchParams.get('organizationId');
-    const model = searchParams.get('model');
-    const search = searchParams.get('search');
-
-    // Build filter conditions
-    const conditions = [];
-
-    if (organizationId) {
-      const parsedOrgId = parseInt(organizationId);
-      if (!isNaN(parsedOrgId)) {
-        conditions.push(eq(llmJudgeConfigs.organizationId, parsedOrgId));
-      }
-    }
-
-    if (model) {
-      conditions.push(eq(llmJudgeConfigs.model, model));
-    }
-
-    if (search) {
-      const safeSearch = sanitizeSearchInput(search);
-      if (safeSearch) {
-        conditions.push(like(llmJudgeConfigs.name, `%${safeSearch}%`));
-      }
-    }
-
-    // Build and execute the query with all conditions
-    const results = await db.select()
-      .from(llmJudgeConfigs)
-      .where(conditions.length > 0 ? and(...conditions) : undefined)
-      .orderBy(desc(llmJudgeConfigs.updatedAt))
-      .limit(limit)
-      .offset(offset);
-
-    return NextResponse.json(results, { status: 200 });
-  } catch (error) {
-    logger.error({ error, route: '/api/llm-judge/configs', method: 'GET' }, 'Error fetching LLM judge configs');
-    return NextResponse.json({ 
-      error: 'Internal server error' 
-    }, { status: 500 });
-  }
   }, { customTier: 'free' });
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const user = await getCurrentUser(request);
-    if (!user) {
-      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    const authResult = await requireAuthWithOrg(request);
+    if (!authResult.authenticated) {
+      const data = await authResult.response.json();
+      return NextResponse.json(data, { status: authResult.response.status });
     }
 
     const body = await request.json();
@@ -105,20 +99,13 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
-    const { name, organizationId, model, promptTemplate, criteria, settings } = body;
+    const { name, model, promptTemplate, criteria, settings } = body;
 
     // Validate required fields
     if (!name || typeof name !== 'string' || name.trim() === '') {
       return NextResponse.json({ 
         error: "Name is required and must be a non-empty string",
         code: "MISSING_NAME" 
-      }, { status: 400 });
-    }
-
-    if (!organizationId || typeof organizationId !== 'number') {
-      return NextResponse.json({ 
-        error: "Organization ID is required and must be a number",
-        code: "MISSING_ORGANIZATION_ID" 
       }, { status: 400 });
     }
 
@@ -136,16 +123,16 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
-    // Prepare insert data
+    // Prepare insert data — org from auth, not body
     const now = new Date().toISOString();
     const insertData = {
       name: name.trim(),
-      organizationId,
+      organizationId: authResult.organizationId,
       model: model.trim(),
       promptTemplate: promptTemplate.trim(),
       criteria: criteria ? JSON.stringify(criteria) : null,
       settings: settings ? JSON.stringify(settings) : null,
-      createdBy: user.id,
+      createdBy: authResult.userId,
       createdAt: now,
       updatedAt: now,
     };
@@ -165,9 +152,10 @@ export async function POST(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
-    const user = await getCurrentUser(request);
-    if (!user) {
-      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    const authResult = await requireAuthWithOrg(request);
+    if (!authResult.authenticated) {
+      const data = await authResult.response.json();
+      return NextResponse.json(data, { status: authResult.response.status });
     }
 
     const searchParams = request.nextUrl.searchParams;
@@ -190,10 +178,10 @@ export async function PUT(request: NextRequest) {
       }, { status: 400 });
     }
 
-    // Check if config exists
+    // Check if config exists — scoped by org
     const existing = await db.select()
       .from(llmJudgeConfigs)
-      .where(eq(llmJudgeConfigs.id, parseInt(id)))
+      .where(and(eq(llmJudgeConfigs.id, parseInt(id)), eq(llmJudgeConfigs.organizationId, authResult.organizationId)))
       .limit(1);
 
     if (existing.length === 0) {
@@ -246,7 +234,7 @@ export async function PUT(request: NextRequest) {
 
     const updated = await db.update(llmJudgeConfigs)
       .set(updates)
-      .where(eq(llmJudgeConfigs.id, parseInt(id)))
+      .where(and(eq(llmJudgeConfigs.id, parseInt(id)), eq(llmJudgeConfigs.organizationId, authResult.organizationId)))
       .returning();
 
     if (updated.length === 0) {
@@ -267,9 +255,10 @@ export async function PUT(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
-    const user = await getCurrentUser(request);
-    if (!user) {
-      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    const authResult = await requireAuthWithOrg(request);
+    if (!authResult.authenticated) {
+      const data = await authResult.response.json();
+      return NextResponse.json(data, { status: authResult.response.status });
     }
 
     const searchParams = request.nextUrl.searchParams;
@@ -282,10 +271,10 @@ export async function DELETE(request: NextRequest) {
       }, { status: 400 });
     }
 
-    // Check if config exists before deleting
+    // Check if config exists — scoped by org
     const existing = await db.select()
       .from(llmJudgeConfigs)
-      .where(eq(llmJudgeConfigs.id, parseInt(id)))
+      .where(and(eq(llmJudgeConfigs.id, parseInt(id)), eq(llmJudgeConfigs.organizationId, authResult.organizationId)))
       .limit(1);
 
     if (existing.length === 0) {
@@ -296,7 +285,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     const deleted = await db.delete(llmJudgeConfigs)
-      .where(eq(llmJudgeConfigs.id, parseInt(id)))
+      .where(and(eq(llmJudgeConfigs.id, parseInt(id)), eq(llmJudgeConfigs.organizationId, authResult.organizationId)))
       .returning();
 
     if (deleted.length === 0) {

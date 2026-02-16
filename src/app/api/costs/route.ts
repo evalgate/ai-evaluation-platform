@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { costService } from '@/lib/services/cost.service';
+import { requireAuthWithOrg } from '@/lib/autumn-server';
 import { withRateLimit } from '@/lib/api-rate-limit';
 import { logger } from '@/lib/logger';
 import { z } from 'zod';
@@ -22,10 +23,15 @@ const createCostRecordSchema = z.object({
 export async function GET(request: NextRequest) {
   return withRateLimit(request, async (req: NextRequest) => {
     try {
+      const authResult = await requireAuthWithOrg(req);
+      if (!authResult.authenticated) {
+        const data = await authResult.response.json();
+        return NextResponse.json(data, { status: authResult.response.status });
+      }
+
       const { searchParams } = new URL(req.url);
       const workflowRunId = searchParams.get('workflowRunId');
       const traceId = searchParams.get('traceId');
-      const organizationId = searchParams.get('organizationId');
       const breakdown = searchParams.get('breakdown') === 'true';
 
       // Get breakdown for a workflow run
@@ -61,24 +67,9 @@ export async function GET(request: NextRequest) {
         return NextResponse.json(result);
       }
 
-      // Get organization cost summary
-      if (organizationId) {
-        const id = parseInt(organizationId);
-        if (isNaN(id)) {
-          return NextResponse.json({
-            error: 'Valid organization ID is required',
-            code: 'INVALID_ID',
-          }, { status: 400 });
-        }
-
-        const summary = await costService.getOrganizationCostSummary(id);
-        return NextResponse.json(summary);
-      }
-
-      return NextResponse.json({
-        error: 'Either workflowRunId, traceId, or organizationId is required',
-        code: 'MISSING_PARAMETER',
-      }, { status: 400 });
+      // Get organization cost summary (always use auth org)
+      const summary = await costService.getOrganizationCostSummary(authResult.organizationId);
+      return NextResponse.json(summary);
     } catch (error: any) {
       logger.error('Error fetching costs', {
         error: error.message,

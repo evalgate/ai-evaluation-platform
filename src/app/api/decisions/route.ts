@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { decisionService } from '@/lib/services/decision.service';
+import { requireAuthWithOrg } from '@/lib/autumn-server';
 import { withRateLimit } from '@/lib/api-rate-limit';
 import { logger } from '@/lib/logger';
 import { z } from 'zod';
@@ -27,6 +28,12 @@ const createDecisionSchema = z.object({
 export async function GET(request: NextRequest) {
   return withRateLimit(request, async (req: NextRequest) => {
     try {
+      const authResult = await requireAuthWithOrg(req);
+      if (!authResult.authenticated) {
+        const data = await authResult.response.json();
+        return NextResponse.json(data, { status: authResult.response.status });
+      }
+
       const { searchParams } = new URL(req.url);
       const workflowRunId = searchParams.get('workflowRunId');
       const spanId = searchParams.get('spanId');

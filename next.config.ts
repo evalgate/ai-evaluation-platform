@@ -1,10 +1,6 @@
 import { withSentryConfig } from "@sentry/nextjs"
 import { withAxiom } from "next-axiom"
 import type { NextConfig } from 'next'
-import path from "node:path";
-
-const LOADER = path.resolve(__dirname, 'src/visual-edits/component-tagger-loader.cjs');
-
 /** @type {import('next').NextConfig} */
 const nextConfig: NextConfig = {
   // Enable React's new compiler (if using React 19+)
@@ -44,7 +40,7 @@ const nextConfig: NextConfig = {
   // Compiler configuration
   compiler: {
     // Remove console.log in production
-    removeConsole: process.env.NODE_ENV === 'production',
+    removeConsole: process.env.NODE_ENV === 'production' ? { exclude: ['error', 'warn'] } : false,
   },
   
   // Webpack configuration
@@ -74,27 +70,29 @@ const nextConfig: NextConfig = {
   // Performance optimizations
   productionBrowserSourceMaps: false,
   
-  // Turbopack configuration (required in Next.js 16 when webpack config exists)
-  // Only enable component tagger loader in development (for visual editing)
-  turbopack: process.env.NODE_ENV === 'development' ? {
-    rules: {
-      "*.{jsx,tsx}": {
-        loaders: [LOADER],
-      },
-    },
-  } : {},
+  // Turbopack configuration
+  // Note: component-tagger-loader disabled — causes Turbopack panic on Windows
+  // (tries to read src/app directory as a file). Re-enable when Turbopack fixes this.
+  turbopack: {},
 }
 
-// Apply Sentry and Axiom configurations
-const configWithPlugins = withAxiom(
-  process.env.SENTRY_AUTH_TOKEN ? withSentryConfig(nextConfig, {
-    org: process.env.SENTRY_ORG,
-    project: process.env.SENTRY_PROJECT,
-    silent: !process.env.CI,
-    widenClientFileUpload: true,
-    disableLogger: true,
-    automaticVercelMonitors: true,
-  }) : nextConfig
-)
+// Apply Axiom logging, then Sentry wrapping (single pass)
+const configWithAxiom = withAxiom(nextConfig);
 
-export default configWithPlugins
+export default withSentryConfig(configWithAxiom, {
+  org: "paul-carpenter",
+  project: "eval-ai",
+
+  // Only print logs for uploading source maps in CI
+  silent: !process.env.CI,
+
+  // Upload a larger set of source maps for prettier stack traces (increases build time)
+  widenClientFileUpload: true,
+
+  // Route browser requests to Sentry through a Next.js rewrite to circumvent ad-blockers.
+  // Note: This route must NOT match any Next.js middleware matcher pattern.
+  tunnelRoute: "/monitoring",
+
+  // Automatic instrumentation of Vercel Cron Monitors
+  automaticVercelMonitors: true,
+});

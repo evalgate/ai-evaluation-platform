@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { benchmarkService } from '@/lib/services/benchmark.service';
-import { requireFeature, trackFeature } from '@/lib/autumn-server';
+import { requireFeature, trackFeature, requireAuthWithOrg } from '@/lib/autumn-server';
 import { withRateLimit } from '@/lib/api-rate-limit';
 import { logger } from '@/lib/logger';
 import { z } from 'zod';
@@ -25,18 +25,16 @@ const createBenchmarkSchema = z.object({
 export async function GET(request: NextRequest) {
   return withRateLimit(request, async (req: NextRequest) => {
     try {
-      const { searchParams } = new URL(req.url);
-      const organizationId = parseInt(searchParams.get('organizationId') || '0');
-      const includePublic = searchParams.get('includePublic') !== 'false';
-
-      if (!organizationId) {
-        return NextResponse.json({
-          error: 'Organization ID is required',
-          code: 'MISSING_ORGANIZATION_ID',
-        }, { status: 400 });
+      const authResult = await requireAuthWithOrg(req);
+      if (!authResult.authenticated) {
+        const data = await authResult.response.json();
+        return NextResponse.json(data, { status: authResult.response.status });
       }
 
-      const benchmarks = await benchmarkService.listBenchmarks(organizationId, includePublic);
+      const { searchParams } = new URL(req.url);
+      const includePublic = searchParams.get('includePublic') !== 'false';
+
+      const benchmarks = await benchmarkService.listBenchmarks(authResult.organizationId, includePublic);
 
       return NextResponse.json(benchmarks, {
         headers: {

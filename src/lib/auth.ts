@@ -5,14 +5,33 @@ import { NextRequest } from 'next/server';
 import { headers } from "next/headers"
 import { db } from "@/db";
  
+const baseURL =
+  process.env.BETTER_AUTH_BASE_URL ||
+  process.env.NEXT_PUBLIC_SITE_URL ||
+  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
+
 export const auth = betterAuth({
-	baseURL: process.env.BETTER_AUTH_BASE_URL || process.env.NEXT_PUBLIC_SITE_URL || "https://v0-ai-evaluation-platform-nu.vercel.app",
+	baseURL,
 	database: drizzleAdapter(db, {
 		provider: "sqlite",
 	}),
 	emailAndPassword: {    
-		enabled: true
+		enabled: false
 	},
+	socialProviders: {
+		github: {
+			clientId: process.env.GITHUB_CLIENT_ID!,
+			clientSecret: process.env.GITHUB_CLIENT_SECRET!,
+		},
+		google: {
+			clientId: process.env.GOOGLE_CLIENT_ID!,
+			clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+		},
+	},
+	trustedOrigins: [
+		"http://localhost:3000",
+		"https://v0-ai-evaluation-platform-nu.vercel.app",
+	],
 	plugins: [bearer()]
 });
 

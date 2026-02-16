@@ -2,20 +2,21 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/db';
 import { organizations, organizationMembers, evaluations, workflows, traces, annotationTasks, webhooks } from '@/db/schema';
 import { eq, like, desc, and } from 'drizzle-orm';
-import { getCurrentUser } from '@/lib/auth';
+import { requireAuthWithOrg } from '@/lib/autumn-server';
 import { sanitizeSearchInput } from '@/lib/validation';
 
 export async function GET(request: NextRequest) {
   try {
-    const user = await getCurrentUser(request);
-    if (!user) {
-      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    const authResult = await requireAuthWithOrg(request);
+    if (!authResult.authenticated) {
+      const data = await authResult.response.json();
+      return NextResponse.json(data, { status: authResult.response.status });
     }
 
     const searchParams = request.nextUrl.searchParams;
     const id = searchParams.get('id');
 
-    // Single organization by ID
+    // Single organization by ID — scoped: user can only see their own org
     if (id) {
       if (!id || isNaN(parseInt(id))) {
         return NextResponse.json({ 
@@ -24,9 +25,17 @@ export async function GET(request: NextRequest) {
         }, { status: 400 });
       }
 
+      // Only allow fetching user's own org
+      if (parseInt(id) !== authResult.organizationId) {
+        return NextResponse.json({ 
+          error: 'Organization not found',
+          code: 'NOT_FOUND' 
+        }, { status: 404 });
+      }
+
       const organization = await db.select()
         .from(organizations)
-        .where(eq(organizations.id, parseInt(id)))
+        .where(eq(organizations.id, authResult.organizationId))
         .limit(1);
 
       if (organization.length === 0) {
@@ -63,9 +72,10 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const user = await getCurrentUser(request);
-    if (!user) {
-      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    const authResult = await requireAuthWithOrg(request);
+    if (!authResult.authenticated) {
+      const data = await authResult.response.json();
+      return NextResponse.json(data, { status: authResult.response.status });
     }
 
     const body = await request.json();
@@ -112,7 +122,7 @@ export async function POST(request: NextRequest) {
     if (newOrganization.length > 0) {
       await db.insert(organizationMembers).values({
         organizationId: newOrganization[0].id,
-        userId: user.id,
+        userId: authResult.userId,
         role: 'owner',
         createdAt: now,
       });
@@ -129,9 +139,10 @@ export async function POST(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
-    const user = await getCurrentUser(request);
-    if (!user) {
-      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    const authResult = await requireAuthWithOrg(request);
+    if (!authResult.authenticated) {
+      const data = await authResult.response.json();
+      return NextResponse.json(data, { status: authResult.response.status });
     }
 
     const searchParams = request.nextUrl.searchParams;
@@ -143,6 +154,14 @@ export async function PUT(request: NextRequest) {
         error: "Valid ID is required",
         code: "INVALID_ID" 
       }, { status: 400 });
+    }
+
+    // Only allow updating user's own org
+    if (parseInt(id) !== authResult.organizationId) {
+      return NextResponse.json({ 
+        error: 'Organization not found',
+        code: 'NOT_FOUND' 
+      }, { status: 404 });
     }
 
     const body = await request.json();
@@ -165,19 +184,6 @@ export async function PUT(request: NextRequest) {
       }, { status: 400 });
     }
 
-    // Check if organization exists
-    const existing = await db.select()
-      .from(organizations)
-      .where(eq(organizations.id, parseInt(id)))
-      .limit(1);
-
-    if (existing.length === 0) {
-      return NextResponse.json({ 
-        error: 'Organization not found',
-        code: 'NOT_FOUND' 
-      }, { status: 404 });
-    }
-
     // Prepare update data
     const updateData: {
       name?: string;
@@ -193,7 +199,7 @@ export async function PUT(request: NextRequest) {
     // Update organization
     const updated = await db.update(organizations)
       .set(updateData)
-      .where(eq(organizations.id, parseInt(id)))
+      .where(eq(organizations.id, authResult.organizationId))
       .returning();
 
     return NextResponse.json(updated[0], { status: 200 });
@@ -207,9 +213,10 @@ export async function PUT(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
-    const user = await getCurrentUser(request);
-    if (!user) {
-      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    const authResult = await requireAuthWithOrg(request);
+    if (!authResult.authenticated) {
+      const data = await authResult.response.json();
+      return NextResponse.json(data, { status: authResult.response.status });
     }
 
     const searchParams = request.nextUrl.searchParams;

@@ -8,6 +8,7 @@ import { llmJudgeConfigs, llmJudgeResults } from '@/db/schema';
 import { eq, and, desc } from 'drizzle-orm';
 import { logger } from '@/lib/logger';
 import { z } from 'zod';
+import { providerKeysService } from './provider-keys.service';
 
 export const createLLMJudgeConfigSchema = z.object({
   name: z.string().min(1).max(255),
@@ -182,7 +183,7 @@ export class LLMJudgeService {
     const prompt = this.buildEvaluationPrompt(config, data);
 
     // Call LLM API (placeholder - integrate with actual LLM providers)
-    const judgement = await this.callLLMProvider(config, prompt);
+    const judgement = await this.callLLMProvider(config, prompt, organizationId);
 
     // Store result
     const [result] = await db.insert(llmJudgeResults).values({
@@ -293,20 +294,24 @@ export class LLMJudgeService {
    */
   private async callLLMProvider(
     config: any,
-    prompt: string
+    prompt: string,
+    organizationId: number
   ): Promise<JudgementResult> {
     const provider = this.getProviderFromModel(config.model);
-    logger.info('Calling LLM provider', { provider, model: config.model });
+    logger.info('Calling LLM provider', { provider, model: config.model, organizationId });
 
     const systemPrompt = 'You are an expert AI evaluator. Respond ONLY with valid JSON in this exact format: {"score": <0-100>, "reasoning": "<explanation>", "passed": <true/false>}. Do not include any other text.';
 
     try {
       if (provider === 'openai') {
-        const apiKey = process.env.OPENAI_API_KEY;
-        if (!apiKey) {
-          logger.warn('OPENAI_API_KEY not set, falling back to simple scoring');
+        // Get per-org encrypted OpenAI key
+        const providerKey = await providerKeysService.getActiveProviderKey(organizationId, 'openai');
+        if (!providerKey) {
+          logger.warn('No OpenAI key found for organization, falling back to simple scoring', { organizationId });
           return this.fallbackScoring(prompt);
         }
+
+        const apiKey = providerKey.decryptedKey;
 
         const response = await fetch('https://api.openai.com/v1/chat/completions', {
           method: 'POST',
@@ -478,6 +483,164 @@ export class LLMJudgeService {
       passRate: totalEvaluations > 0
         ? Math.round((passedEvaluations / totalEvaluations) * 100)
         : 0,
+    };
+  }
+
+  /**
+   * Evaluate a batch of test results using LLM judge (post-eval hook).
+   * This is called automatically after an evaluation run completes.
+   */
+  async evaluateRunBatch(
+    evaluationRunId: number,
+    organizationId: number,
+    testResults: Array<{
+      testCaseId: number;
+      input: string;
+      output: string;
+      expectedOutput?: string;
+      score?: number;
+      status: string;
+    }>
+  ): Promise<{
+    totalJudged: number;
+    passedJudged: number;
+    failedJudged: number;
+    averageJudgeScore: number;
+    judgeResults: Array<{
+      testCaseId: number;
+      judgeScore: number;
+      judgeReasoning: string;
+      passed: boolean;
+    }>;
+  }> {
+    logger.info('Starting batch LLM judge evaluation', { evaluationRunId, testResultsCount: testResults.length });
+
+    // Get default judge config for the organization
+    const [defaultConfig] = await db
+      .select()
+      .from(llmJudgeConfigs)
+      .where(and(
+        eq(llmJudgeConfigs.organizationId, organizationId),
+        eq(llmJudgeConfigs.name, 'Default Judge Config')
+      ))
+      .limit(1);
+
+    if (!defaultConfig) {
+      logger.warn('No default judge config found, skipping batch evaluation', { organizationId });
+      return {
+        totalJudged: 0,
+        passedJudged: 0,
+        failedJudged: 0,
+        averageJudgeScore: 0,
+        judgeResults: [],
+      };
+    }
+
+    const judgeResults: Array<{
+      testCaseId: number;
+      judgeScore: number;
+      judgeReasoning: string;
+      passed: boolean;
+    }> = [];
+
+    // Evaluate each test result
+    for (const testResult of testResults) {
+      try {
+        const evaluation = await this.evaluate(organizationId, {
+          configId: defaultConfig.id,
+          input: testResult.input,
+          output: testResult.output,
+          expectedOutput: testResult.expectedOutput,
+          context: `Evaluation Run ID: ${evaluationRunId}, Test Case ID: ${testResult.testCaseId}`,
+          metadata: {
+            originalScore: testResult.score,
+            originalStatus: testResult.status,
+            testCaseId: testResult.testCaseId,
+            evaluationRunId,
+          },
+        });
+
+        // Save judge result
+        await db.insert(llmJudgeResults).values({
+          configId: defaultConfig.id,
+          evaluationRunId,
+          testCaseId: testResult.testCaseId,
+          input: testResult.input,
+          output: testResult.output,
+          score: evaluation.score,
+          reasoning: evaluation.reasoning,
+          metadata: JSON.stringify({
+            originalScore: testResult.score,
+            originalStatus: testResult.status,
+            passed: evaluation.passed,
+            evaluationRunId,
+          }),
+          createdAt: new Date().toISOString(),
+        });
+
+        judgeResults.push({
+          testCaseId: testResult.testCaseId,
+          judgeScore: evaluation.score,
+          judgeReasoning: evaluation.reasoning,
+          passed: evaluation.passed,
+        });
+
+      } catch (error: any) {
+        logger.error('Failed to judge test case', { 
+          testCaseId: testResult.testCaseId, 
+          error: error.message 
+        });
+
+        // Save failed judge result
+        await db.insert(llmJudgeResults).values({
+          configId: defaultConfig.id,
+          evaluationRunId,
+          testCaseId: testResult.testCaseId,
+          input: testResult.input,
+          output: testResult.output,
+          score: 0,
+          reasoning: `Judge evaluation failed: ${error.message}`,
+          metadata: JSON.stringify({
+            originalScore: testResult.score,
+            originalStatus: testResult.status,
+            passed: false,
+            evaluationRunId,
+            error: error.message,
+          }),
+          createdAt: new Date().toISOString(),
+        });
+
+        judgeResults.push({
+          testCaseId: testResult.testCaseId,
+          judgeScore: 0,
+          judgeReasoning: `Judge evaluation failed: ${error.message}`,
+          passed: false,
+        });
+      }
+    }
+
+    // Calculate summary statistics
+    const totalJudged = judgeResults.length;
+    const passedJudged = judgeResults.filter(r => r.passed).length;
+    const failedJudged = totalJudged - passedJudged;
+    const averageJudgeScore = totalJudged > 0
+      ? judgeResults.reduce((sum, r) => sum + r.judgeScore, 0) / totalJudged
+      : 0;
+
+    logger.info('Batch LLM judge evaluation completed', {
+      evaluationRunId,
+      totalJudged,
+      passedJudged,
+      failedJudged,
+      averageJudgeScore,
+    });
+
+    return {
+      totalJudged,
+      passedJudged,
+      failedJudged,
+      averageJudgeScore: Math.round(averageJudgeScore * 100) / 100,
+      judgeResults,
     };
   }
 }
