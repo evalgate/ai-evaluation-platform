@@ -2,6 +2,7 @@
 import { autumnHandler } from "autumn-js/next";
 import { auth } from "@/lib/auth";
 export const { GET, POST } = autumnHandler({
+  secretKey: process.env.AUTUMN_SECRET_KEY,
   identify: async (request) => {
     const session = await auth.api.getSession({
       headers: request.headers,
