@@ -135,13 +135,8 @@ class WorkflowTracer {
         const durationMs = Date.now() - new Date(this.currentWorkflow.startedAt).getTime();
         // Calculate total cost
         const totalCost = this.costs.reduce((sum, cost) => sum + parseFloat(cost.totalCost), 0);
-        // Update the trace with final status
-        // Note: We create a new trace entry with the same ID pattern to update status
-        const traceId = `${this.options.tracePrefix}-complete-${this.currentWorkflow.traceId}`;
-        await this.client.traces.create({
-            name: `Workflow: ${this.currentWorkflow.name}`,
-            traceId,
-            organizationId: this.options.organizationId,
+        // Update the original trace with completion data
+        await this.client.traces.update(this.currentWorkflow.traceId, {
             status: status === 'completed' ? 'success' : 'error',
             durationMs,
             metadata: (0, context_1.mergeWithContext)({

@@ -127,7 +127,15 @@ export async function runCheck(args: CheckArgs): Promise<number> {
     return EXIT.API_ERROR;
   }
 
-  const data = await scoreRes.json();
+  const data = (await scoreRes.json()) as {
+    score?: number;
+    total?: number | null;
+    evidenceLevel?: string | null;
+    baselineScore?: number | null;
+    regressionDelta?: number | null;
+    breakdown?: { passRate?: number; safety?: number; judge?: number };
+    flags?: string[];
+  };
   const score: number = data?.score ?? 0;
   const total: number | null = data?.total ?? null;
   const evidenceLevel: string | null = data?.evidenceLevel ?? null;
@@ -157,10 +165,10 @@ export async function runCheck(args: CheckArgs): Promise<number> {
     console.log(`│  Baseline: ${baselineScore}  ${arrow} ${Math.abs(delta)} pts          │`);
   }
   if (breakdown) {
-    const pct = (v: number) => `${Math.round((v ?? 0) * 100)}%`;
+    const pct = (v: number | undefined) => `${Math.round((v ?? 0) * 100)}%`;
     console.log(`│  Pass: ${pct(breakdown.passRate)}  Safety: ${pct(breakdown.safety)}  Judge: ${pct(breakdown.judge)} │`);
   }
-  if (data?.flags?.length > 0) {
+  if (data?.flags && data.flags.length > 0) {
     console.log(`│  Flags: ${data.flags.join(', ').padEnd(30)} │`);
   }
   console.log('└─────────────────────────────────────────┘');

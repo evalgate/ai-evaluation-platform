@@ -76,13 +76,45 @@ class AIEvalClient {
         this.cache = new cache_1.RequestCache(config.cacheSize || 1000);
         // Initialize request batcher if enabled (default: enabled)
         if (config.enableBatching !== false) {
+            const MAX_CONCURRENCY = 5;
             this.batcher = new batch_1.RequestBatcher(async (requests) => {
-                // Batch execution placeholder - will be implemented per API
-                return requests.map(req => ({
-                    id: req.id,
-                    status: 200,
-                    data: null,
-                }));
+                const results = [];
+                const executing = [];
+                for (const req of requests) {
+                    const task = (async () => {
+                        try {
+                            const data = await this.request(req.endpoint, {
+                                method: req.method,
+                                body: req.body ? JSON.stringify(req.body) : undefined,
+                                headers: req.headers,
+                            });
+                            results.push({ id: req.id, status: 200, data });
+                        }
+                        catch (err) {
+                            results.push({
+                                id: req.id,
+                                status: err?.statusCode || 500,
+                                data: null,
+                                error: err?.message || 'Unknown error',
+                            });
+                        }
+                    })();
+                    executing.push(task);
+                    if (executing.length >= MAX_CONCURRENCY) {
+                        await Promise.race(executing);
+                        // Remove settled promises
+                        for (let i = executing.length - 1; i >= 0; i--) {
+                            const settled = await Promise.race([
+                                executing[i].then(() => true),
+                                Promise.resolve(false),
+                            ]);
+                            if (settled)
+                                executing.splice(i, 1);
+                        }
+                    }
+                }
+                await Promise.allSettled(executing);
+                return results;
             }, {
                 maxBatchSize: config.batchSize || 10,
                 batchDelay: config.batchDelay || 50,
@@ -337,6 +369,24 @@ class TraceAPI {
      */
     async get(id) {
         return this.client.request(`/api/traces/${id}`);
+    }
+    /**
+     * Update an existing trace (e.g. set status, duration, metadata on completion)
+     *
+     * @example
+     * ```typescript
+     * await client.traces.update(42, {
+     *   status: 'success',
+     *   durationMs: 1234,
+     *   metadata: { output: 'done' }
+     * });
+     * ```
+     */
+    async update(id, params) {
+        return this.client.request(`/api/traces/${id}`, {
+            method: 'PATCH',
+            body: JSON.stringify(params),
+        });
     }
     /**
      * Create a span for a trace

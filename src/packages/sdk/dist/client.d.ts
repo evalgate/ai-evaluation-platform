@@ -1,4 +1,4 @@
-import { ClientConfig, Trace, CreateTraceParams, ListTracesParams, Evaluation, CreateEvaluationParams, UpdateEvaluationParams, ListEvaluationsParams, LLMJudgeResult, RunLLMJudgeParams, TestCase, CreateTestCaseParams, EvaluationRun, CreateRunParams, Span, CreateSpanParams, OrganizationLimits, Annotation, CreateAnnotationParams, ListAnnotationsParams, AnnotationTask, CreateAnnotationTaskParams, ListAnnotationTasksParams, AnnotationItem, CreateAnnotationItemParams, ListAnnotationItemsParams, APIKey, APIKeyWithSecret, CreateAPIKeyParams, UpdateAPIKeyParams, ListAPIKeysParams, APIKeyUsage, Webhook, CreateWebhookParams, UpdateWebhookParams, ListWebhooksParams, WebhookDelivery, ListWebhookDeliveriesParams, UsageStats, GetUsageParams, UsageSummary, LLMJudgeConfig, CreateLLMJudgeConfigParams, ListLLMJudgeConfigsParams, ListLLMJudgeResultsParams, LLMJudgeAlignment, GetLLMJudgeAlignmentParams, Organization } from './types';
+import { ClientConfig, Trace, CreateTraceParams, ListTracesParams, Evaluation, CreateEvaluationParams, UpdateEvaluationParams, ListEvaluationsParams, LLMJudgeResult, RunLLMJudgeParams, TestCase, CreateTestCaseParams, EvaluationRun, CreateRunParams, Span, CreateSpanParams, UpdateTraceParams, OrganizationLimits, Annotation, CreateAnnotationParams, ListAnnotationsParams, AnnotationTask, CreateAnnotationTaskParams, ListAnnotationTasksParams, AnnotationItem, CreateAnnotationItemParams, ListAnnotationItemsParams, APIKey, APIKeyWithSecret, CreateAPIKeyParams, UpdateAPIKeyParams, ListAPIKeysParams, APIKeyUsage, Webhook, CreateWebhookParams, UpdateWebhookParams, ListWebhooksParams, WebhookDelivery, ListWebhookDeliveriesParams, UsageStats, GetUsageParams, UsageSummary, LLMJudgeConfig, CreateLLMJudgeConfigParams, ListLLMJudgeConfigsParams, ListLLMJudgeResultsParams, LLMJudgeAlignment, GetLLMJudgeAlignmentParams, Organization } from './types';
 import { Logger } from './logger';
 /**
  * AI Evaluation Platform SDK Client
@@ -126,6 +126,19 @@ declare class TraceAPI {
      * Get a single trace by ID
      */
     get(id: number): Promise<Trace>;
+    /**
+     * Update an existing trace (e.g. set status, duration, metadata on completion)
+     *
+     * @example
+     * ```typescript
+     * await client.traces.update(42, {
+     *   status: 'success',
+     *   durationMs: 1234,
+     *   metadata: { output: 'done' }
+     * });
+     * ```
+     */
+    update<TMetadata = Record<string, any>>(id: number, params: UpdateTraceParams<TMetadata>): Promise<Trace<TMetadata>>;
     /**
      * Create a span for a trace
      */
