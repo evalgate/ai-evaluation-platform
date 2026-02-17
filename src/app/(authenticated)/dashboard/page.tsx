@@ -59,8 +59,8 @@ function DashboardSkeleton() {
 }
 
 export default async function DashboardPage() {
-  const headersList = headers()
-  const session = await auth.api.getSession(headersList)
+  const headersList = await headers()
+  const session = await auth.api.getSession({ headers: headersList })
   
   if (!session?.user) {
     redirect("/auth/login")
