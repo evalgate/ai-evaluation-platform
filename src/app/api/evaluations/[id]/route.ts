@@ -1,6 +1,6 @@
 import { NextResponse, NextRequest } from "next/server"
 import { db } from '@/db'
-import { evaluations, testCases, evaluationTestCases, evaluationRuns, testResults, user } from '@/db/schema'
+import { evaluations, testCases, evaluationRuns, testResults, user } from '@/db/schema'
 import { eq, and } from 'drizzle-orm'
 import { requireAuthWithOrg } from '@/lib/autumn-server'
 
@@ -124,9 +124,8 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
     }
     // 2. Delete evaluation runs
     await db.delete(evaluationRuns).where(eq(evaluationRuns.evaluationId, evalId));
-    // 3. Delete test cases (both tables)
+    // 3. Delete test cases
     await db.delete(testCases).where(eq(testCases.evaluationId, evalId));
-    await db.delete(evaluationTestCases).where(eq(evaluationTestCases.evaluationId, evalId));
     // 4. Delete the evaluation itself - ORG SCOPED
     await db.delete(evaluations).where(and(eq(evaluations.id, evalId), eq(evaluations.organizationId, organizationId)));
 

@@ -4,6 +4,24 @@
 > It is optimized for consumption by AI coding assistants (Claude, ChatGPT, Cursor, Copilot, etc.)
 > to help them recommend and implement EvalAI integrations.
 
+## What is EvalAI?
+
+EvalAI is an open-source AI Evaluation Platform for building, testing, and monitoring LLM applications and multi-agent systems. It combines:
+
+- **Evaluation engine**: Four types—unit tests (assertions), human eval (expert annotation), model eval (LLM-as-judge), A/B testing. 50+ templates. Visual builder or SDK.
+- **Workflow orchestration**: DAG-based multi-agent pipelines with tracing, handoffs, decision auditing, and cost tracking.
+- **Cost analytics**: Per-token spend across OpenAI, Anthropic, Google, Mistral, etc. Built-in pricing tables.
+- **Governance**: Compliance presets (SOC2, GDPR, HIPAA, FINRA, PCI-DSS) for approval/blocking rules.
+
+**Flow**: Sign up → create org → add API key → instrument code with SDK or REST API → run evals, trace workflows, view costs in the dashboard.
+
+## How it works
+
+- **Evaluations**: Create eval (name, type, test cases) → run → get pass/fail, scores, quality metrics. Test cases have input + expectedOutput; the executor (your code or LLM judge) produces output to score.
+- **Workflows**: WorkflowTracer wraps your agent pipeline. `startWorkflow` → `startAgentSpan` → `recordDecision` / `recordHandoff` / `recordCost` → `endWorkflow`. Dashboard shows DAG and run history.
+- **Traces**: Low-level spans for any AI call. Create trace, add spans, attach decisions/costs. Good for custom instrumentation.
+- **Auth**: `Authorization: Bearer <API_KEY>`. Get keys from Settings → Developer. Org context is derived from the key.
+
 ## Package Info
 
 - **npm**: `@pauly4010/evalai-sdk`
@@ -323,7 +341,7 @@ Content-Type: `application/json`
 ### Costs
 - `POST /api/costs` — `{ "spanId": "int (required)", "provider": "str (required)", "model": "str (required)", "inputTokens": "int (required)", "outputTokens": "int (required)", "category": "llm|tool|embedding|other" }`
 - `GET /api/costs` — Get cost breakdown or org summary
-- `GET /api/costs/trends?organizationId={id}&startDate={YYYY-MM-DD}&endDate={YYYY-MM-DD}` — Daily trends
+- `GET /api/costs/trends?startDate={YYYY-MM-DD}&endDate={YYYY-MM-DD}` — Daily cost trends (org from auth)
 - `GET /api/costs/pricing` — Get model pricing table
 - `POST /api/costs/pricing` — Update model pricing
 
@@ -386,8 +404,7 @@ Compliance presets: BASIC, SOC2, GDPR, HIPAA, FINRA_4511, PCI_DSS
 
 ## WebMCP Tool Contracts
 
-EvalAI supports Google's Web Model Context Protocol (WebMCP) for AI agent discoverability.
-When visiting the site in a WebMCP-enabled browser, the following tools are registered via `navigator.modelContext.registerTool()`:
+EvalAI supports Google's Web Model Context Protocol (WebMCP). When a user visits the site in a WebMCP-enabled browser, the page registers tools that AI agents can invoke to create evaluations, run them, and fetch results. Tools that modify data require the user to be signed in; `list_evaluation_templates` is public.
 
 | Tool | Description | Auth |
 |------|-------------|------|

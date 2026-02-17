@@ -1,107 +1,57 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { benchmarkService } from '@/lib/services/benchmark.service';
-import { withRateLimit } from '@/lib/api-rate-limit';
+import { secureRoute, type AuthContext } from '@/lib/api/secure-route';
+import { notFound, forbidden, validationError } from '@/lib/api/errors';
 import { logger } from '@/lib/logger';
-
-type RouteParams = {
-  params: Promise<{ id: string }>;
-};
 
 /**
  * GET /api/benchmarks/[id] - Get a single benchmark
  */
-export async function GET(request: NextRequest, { params }: RouteParams) {
-  return withRateLimit(request, async (req: NextRequest) => {
-    try {
-      const { id } = await params;
-      const benchmarkId = parseInt(id);
+export const GET = secureRoute(async (req: NextRequest, ctx: AuthContext, params) => {
+  const benchmarkId = parseInt(params.id);
 
-      if (isNaN(benchmarkId)) {
-        return NextResponse.json({
-          error: 'Valid benchmark ID is required',
-          code: 'INVALID_ID',
-        }, { status: 400 });
-      }
+  if (isNaN(benchmarkId)) {
+    return validationError('Valid benchmark ID is required');
+  }
 
-      const benchmark = await benchmarkService.getBenchmarkById(benchmarkId);
+  const benchmark = await benchmarkService.getBenchmarkById(benchmarkId);
 
-      if (!benchmark) {
-        return NextResponse.json({
-          error: 'Benchmark not found',
-          code: 'NOT_FOUND',
-        }, { status: 404 });
-      }
+  if (!benchmark) {
+    return notFound('Benchmark not found');
+  }
 
-      // Get stats
-      const stats = await benchmarkService.getBenchmarkStats(benchmarkId);
+  // Verify org ownership
+  if (benchmark.organizationId !== ctx.organizationId) {
+    return forbidden('Benchmark does not belong to your organization');
+  }
 
-      return NextResponse.json({
-        benchmark,
-        stats,
-      });
-    } catch (error: any) {
-      logger.error('Error fetching benchmark', {
-        error: error.message,
-        route: '/api/benchmarks/[id]',
-        method: 'GET',
-      });
-      return NextResponse.json({
-        error: 'Internal server error',
-        code: 'INTERNAL_ERROR',
-      }, { status: 500 });
-    }
-  }, { customTier: 'free' });
-}
+  const stats = await benchmarkService.getBenchmarkStats(benchmarkId);
+
+  return NextResponse.json({
+    benchmark,
+    stats,
+  });
+})
 
 /**
  * DELETE /api/benchmarks/[id] - Delete a benchmark
  */
-export async function DELETE(request: NextRequest, { params }: RouteParams) {
-  return withRateLimit(request, async (req: NextRequest) => {
-    try {
-      const { id } = await params;
-      const benchmarkId = parseInt(id);
+export const DELETE = secureRoute(async (req: NextRequest, ctx: AuthContext, params) => {
+  const benchmarkId = parseInt(params.id);
 
-      if (isNaN(benchmarkId)) {
-        return NextResponse.json({
-          error: 'Valid benchmark ID is required',
-          code: 'INVALID_ID',
-        }, { status: 400 });
-      }
+  if (isNaN(benchmarkId)) {
+    return validationError('Valid benchmark ID is required');
+  }
 
-      const { searchParams } = new URL(req.url);
-      const organizationId = parseInt(searchParams.get('organizationId') || '0');
+  // Use ctx.organizationId instead of query param
+  const deleted = await benchmarkService.deleteBenchmark(benchmarkId, ctx.organizationId);
 
-      if (!organizationId) {
-        return NextResponse.json({
-          error: 'Organization ID is required',
-          code: 'MISSING_ORGANIZATION_ID',
-        }, { status: 400 });
-      }
+  if (!deleted) {
+    return notFound('Benchmark not found or access denied');
+  }
 
-      const deleted = await benchmarkService.deleteBenchmark(benchmarkId, organizationId);
-
-      if (!deleted) {
-        return NextResponse.json({
-          error: 'Benchmark not found or access denied',
-          code: 'NOT_FOUND',
-        }, { status: 404 });
-      }
-
-      return NextResponse.json({
-        message: 'Benchmark deleted successfully',
-        success: true,
-      });
-    } catch (error: any) {
-      logger.error('Error deleting benchmark', {
-        error: error.message,
-        route: '/api/benchmarks/[id]',
-        method: 'DELETE',
-      });
-      return NextResponse.json({
-        error: 'Internal server error',
-        code: 'INTERNAL_ERROR',
-      }, { status: 500 });
-    }
-  }, { customTier: 'free' });
-}
+  return NextResponse.json({
+    message: 'Benchmark deleted successfully',
+    success: true,
+  });
+})

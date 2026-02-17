@@ -1,4 +1,4 @@
-import { sqliteTable, integer, text } from 'drizzle-orm/sqlite-core';
+import { sqliteTable, integer, text, uniqueIndex } from 'drizzle-orm/sqlite-core';
 
 
 
@@ -81,7 +81,9 @@ export const organizationMembers = sqliteTable('organization_members', {
   userId: text('user_id').references(() => user.id).notNull(),
   role: text('role').notNull(),
   createdAt: text('created_at').notNull(),
-});
+}, (table) => ({
+  uniqueOrgUser: uniqueIndex('org_members_org_user_unique').on(table.organizationId, table.userId),
+}));
 
 // Evaluations
 export const evaluations = sqliteTable('evaluations', {
@@ -95,10 +97,18 @@ export const evaluations = sqliteTable('evaluations', {
   executionSettings: text('execution_settings', { mode: 'json' }),
   modelSettings: text('model_settings', { mode: 'json' }),
   customMetrics: text('custom_metrics', { mode: 'json' }),
+  executorType: text('executor_type'),
+  executorConfig: text('executor_config', { mode: 'json' }),
+  publishedRunId: integer('published_run_id'),
+  publishedVersion: integer('published_version'),
   createdAt: text('created_at').notNull(),
   updatedAt: text('updated_at').notNull(),
 });
 
+/**
+ * @deprecated Use `testCases` table instead. This table is retained only for
+ * backwards-compatible migrations. All new code must use `testCases`.
+ */
 export const evaluationTestCases = sqliteTable('evaluation_test_cases', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   evaluationId: integer('evaluation_id').references(() => evaluations.id).notNull(),
@@ -111,6 +121,8 @@ export const evaluationTestCases = sqliteTable('evaluation_test_cases', {
 export const evaluationRuns = sqliteTable('evaluation_runs', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   evaluationId: integer('evaluation_id').references(() => evaluations.id).notNull(),
+  organizationId: integer('organization_id').references(() => organizations.id).notNull(),
+  idempotencyKey: text('idempotency_key').unique(),
   status: text('status').notNull().default('pending'),
   totalCases: integer('total_cases').default(0),
   passedCases: integer('passed_cases').default(0),
@@ -134,19 +146,9 @@ export const traces = sqliteTable('traces', {
   createdAt: text('created_at').notNull(),
 });
 
-export const traceSpans = sqliteTable('trace_spans', {
-  id: integer('id').primaryKey({ autoIncrement: true }),
-  traceId: integer('trace_id').references(() => traces.id).notNull(),
-  spanId: text('span_id').notNull(),
-  parentSpanId: text('parent_span_id'),
-  name: text('name').notNull(),
-  type: text('type').notNull(),
-  input: text('input'),
-  output: text('output'),
-  durationMs: integer('duration_ms'),
-  metadata: text('metadata', { mode: 'json' }),
-  createdAt: text('created_at').notNull(),
-});
+// DEPRECATED: traceSpans table removed in span unification (Phase 2).
+// All span data now lives in the `spans` table which has startTime/endTime
+// and a UNIQUE constraint on spanId. See spans definition below.
 
 // Annotations
 export const annotationTasks = sqliteTable('annotation_tasks', {
@@ -207,7 +209,7 @@ export const apiKeys = sqliteTable('api_keys', {
   userId: text('user_id').references(() => user.id).notNull(),
   organizationId: integer('organization_id').references(() => organizations.id).notNull(),
   keyHash: text('key_hash').notNull(),
-  keyPrefix: text('key_prefix').notNull(),
+  keyPrefix: text('key_prefix').notNull().unique(),
   name: text('name').notNull(),
   scopes: text('scopes', { mode: 'json' }).notNull(),
   lastUsedAt: text('last_used_at'),
@@ -289,6 +291,7 @@ export const testCases = sqliteTable('test_cases', {
   evaluationId: integer('evaluation_id').references(() => evaluations.id).notNull(),
   name: text('name').notNull(),
   input: text('input').notNull(),
+  inputHash: text('input_hash'), // SHA-256 of normalized input for trace-linked matching
   expectedOutput: text('expected_output'),
   metadata: text('metadata', { mode: 'json' }),
   createdAt: text('created_at').notNull(),
@@ -298,10 +301,13 @@ export const testResults = sqliteTable('test_results', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   evaluationRunId: integer('evaluation_run_id').references(() => evaluationRuns.id).notNull(),
   testCaseId: integer('test_case_id').references(() => testCases.id).notNull(),
+  organizationId: integer('organization_id').references(() => organizations.id).notNull(),
   status: text('status').notNull().default('pending'),
   output: text('output'),
   score: integer('score'),
   error: text('error'),
+  assertionsJson: text('assertions_json', { mode: 'json' }), // Structured assertion outcomes: { pii: false, toxicity: false, ... }
+  traceLinkedMatched: integer('trace_linked_matched', { mode: 'boolean' }), // true=matched, false=no span, null=not trace-linked
   durationMs: integer('duration_ms'),
   messages: text('messages', { mode: 'json' }), // Raw LLM messages array for each turn
   toolCalls: text('tool_calls', { mode: 'json' }), // Tool arguments and outputs per turn
@@ -319,7 +325,9 @@ export const spans = sqliteTable('spans', {
   endTime: text('end_time'),
   durationMs: integer('duration_ms'),
   input: text('input'),
+  inputHash: text('input_hash'), // SHA-256 of normalized input for deterministic matching
   output: text('output'),
+  evaluationRunId: integer('evaluation_run_id').references(() => evaluationRuns.id), // when consumed by trace-linked run
   metadata: text('metadata', { mode: 'json' }),
   createdAt: text('created_at').notNull(),
 });
@@ -367,6 +375,7 @@ export const workflowRuns = sqliteTable('workflow_runs', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   workflowId: integer('workflow_id').references(() => workflows.id),
   traceId: integer('trace_id').references(() => traces.id).notNull(),
+  organizationId: integer('organization_id').references(() => organizations.id).notNull(),
   status: text('status').notNull().default('running'), // 'running', 'completed', 'failed', 'cancelled'
   input: text('input', { mode: 'json' }),
   output: text('output', { mode: 'json' }),
@@ -385,6 +394,7 @@ export const workflowRuns = sqliteTable('workflow_runs', {
 export const agentHandoffs = sqliteTable('agent_handoffs', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   workflowRunId: integer('workflow_run_id').references(() => workflowRuns.id).notNull(),
+  organizationId: integer('organization_id').references(() => organizations.id).notNull(),
   fromSpanId: text('from_span_id'),
   toSpanId: text('to_span_id').notNull(),
   fromAgent: text('from_agent'),
@@ -403,6 +413,7 @@ export const agentDecisions = sqliteTable('agent_decisions', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   spanId: integer('span_id').references(() => spans.id).notNull(),
   workflowRunId: integer('workflow_run_id').references(() => workflowRuns.id),
+  organizationId: integer('organization_id').references(() => organizations.id).notNull(),
   agentName: text('agent_name').notNull(),
   decisionType: text('decision_type').notNull(), // 'action', 'tool', 'delegate', 'respond'
   chosen: text('chosen').notNull(), // the action/tool that was chosen
@@ -422,6 +433,8 @@ export const costRecords = sqliteTable('cost_records', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   spanId: integer('span_id').references(() => spans.id).notNull(),
   workflowRunId: integer('workflow_run_id').references(() => workflowRuns.id),
+  evaluationRunId: integer('evaluation_run_id').references(() => evaluationRuns.id),
+  organizationId: integer('organization_id').references(() => organizations.id).notNull(),
   provider: text('provider').notNull(), // 'openai', 'anthropic', 'google', etc.
   model: text('model').notNull(),
   inputTokens: integer('input_tokens').notNull(),
@@ -542,6 +555,101 @@ export const reportCards = sqliteTable('report_cards', {
   isPublic: integer('is_public', { mode: 'boolean' }).default(true),
   reportData: text('report_data', { mode: 'json' }).notNull(), // Snapshot of scores/results
   expiresAt: text('expires_at'),                           // Optional expiry
+  viewCount: integer('view_count').default(0),
+  createdBy: text('created_by').references(() => user.id).notNull(),
+  createdAt: text('created_at').notNull(),
+});
+
+// ============================================
+// AUDIT & GOVERNANCE
+// ============================================
+
+// Immutable audit log for security events and data mutations
+export const auditLogs = sqliteTable('audit_logs', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  organizationId: integer('organization_id').references(() => organizations.id).notNull(),
+  userId: text('user_id'),
+  action: text('action').notNull(),
+  resourceType: text('resource_type'),
+  resourceId: text('resource_id'),
+  metadata: text('metadata', { mode: 'json' }),
+  ipAddress: text('ip_address'),
+  userAgent: text('user_agent'),
+  createdAt: text('created_at').notNull(),
+});
+
+// ============================================
+// QUALITY SCORING
+// ============================================
+
+// Quality scores computed per evaluation run
+export const qualityScores = sqliteTable('quality_scores', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  evaluationRunId: integer('evaluation_run_id').references(() => evaluationRuns.id).notNull(),
+  evaluationId: integer('evaluation_id').references(() => evaluations.id).notNull(),
+  organizationId: integer('organization_id').references(() => organizations.id).notNull(),
+  score: integer('score').notNull(),
+  total: integer('total'), // test case count for minN gating
+  traceCoverageRate: text('trace_coverage_rate'), // nullable, for trace-linked runs: matched/total
+  breakdown: text('breakdown', { mode: 'json' }).notNull(),
+  flags: text('flags', { mode: 'json' }).notNull(),
+  evidenceLevel: text('evidence_level'), // 'strong' | 'medium' | 'weak'
+  scoringVersion: text('scoring_version').notNull().default('v1'),
+  model: text('model'),
+  isBaseline: integer('is_baseline', { mode: 'boolean' }).default(false),
+  createdAt: text('created_at').notNull(),
+});
+
+// ============================================
+// EVALUATION VERSIONING
+// ============================================
+
+// Snapshots of evaluation configs at publish time
+export const evaluationVersions = sqliteTable('evaluation_versions', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  evaluationId: integer('evaluation_id').references(() => evaluations.id).notNull(),
+  version: integer('version').notNull(),
+  snapshotJson: text('snapshot_json', { mode: 'json' }).notNull(),
+  diffSummary: text('diff_summary'),
+  createdBy: text('created_by').references(() => user.id).notNull(),
+  createdAt: text('created_at').notNull(),
+});
+
+// ============================================
+// DRIFT DETECTION
+// ============================================
+
+// Alerts generated by drift detection
+export const driftAlerts = sqliteTable('drift_alerts', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  organizationId: integer('organization_id').references(() => organizations.id).notNull(),
+  evaluationId: integer('evaluation_id').references(() => evaluations.id),
+  alertType: text('alert_type').notNull(),
+  severity: text('severity').notNull(),
+  explanation: text('explanation').notNull(),
+  model: text('model'),
+  currentValue: text('current_value'),
+  baselineValue: text('baseline_value'),
+  zScoreValue: text('z_score_value'),
+  metadata: text('metadata', { mode: 'json' }),
+  acknowledgedAt: text('acknowledged_at'),
+  createdAt: text('created_at').notNull(),
+});
+
+// ============================================
+// SIGNED REPORT EXPORT
+// ============================================
+
+// Shared reports with HMAC signatures
+export const sharedReports = sqliteTable('shared_reports', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  organizationId: integer('organization_id').references(() => organizations.id).notNull(),
+  evaluationId: integer('evaluation_id').references(() => evaluations.id).notNull(),
+  evaluationRunId: integer('evaluation_run_id').references(() => evaluationRuns.id).notNull(),
+  shareToken: text('share_token').notNull().unique(),
+  reportBody: text('report_body').notNull(),
+  signature: text('signature').notNull(),
+  expiresAt: text('expires_at'),
   viewCount: integer('view_count').default(0),
   createdBy: text('created_by').references(() => user.id).notNull(),
   createdAt: text('created_at').notNull(),

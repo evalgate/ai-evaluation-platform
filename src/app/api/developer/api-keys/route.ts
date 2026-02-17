@@ -1,16 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/db';
-import { apiKeys, organizationMembers } from '@/db/schema';
-import { eq, and, desc, isNull } from 'drizzle-orm';
-import { requireAuthWithOrg } from '@/lib/autumn-server';
+import { apiKeys } from '@/db/schema';
+import { eq, and, desc } from 'drizzle-orm';
+import { requireAdmin } from '@/lib/autumn-server';
 import { withRateLimit } from '@/lib/api-rate-limit';
 import { logger } from '@/lib/logger';
+import { scopesForRole, ALL_SCOPES } from '@/lib/auth/scopes';
 import crypto from 'crypto';
 
 export async function POST(request: NextRequest) {
   return withRateLimit(request, async (req) => {
     try {
-    const authResult = await requireAuthWithOrg(request);
+    const authResult = await requireAdmin(request);
     if (!authResult.authenticated) {
       const data = await authResult.response.json();
       return NextResponse.json(data, { status: authResult.response.status });
@@ -57,6 +58,32 @@ export async function POST(request: NextRequest) {
         error: "All scopes must be strings",
         code: "INVALID_SCOPES" 
       }, { status: 400 });
+    }
+
+    // Scope issuance guardrails: reject * and non-canonical scopes
+    const requestedScopes = scopes as string[];
+    if (requestedScopes.includes('*')) {
+      return NextResponse.json({ 
+        error: "Wildcard scope '*' is not allowed",
+        code: "INVALID_SCOPES" 
+      }, { status: 400 });
+    }
+    const invalidScopes = requestedScopes.filter(s => !ALL_SCOPES.includes(s));
+    if (invalidScopes.length > 0) {
+      return NextResponse.json({ 
+        error: `Invalid scopes: ${invalidScopes.join(', ')}`,
+        code: "INVALID_SCOPES" 
+      }, { status: 400 });
+    }
+
+    // Creator can only mint scopes they hold (subset of role scopes)
+    const creatorScopes = new Set(scopesForRole(authResult.role));
+    const excessScopes = requestedScopes.filter(s => !creatorScopes.has(s));
+    if (excessScopes.length > 0) {
+      return NextResponse.json({ 
+        error: `Cannot grant scopes beyond your role: ${excessScopes.join(', ')}`,
+        code: "INSUFFICIENT_ROLE" 
+      }, { status: 403 });
     }
 
     // Validate expiresAt if provided
@@ -112,7 +139,13 @@ export async function POST(request: NextRequest) {
       keyPrefix: newApiKey[0].keyPrefix
     }, { status: 201 });
 
-  } catch (error) {
+  } catch (error: any) {
+    if (error?.message?.includes('UNIQUE constraint failed') || error?.code === 'SQLITE_CONSTRAINT_UNIQUE') {
+      return NextResponse.json({
+        error: 'API key prefix collision — please retry',
+        code: 'CONFLICT',
+      }, { status: 409 });
+    }
     logger.error({ error, route: '/api/developer/api-keys', method: 'POST' }, 'Error creating API key');
     return NextResponse.json({ 
       error: 'Internal server error' 

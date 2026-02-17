@@ -61,7 +61,7 @@ async function evaluateChatbot() {
   for (const testCase of testCases) {
     const response = await yourChatbot(testCase.input);
     
-    await client.traces.addSpan(trace.id, {
+    await client.traces.createSpan(trace.id, {
       name: 'chatbot-response',
       input: testCase.input,
       output: response,

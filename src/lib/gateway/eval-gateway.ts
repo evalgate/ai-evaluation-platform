@@ -8,6 +8,7 @@ import { evalWorker } from '@/lib/workers/eval-worker';
 interface StartRunOptions {
   testCases?: string[];
   settings?: Record<string, any>;
+  idempotencyKey?: string;
 }
 
 interface RunStatus {
@@ -71,10 +72,39 @@ class EvalGateway {
       throw new Error('No test cases found for evaluation');
     }
 
+    // 2b. Idempotency check: if an idempotencyKey is provided, return existing run
+    if (options.idempotencyKey) {
+      const [existing] = await db
+        .select()
+        .from(evaluationRuns)
+        .where(eq(evaluationRuns.idempotencyKey, options.idempotencyKey))
+        .limit(1);
+
+      if (existing) {
+        logger.info('Gateway: Returning existing run for idempotency key', {
+          runId: existing.id,
+          idempotencyKey: options.idempotencyKey,
+        });
+        return {
+          id: existing.id,
+          status: existing.status,
+          totalCases: existing.totalCases ?? 0,
+          processedCount: existing.processedCount ?? 0,
+          passedCases: existing.passedCases ?? 0,
+          failedCases: existing.failedCases ?? 0,
+          startedAt: existing.startedAt ?? undefined,
+          completedAt: existing.completedAt ?? undefined,
+          traceLog: existing.traceLog,
+        };
+      }
+    }
+
     // 3. Create evaluation run with PENDING status
     const now = new Date().toISOString();
     const [run] = await db.insert(evaluationRuns).values({
       evaluationId,
+      organizationId,
+      idempotencyKey: options.idempotencyKey ?? null,
       status: 'pending',
       totalCases: testCaseIds.length,
       processedCount: 0,

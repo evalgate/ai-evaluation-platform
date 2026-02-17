@@ -148,7 +148,16 @@ export async function POST(request: NextRequest) {
         }, { status: 400 });
       }
 
-      const decision = await decisionService.create(validation.data);
+      const authResult = await requireAuthWithOrg(req);
+      if (!authResult.authenticated) {
+        const data = await authResult.response.json();
+        return NextResponse.json(data, { status: authResult.response.status });
+      }
+
+      const decision = await decisionService.create({
+        ...validation.data,
+        organizationId: authResult.organizationId,
+      });
 
       logger.info('Decision created', {
         decisionId: decision.id,

@@ -14,6 +14,7 @@ import { eq, and, desc, sql, gte, lte, inArray } from 'drizzle-orm';
 export interface CreateCostRecordParams {
   spanId: number;
   workflowRunId?: number;
+  organizationId: number;
   provider: string;
   model: string;
   inputTokens: number;
@@ -142,6 +143,7 @@ class CostService {
       .values({
         spanId: params.spanId,
         workflowRunId: params.workflowRunId || null,
+        organizationId: params.organizationId,
         provider: params.provider,
         model: params.model,
         inputTokens: params.inputTokens,

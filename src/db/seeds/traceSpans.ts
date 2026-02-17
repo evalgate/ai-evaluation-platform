@@ -1,5 +1,5 @@
 import { db } from '@/db';
-import { traceSpans } from '@/db/schema';
+import { spans } from '@/db/schema';
 
 async function main() {
     const sampleTraceSpans = [
@@ -260,7 +260,11 @@ async function main() {
         },
     ];
 
-    await db.insert(traceSpans).values(sampleTraceSpans);
+    await db.insert(spans).values(sampleTraceSpans.map(s => ({
+        ...s,
+        startTime: s.createdAt,
+        endTime: null,
+    })));
     
     console.log('✅ Trace spans seeder completed successfully');
 }

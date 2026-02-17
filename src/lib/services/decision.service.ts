@@ -21,6 +21,7 @@ export interface DecisionAlternative {
 export interface CreateDecisionParams {
   spanId: number;
   workflowRunId?: number;
+  organizationId: number;
   agentName: string;
   decisionType: 'action' | 'tool' | 'delegate' | 'respond' | 'route';
   chosen: string;
@@ -54,6 +55,7 @@ class DecisionService {
       .values({
         spanId: params.spanId,
         workflowRunId: params.workflowRunId || null,
+        organizationId: params.organizationId,
         agentName: params.agentName,
         decisionType: params.decisionType,
         chosen: params.chosen,

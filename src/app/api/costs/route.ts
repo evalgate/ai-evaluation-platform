@@ -102,7 +102,16 @@ export async function POST(request: NextRequest) {
         }, { status: 400 });
       }
 
-      const record = await costService.createRecord(validation.data);
+      const authResult = await requireAuthWithOrg(req);
+      if (!authResult.authenticated) {
+        const data = await authResult.response.json();
+        return NextResponse.json(data, { status: authResult.response.status });
+      }
+
+      const record = await costService.createRecord({
+        ...validation.data,
+        organizationId: authResult.organizationId,
+      });
 
       logger.info('Cost record created', {
         recordId: record.id,

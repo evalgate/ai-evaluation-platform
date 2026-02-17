@@ -1,7 +1,9 @@
 import { db } from "@/db";
-import { session, user, apiKeys, organizationMembers } from "@/db/schema";
+import { session, user, apiKeys, organizationMembers, organizations } from "@/db/schema";
 import { eq, and, isNull } from "drizzle-orm";
 import crypto from "crypto";
+import { scopesForRole } from "@/lib/auth/scopes";
+import { normalizeRole, type Role, type AuthType } from "@/lib/api/secure-route";
 
 /**
  * Server-side Autumn feature checking and tracking
@@ -26,7 +28,9 @@ interface ValidateSessionResult {
   userId?: string;
   error?: string;
   scopes?: string[];
-  isApiKey?: boolean;
+  authType?: AuthType;
+  /** For API key auth, the org the key is scoped to. */
+  apiKeyOrgId?: number;
 }
 
 /**
@@ -60,8 +64,8 @@ export async function validateSession(token: string | null, requiredScope?: stri
         return { valid: false, error: "Session expired" };
       }
 
-      // Session-based users have full access (no scope restrictions)
-      return { valid: true, userId: userSession.userId, isApiKey: false };
+      // Session-based users get scopes derived from their org role later
+      return { valid: true, userId: userSession.userId, authType: 'session' };
     }
 
     // ── Path 2: Check API keys table (for SDK / programmatic access) ──
@@ -87,9 +91,9 @@ export async function validateSession(token: string | null, requiredScope?: stri
       }
     }
 
-    // Enforce scope check if a required scope was specified
+    // Enforce scope check if a required scope was specified (no * wildcard)
     const keyScopes = Array.isArray(apiKey.scopes) ? apiKey.scopes as string[] : [];
-    if (requiredScope && !keyScopes.includes(requiredScope) && !keyScopes.includes("*")) {
+    if (requiredScope && !keyScopes.includes(requiredScope)) {
       return {
         valid: false,
         error: `API key does not have the required scope: ${requiredScope}`,
@@ -102,7 +106,13 @@ export async function validateSession(token: string | null, requiredScope?: stri
       .where(eq(apiKeys.id, apiKey.id))
       .run();
 
-    return { valid: true, userId: apiKey.userId, scopes: keyScopes, isApiKey: true };
+    return {
+      valid: true,
+      userId: apiKey.userId,
+      scopes: keyScopes,
+      authType: 'apiKey',
+      apiKeyOrgId: apiKey.organizationId,
+    };
   } catch (error) {
     console.error("Session validation error:", error);
     return { valid: false, error: "Session validation failed" };
@@ -212,7 +222,14 @@ export function extractBearerToken(authHeader: string | null): string | null {
  * Returns standardized error responses
  */
 export async function requireAuth(request: Request): Promise<
-  | { authenticated: true; userId: string }
+  | {
+      authenticated: true;
+      userId: string;
+      scopes: string[];
+      authType: Exclude<AuthType, 'anonymous'>;
+      /** Present only for API-key auth — the org the key belongs to. */
+      apiKeyOrgId?: number;
+    }
   | { authenticated: false; response: Response }
 > {
   const authHeader = request.headers.get("authorization");
@@ -239,6 +256,9 @@ export async function requireAuth(request: Request): Promise<
   return {
     authenticated: true,
     userId: validation.userId,
+    scopes: validation.scopes ?? [],
+    authType: (validation.authType as Exclude<AuthType, 'anonymous'>) ?? 'session',
+    apiKeyOrgId: validation.apiKeyOrgId,
   };
 }
 
@@ -249,7 +269,14 @@ export async function requireAuth(request: Request): Promise<
  * returned organizationId to scope DB queries, never trusting client-provided org IDs.
  */
 export async function requireAuthWithOrg(request: Request): Promise<
-  | { authenticated: true; userId: string; organizationId: number; role: string }
+  | {
+      authenticated: true;
+      userId: string;
+      organizationId: number;
+      role: Role;
+      scopes: string[];
+      authType: Exclude<AuthType, 'anonymous'>;
+    }
   | { authenticated: false; response: Response }
 > {
   const authResult = await requireAuth(request);
@@ -257,13 +284,60 @@ export async function requireAuthWithOrg(request: Request): Promise<
     return authResult;
   }
 
-  const memberships = await db
-    .select()
-    .from(organizationMembers)
-    .where(eq(organizationMembers.userId, authResult.userId))
-    .limit(1);
+  // ── API-key path: org comes from the key itself ──
+  if (authResult.authType === 'apiKey' && authResult.apiKeyOrgId) {
+    return {
+      authenticated: true,
+      userId: authResult.userId,
+      organizationId: authResult.apiKeyOrgId,
+      role: 'member' as Role, // API keys don't carry a role; treat as member
+      scopes: authResult.scopes,
+      authType: 'apiKey',
+    };
+  }
 
-  if (memberships.length === 0) {
+  // ── Session path: look up org membership ──
+  // Check for active_org cookie to allow multi-org users to pick which org
+  const cookieHeader = request.headers.get('cookie') ?? '';
+  const activeOrgMatch = cookieHeader.match(/(?:^|;\s*)active_org=(\d+)/);
+  const preferredOrgId = activeOrgMatch ? parseInt(activeOrgMatch[1], 10) : null;
+
+  // If the user set a preferred org, verify org exists and user is still a member
+  let membership: { organizationId: number; role: string } | undefined;
+
+  if (preferredOrgId) {
+    const [preferred] = await db
+      .select({
+        organizationId: organizationMembers.organizationId,
+        role: organizationMembers.role,
+      })
+      .from(organizationMembers)
+      .innerJoin(organizations, eq(organizationMembers.organizationId, organizations.id))
+      .where(
+        and(
+          eq(organizationMembers.userId, authResult.userId),
+          eq(organizationMembers.organizationId, preferredOrgId),
+        ),
+      )
+      .limit(1);
+    membership = preferred;
+  }
+
+  // Fall back to first valid membership if preferred org invalid (deleted, user removed, etc.)
+  if (!membership) {
+    const [first] = await db
+      .select({
+        organizationId: organizationMembers.organizationId,
+        role: organizationMembers.role,
+      })
+      .from(organizationMembers)
+      .innerJoin(organizations, eq(organizationMembers.organizationId, organizations.id))
+      .where(eq(organizationMembers.userId, authResult.userId))
+      .limit(1);
+    membership = first;
+  }
+
+  if (!membership) {
     return {
       authenticated: false,
       response: new Response(
@@ -279,11 +353,15 @@ export async function requireAuthWithOrg(request: Request): Promise<
     };
   }
 
+  const role = normalizeRole(membership.role);
+
   return {
     authenticated: true,
     userId: authResult.userId,
-    organizationId: memberships[0].organizationId,
-    role: memberships[0].role,
+    organizationId: membership.organizationId,
+    role,
+    scopes: scopesForRole(role),
+    authType: 'session',
   };
 }
 
@@ -292,7 +370,14 @@ export async function requireAuthWithOrg(request: Request): Promise<
  * Requires the user to be an owner or admin of their organization.
  */
 export async function requireAdmin(request: Request): Promise<
-  | { authenticated: true; userId: string; organizationId: number; role: string }
+  | {
+      authenticated: true;
+      userId: string;
+      organizationId: number;
+      role: Role;
+      scopes: string[];
+      authType: Exclude<AuthType, 'anonymous'>;
+    }
   | { authenticated: false; response: Response }
 > {
   const result = await requireAuthWithOrg(request);

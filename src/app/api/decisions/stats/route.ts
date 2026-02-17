@@ -1,75 +1,98 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { secureRoute, type AuthContext } from '@/lib/api/secure-route';
+import { validationError, notFound } from '@/lib/api/errors';
+import { db } from '@/db';
+import { workflowRuns, workflows, traces } from '@/db/schema';
+import { eq, and } from 'drizzle-orm';
 import { decisionService } from '@/lib/services/decision.service';
-import { withRateLimit } from '@/lib/api-rate-limit';
 import { logger } from '@/lib/logger';
 
 /**
- * GET /api/decisions/stats - Get decision statistics
+ * GET /api/decisions/stats - Get decision statistics scoped to the user's organization
  */
-export async function GET(request: NextRequest) {
-  return withRateLimit(request, async (req: NextRequest) => {
-    try {
-      const { searchParams } = new URL(req.url);
-      const workflowRunId = searchParams.get('workflowRunId');
-      const workflowId = searchParams.get('workflowId');
-      const traceId = searchParams.get('traceId');
+export const GET = secureRoute(async (
+  req: NextRequest,
+  ctx: AuthContext,
+) => {
+  const { searchParams } = new URL(req.url);
+  const workflowRunId = searchParams.get('workflowRunId');
+  const workflowId = searchParams.get('workflowId');
+  const traceId = searchParams.get('traceId');
 
-      // Get stats for a workflow run
-      if (workflowRunId) {
-        const id = parseInt(workflowRunId);
-        if (isNaN(id)) {
-          return NextResponse.json({
-            error: 'Valid workflow run ID is required',
-            code: 'INVALID_ID',
-          }, { status: 400 });
-        }
-
-        const stats = await decisionService.getWorkflowDecisionStats(id);
-        return NextResponse.json(stats);
-      }
-
-      // Get decision patterns for a workflow
-      if (workflowId) {
-        const id = parseInt(workflowId);
-        if (isNaN(id)) {
-          return NextResponse.json({
-            error: 'Valid workflow ID is required',
-            code: 'INVALID_ID',
-          }, { status: 400 });
-        }
-
-        const patterns = await decisionService.getAgentDecisionPatterns(id);
-        return NextResponse.json(patterns);
-      }
-
-      // Get audit trail for a trace
-      if (traceId) {
-        const id = parseInt(traceId);
-        if (isNaN(id)) {
-          return NextResponse.json({
-            error: 'Valid trace ID is required',
-            code: 'INVALID_ID',
-          }, { status: 400 });
-        }
-
-        const auditTrail = await decisionService.getDecisionAuditTrail(id);
-        return NextResponse.json(auditTrail);
-      }
-
-      return NextResponse.json({
-        error: 'Either workflowRunId, workflowId, or traceId is required',
-        code: 'MISSING_PARAMETER',
-      }, { status: 400 });
-    } catch (error: any) {
-      logger.error('Error fetching decision stats', {
-        error: error.message,
-        route: '/api/decisions/stats',
-        method: 'GET',
-      });
-      return NextResponse.json({
-        error: 'Internal server error',
-        code: 'INTERNAL_ERROR',
-      }, { status: 500 });
+  // Get stats for a workflow run
+  if (workflowRunId) {
+    const id = parseInt(workflowRunId);
+    if (isNaN(id)) {
+      return validationError('Valid workflow run ID is required');
     }
-  }, { customTier: 'free' });
-}
+
+    // Verify the workflow run belongs to this organization
+    const run = await db
+      .select()
+      .from(workflowRuns)
+      .where(and(
+        eq(workflowRuns.id, id),
+        eq(workflowRuns.organizationId, ctx.organizationId),
+      ))
+      .limit(1);
+
+    if (!run[0]) {
+      return notFound('Workflow run not found');
+    }
+
+    const stats = await decisionService.getWorkflowDecisionStats(id);
+    return NextResponse.json(stats);
+  }
+
+  // Get decision patterns for a workflow
+  if (workflowId) {
+    const id = parseInt(workflowId);
+    if (isNaN(id)) {
+      return validationError('Valid workflow ID is required');
+    }
+
+    // Verify the workflow belongs to this organization
+    const workflow = await db
+      .select()
+      .from(workflows)
+      .where(and(
+        eq(workflows.id, id),
+        eq(workflows.organizationId, ctx.organizationId),
+      ))
+      .limit(1);
+
+    if (!workflow[0]) {
+      return notFound('Workflow not found');
+    }
+
+    const patterns = await decisionService.getAgentDecisionPatterns(id);
+    return NextResponse.json(patterns);
+  }
+
+  // Get audit trail for a trace
+  if (traceId) {
+    const id = parseInt(traceId);
+    if (isNaN(id)) {
+      return validationError('Valid trace ID is required');
+    }
+
+    // Verify the trace belongs to this organization
+    const trace = await db
+      .select()
+      .from(traces)
+      .where(and(
+        eq(traces.id, id),
+        eq(traces.organizationId, ctx.organizationId),
+      ))
+      .limit(1);
+
+    if (!trace[0]) {
+      return notFound('Trace not found');
+    }
+
+    const auditTrail = await decisionService.getDecisionAuditTrail(id);
+    return NextResponse.json(auditTrail);
+  }
+
+  return validationError('Either workflowRunId, workflowId, or traceId is required');
+}, { rateLimit: 'free' });

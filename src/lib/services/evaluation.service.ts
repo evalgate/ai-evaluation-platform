@@ -4,10 +4,12 @@
  */
 
 import { db } from '@/db';
-import { evaluations, evaluationRuns, evaluationTestCases, testCases, testResults } from '@/db/schema';
+import { evaluations, evaluationRuns, testCases, testResults } from '@/db/schema';
+import { computeAndStoreQualityScore } from '@/lib/services/aggregate-metrics.service';
 import { eq, and, desc } from 'drizzle-orm';
 import { logger } from '@/lib/logger';
 import { z } from 'zod';
+import { createExecutor, type ExecutorType, type ExecutorConfig } from './eval-executor';
 
 export const createEvaluationSchema = z.object({
   name: z.string().min(1).max(255),
@@ -119,9 +121,10 @@ export class EvaluationService {
 
     // Create test cases if provided
     if (data.testCases && data.testCases.length > 0) {
-      await db.insert(evaluationTestCases).values(
-        data.testCases.map((tc) => ({
+      await db.insert(testCases).values(
+        data.testCases.map((tc, idx) => ({
           evaluationId: evaluation.id,
+          name: tc.name || `Test Case ${idx + 1}`,
           input: tc.input,
           expectedOutput: tc.expectedOutput || '',
           metadata: JSON.stringify(tc.metadata || {}),
@@ -202,26 +205,15 @@ export class EvaluationService {
       return null;
     }
 
-    // Fetch test cases from the canonical testCases table first, fall back to evaluationTestCases
-    let cases = await db
+    // Fetch test cases from the canonical testCases table
+    const cases = await db
       .select()
       .from(testCases)
       .where(eq(testCases.evaluationId, id));
 
-    if (cases.length === 0) {
-      const legacyCases = await db
-        .select()
-        .from(evaluationTestCases)
-        .where(eq(evaluationTestCases.evaluationId, id));
-      // Map to the same shape — evaluationTestCases has no name field
-      cases = legacyCases.map((tc) => ({
-        ...tc,
-        name: `Test Case ${tc.id}`,
-      }));
-    }
-
     const [run] = await db.insert(evaluationRuns).values({
       evaluationId: id,
+      organizationId,
       status: 'running',
       startedAt: new Date().toISOString(),
       totalCases: cases.length,
@@ -261,42 +253,75 @@ export class EvaluationService {
       let output: string | null = null;
       let score: number | null = null;
       let error: string | null = null;
+      let traceLinkedMatched: boolean | null = null;
 
       try {
         if (evaluation.type === 'unit_test' || evaluation.type === 'standard') {
-          // Unit test: run assertions against input and expectedOutput
-          if (tc.expectedOutput && tc.expectedOutput.trim().length > 0) {
-            output = tc.input; // The "output" being evaluated is the input prompt's response
-            const expected = tc.expectedOutput.trim().toLowerCase();
-            const actual = (tc.input || '').trim().toLowerCase();
+          // If an executor is configured, use it to generate real output
+          const execType = evaluation.executorType as ExecutorType | null;
+          const execConfig = (typeof evaluation.executorConfig === 'string'
+            ? JSON.parse(evaluation.executorConfig)
+            : evaluation.executorConfig) as ExecutorConfig | null;
 
-            // Run meaningful comparisons:
-            // 1. Check if expected keywords appear in the input/output
-            const expectedWords = expected.split(/\s+/).filter(w => w.length > 3);
-            const matchedWords = expectedWords.filter(w => actual.includes(w));
-            const keywordMatchRate = expectedWords.length > 0
-              ? (matchedWords.length / expectedWords.length) * 100
-              : 100;
+          if (execType && execConfig) {
+            const runContext = run.startedAt
+              ? { evaluationRunId: run.id, runStartedAt: run.startedAt }
+              : undefined;
+            const executor = createExecutor(execType, execConfig, organizationId, runContext);
+            const execResult = await executor.run(tc.input);
+            output = execResult.output ?? '';
+            traceLinkedMatched = execType === 'trace_linked' && execResult.meta?.matched != null
+              ? execResult.meta.matched
+              : null;
 
-            // 2. Length similarity check
-            const lengthRatio = actual.length > 0 && expected.length > 0
-              ? Math.min(actual.length, expected.length) / Math.max(actual.length, expected.length)
-              : 0;
+            // Compare executor output against expected
+            if (tc.expectedOutput && tc.expectedOutput.trim().length > 0) {
+              const expected = tc.expectedOutput.trim().toLowerCase();
+              const actual = output.trim().toLowerCase();
 
-            // 3. Exact match bonus
-            const isExactMatch = actual === expected;
+              const expectedWords = expected.split(/\s+/).filter(w => w.length > 3);
+              const matchedWords = expectedWords.filter(w => actual.includes(w));
+              const keywordMatchRate = expectedWords.length > 0
+                ? (matchedWords.length / expectedWords.length) * 100
+                : 100;
 
-            // Compute score
-            score = isExactMatch
-              ? 100
-              : Math.round(keywordMatchRate * 0.7 + lengthRatio * 100 * 0.3);
-            status = score >= 70 ? 'passed' : 'failed';
-            output = tc.expectedOutput;
+              const isExactMatch = actual === expected;
+              score = isExactMatch ? 100 : Math.round(keywordMatchRate);
+              status = score >= 70 ? 'passed' : 'failed';
+            } else {
+              // No expected output — mark as passed with the actual output
+              status = 'passed';
+              score = 100;
+            }
           } else {
-            // No expected output — cannot assert, mark as passed with note
-            output = 'No expected output defined — skipped assertion';
-            status = 'passed';
-            score = 100;
+            // Heuristic fallback (no executor configured)
+            logger.warn('No executor configured — using heuristic scoring', { evaluationId: id });
+            if (tc.expectedOutput && tc.expectedOutput.trim().length > 0) {
+              output = tc.input;
+              const expected = tc.expectedOutput.trim().toLowerCase();
+              const actual = (tc.input || '').trim().toLowerCase();
+
+              const expectedWords = expected.split(/\s+/).filter(w => w.length > 3);
+              const matchedWords = expectedWords.filter(w => actual.includes(w));
+              const keywordMatchRate = expectedWords.length > 0
+                ? (matchedWords.length / expectedWords.length) * 100
+                : 100;
+
+              const lengthRatio = actual.length > 0 && expected.length > 0
+                ? Math.min(actual.length, expected.length) / Math.max(actual.length, expected.length)
+                : 0;
+
+              const isExactMatch = actual === expected;
+              score = isExactMatch
+                ? 100
+                : Math.round(keywordMatchRate * 0.7 + lengthRatio * 100 * 0.3);
+              status = score >= 70 ? 'passed' : 'failed';
+              output = tc.expectedOutput;
+            } else {
+              output = 'No expected output defined — skipped assertion';
+              status = 'passed';
+              score = 100;
+            }
           }
         } else if (evaluation.type === 'model_eval') {
           // Model evaluation: use LLM judge
@@ -347,10 +372,12 @@ export class EvaluationService {
       await db.insert(testResults).values({
         evaluationRunId: run.id,
         testCaseId: tc.id,
+        organizationId,
         status,
         output,
         score,
         error,
+        traceLinkedMatched: traceLinkedMatched ?? null,
         durationMs,
         createdAt: new Date().toISOString(),
       });
@@ -376,6 +403,11 @@ export class EvaluationService {
       failedCases: failedCount,
     });
 
+    // Compute quality score (fire-and-forget)
+    computeAndStoreQualityScore(run.id, id, organizationId).catch((err) => {
+      logger.error('Quality score computation failed', { runId: run.id, error: err instanceof Error ? err.message : String(err) });
+    });
+
     return { ...run, totalCases: cases.length, passedCases: passedCount, failedCases: failedCount };
   }
 
@@ -396,14 +428,14 @@ export class EvaluationService {
       .from(evaluationRuns)
       .where(eq(evaluationRuns.evaluationId, id));
 
-    const testCases = await db
+    const cases = await db
       .select()
-      .from(evaluationTestCases)
-      .where(eq(evaluationTestCases.evaluationId, id));
+      .from(testCases)
+      .where(eq(testCases.evaluationId, id));
 
     return {
       totalRuns: runs.length,
-      totalTestCases: testCases.length,
+      totalTestCases: cases.length,
       lastRunAt: runs[0]?.createdAt || null,
       status: evaluation.status,
     };

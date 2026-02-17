@@ -1,94 +1,101 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/db';
-import { traceSpans, traces } from '@/db/schema';
+import { spans, traces, evaluationRuns } from '@/db/schema';
 import { eq, asc, and } from 'drizzle-orm';
-import { requireAuthWithOrg } from '@/lib/autumn-server';
+import { secureRoute, type AuthContext } from '@/lib/api/secure-route';
+import { notFound, validationError, forbidden } from '@/lib/api/errors';
+import { SCOPES } from '@/lib/auth/scopes';
+import { sha256Input } from '@/lib/utils/input-hash';
 
-export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  try {
-    // Authenticate and resolve org from user membership (app-layer RLS)
-    const authResult = await requireAuthWithOrg(request);
-    if (!authResult.authenticated) {
-      const data = await authResult.response.json();
-      return NextResponse.json(data, { status: authResult.response.status });
-    }
+export const GET = secureRoute(async (req: NextRequest, ctx: AuthContext, params) => {
+  const traceId = parseInt(params.id);
 
-    const { id } = await params;
-    const traceId = parseInt(id);
-
-    if (isNaN(traceId)) {
-      return NextResponse.json({ 
-        error: "Valid trace ID is required",
-        code: "INVALID_ID" 
-      }, { status: 400 });
-    }
-
-    const { searchParams } = new URL(request.url);
-    const limit = Math.min(parseInt(searchParams.get('limit') || '100'), 500);
-    const offset = parseInt(searchParams.get('offset') || '0');
-
-    const spans = await db.select()
-      .from(traceSpans)
-      .where(eq(traceSpans.traceId, traceId))
-      .orderBy(asc(traceSpans.createdAt))
-      .limit(limit)
-      .offset(offset);
-
-    return NextResponse.json(spans);
-  } catch (error) {
-    console.error('GET error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  if (isNaN(traceId)) {
+    return validationError('Valid trace ID is required');
   }
-}
 
-export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  try {
-    // Authenticate and resolve org from user membership (app-layer RLS)
-    const authResult = await requireAuthWithOrg(request);
-    if (!authResult.authenticated) {
-      const data = await authResult.response.json();
-      return NextResponse.json(data, { status: authResult.response.status });
-    }
+  // Verify trace exists and belongs to this org
+  const traceData = await db.select()
+    .from(traces)
+    .where(eq(traces.id, traceId))
+    .limit(1);
 
-    const { id } = await params;
-    const traceId = parseInt(id);
-
-    if (isNaN(traceId)) {
-      return NextResponse.json({ 
-        error: "Valid trace ID is required",
-        code: "INVALID_ID" 
-      }, { status: 400 });
-    }
-
-    const body = await request.json();
-    const { spanId, name, type, parentSpanId, input, output, durationMs, metadata } = body;
-
-    if (!spanId || !name || !type) {
-      return NextResponse.json({ 
-        error: "spanId, name, and type are required",
-        code: "MISSING_REQUIRED_FIELDS" 
-      }, { status: 400 });
-    }
-
-    const now = new Date().toISOString();
-    const newSpan = await db.insert(traceSpans)
-      .values({
-        traceId,
-        spanId: spanId.trim(),
-        parentSpanId: parentSpanId?.trim() || null,
-        name: name.trim(),
-        type: type.trim(),
-        input: input || null,
-        output: output || null,
-        durationMs: durationMs || null,
-        metadata: metadata || null,
-        createdAt: now,
-      })
-      .returning();
-
-    return NextResponse.json(newSpan[0], { status: 201 });
-  } catch (error) {
-    console.error('POST error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  if (traceData.length === 0 || traceData[0].organizationId !== ctx.organizationId) {
+    return notFound('Trace not found');
   }
-}
+
+  const { searchParams } = new URL(req.url);
+  const limit = Math.min(parseInt(searchParams.get('limit') || '100'), 500);
+  const offset = parseInt(searchParams.get('offset') || '0');
+
+  const result = await db.select()
+    .from(spans)
+    .where(eq(spans.traceId, traceId))
+    .orderBy(asc(spans.startTime))
+    .limit(limit)
+    .offset(offset);
+
+  return NextResponse.json(result);
+}, { requiredScopes: [SCOPES.TRACES_READ] });
+
+export const POST = secureRoute(async (req: NextRequest, ctx: AuthContext, params) => {
+  const traceId = parseInt(params.id);
+
+  if (isNaN(traceId)) {
+    return validationError('Valid trace ID is required');
+  }
+
+  // Trace ownership check (tenant boundary): reject if trace not in org
+  const [trace] = await db
+    .select({ id: traces.id })
+    .from(traces)
+    .where(and(eq(traces.id, traceId), eq(traces.organizationId, ctx.organizationId)))
+    .limit(1);
+
+  if (!trace) return forbidden('TRACE_NOT_IN_ORG');
+
+  const body = await req.json();
+  const { spanId, name, type, parentSpanId, input, output, durationMs, startTime, endTime, metadata, evaluationRunId } = body;
+
+  if (!spanId || !name || !type) {
+    return validationError('spanId, name, and type are required');
+  }
+
+  // Verify run belongs to org if evaluationRunId provided
+  if (evaluationRunId != null) {
+    const [run] = await db
+      .select()
+      .from(evaluationRuns)
+      .where(and(
+        eq(evaluationRuns.id, evaluationRunId),
+        eq(evaluationRuns.organizationId, ctx.organizationId),
+      ))
+      .limit(1);
+    if (!run) return forbidden('Run not in organization');
+  }
+
+  const now = new Date().toISOString();
+  const inputStr = typeof input === 'string' ? input : input != null ? JSON.stringify(input) : null;
+  const inputHash = inputStr ? sha256Input(inputStr) : null;
+
+  const newSpan = await db.insert(spans)
+    .values({
+      traceId,
+      spanId: spanId.trim(),
+      parentSpanId: parentSpanId?.trim() || null,
+      name: name.trim(),
+      type: type.trim(),
+      startTime: startTime || now,
+      endTime: endTime || null,
+      input: inputStr,
+      inputHash,
+      output: output || null,
+      durationMs: durationMs || null,
+      metadata: metadata || null,
+      evaluationRunId: evaluationRunId ?? null,
+      createdAt: now,
+    })
+    .returning();
+
+  return NextResponse.json(newSpan[0], { status: 201 });
+}, { requiredScopes: [SCOPES.TRACES_WRITE] });

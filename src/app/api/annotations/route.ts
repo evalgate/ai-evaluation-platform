@@ -1,138 +1,118 @@
 import { NextResponse, NextRequest } from "next/server"
 import { db } from '@/db'
-import { humanAnnotations, user, testCases, annotationTasks } from '@/db/schema'
+import { humanAnnotations, user, testCases, annotationTasks, evaluationRuns, evaluations } from '@/db/schema'
 import { eq, desc, and } from 'drizzle-orm'
-import { getCurrentUser } from '@/lib/auth'
-import { withRateLimit } from '@/lib/api-rate-limit'
+import { secureRoute, type AuthContext } from '@/lib/api/secure-route'
+import { validationError, internalError } from '@/lib/api/errors'
 import { logger } from '@/lib/logger'
 
-export async function GET(request: NextRequest) {
-  return withRateLimit(request, async (req) => {
-    try {
-    const currentUser = await getCurrentUser(request)
+export const GET = secureRoute(async (req: NextRequest, ctx: AuthContext) => {
+  const { searchParams } = new URL(req.url)
+  const evaluationRunId = searchParams.get("evaluationRunId")
+  const testCaseId = searchParams.get("testCaseId")
 
-    if (!currentUser) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
-
-    const { searchParams } = new URL(request.url)
-    const evaluationRunId = searchParams.get("evaluationRunId")
-    const testCaseId = searchParams.get("testCaseId")
-
-    // Build conditions array
-    const conditions = []
-    if (evaluationRunId) {
-      conditions.push(eq(humanAnnotations.evaluationRunId, parseInt(evaluationRunId)))
-    }
-    if (testCaseId) {
-      conditions.push(eq(humanAnnotations.testCaseId, parseInt(testCaseId)))
-    }
-
-    // Build query with conditions
-    let query = db
-      .select({
-        id: humanAnnotations.id,
-        evaluationRunId: humanAnnotations.evaluationRunId,
-        testCaseId: humanAnnotations.testCaseId,
-        annotatorId: humanAnnotations.annotatorId,
-        rating: humanAnnotations.rating,
-        feedback: humanAnnotations.feedback,
-        labels: humanAnnotations.labels,
-        metadata: humanAnnotations.metadata,
-        createdAt: humanAnnotations.createdAt,
-        annotator: {
-          id: user.id,
-          name: user.name,
-          email: user.email,
-        },
-        testCase: {
-          name: testCases.name,
-        }
-      })
-      .from(humanAnnotations)
-      .leftJoin(user, eq(humanAnnotations.annotatorId, user.id))
-      .leftJoin(testCases, eq(humanAnnotations.testCaseId, testCases.id))
-
-    // Apply conditions if any exist
-    let annotations
-    if (conditions.length > 0) {
-      annotations = await query
-        .where(and(...conditions))
-        .orderBy(desc(humanAnnotations.createdAt))
-    } else {
-      annotations = await query
-        .orderBy(desc(humanAnnotations.createdAt))
-    }
-
-    // Format response to match Supabase structure
-    const formattedAnnotations = annotations.map(a => ({
-      ...a,
-      users: a.annotator,
-      test_cases: a.testCase,
-      annotator: undefined,
-      testCase: undefined,
-    }))
-
-    return NextResponse.json({ annotations: formattedAnnotations })
-    } catch (error) {
-      logger.error({ error, route: '/api/annotations', method: 'GET' }, 'Error fetching annotations')
-      return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
-    }
-  }, { customTier: 'free' });
-}
-
-export async function POST(request: NextRequest) {
-  try {
-    const currentUser = await getCurrentUser(request)
-
-    if (!currentUser) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
-
-    const body = await request.json()
-    const { evaluationRunId, testCaseId, rating, feedback, labels, metadata } = body
-
-    if (!evaluationRunId || !testCaseId) {
-      return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
-    }
-
-    const now = new Date().toISOString()
-
-    // Create annotation
-    const newAnnotation = await db
-      .insert(humanAnnotations)
-      .values({
-        evaluationRunId,
-        testCaseId,
-        annotatorId: currentUser.id,
-        rating: rating || null,
-        feedback: feedback || null,
-        labels: labels || {},
-        metadata: metadata || {},
-        createdAt: now,
-      })
-      .returning()
-
-    // Update task status to completed if it exists
-    const existingTasks = await db
-      .select()
-      .from(annotationTasks)
-      .where(eq(annotationTasks.id, testCaseId))
-      .limit(1)
-
-    if (existingTasks.length > 0) {
-      await db
-        .update(annotationTasks)
-        .set({ 
-          status: "completed",
-          updatedAt: now,
-        })
-        .where(eq(annotationTasks.id, testCaseId))
-    }
-
-    return NextResponse.json({ annotation: newAnnotation[0] }, { status: 201 })
-  } catch (error) {
-    logger.error({ error, route: '/api/annotations', method: 'POST' }, 'Error creating annotation')
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  // Build conditions array — always scope by org via evaluationRuns
+  const conditions = []
+  if (evaluationRunId) {
+    conditions.push(eq(humanAnnotations.evaluationRunId, parseInt(evaluationRunId)))
   }
-}
+  if (testCaseId) {
+    conditions.push(eq(humanAnnotations.testCaseId, parseInt(testCaseId)))
+  }
+  // Org-scoping: join through evaluationRuns.organizationId
+  conditions.push(eq(evaluationRuns.organizationId, ctx.organizationId))
+
+  const query = db
+    .select({
+      id: humanAnnotations.id,
+      evaluationRunId: humanAnnotations.evaluationRunId,
+      testCaseId: humanAnnotations.testCaseId,
+      annotatorId: humanAnnotations.annotatorId,
+      rating: humanAnnotations.rating,
+      feedback: humanAnnotations.feedback,
+      labels: humanAnnotations.labels,
+      metadata: humanAnnotations.metadata,
+      createdAt: humanAnnotations.createdAt,
+      annotator: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+      },
+      testCase: {
+        name: testCases.name,
+      }
+    })
+    .from(humanAnnotations)
+    .innerJoin(evaluationRuns, eq(humanAnnotations.evaluationRunId, evaluationRuns.id))
+    .leftJoin(user, eq(humanAnnotations.annotatorId, user.id))
+    .leftJoin(testCases, eq(humanAnnotations.testCaseId, testCases.id))
+
+  const annotations = await query
+    .where(and(...conditions))
+    .orderBy(desc(humanAnnotations.createdAt))
+
+  const formattedAnnotations = annotations.map(a => ({
+    ...a,
+    users: a.annotator,
+    test_cases: a.testCase,
+    annotator: undefined,
+    testCase: undefined,
+  }))
+
+  return NextResponse.json({ annotations: formattedAnnotations })
+})
+
+export const POST = secureRoute(async (req: NextRequest, ctx: AuthContext) => {
+  const body = await req.json()
+  const { evaluationRunId, testCaseId, rating, feedback, labels, metadata } = body
+
+  if (!evaluationRunId || !testCaseId) {
+    return validationError("Missing required fields: evaluationRunId and testCaseId")
+  }
+
+  // Verify the evaluationRun belongs to this org
+  const run = await db
+    .select({ organizationId: evaluationRuns.organizationId })
+    .from(evaluationRuns)
+    .where(eq(evaluationRuns.id, evaluationRunId))
+    .limit(1)
+
+  if (run.length === 0 || run[0].organizationId !== ctx.organizationId) {
+    return validationError("Evaluation run not found or does not belong to your organization")
+  }
+
+  const now = new Date().toISOString()
+
+  const newAnnotation = await db
+    .insert(humanAnnotations)
+    .values({
+      evaluationRunId,
+      testCaseId,
+      annotatorId: ctx.userId,
+      rating: rating || null,
+      feedback: feedback || null,
+      labels: labels || {},
+      metadata: metadata || {},
+      createdAt: now,
+    })
+    .returning()
+
+  // Update task status to completed if it exists
+  const existingTasks = await db
+    .select()
+    .from(annotationTasks)
+    .where(eq(annotationTasks.id, testCaseId))
+    .limit(1)
+
+  if (existingTasks.length > 0) {
+    await db
+      .update(annotationTasks)
+      .set({
+        status: "completed",
+        updatedAt: now,
+      })
+      .where(eq(annotationTasks.id, testCaseId))
+  }
+
+  return NextResponse.json({ annotation: newAnnotation[0] }, { status: 201 })
+})

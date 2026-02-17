@@ -341,12 +341,16 @@ export class ProviderKeysService {
    * Get or create encryption key for an organization.
    */
   private async getOrCreateEncryptionKey(organizationId: number): Promise<string> {
-    // For now, use a simple key derivation based on organization ID
-    // In production, this should be stored securely (e.g., in environment variables or a key management service)
-    const baseKey = process.env.PROVIDER_KEY_ENCRYPTION_KEY || 'default-encryption-key-change-in-production';
+    const baseKey = process.env.PROVIDER_KEY_ENCRYPTION_KEY;
+    if (!baseKey) {
+      throw new Error(
+        'PROVIDER_KEY_ENCRYPTION_KEY environment variable is required. ' +
+        'Generate a strong secret and set it in your .env file.'
+      );
+    }
     const salt = `org-${organizationId}`;
     
-    return encryption.deriveKey(baseKey, salt, 10000);
+    return encryption.deriveKey(baseKey, salt, 100000);
   }
 
   /**

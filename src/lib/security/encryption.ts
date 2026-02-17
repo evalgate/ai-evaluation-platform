@@ -55,7 +55,7 @@ export class AESEncryption {
       const ivBuffer = Buffer.from(iv, 'base64');
       
       const crypto = require('crypto');
-      const cipher = crypto.createCipher(this.algorithm, keyBuffer, ivBuffer);
+      const cipher = crypto.createCipheriv(this.algorithm, keyBuffer, ivBuffer);
       
       let encrypted = cipher.update(data, 'utf8', 'hex');
       encrypted += cipher.final('hex');
@@ -85,7 +85,7 @@ export class AESEncryption {
       const tagBuffer = Buffer.from(encryptedData.tag, 'base64');
       
       const crypto = require('crypto');
-      const decipher = crypto.createDecipher(this.algorithm, keyBuffer, ivBuffer);
+      const decipher = crypto.createDecipheriv(this.algorithm, keyBuffer, ivBuffer);
       
       decipher.setAuthTag(tagBuffer);
       
@@ -252,10 +252,10 @@ export class SecureRandom {
   static string(length: number, charset: string = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'): string {
     const chars = charset;
     let result = '';
+    const bytes = randomBytes(length);
     
     for (let i = 0; i < length; i++) {
-      const randomIndex = Math.floor(Math.random() * chars.length);
-      result += chars[randomIndex];
+      result += chars[bytes[i] % chars.length];
     }
     
     return result;

@@ -126,6 +126,15 @@ export interface CreateTraceParams<TMetadata = Record<string, any>> {
 }
 
 /**
+ * Parameters for updating an existing trace
+ */
+export interface UpdateTraceParams<TMetadata = Record<string, any>> {
+  status?: 'pending' | 'success' | 'error';
+  durationMs?: number;
+  metadata?: TMetadata;
+}
+
+/**
  * Parameters for listing traces
  */
 export interface ListTracesParams {

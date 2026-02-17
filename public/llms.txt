@@ -2,11 +2,28 @@
 
 > Open-source observability, evaluation, and governance platform for AI agents and LLM applications. Published SDK on npm. REST API for any language.
 
+## What is EvalAI?
+
+EvalAI (AI Evaluation Platform) is a production-grade platform that helps developers build, test, and monitor AI systems. Think of it as a combination of:
+- **Testing framework** for LLMs and agents (unit tests, LLM-as-judge, human eval, A/B tests)
+- **Observability layer** for multi-agent workflows (traces, spans, DAG visualization)
+- **Cost dashboard** for tracking LLM spend across providers
+- **Governance engine** for compliance (SOC2, GDPR, HIPAA, etc.)
+
+You sign up, create an organization, add API keys or use the web UI, then instrument your code with the SDK or call the REST API. Evaluations run test cases against your model outputs; workflows trace agent pipelines; costs are tracked per token.
+
+## How it works
+
+1. **Evaluations**: Create an evaluation (unit_test, human_eval, model_eval, ab_test), add test cases (input + expected output or rubric), then run it. The platform executes tests, scores outputs, and stores results. Use the visual builder or SDK.
+2. **Workflows**: Instrument multi-agent pipelines with WorkflowTracer. Start a workflow, record agent spans, handoffs, decisions, and costs. View DAGs and run history in the dashboard.
+3. **Traces**: Create traces and spans for any AI call. Attach metadata, record decisions, and track costs. Useful for debugging and auditing.
+4. **Auth**: Use API keys (Settings → Developer) or OAuth (Google/GitHub). All API calls use `Authorization: Bearer <key>`.
+
 ## Quick Install
 
 npm install @pauly4010/evalai-sdk
 
-## What EvalAI Does
+## What EvalAI Provides
 
 EvalAI provides:
 - **Workflow Tracing**: Instrument multi-agent workflows with DAG visualization, agent handoffs, and decision auditing
@@ -200,10 +217,9 @@ All endpoints accept JSON. Authenticated endpoints require `Authorization: Beare
 
 ## WebMCP Tool Contracts
 
-EvalAI supports Google's Web Model Context Protocol (WebMCP) for AI agent discoverability.
-When visiting the site in a WebMCP-enabled browser, the following tools are registered via `navigator.modelContext.registerTool()`:
+EvalAI supports Google's Web Model Context Protocol (WebMCP). When a user visits the site in a WebMCP-enabled browser (e.g. Cursor, Claude), the page registers tools that AI agents can call to interact with the platform—create evals, run them, fetch results. The user must be signed in for create/run/get tools; list_templates is public.
 
-- `list_evaluation_templates` — List evaluation templates by category from both quick-start (6) and full catalog (50+)
+- `list_evaluation_templates` — List evaluation templates by category from both quick-start (6) and full catalog (50+). Public, no auth.
 - `create_evaluation` — Create a new evaluation (unit_test, human_eval, model_eval, ab_test). Requires auth.
 - `run_evaluation` — Execute an evaluation run with real test case execution. Requires auth.
 - `get_evaluation_results` — Fetch run results with pass/fail metrics. Requires auth.

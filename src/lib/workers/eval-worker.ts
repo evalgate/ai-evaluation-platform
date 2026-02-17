@@ -17,6 +17,7 @@ import {
   createSSEMessage
 } from '@/lib/streaming/sse-server';
 import { providerKeysService } from '@/lib/services/provider-keys.service';
+import { computeAndStoreQualityScore } from '@/lib/services/aggregate-metrics.service';
 
 interface WorkerOptions {
   testCases?: string[];
@@ -115,6 +116,7 @@ class EvalWorker {
           await db.insert(testResults).values({
             evaluationRunId: runId,
             testCaseId: testCase.id,
+            organizationId,
             status: result.status,
             output: result.output,
             score: result.score,
@@ -155,6 +157,7 @@ class EvalWorker {
           await db.insert(testResults).values({
             evaluationRunId: runId,
             testCaseId: testCase.id,
+            organizationId,
             status: 'failed',
             output: null,
             score: 0,
@@ -215,7 +218,12 @@ class EvalWorker {
         })
         .where(eq(evaluationRuns.id, runId));
 
-      // 6. Trigger Meta-Judge as post-eval hook (async, fire-and-forget)
+      // 6. Compute and store quality score
+      computeAndStoreQualityScore(runId, evaluationId, organizationId).catch(error => {
+        logger.error('Worker: Quality score computation failed', { runId, error: error.message });
+      });
+
+      // 7. Trigger Meta-Judge as post-eval hook (async, fire-and-forget)
       this.triggerMetaJudge(runId, evaluationId, organizationId, testCasesData).catch(error => {
         logger.error('Worker: Meta-Judge failed', { runId, error: error.message });
       });

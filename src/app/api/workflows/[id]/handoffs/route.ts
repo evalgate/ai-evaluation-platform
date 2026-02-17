@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { secureRoute, type AuthContext } from '@/lib/api/secure-route';
+import { notFound, validationError, internalError } from '@/lib/api/errors';
+import { SCOPES } from '@/lib/auth/scopes';
+import { db } from '@/db';
+import { workflows } from '@/db/schema';
+import { eq, and } from 'drizzle-orm';
 import { workflowService } from '@/lib/services/workflow.service';
-import { withRateLimit } from '@/lib/api-rate-limit';
 import { logger } from '@/lib/logger';
 import { z } from 'zod';
-
-type RouteParams = {
-  params: Promise<{ id: string }>;
-};
 
 const createHandoffSchema = z.object({
   workflowRunId: z.number().int().positive(),
@@ -21,109 +22,89 @@ const createHandoffSchema = z.object({
 /**
  * GET /api/workflows/[id]/handoffs - Get handoff statistics for a workflow
  */
-export async function GET(request: NextRequest, { params }: RouteParams) {
-  return withRateLimit(request, async (req: NextRequest) => {
-    try {
-      const { id } = await params;
-      const workflowId = parseInt(id);
+export const GET = secureRoute(async (req: NextRequest, ctx: AuthContext, params) => {
+  const workflowId = parseInt(params.id);
 
-      if (isNaN(workflowId)) {
-        return NextResponse.json({
-          error: 'Valid workflow ID is required',
-          code: 'INVALID_ID',
-        }, { status: 400 });
-      }
+  if (isNaN(workflowId)) {
+    return validationError('Valid workflow ID is required');
+  }
 
-      const { searchParams } = new URL(req.url);
-      const runId = searchParams.get('runId');
+  // Verify workflow belongs to the caller's organization
+  const [workflow] = await db
+    .select({ id: workflows.id })
+    .from(workflows)
+    .where(and(eq(workflows.id, workflowId), eq(workflows.organizationId, ctx.organizationId)));
 
-      // If runId is provided, get handoffs for that specific run
-      if (runId) {
-        const runIdNum = parseInt(runId);
-        if (isNaN(runIdNum)) {
-          return NextResponse.json({
-            error: 'Valid run ID is required',
-            code: 'INVALID_ID',
-          }, { status: 400 });
-        }
+  if (!workflow) {
+    return notFound('Workflow not found');
+  }
 
-        const handoffs = await workflowService.listHandoffs(runIdNum);
-        return NextResponse.json(handoffs);
-      }
+  const { searchParams } = new URL(req.url);
+  const runId = searchParams.get('runId');
 
-      // Otherwise, get handoff statistics for the workflow
-      const stats = await workflowService.getHandoffStats(workflowId);
-
-      return NextResponse.json({
-        workflowId,
-        handoffStats: stats,
-      }, {
-        headers: {
-          'Cache-Control': 'private, max-age=60, stale-while-revalidate=120',
-        },
-      });
-    } catch (error: any) {
-      logger.error('Error fetching handoffs', {
-        error: error.message,
-        route: '/api/workflows/[id]/handoffs',
-        method: 'GET',
-      });
-      return NextResponse.json({
-        error: 'Internal server error',
-        code: 'INTERNAL_ERROR',
-      }, { status: 500 });
+  // If runId is provided, get handoffs for that specific run
+  if (runId) {
+    const runIdNum = parseInt(runId);
+    if (isNaN(runIdNum)) {
+      return validationError('Valid run ID is required');
     }
-  }, { customTier: 'free' });
-}
+
+    const handoffs = await workflowService.listHandoffs(runIdNum);
+    return NextResponse.json(handoffs);
+  }
+
+  // Otherwise, get handoff statistics for the workflow
+  const stats = await workflowService.getHandoffStats(workflowId);
+
+  return NextResponse.json({
+    workflowId,
+    handoffStats: stats,
+  }, {
+    headers: {
+      'Cache-Control': 'private, max-age=60, stale-while-revalidate=120',
+    },
+  });
+}, { rateLimit: 'free', requiredScopes: [SCOPES.RUNS_READ] });
 
 /**
  * POST /api/workflows/[id]/handoffs - Create a new handoff
  */
-export async function POST(request: NextRequest, { params }: RouteParams) {
-  return withRateLimit(request, async (req: NextRequest) => {
-    try {
-      const { id } = await params;
-      const workflowId = parseInt(id);
+export const POST = secureRoute(async (req: NextRequest, ctx: AuthContext, params) => {
+  const workflowId = parseInt(params.id);
 
-      if (isNaN(workflowId)) {
-        return NextResponse.json({
-          error: 'Valid workflow ID is required',
-          code: 'INVALID_ID',
-        }, { status: 400 });
-      }
+  if (isNaN(workflowId)) {
+    return validationError('Valid workflow ID is required');
+  }
 
-      const body = await req.json();
+  // Verify workflow belongs to the caller's organization
+  const [workflow] = await db
+    .select({ id: workflows.id })
+    .from(workflows)
+    .where(and(eq(workflows.id, workflowId), eq(workflows.organizationId, ctx.organizationId)));
 
-      // Validate request body
-      const validation = createHandoffSchema.safeParse(body);
-      if (!validation.success) {
-        return NextResponse.json({
-          error: 'Invalid request body',
-          code: 'VALIDATION_ERROR',
-          details: validation.error.errors,
-        }, { status: 400 });
-      }
+  if (!workflow) {
+    return notFound('Workflow not found');
+  }
 
-      const handoff = await workflowService.createHandoff(validation.data);
+  const body = await req.json();
 
-      logger.info('Handoff created', {
-        handoffId: handoff.id,
-        workflowId,
-        runId: validation.data.workflowRunId,
-        type: validation.data.handoffType,
-      });
+  const validation = createHandoffSchema.safeParse(body);
+  if (!validation.success) {
+    return validationError('Invalid request body', validation.error.errors);
+  }
 
-      return NextResponse.json(handoff, { status: 201 });
-    } catch (error: any) {
-      logger.error('Error creating handoff', {
-        error: error.message,
-        route: '/api/workflows/[id]/handoffs',
-        method: 'POST',
-      });
-      return NextResponse.json({
-        error: 'Internal server error',
-        code: 'INTERNAL_ERROR',
-      }, { status: 500 });
-    }
-  }, { customTier: 'free' });
-}
+  const handoff = await workflowService.createHandoff({
+    ...validation.data,
+    organizationId: ctx.organizationId,
+  });
+
+  logger.info('Handoff created', {
+    handoffId: handoff.id,
+    workflowId,
+    runId: validation.data.workflowRunId,
+    type: validation.data.handoffType,
+    organizationId: ctx.organizationId,
+  });
+
+  return NextResponse.json(handoff, { status: 201 });
+}, { rateLimit: 'free', requiredScopes: [SCOPES.RUNS_WRITE] });

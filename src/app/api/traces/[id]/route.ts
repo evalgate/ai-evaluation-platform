@@ -1,39 +1,75 @@
-import { NextResponse, NextRequest } from "next/server"
-import { db } from '@/db'
-import { traces, spans } from '@/db/schema'
-import { eq, asc } from 'drizzle-orm'
-import { getCurrentUser } from '@/lib/auth'
+import { NextRequest, NextResponse } from 'next/server';
+import { db } from '@/db';
+import { traces, spans } from '@/db/schema';
+import { eq, and, asc } from 'drizzle-orm';
+import { secureRoute, type AuthContext } from '@/lib/api/secure-route';
+import { notFound, validationError } from '@/lib/api/errors';
+import { SCOPES } from '@/lib/auth/scopes';
 
-export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  try {
-    const currentUser = await getCurrentUser(request)
-    const { id } = await params
+export const GET = secureRoute(async (req: NextRequest, ctx: AuthContext, params) => {
+  const traceId = parseInt(params.id);
 
-    if (!currentUser) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
+  // Fetch trace
+  const traceData = await db
+    .select()
+    .from(traces)
+    .where(eq(traces.id, traceId))
+    .limit(1);
 
-    // Fetch trace
-    const traceData = await db
-      .select()
-      .from(traces)
-      .where(eq(traces.id, parseInt(id)))
-      .limit(1)
-
-    if (traceData.length === 0) {
-      return NextResponse.json({ error: "Trace not found" }, { status: 404 })
-    }
-
-    // Fetch all spans for this trace ordered by start time
-    const traceSpans = await db
-      .select()
-      .from(spans)
-      .where(eq(spans.traceId, parseInt(id)))
-      .orderBy(asc(spans.startTime))
-
-    return NextResponse.json({ trace: traceData[0], spans: traceSpans })
-  } catch (error) {
-    console.error('GET trace error:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  if (traceData.length === 0) {
+    return notFound('Trace not found');
   }
-}
+
+  // Verify org ownership
+  if (traceData[0].organizationId !== ctx.organizationId) {
+    return notFound('Trace not found');
+  }
+
+  // Fetch all spans for this trace ordered by start time
+  const traceSpans = await db
+    .select()
+    .from(spans)
+    .where(eq(spans.traceId, traceId))
+    .orderBy(asc(spans.startTime));
+
+  return NextResponse.json({ trace: traceData[0], spans: traceSpans });
+}, { requiredScopes: [SCOPES.TRACES_READ] });
+
+export const PATCH = secureRoute(async (req: NextRequest, ctx: AuthContext, params) => {
+  const traceId = parseInt(params.id);
+  if (isNaN(traceId)) {
+    return validationError('Valid trace ID is required');
+  }
+
+  // Verify trace belongs to org
+  const existing = await db
+    .select()
+    .from(traces)
+    .where(and(eq(traces.id, traceId), eq(traces.organizationId, ctx.organizationId)))
+    .limit(1);
+
+  if (existing.length === 0) {
+    return notFound('Trace not found');
+  }
+
+  const body = await req.json();
+  const updateData: Record<string, unknown> = {};
+
+  if (body.status !== undefined) updateData.status = body.status;
+  if (body.durationMs !== undefined) updateData.durationMs = body.durationMs;
+  if (body.metadata !== undefined) {
+    // Merge metadata
+    const existingMeta = typeof existing[0].metadata === 'string'
+      ? JSON.parse(existing[0].metadata)
+      : existing[0].metadata ?? {};
+    updateData.metadata = JSON.stringify({ ...existingMeta, ...body.metadata });
+  }
+
+  const [updated] = await db
+    .update(traces)
+    .set(updateData)
+    .where(and(eq(traces.id, traceId), eq(traces.organizationId, ctx.organizationId)))
+    .returning();
+
+  return NextResponse.json(updated);
+}, { requiredScopes: [SCOPES.TRACES_WRITE] });

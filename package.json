@@ -16,7 +16,9 @@
     "sdk:build": "cd src/packages/sdk && pnpm build",
     "sdk:test": "cd src/packages/sdk && pnpm test",
     "remotion:preview": "npx remotion preview src/remotion/index.ts",
-    "remotion:render": "npx remotion render src/remotion/index.ts DemoVideo out/demo-video.mp4"
+    "remotion:render": "npx remotion render src/remotion/index.ts DemoVideo out/demo-video.mp4",
+    "db:migrate": "npx tsx scripts/run-migrations.ts",
+    "db:migrate:new": "npx tsx scripts/run-migrations.ts 0009 0010 0011 0012 0013 0014 0015 0016 0017"
   },
   "dependencies": {
     "@babel/parser": "^7.28.4",

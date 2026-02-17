@@ -2,221 +2,126 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/db';
 import { webhooks } from '@/db/schema';
 import { eq } from 'drizzle-orm';
-import { getCurrentUser } from '@/lib/auth';
+import { secureRoute, type AuthContext } from '@/lib/api/secure-route';
+import { notFound, forbidden, validationError } from '@/lib/api/errors';
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const user = await getCurrentUser(request);
-    if (!user) {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      );
-    }
+/**
+ * Fetch the webhook and verify it belongs to the caller's org.
+ * Returns the webhook row or a NextResponse error.
+ */
+async function loadOwnedWebhook(webhookId: number, ctx: AuthContext) {
+  const result = await db
+    .select()
+    .from(webhooks)
+    .where(eq(webhooks.id, webhookId))
+    .limit(1);
 
-    const { id } = await params;
-
-    if (!id || isNaN(parseInt(id))) {
-      return NextResponse.json(
-        { error: 'Valid ID is required', code: 'INVALID_ID' },
-        { status: 400 }
-      );
-    }
-
-    const webhook = await db
-      .select()
-      .from(webhooks)
-      .where(eq(webhooks.id, parseInt(id)))
-      .limit(1);
-
-    if (webhook.length === 0) {
-      return NextResponse.json(
-        { error: 'Webhook not found' },
-        { status: 404 }
-      );
-    }
-
-    const { secret, ...webhookWithoutSecret } = webhook[0];
-
-    return NextResponse.json(webhookWithoutSecret, { status: 200 });
-  } catch (error) {
-    console.error('GET error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+  if (result.length === 0) {
+    return { error: notFound('Webhook not found') };
   }
+  if (result[0].organizationId !== ctx.organizationId) {
+    return { error: forbidden('Webhook does not belong to your organization') };
+  }
+  return { webhook: result[0] };
 }
 
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const user = await getCurrentUser(request);
-    if (!user) {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      );
-    }
-
-    const { id } = await params;
-
-    if (!id || isNaN(parseInt(id))) {
-      return NextResponse.json(
-        { error: 'Valid ID is required', code: 'INVALID_ID' },
-        { status: 400 }
-      );
-    }
-
-    const body = await request.json();
-    const { url, events, status } = body;
-
-    const existingWebhook = await db
-      .select()
-      .from(webhooks)
-      .where(eq(webhooks.id, parseInt(id)))
-      .limit(1);
-
-    if (existingWebhook.length === 0) {
-      return NextResponse.json(
-        { error: 'Webhook not found' },
-        { status: 404 }
-      );
-    }
-
-    if (url !== undefined) {
-      if (typeof url !== 'string' || (!url.startsWith('http://') && !url.startsWith('https://'))) {
-        return NextResponse.json(
-          { error: 'URL must start with http:// or https://', code: 'INVALID_URL' },
-          { status: 400 }
-        );
-      }
-    }
-
-    if (events !== undefined) {
-      if (!Array.isArray(events) || events.length === 0) {
-        return NextResponse.json(
-          { error: 'Events array cannot be empty', code: 'INVALID_EVENTS' },
-          { status: 400 }
-        );
-      }
-    }
-
-    if (status !== undefined) {
-      if (status !== 'active' && status !== 'inactive') {
-        return NextResponse.json(
-          { error: 'Status must be "active" or "inactive"', code: 'INVALID_STATUS' },
-          { status: 400 }
-        );
-      }
-    }
-
-    const updates: Record<string, unknown> = {
-      updatedAt: new Date().toISOString()
-    };
-
-    if (url !== undefined) {
-      updates.url = url;
-    }
-
-    if (events !== undefined) {
-      updates.events = JSON.stringify(events);
-    }
-
-    if (status !== undefined) {
-      updates.status = status;
-    }
-
-    const updated = await db
-      .update(webhooks)
-      .set(updates)
-      .where(eq(webhooks.id, parseInt(id)))
-      .returning();
-
-    if (updated.length === 0) {
-      return NextResponse.json(
-        { error: 'Webhook not found' },
-        { status: 404 }
-      );
-    }
-
-    const { secret, ...webhookWithoutSecret } = updated[0];
-
-    return NextResponse.json(webhookWithoutSecret, { status: 200 });
-  } catch (error) {
-    console.error('PATCH error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+export const GET = secureRoute(async (req: NextRequest, ctx: AuthContext, params) => {
+  const webhookId = parseInt(params.id);
+  if (isNaN(webhookId)) {
+    return validationError('Valid ID is required');
   }
-}
 
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const user = await getCurrentUser(request);
-    if (!user) {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      );
-    }
+  const result = await loadOwnedWebhook(webhookId, ctx);
+  if ('error' in result) return result.error;
 
-    const { id } = await params;
+  const { secret, ...webhookWithoutSecret } = result.webhook;
+  return NextResponse.json(webhookWithoutSecret, { status: 200 });
+})
 
-    if (!id || isNaN(parseInt(id))) {
-      return NextResponse.json(
-        { error: 'Valid ID is required', code: 'INVALID_ID' },
-        { status: 400 }
-      );
-    }
-
-    const existingWebhook = await db
-      .select()
-      .from(webhooks)
-      .where(eq(webhooks.id, parseInt(id)))
-      .limit(1);
-
-    if (existingWebhook.length === 0) {
-      return NextResponse.json(
-        { error: 'Webhook not found' },
-        { status: 404 }
-      );
-    }
-
-    const deleted = await db
-      .delete(webhooks)
-      .where(eq(webhooks.id, parseInt(id)))
-      .returning();
-
-    if (deleted.length === 0) {
-      return NextResponse.json(
-        { error: 'Webhook not found' },
-        { status: 404 }
-      );
-    }
-
-    const { secret: _secret, ...deletedWithoutSecret } = deleted[0];
-    return NextResponse.json(
-      { 
-        message: 'Webhook deleted successfully',
-        deletedWebhook: deletedWithoutSecret
-      },
-      { status: 200 }
-    );
-  } catch (error) {
-    console.error('DELETE error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+export const PATCH = secureRoute(async (req: NextRequest, ctx: AuthContext, params) => {
+  const webhookId = parseInt(params.id);
+  if (isNaN(webhookId)) {
+    return validationError('Valid ID is required');
   }
-}
+
+  const result = await loadOwnedWebhook(webhookId, ctx);
+  if ('error' in result) return result.error;
+
+  const body = await req.json();
+  const { url, events, status } = body;
+
+  if (url !== undefined) {
+    if (typeof url !== 'string' || (!url.startsWith('http://') && !url.startsWith('https://'))) {
+      return validationError('URL must start with http:// or https://');
+    }
+  }
+
+  if (events !== undefined) {
+    if (!Array.isArray(events) || events.length === 0) {
+      return validationError('Events array cannot be empty');
+    }
+  }
+
+  if (status !== undefined) {
+    if (status !== 'active' && status !== 'inactive') {
+      return validationError('Status must be "active" or "inactive"');
+    }
+  }
+
+  const updates: Record<string, unknown> = {
+    updatedAt: new Date().toISOString()
+  };
+
+  if (url !== undefined) {
+    updates.url = url;
+  }
+
+  if (events !== undefined) {
+    updates.events = JSON.stringify(events);
+  }
+
+  if (status !== undefined) {
+    updates.status = status;
+  }
+
+  const updated = await db
+    .update(webhooks)
+    .set(updates)
+    .where(eq(webhooks.id, webhookId))
+    .returning();
+
+  if (updated.length === 0) {
+    return notFound('Webhook not found');
+  }
+
+  const { secret, ...webhookWithoutSecret } = updated[0];
+  return NextResponse.json(webhookWithoutSecret, { status: 200 });
+})
+
+export const DELETE = secureRoute(async (req: NextRequest, ctx: AuthContext, params) => {
+  const webhookId = parseInt(params.id);
+  if (isNaN(webhookId)) {
+    return validationError('Valid ID is required');
+  }
+
+  const result = await loadOwnedWebhook(webhookId, ctx);
+  if ('error' in result) return result.error;
+
+  const deleted = await db
+    .delete(webhooks)
+    .where(eq(webhooks.id, webhookId))
+    .returning();
+
+  if (deleted.length === 0) {
+    return notFound('Webhook not found');
+  }
+
+  const { secret: _secret, ...deletedWithoutSecret } = deleted[0];
+  return NextResponse.json(
+    {
+      message: 'Webhook deleted successfully',
+      deletedWebhook: deletedWithoutSecret
+    },
+    { status: 200 }
+  );
+})

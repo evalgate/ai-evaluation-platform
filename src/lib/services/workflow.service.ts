@@ -47,6 +47,7 @@ export interface UpdateWorkflowParams {
 export interface CreateWorkflowRunParams {
   workflowId?: number;
   traceId: number;
+  organizationId: number;
   input?: Record<string, any>;
   metadata?: Record<string, any>;
 }
@@ -65,6 +66,7 @@ export interface UpdateWorkflowRunParams {
 
 export interface CreateHandoffParams {
   workflowRunId: number;
+  organizationId: number;
   fromSpanId?: string;
   toSpanId: string;
   fromAgent?: string;
@@ -285,6 +287,7 @@ class WorkflowService {
       .values({
         workflowId: params.workflowId || null,
         traceId: params.traceId,
+        organizationId: params.organizationId,
         status: 'running',
         input: params.input as any || null,
         metadata: params.metadata as any || null,
@@ -379,6 +382,7 @@ class WorkflowService {
       .insert(agentHandoffs)
       .values({
         workflowRunId: params.workflowRunId,
+        organizationId: params.organizationId,
         fromSpanId: params.fromSpanId || null,
         toSpanId: params.toSpanId,
         fromAgent: params.fromAgent || null,

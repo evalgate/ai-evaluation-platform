@@ -1,12 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { secureRoute, type AuthContext } from '@/lib/api/secure-route';
+import { notFound, validationError } from '@/lib/api/errors';
 import { benchmarkService } from '@/lib/services/benchmark.service';
-import { withRateLimit } from '@/lib/api-rate-limit';
 import { logger } from '@/lib/logger';
 import { z } from 'zod';
-
-type RouteParams = {
-  params: Promise<{ id: string }>;
-};
 
 const submitResultSchema = z.object({
   agentConfigId: z.number().int().positive(),
@@ -23,60 +20,45 @@ const submitResultSchema = z.object({
 /**
  * POST /api/benchmarks/[id]/results - Submit benchmark result
  */
-export async function POST(request: NextRequest, { params }: RouteParams) {
-  return withRateLimit(request, async (req: NextRequest) => {
-    try {
-      const { id } = await params;
-      const benchmarkId = parseInt(id);
+export const POST = secureRoute(async (
+  req: NextRequest,
+  ctx: AuthContext,
+  params,
+) => {
+  const benchmarkId = parseInt(params.id);
 
-      if (isNaN(benchmarkId)) {
-        return NextResponse.json({
-          error: 'Valid benchmark ID is required',
-          code: 'INVALID_ID',
-        }, { status: 400 });
-      }
+  if (isNaN(benchmarkId)) {
+    return validationError('Valid benchmark ID is required');
+  }
 
-      const benchmark = await benchmarkService.getBenchmarkById(benchmarkId);
-      if (!benchmark) {
-        return NextResponse.json({
-          error: 'Benchmark not found',
-          code: 'NOT_FOUND',
-        }, { status: 404 });
-      }
+  const benchmark = await benchmarkService.getBenchmarkById(benchmarkId);
+  if (!benchmark) {
+    return notFound('Benchmark not found');
+  }
 
-      const body = await req.json();
+  // Verify benchmark belongs to this organization
+  if (benchmark.organizationId !== ctx.organizationId) {
+    return notFound('Benchmark not found');
+  }
 
-      const validation = submitResultSchema.safeParse(body);
-      if (!validation.success) {
-        return NextResponse.json({
-          error: 'Invalid request body',
-          code: 'VALIDATION_ERROR',
-          details: validation.error.errors,
-        }, { status: 400 });
-      }
+  const body = await req.json();
 
-      const result = await benchmarkService.submitResult({
-        benchmarkId,
-        ...validation.data,
-      });
+  const validation = submitResultSchema.safeParse(body);
+  if (!validation.success) {
+    return validationError('Invalid request body', validation.error.errors);
+  }
 
-      logger.info('Benchmark result submitted', {
-        benchmarkId,
-        agentConfigId: validation.data.agentConfigId,
-        accuracy: validation.data.accuracy,
-      });
+  const result = await benchmarkService.submitResult({
+    benchmarkId,
+    ...validation.data,
+  });
 
-      return NextResponse.json(result, { status: 201 });
-    } catch (error: any) {
-      logger.error('Error submitting benchmark result', {
-        error: error.message,
-        route: '/api/benchmarks/[id]/results',
-        method: 'POST',
-      });
-      return NextResponse.json({
-        error: 'Internal server error',
-        code: 'INTERNAL_ERROR',
-      }, { status: 500 });
-    }
-  }, { customTier: 'free' });
-}
+  logger.info('Benchmark result submitted', {
+    benchmarkId,
+    agentConfigId: validation.data.agentConfigId,
+    accuracy: validation.data.accuracy,
+    organizationId: ctx.organizationId,
+  });
+
+  return NextResponse.json(result, { status: 201 });
+}, { rateLimit: 'free' });

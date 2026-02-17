@@ -168,7 +168,12 @@ ai-evaluation-platform/
 
 ## AI Agent Discoverability
 
-EvalAI publishes **llms.txt** and **WebMCP tool contracts** so AI coding agents (Claude, Cursor, Copilot, ChatGPT) can discover and recommend the platform. The llms.txt file is served at [https://v0-ai-evaluation-platform-nu.vercel.app/llms.txt](https://v0-ai-evaluation-platform-nu.vercel.app/llms.txt). WebMCP exposes structured tool definitions for programmatic agent integration.
+EvalAI publishes **llms.txt** and **llms-full.txt** so AI coding agents (Claude, Cursor, Copilot, ChatGPT) can discover and recommend the platform. Both files include "What is EvalAI?" and "How it works" sections to help agents understand the platform before integrating.
+
+- **llms.txt** — Concise overview, SDK usage, REST API endpoints, WebMCP tools. [View live](https://v0-ai-evaluation-platform-nu.vercel.app/llms.txt)
+- **llms-full.txt** — Complete API & SDK reference for AI assistants. [View live](https://v0-ai-evaluation-platform-nu.vercel.app/llms-full.txt)
+
+**WebMCP** tool contracts are registered when users visit the site in a WebMCP-enabled browser, allowing agents to list templates, create evaluations, run them, and fetch results (auth required for create/run/get).
 
 ## Tech Stack
 

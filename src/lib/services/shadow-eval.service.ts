@@ -1,6 +1,6 @@
 // src/lib/services/shadow-eval.service.ts
 import { db } from '@/db';
-import { traces, traceSpans, evaluations, evaluationRuns, testResults, testCases } from '@/db/schema';
+import { traces, spans, evaluations, evaluationRuns, testResults, testCases } from '@/db/schema';
 import { eq, and, desc, gte, lte, inArray, like } from 'drizzle-orm';
 import { logger } from '@/lib/logger';
 import { providerKeysService } from '@/lib/services/provider-keys.service';
@@ -116,6 +116,7 @@ export class ShadowEvalService {
     const now = new Date().toISOString();
     const [shadowRun] = await db.insert(evaluationRuns).values({
       evaluationId: input.evaluationId,
+      organizationId,
       status: 'pending',
       totalCases: productionTraces.length,
       processedCount: 0,
@@ -263,22 +264,22 @@ export class ShadowEvalService {
     const traceReplayData: TraceReplayData[] = [];
 
     for (const trace of tracesData) {
-      const spans = await db
+      const traceSpanData = await db
         .select({
-          spanId: traceSpans.spanId,
-          name: traceSpans.name,
-          type: traceSpans.type,
-          input: traceSpans.input,
-          output: traceSpans.output,
-          duration: traceSpans.durationMs,
-          metadata: traceSpans.metadata,
+          spanId: spans.spanId,
+          name: spans.name,
+          type: spans.type,
+          input: spans.input,
+          output: spans.output,
+          duration: spans.durationMs,
+          metadata: spans.metadata,
         })
-        .from(traceSpans)
-        .where(eq(traceSpans.traceId, trace.traceId as any));
+        .from(spans)
+        .where(eq(spans.traceId, trace.traceId as any));
 
       traceReplayData.push({
         traceId: trace.traceId,
-        spans: spans.map(span => ({
+        spans: traceSpanData.map(span => ({
           spanId: span.spanId,
           name: span.name,
           type: span.type,
@@ -340,6 +341,7 @@ export class ShadowEvalService {
         await db.insert(testResults).values({
           evaluationRunId: shadowRunId,
           testCaseId: 0, // Shadow evals don't have test cases
+          organizationId,
           status: result.passed ? 'passed' : 'failed',
           output: result.output,
           score: result.score,

@@ -10,6 +10,7 @@ async function main() {
     const sampleEvaluationRuns = [
         {
             evaluationId: 1,
+            organizationId: 1,
             status: 'completed',
             totalCases: 10,
             passedCases: 8,
@@ -20,6 +21,7 @@ async function main() {
         },
         {
             evaluationId: 2,
+            organizationId: 1,
             status: 'running',
             totalCases: 5,
             passedCases: 3,
@@ -30,6 +32,7 @@ async function main() {
         },
         {
             evaluationId: 3,
+            organizationId: 1,
             status: 'completed',
             totalCases: 8,
             passedCases: 8,
