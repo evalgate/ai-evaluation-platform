@@ -94,7 +94,7 @@ export default function WorkflowDetailPage({ params }: PageProps) {
       
       // Fetch workflow with stats
       Promise.all([
-        fetch(`/api/workflows/${id}?organizationId=1&includeStats=true`, {
+        fetch(`/api/workflows/${id}?includeStats=true`, {
           headers: { Authorization: `Bearer ${token}` }
         }).then(res => res.json()),
         fetch(`/api/workflows/${id}/runs?limit=20`, {
@@ -105,13 +105,17 @@ export default function WorkflowDetailPage({ params }: PageProps) {
         }).then(res => res.json()),
       ])
         .then(([workflow, runsData, handoffs]) => {
-          if (workflow.error) {
+          if (workflow?.code === "NO_ORG_MEMBERSHIP") {
+            router.push("/onboarding")
+            return
+          }
+          if (workflow?.error) {
             router.push("/workflows")
             return
           }
           setWorkflowData(workflow)
           setRuns(Array.isArray(runsData) ? runsData : [])
-          setHandoffStats(handoffs.handoffStats || [])
+          setHandoffStats(handoffs?.handoffStats || [])
           setIsLoading(false)
         })
         .catch(() => {

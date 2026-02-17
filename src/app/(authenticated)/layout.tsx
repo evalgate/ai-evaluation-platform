@@ -63,6 +63,9 @@ export default function AuthenticatedLayout({
         if (response.ok) {
           const data = await response.json()
           setOrganization(data.organization)
+        } else if (response.status === 404) {
+          router.push("/onboarding")
+          return
         }
       } catch (error) {
         console.error("Failed to fetch organization:", error)
@@ -72,7 +75,7 @@ export default function AuthenticatedLayout({
     }
 
     fetchOrganization()
-  }, [session])
+  }, [session, router])
 
   if (isPending || isLoadingOrg) {
     return (

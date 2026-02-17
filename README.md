@@ -8,7 +8,7 @@
 
 **Evaluations are the language of GenAI.** AI Evaluation Platform (EvalAI) is built on the conviction that rigorous, repeatable evaluation is what separates production-ready AI systems from experimental prototypes. Without evals, you're flying blind—with them, you can ship with confidence.
 
-EvalAI is a production-grade platform for multi-agent orchestration, evaluation, governance, cost tracking, and benchmarking. It supports **four evaluation types**: Unit Tests (automated assertions), Human Evaluation (expert annotation), Model Evaluation (LLM-as-judge), and A/B Testing. Choose from **80+ evaluation templates** spanning chatbots, RAG systems, code generation, adversarial testing, and industry-specific scenarios. The visual evaluation builder lets you compose evals without code, while the quality score dashboard surfaces pass rates, IAA metrics, and LLM-human alignment at a glance.
+EvalAI is a production-grade platform for multi-agent orchestration, evaluation, governance, cost tracking, and benchmarking. It supports **four evaluation types**: Unit Tests (automated assertions), Human Evaluation (expert annotation), Model Evaluation (LLM-as-judge), and A/B Testing. Choose from **50+ evaluation templates** spanning chatbots, RAG systems, code generation, adversarial testing, and industry-specific scenarios. The visual evaluation builder lets you compose evals without code, while the quality score dashboard surfaces pass rates, IAA metrics, and LLM-human alignment at a glance.
 
 For human evaluation, EvalAI computes **Interannotator Agreement (IAA)** metrics—Cohen's Kappa and Fleiss's Kappa—so you can measure annotation quality and reliability. The **LLM-Human Alignment** analysis compares LLM judge scores to human ratings, helping you calibrate automated evaluation against ground truth. A full **TypeScript SDK** (`@pauly4010/evalai-sdk`) provides programmatic access to evaluations, traces, and workflows. **WebMCP** (Web Model Context Protocol) support enables AI agents to discover and integrate with the platform.
 
@@ -18,7 +18,7 @@ For human evaluation, EvalAI computes **Interannotator Agreement (IAA)** metrics
 
 ### Evaluation
 - **Four evaluation types:** Unit Tests, Human Evaluation, LLM Judge, A/B Testing
-- **80+ evaluation templates** across chatbots, RAG, code-gen, adversarial, multimodal, and industry domains
+- **50+ evaluation templates** across chatbots, RAG, code-gen, adversarial, multimodal, and industry domains
 - **Visual evaluation builder** — compose evals with drag-and-drop, no code required
 - **Quality score dashboard** — pass rates, trends, and drill-down into failures
 - **Interannotator Agreement (IAA)** — Cohen's Kappa, Fleiss's Kappa for human eval quality
@@ -155,7 +155,7 @@ ai-evaluation-platform/
 
 | Feature | EvalAI | Langfuse | Braintrust | Promptfoo | Custom |
 |---------|--------|----------|------------|-----------|--------|
-| **Eval Templates** | ✅ 80+ | ⚠️ Limited | ⚠️ Some | ✅ Yes | ❌ Build yourself |
+| **Eval Templates** | ✅ 50+ | ⚠️ Limited | ⚠️ Some | ✅ Yes | ❌ Build yourself |
 | **LLM Judge** | ✅ Built-in | ❌ No | ✅ Yes | ✅ Yes | ❌ Build yourself |
 | **Human Eval** | ✅ Full | ⚠️ Basic | ✅ Yes | ❌ No | ❌ Build yourself |
 | **IAA Metrics** | ✅ Cohen's, Fleiss's | ❌ No | ⚠️ Limited | ❌ No | ❌ Build yourself |

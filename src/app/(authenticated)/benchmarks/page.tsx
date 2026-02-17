@@ -207,11 +207,15 @@ export default function BenchmarksPage() {
 
     if (session?.user) {
       const token = localStorage.getItem("bearer_token")
-      fetch("/api/benchmarks?organizationId=1", {
+      fetch("/api/benchmarks", {
         headers: { Authorization: `Bearer ${token}` },
       })
         .then(res => res.json())
         .then(data => {
+          if (res.status === 403 && data?.code === "NO_ORG_MEMBERSHIP") {
+            router.push("/onboarding")
+            return
+          }
           setBenchmarks(Array.isArray(data) ? data : [])
           setIsLoading(false)
         })
@@ -219,7 +223,7 @@ export default function BenchmarksPage() {
           setIsLoading(false)
         })
     }
-  }, [session, isPending])
+  }, [session, isPending, router])
 
   if (isPending) {
     return null

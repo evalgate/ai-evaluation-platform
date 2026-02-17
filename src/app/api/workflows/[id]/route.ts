@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { workflowService } from '@/lib/services/workflow.service';
+import { requireAuthWithOrg } from '@/lib/autumn-server';
 import { withRateLimit } from '@/lib/api-rate-limit';
 import { logger } from '@/lib/logger';
 import { z } from 'zod';
@@ -39,6 +40,12 @@ const updateWorkflowSchema = z.object({
 export async function GET(request: NextRequest, { params }: RouteParams) {
   return withRateLimit(request, async (req: NextRequest) => {
     try {
+      const authResult = await requireAuthWithOrg(req);
+      if (!authResult.authenticated) {
+        const data = await authResult.response.json();
+        return NextResponse.json(data, { status: authResult.response.status });
+      }
+
       const { id } = await params;
       const workflowId = parseInt(id);
 
@@ -50,14 +57,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       }
 
       const { searchParams } = new URL(req.url);
-      const organizationId = parseInt(searchParams.get('organizationId') || '0');
-
-      if (!organizationId) {
-        return NextResponse.json({
-          error: 'Organization ID is required',
-          code: 'MISSING_ORGANIZATION_ID',
-        }, { status: 400 });
-      }
+      const organizationId = authResult.organizationId;
 
       // Check if stats are requested
       const includeStats = searchParams.get('includeStats') === 'true';
@@ -107,6 +107,12 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 export async function PUT(request: NextRequest, { params }: RouteParams) {
   return withRateLimit(request, async (req: NextRequest) => {
     try {
+      const authResult = await requireAuthWithOrg(req);
+      if (!authResult.authenticated) {
+        const data = await authResult.response.json();
+        return NextResponse.json(data, { status: authResult.response.status });
+      }
+
       const { id } = await params;
       const workflowId = parseInt(id);
 
@@ -117,16 +123,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
         }, { status: 400 });
       }
 
-      const { searchParams } = new URL(req.url);
-      const organizationId = parseInt(searchParams.get('organizationId') || '0');
-
-      if (!organizationId) {
-        return NextResponse.json({
-          error: 'Organization ID is required',
-          code: 'MISSING_ORGANIZATION_ID',
-        }, { status: 400 });
-      }
-
+      const organizationId = authResult.organizationId;
       const body = await req.json();
 
       // Validate request body
@@ -198,6 +195,12 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
   return withRateLimit(request, async (req: NextRequest) => {
     try {
+      const authResult = await requireAuthWithOrg(req);
+      if (!authResult.authenticated) {
+        const data = await authResult.response.json();
+        return NextResponse.json(data, { status: authResult.response.status });
+      }
+
       const { id } = await params;
       const workflowId = parseInt(id);
 
@@ -208,16 +211,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
         }, { status: 400 });
       }
 
-      const { searchParams } = new URL(req.url);
-      const organizationId = parseInt(searchParams.get('organizationId') || '0');
-
-      if (!organizationId) {
-        return NextResponse.json({
-          error: 'Organization ID is required',
-          code: 'MISSING_ORGANIZATION_ID',
-        }, { status: 400 });
-      }
-
+      const organizationId = authResult.organizationId;
       const deleted = await workflowService.delete(workflowId, organizationId);
 
       if (!deleted) {

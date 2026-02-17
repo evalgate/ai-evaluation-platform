@@ -48,6 +48,12 @@ export const annotationsPerProject = feature({
   type: "single_use",
 });
 
+export const workflowsPerProject = feature({
+  id: "workflows_per_project",
+  name: "Workflows Per Project",
+  type: "single_use",
+});
+
 export const communitySupport = feature({
   id: "community_support",
   name: "Community Support",
@@ -85,32 +91,38 @@ export const developer = product({
   items: [
     featureItem({
       feature_id: traces.id,
-      included_usage: 5000,
+      included_usage: 10000,
       interval: "month",
     }),
     featureItem({
       feature_id: projects.id,
-      included_usage: 1,
+      included_usage: 3,
     }),
     featureItem({
       feature_id: annotations.id,
-      included_usage: 10,
+      included_usage: 25,
       interval: "month",
     }),
     featureItem({
       feature_id: tracesPerProject.id,
-      included_usage: 100,
+      included_usage: 250,
       interval: "month",
       entity_feature_id: organizations.id,
     }),
     featureItem({
       feature_id: evalsPerProject.id,
-      included_usage: 10,
+      included_usage: 25,
       interval: "month",
       entity_feature_id: organizations.id,
     }),
     featureItem({
       feature_id: annotationsPerProject.id,
+      included_usage: 25,
+      interval: "month",
+      entity_feature_id: organizations.id,
+    }),
+    featureItem({
+      feature_id: workflowsPerProject.id,
       included_usage: 10,
       interval: "month",
       entity_feature_id: organizations.id,
@@ -163,6 +175,12 @@ export const team = product({
       entity_feature_id: organizations.id,
     }),
     featureItem({
+      feature_id: workflowsPerProject.id,
+      included_usage: 25,
+      interval: "month",
+      entity_feature_id: organizations.id,
+    }),
+    featureItem({
       feature_id: emailSupport.id,
     }),
     featureItem({
@@ -201,6 +219,10 @@ export const professional = product({
     }),
     featureItem({
       feature_id: annotationsPerProject.id,
+      entity_feature_id: organizations.id,
+    }),
+    featureItem({
+      feature_id: workflowsPerProject.id,
       entity_feature_id: organizations.id,
     }),
     featureItem({

@@ -18,7 +18,6 @@ import {
   AlertTriangle
 } from "lucide-react"
 import { useSession } from "@/lib/auth-client"
-import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 import {
   LineChart,
@@ -71,11 +70,16 @@ const CHART_COLORS = [
 
 export default function CostsPage() {
   const { data: session, isPending } = useSession()
-  const router = useRouter()
   const [summary, setSummary] = useState<CostSummary | null>(null)
   const [trends, setTrends] = useState<CostTrend[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [activeTab, setActiveTab] = useState("overview")
+  const [noOrg, setNoOrg] = useState(false)
+  const [refreshTrigger, setRefreshTrigger] = useState(0)
+
+  const handleRefresh = () => {
+    if (!isLoading) setRefreshTrigger((n) => n + 1)
+  }
 
   useEffect(() => {
     if (!isPending && !session?.user) {
@@ -106,34 +110,63 @@ export default function CostsPage() {
 
     if (session?.user) {
       const token = localStorage.getItem("bearer_token")
-      
-      Promise.all([
-        fetch("/api/costs?organizationId=1", {
-          headers: { Authorization: `Bearer ${token}` }
-        }).then(res => res.json()),
-        fetch("/api/costs/trends?organizationId=1", {
-          headers: { Authorization: `Bearer ${token}` }
-        }).then(res => res.json()),
-      ])
-        .then(([summaryData, trendsData]) => {
+      const headers = { Authorization: `Bearer ${token}` }
+
+      const fetchData = async () => {
+        try {
+          setNoOrg(false)
+          const orgRes = await fetch("/api/organizations/current", { headers })
+          if (!orgRes.ok) {
+            if (orgRes.status === 404) {
+              setNoOrg(true)
+              setSummary(null)
+              setTrends([])
+              setIsLoading(false)
+              return
+            }
+            throw new Error("Failed to fetch organization")
+          }
+          const [costsRes, trendsRes] = await Promise.all([
+            fetch("/api/costs", { headers }),
+            fetch("/api/costs/trends", { headers }),
+          ])
+
+          const summaryData = await costsRes.json()
+          if (!costsRes.ok || summaryData?.error) {
+            setSummary(null)
+            setTrends([])
+            setIsLoading(false)
+            return
+          }
           setSummary(summaryData)
-          setTrends(trendsData.trends || [])
+
+          if (trendsRes.ok) {
+            const trendsData = await trendsRes.json()
+            setTrends(trendsData?.trends ?? [])
+          } else {
+            setTrends([])
+          }
+        } catch {
+          setSummary(null)
+          setTrends([])
+        } finally {
           setIsLoading(false)
-        })
-        .catch(() => {
-          setIsLoading(false)
-        })
+        }
+      }
+      fetchData()
     }
-  }, [session, isPending])
+  }, [session, isPending, refreshTrigger])
 
   if (isPending) {
     return null
   }
 
   const isDemo = !session?.user
-  const weekOverWeekChange = summary 
-    ? ((summary.last7Days.totalCost - (summary.last30Days.totalCost - summary.last7Days.totalCost) / 3) / 
-       ((summary.last30Days.totalCost - summary.last7Days.totalCost) / 3) * 100)
+  const prev3Weeks = summary?.last30Days && summary?.last7Days
+    ? (summary.last30Days.totalCost - summary.last7Days.totalCost) / 3
+    : 0
+  const weekOverWeekChange = summary?.last7Days && prev3Weeks > 0
+    ? ((summary.last7Days.totalCost - prev3Weeks) / prev3Weeks) * 100
     : 0
 
   const pieChartData = summary?.topModels.map((model, i) => ({
@@ -144,6 +177,17 @@ export default function CostsPage() {
 
   return (
     <div className="space-y-6">
+      {noOrg && (
+        <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-lg">
+          <p className="text-sm text-amber-600 dark:text-amber-400">
+            <strong>Setup required:</strong> Complete your organization setup to view cost analytics.{" "}
+            <Link href="/onboarding" className="underline font-semibold">
+              Go to onboarding
+            </Link>
+          </p>
+        </div>
+      )}
+
       {isDemo && (
         <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
           <p className="text-sm text-blue-600 dark:text-blue-400">
@@ -163,12 +207,27 @@ export default function CostsPage() {
             Track and optimize your LLM spending
           </p>
         </div>
-        <Button variant="outline" size="sm" disabled={isLoading}>
-          <RefreshCw className={`mr-2 h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-          Refresh
-        </Button>
+        {!noOrg && (
+          <Button variant="outline" size="sm" disabled={isLoading} onClick={handleRefresh}>
+            <RefreshCw className={`mr-2 h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
+        )}
       </div>
 
+      {noOrg ? (
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-16 text-center">
+            <p className="text-muted-foreground mb-4">
+              Set up your organization to start tracking LLM costs.
+            </p>
+            <Button asChild>
+              <Link href="/onboarding">Complete setup</Link>
+            </Button>
+          </CardContent>
+        </Card>
+      ) : (
+        <>
       {/* Summary Cards */}
       {isLoading ? (
         <div className="grid gap-4 md:grid-cols-4">
@@ -255,7 +314,9 @@ export default function CostsPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                ${(summary.last30Days.totalCost / summary.last30Days.requestCount).toFixed(4)}
+                ${summary.last30Days.requestCount > 0
+                  ? (summary.last30Days.totalCost / summary.last30Days.requestCount).toFixed(4)
+                  : "0.0000"}
               </div>
               <p className="text-xs text-muted-foreground mt-1">
                 Per API call
@@ -516,6 +577,8 @@ export default function CostsPage() {
           </Card>
         </TabsContent>
       </Tabs>
+        </>
+      )}
     </div>
   )
 }

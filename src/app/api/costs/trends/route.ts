@@ -1,33 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { costService } from '@/lib/services/cost.service';
+import { requireAuthWithOrg } from '@/lib/autumn-server';
 import { withRateLimit } from '@/lib/api-rate-limit';
 import { logger } from '@/lib/logger';
 
 /**
  * GET /api/costs/trends - Get cost trends over time
+ * Uses authenticated user's organization (organizationId query param ignored)
  */
 export async function GET(request: NextRequest) {
   return withRateLimit(request, async (req: NextRequest) => {
     try {
+      const authResult = await requireAuthWithOrg(req);
+      if (!authResult.authenticated) {
+        const data = await authResult.response.json();
+        return NextResponse.json(data, { status: authResult.response.status });
+      }
+
       const { searchParams } = new URL(req.url);
-      const organizationId = searchParams.get('organizationId');
       const startDate = searchParams.get('startDate');
       const endDate = searchParams.get('endDate');
-
-      if (!organizationId) {
-        return NextResponse.json({
-          error: 'Organization ID is required',
-          code: 'MISSING_ORGANIZATION_ID',
-        }, { status: 400 });
-      }
-
-      const id = parseInt(organizationId);
-      if (isNaN(id)) {
-        return NextResponse.json({
-          error: 'Valid organization ID is required',
-          code: 'INVALID_ID',
-        }, { status: 400 });
-      }
 
       // Default to last 30 days if not specified
       const now = new Date();
@@ -36,10 +28,10 @@ export async function GET(request: NextRequest) {
       const start = startDate || defaultStartDate.toISOString().split('T')[0];
       const end = endDate || now.toISOString().split('T')[0];
 
-      const trends = await costService.getCostTrends(id, start, end);
+      const trends = await costService.getCostTrends(authResult.organizationId, start, end);
 
       return NextResponse.json({
-        organizationId: id,
+        organizationId: authResult.organizationId,
         startDate: start,
         endDate: end,
         trends,

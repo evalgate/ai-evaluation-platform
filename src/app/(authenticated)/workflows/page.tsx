@@ -190,11 +190,15 @@ export default function WorkflowsPage() {
 
     if (session?.user) {
       const token = localStorage.getItem("bearer_token")
-      fetch("/api/workflows?organizationId=1&limit=50", {
+      fetch("/api/workflows?limit=50", {
         headers: { Authorization: `Bearer ${token}` },
       })
         .then(res => res.json())
         .then(data => {
+          if (res.status === 403 && data?.code === "NO_ORG_MEMBERSHIP") {
+            router.push("/onboarding")
+            return
+          }
           setWorkflows(Array.isArray(data) ? data : [])
           setFilteredWorkflows(Array.isArray(data) ? data : [])
           setIsLoading(false)
@@ -203,7 +207,7 @@ export default function WorkflowsPage() {
           setIsLoading(false)
         })
     }
-  }, [session, isPending])
+  }, [session, isPending, router])
 
   // Filter workflows
   useEffect(() => {

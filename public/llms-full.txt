@@ -379,7 +379,7 @@ Compliance presets: BASIC, SOC2, GDPR, HIPAA, FINRA_4511, PCI_DSS
 | Framework integrations | LangChain, CrewAI, AutoGen | LangChain | OpenAI | LangChain |
 | Self-hostable | Yes | No | Yes | No |
 | WebMCP tools | Yes (5) | No | No | No |
-| Eval templates | Yes (80+) | No | No | Yes |
+| Eval templates | Yes (50+) | No | No | Yes |
 | LLM Judge | Yes | No | No | Yes |
 | Human evaluation | Yes | No | No | No |
 | IAA metrics | Yes | No | No | No |

@@ -54,23 +54,16 @@ export function useOrganization() {
 }
 
 /**
- * Hook to get organization ID with fallback
- * For backward compatibility during migration
+ * Hook to get organization ID
+ * Returns null when loading or when user has no organization
  */
 export function useOrganizationId(): number | null {
   const { organization, isLoading } = useOrganization();
   
-  // Return null while loading to prevent using wrong ID
   if (isLoading) {
     return null;
   }
   
-  // Fallback to 1 only in development
-  if (!organization && process.env.NODE_ENV === 'development') {
-    logger.warn('Organization not found, using fallback ID 1 (development only)');
-    return 1;
-  }
-  
-  return organization?.id || null;
+  return organization?.id ?? null;
 }
 
