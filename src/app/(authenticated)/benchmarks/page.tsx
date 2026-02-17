@@ -210,8 +210,8 @@ export default function BenchmarksPage() {
       fetch("/api/benchmarks", {
         headers: { Authorization: `Bearer ${token}` },
       })
-        .then(res => res.json())
-        .then(data => {
+        .then(res => res.json().then(data => ({ res, data })))
+        .then(({ res, data }) => {
           if (res.status === 403 && data?.code === "NO_ORG_MEMBERSHIP") {
             router.push("/onboarding")
             return
