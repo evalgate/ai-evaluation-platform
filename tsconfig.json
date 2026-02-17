@@ -49,6 +49,7 @@
     "node_modules",
     "src/packages/sdk/**/*",
     "src/integrations/**/*",
-    "src/remotion/**/*"
+    "src/remotion/**/*",
+    "examples/**/*"
   ]
 }
