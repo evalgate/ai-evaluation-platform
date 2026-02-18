@@ -136,6 +136,10 @@ import { COMPREHENSIVE_TEMPLATES, type EvaluationTemplate as CatalogTemplate } f
 - 5 tools exposed via `navigator.modelContext.registerTool()`.
 - All tool execute functions must use proper error handling (check `response.ok`).
 
+## Git Commits
+
+- **Never add `Co-authored-by: Cursor <cursoragent@cursor.com>`** or any co-author trailer to commit messages. Commit as the user only.
+
 ## Key URLs
 
 - Live site: https://v0-ai-evaluation-platform-nu.vercel.app
