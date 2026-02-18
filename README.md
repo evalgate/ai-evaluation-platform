@@ -139,7 +139,7 @@ ai-evaluation-platform/
 │   │   └── demo/        # Public demo endpoints (playground, custom-eval)
 │   ├── (authenticated)/ # Protected pages (dashboard, evals, workflows, costs, benchmarks)
 │   └── guides/          # Documentation guides (13 guides)
-├── src/packages/sdk/    # TypeScript SDK (@pauly4010/evalai-sdk) v1.3.0
+├── src/packages/sdk/    # TypeScript SDK (@pauly4010/evalai-sdk) v1.4.1
 ├── src/components/      # React components (26+ app components)
 │   └── ui/              # shadcn/ui primitives (57 components)
 ├── src/lib/             # Core services, utilities, templates
@@ -148,7 +148,7 @@ ai-evaluation-platform/
 ├── src/db/              # Database layer (Drizzle ORM schema, 33 tables)
 ├── src/__tests__/       # Test files (Vitest)
 ├── public/              # Static assets + llms.txt + llms-full.txt
-└── drizzle/             # Database migrations (9 migration files)
+└── drizzle/             # Database migrations (25 migration files)
 ```
 
 ## Comparison
