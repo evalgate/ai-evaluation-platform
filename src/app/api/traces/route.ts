@@ -68,7 +68,7 @@ export const POST = secureRoute(async (req: NextRequest, ctx: AuthContext) => {
       name,
       traceId,
       status,
-      durationMs,
+      durationMs: durationMs ?? undefined,
       metadata,
     });
 

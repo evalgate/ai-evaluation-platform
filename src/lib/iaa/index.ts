@@ -184,7 +184,7 @@ export function computeIAA(annotations: AnnotationRecord[]): IAAResult {
     const pairs: Array<{ rater1: string; rater2: string }> = [];
     multiAnnotatorItems.forEach((arr) => {
       if (arr.length === 2) {
-        pairs.push({ rater1: arr[0].category, rater2: arr[1].category });
+        pairs.push({ rater1: String(arr[0].category), rater2: String(arr[1].category) });
       }
     });
     cohensKappaVal = pairs.length > 0 ? cohensKappa(pairs) : undefined;
@@ -193,7 +193,8 @@ export function computeIAA(annotations: AnnotationRecord[]): IAAResult {
     multiAnnotatorItems.forEach((arr) => {
       const row: Record<string, number> = {};
       arr.forEach(({ category }) => {
-        row[category] = (row[category] ?? 0) + 1;
+        const key = String(category);
+        row[key] = (row[key] ?? 0) + 1;
       });
       matrix.push(row);
     });

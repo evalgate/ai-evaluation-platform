@@ -126,7 +126,7 @@ export function normalizeAssertionsForWrite(val: unknown): AssertionsEnvelope | 
   if ('version' in parsed && parsed.version === 'v1') {
     return validateAssertionsEnvelope(parsed);
   }
-  return validateAssertionsEnvelope(toAssertionsEnvelope(parsed as LegacyAssertions));
+  return validateAssertionsEnvelope(toAssertionsEnvelope(parsed as Record<string, boolean>));
 }
 
 /** Compute safety pass rate from parsed value (envelope or legacy) */

@@ -75,8 +75,8 @@ describe('/api/mcp/call', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockRequireAuthWithOrg.mockResolvedValue(authedCtx);
-    mockEvaluationService.getById.mockResolvedValue(null);
-    mockEvaluationService.list.mockResolvedValue([]);
+    vi.mocked(mockEvaluationService.getById).mockResolvedValue(null);
+    vi.mocked(mockEvaluationService.list).mockResolvedValue([]);
   });
 
   it('rejects invalid body', async () => {
@@ -150,7 +150,7 @@ describe('/api/mcp/call', () => {
   });
 
   it('returns 404 when evaluation not found', async () => {
-    mockEvaluationService.getById.mockResolvedValue(null);
+    vi.mocked(mockEvaluationService.getById).mockResolvedValue(null);
 
     const req = new NextRequest('http://localhost:3000/api/mcp/call', {
       method: 'POST',
@@ -169,7 +169,7 @@ describe('/api/mcp/call', () => {
   });
 
   it('returns 500 for unexpected throws', async () => {
-    mockEvaluationService.getById.mockRejectedValue(new Error('DB connection lost'));
+    vi.mocked(mockEvaluationService.getById).mockRejectedValue(new Error('DB connection lost'));
 
     const req = new NextRequest('http://localhost:3000/api/mcp/call', {
       method: 'POST',
@@ -189,12 +189,12 @@ describe('/api/mcp/call', () => {
   });
 
   it('success response includes type json content', async () => {
-    mockEvaluationService.getById.mockResolvedValue({
+    vi.mocked(mockEvaluationService.getById).mockResolvedValue({
       id: 1,
       name: 'Test Eval',
       organizationId: 1,
       status: 'active',
-    });
+    } as any);
 
     const req = new NextRequest('http://localhost:3000/api/mcp/call', {
       method: 'POST',

@@ -282,7 +282,7 @@ export class SecureRandom {
    */
   static integer(min: number = 0, max: number = Number.MAX_SAFE_INTEGER): number {
     const bytes = crypto.randomBytes(4);
-    const randomValue = bytes.readUInt32BE(0, false);
+    const randomValue = bytes.readUInt32BE(0);
     return min + (randomValue % (max - min));
   }
 }

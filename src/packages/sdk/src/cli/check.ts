@@ -232,7 +232,7 @@ export async function runCheck(args: CheckArgs): Promise<number> {
   }
 
   // ── Compute gate result (before printing, for deterministic output order) ──
-  let exitCode = EXIT.PASS;
+  let exitCode: number = EXIT.PASS;
   let failReason: string | null = null;
 
   if (args.minScore > 0 && score < args.minScore) {
