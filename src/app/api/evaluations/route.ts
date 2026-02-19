@@ -165,7 +165,7 @@ export const POST = secureRoute(async (req: NextRequest, ctx: AuthContext) => {
               input: tc.input,
               expectedOutput: tc.expectedOutput || null,
               metadata: tc.metadata || null,
-              createdAt: now,
+              createdAt: now.toISOString(),
             })),
           );
           logger.info("Test cases persisted from templates", {

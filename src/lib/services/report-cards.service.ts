@@ -160,7 +160,10 @@ export class ReportCardsService {
       averageDuration: stats.averageDuration,
       totalCost: stats.totalCost,
       lastRunAt: runs.length > 0 ? runs[0].createdAt : "",
-      createdAt: evaluation.createdAt,
+      createdAt:
+        evaluation.createdAt instanceof Date
+          ? evaluation.createdAt.toISOString()
+          : String(evaluation.createdAt),
       performance,
       quality,
       trends,

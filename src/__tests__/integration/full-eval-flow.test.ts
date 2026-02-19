@@ -139,7 +139,10 @@ describe("Full eval flow integration", () => {
         name: evaluation.name,
         description: evaluation.description ?? "",
         type: evaluation.type as EvaluationType,
-        created_at: evaluation.createdAt,
+        created_at:
+          evaluation.createdAt instanceof Date
+            ? evaluation.createdAt.toISOString()
+            : String(evaluation.createdAt),
       },
       timestamp: new Date().toISOString(),
       summary: {

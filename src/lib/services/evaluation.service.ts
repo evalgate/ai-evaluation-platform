@@ -141,7 +141,7 @@ export class EvaluationService {
           input: tc.input,
           expectedOutput: tc.expectedOutput || "",
           metadata: JSON.stringify(tc.metadata || {}),
-          createdAt: new Date(),
+          createdAt: new Date().toISOString(),
         })),
       );
     }

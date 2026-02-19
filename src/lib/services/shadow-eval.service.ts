@@ -266,8 +266,8 @@ export class ShadowEvalService {
       conditions.push(inArray(traces.traceId, traceIds));
     }
     if (dateRange) {
-      conditions.push(gte(traces.createdAt, dateRange.start));
-      conditions.push(lte(traces.createdAt, dateRange.end));
+      conditions.push(gte(traces.createdAt, new Date(dateRange.start)));
+      conditions.push(lte(traces.createdAt, new Date(dateRange.end)));
     }
 
     const tracesData = await db

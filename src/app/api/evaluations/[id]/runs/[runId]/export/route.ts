@@ -67,7 +67,10 @@ export const GET = secureRoute(
         description: evaluation.description ?? "",
         type: evaluation.type as EvaluationType,
         category: (evaluation as { category?: string }).category,
-        created_at: evaluation.createdAt,
+        created_at:
+          evaluation.createdAt instanceof Date
+            ? evaluation.createdAt.toISOString()
+            : String(evaluation.createdAt),
       },
       timestamp: new Date().toISOString(),
       summary: {
