@@ -35,8 +35,14 @@ jobs:
       - name: Coverage
         run: pnpm test:coverage --run
 
+      - name: Coverage audit
+        run: pnpm run audit:coverage
+
       - name: OpenAPI audit
         run: pnpm run audit:openapi
+
+      - name: Demo assets audit
+        run: pnpm run audit:demo-assets
 
       - name: Build
         run: pnpm build

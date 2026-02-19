@@ -199,3 +199,14 @@ export function assertNoSecrets(sanitized: unknown): void {
     throw new Error("Export data contains disallowed keys (secrets or internal identifiers)");
   }
 }
+
+/**
+ * Single write path for shared export data.
+ * Sanitizes and validates; throws if export contains secrets.
+ * Use this before any insert/update to shared_exports.
+ */
+export function prepareExportForShare(exportData: unknown): Record<string, unknown> {
+  const sanitized = sanitizeExportData(exportData);
+  assertNoSecrets(sanitized);
+  return sanitized;
+}

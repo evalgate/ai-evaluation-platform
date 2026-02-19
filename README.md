@@ -1,5 +1,6 @@
 # EvalAI
 
+[![Platform CI](https://github.com/pauly7610/ai-evaluation-platform/actions/workflows/platform-ci.yml/badge.svg)](https://github.com/pauly7610/ai-evaluation-platform/actions/workflows/platform-ci.yml)
 [![npm](https://img.shields.io/npm/v/@pauly4010/evalai-sdk?style=flat-square&logo=npm&color=cb3837)](https://www.npmjs.com/package/@pauly4010/evalai-sdk)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](https://opensource.org/licenses/MIT)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](https://github.com/pauly7610/ai-evaluation-platform/pulls)
@@ -61,6 +62,14 @@ If your score drops below the baseline, CI fails. That's your regression gate.
 
 Simple.
 
+## Golden Path (run locally → gate in CI → fail output)
+
+1. **Run locally (~60 seconds):** Use the snippet above. You get `PASS 2/2 (score: 100)` or a fail with score + baseline compare.
+2. **Gate in CI:** Add `npx -y @pauly4010/evalai-sdk@^1 check --format github --onFail import` to your CI. When the score drops below baseline, CI fails and shows the regression delta.
+3. **Fail output:** `evalai check` exits non-zero, prints the score vs baseline, and with `--onFail import` uploads failing runs to the dashboard for debugging.
+
+See [examples/quickstart-ci](examples/quickstart-ci) for a minimal CI example, [docs/ci/github-actions.md](docs/ci/github-actions.md) for a copy-paste workflow, or [docs/demo.md](docs/demo.md) for before/after screenshots.
+
 ## Remove anytime
 
 Delete `evalai.config.json`. That's it.
@@ -72,6 +81,8 @@ If you connect to the hosted platform: quality score history, baseline compariso
 EvalAI is just a regression gate.
 
 **Live demo:** [https://v0-ai-evaluation-platform-nu.vercel.app](https://v0-ai-evaluation-platform-nu.vercel.app)
+
+**Docs:** [Exporting and Sharing](docs/EXPORTING_AND_SHARING.md) · [Share link privacy](docs/share-links.md) · [API contract](docs/api-contract.md) · [GitHub Actions CI](docs/ci/github-actions.md) · [Security](SECURITY.md)
 
 ---
 
@@ -136,7 +147,7 @@ Contributions are welcome! Please use `pnpm` for all local development. Run test
 ```bash
 pnpm install        # Install dependencies
 pnpm dev            # Start dev server
-pnpm test           # Run tests (runs test:db-setup first to migrate test.db)
+pnpm test           # Run tests (temp DB per worker, migrations in setup)
 pnpm build          # Production build
 ```
 

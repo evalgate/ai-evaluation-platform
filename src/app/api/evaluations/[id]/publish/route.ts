@@ -7,7 +7,7 @@ import { conflict, notFound, validationError } from "@/lib/api/errors";
 import { type AuthContext, secureRoute } from "@/lib/api/secure-route";
 import { SCOPES } from "@/lib/auth/scopes";
 import { logger } from "@/lib/logger";
-import { assertNoSecrets, computeExportHash, sanitizeExportData } from "@/lib/shared-exports";
+import { computeExportHash, prepareExportForShare } from "@/lib/shared-exports";
 
 const generateShareId = customAlphabet("0123456789abcdefghijklmnopqrstuvwxyz", 10);
 
@@ -52,11 +52,10 @@ export const POST = secureRoute(
         ? new Date(Date.now() + expiresInDays * 24 * 60 * 60 * 1000).toISOString()
         : undefined;
 
-    // Sanitize and assert no secrets
+    // Single write path: sanitize and validate (no unsanitized export can be persisted)
     let sanitized: Record<string, unknown>;
     try {
-      sanitized = sanitizeExportData(exportData);
-      assertNoSecrets(sanitized);
+      sanitized = prepareExportForShare(exportData);
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Export data validation failed";
       return validationError(msg);

@@ -7,9 +7,56 @@
 import {
   assertNoSecrets,
   computeExportHash,
+  prepareExportForShare,
   sanitizeExportData,
   stableStringify,
 } from "@/lib/shared-exports";
+
+/** Forbidden keys — must not appear in sanitized output (regression guard) */
+const FORBIDDEN_KEYS = new Set([
+  "apikey",
+  "api_key",
+  "authorization",
+  "bearer",
+  "bearer_token",
+  "secret",
+  "password",
+  "token",
+  "organizationid",
+  "organization_id",
+  "userid",
+  "user_id",
+  "createdby",
+  "created_by",
+  "annotatorid",
+  "annotator_id",
+  "internalnotes",
+  "internal_notes",
+]);
+
+/** Recursively check for forbidden keys in output. Returns true if any found. */
+function hasSensitiveKeys(obj: unknown, depth = 0): boolean {
+  if (depth > 50) return false;
+  if (obj === null || obj === undefined) return false;
+  if (typeof obj === "string" || typeof obj === "number" || typeof obj === "boolean") return false;
+  if (Array.isArray(obj)) {
+    return obj.some((item) => hasSensitiveKeys(item, depth + 1));
+  }
+  if (typeof obj === "object") {
+    for (const [key] of Object.entries(obj)) {
+      const keyLower = key.toLowerCase();
+      if (
+        FORBIDDEN_KEYS.has(keyLower) ||
+        keyLower.includes("apikey") ||
+        keyLower.includes("secret")
+      ) {
+        return true;
+      }
+      if (hasSensitiveKeys((obj as Record<string, unknown>)[key], depth + 1)) return true;
+    }
+  }
+  return false;
+}
 
 describe("sanitizeExportData + assertNoSecrets", () => {
   const baseExport = {
@@ -25,6 +72,24 @@ describe("sanitizeExportData + assertNoSecrets", () => {
     expect(sanitized.summary).toBeDefined();
     expect(sanitized.qualityScore).toBeDefined();
     assertNoSecrets(sanitized);
+  });
+
+  it("sanitized output from clean input has no sensitive keys (regression guard)", () => {
+    const sanitized = sanitizeExportData(baseExport);
+    expect(hasSensitiveKeys(sanitized)).toBe(false);
+  });
+
+  it("prepareExportForShare throws when export contains sensitive key (write-time gate)", () => {
+    const withSecret = {
+      ...baseExport,
+      evaluation: { ...baseExport.evaluation, apiKey: "sk-xxx" },
+    };
+    expect(() => prepareExportForShare(withSecret)).toThrow(/disallowed keys/);
+  });
+
+  it("prepareExportForShare output has no sensitive keys (persisted exportData invariant)", () => {
+    const prepared = prepareExportForShare(baseExport);
+    expect(hasSensitiveKeys(prepared)).toBe(false);
   });
 
   it("rejects apiKey anywhere nested", () => {

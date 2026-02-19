@@ -1,10 +1,9 @@
 /**
  * Exports API contract test
  * Verifies GET /api/exports/[shareId] returns ShareExportDTO that passes validateDemoData,
- * and correct status codes for 404 (not found), 410 (expired/revoked).
+ * and correct status codes for 404 (not found), 410 (expired/revoked/unavailable).
  */
 
-import { createHash } from "node:crypto";
 import { NextRequest } from "next/server";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 
@@ -27,6 +26,7 @@ import { GET } from "@/app/api/exports/[shareId]/route";
 import { db } from "@/db";
 import { evaluations, organizations, sharedExports } from "@/db/schema";
 import { validateDemoData } from "@/lib/demo-loader";
+import { computeExportHash } from "@/lib/shared-exports";
 
 let ORG_ID: number;
 let EVAL_ID: number;
@@ -54,11 +54,6 @@ const validExportData = {
   share_id: "contract-test-share",
   public: true,
 };
-
-function computeHash(data: Record<string, unknown>): string {
-  const canonical = JSON.stringify(data, Object.keys(data).sort());
-  return createHash("sha256").update(canonical).digest("hex");
-}
 
 describe("GET /api/exports/[shareId] contract", () => {
   let dbReady = false;
@@ -112,7 +107,9 @@ describe("GET /api/exports/[shareId] contract", () => {
           "contract-test-share",
           "revoked-share",
           "expired-share",
+          "unavailable-share",
           "view-count-test",
+          "etag-invariant-share",
         ]),
       );
   });
@@ -121,7 +118,7 @@ describe("GET /api/exports/[shareId] contract", () => {
     if (!dbReady) return;
 
     const shareId = "view-count-test";
-    const exportHash = computeHash(validExportData);
+    const exportHash = computeExportHash(validExportData);
 
     await db.insert(sharedExports).values({
       shareId,
@@ -160,7 +157,7 @@ describe("GET /api/exports/[shareId] contract", () => {
     if (!dbReady) return;
 
     const shareId = "contract-test-share";
-    const exportHash = computeHash(validExportData);
+    const exportHash = computeExportHash(validExportData);
 
     await db.insert(sharedExports).values({
       shareId,
@@ -185,22 +182,104 @@ describe("GET /api/exports/[shareId] contract", () => {
     const text = await res.text();
     expect(text).toBe("");
     expect(res.headers.get("ETag")).toBe(`"${exportHash}"`);
+    expect(res.headers.get("Cache-Control")).toMatch(/public,\s*max-age=\d+/);
   });
 
-  it("returns 404 for unknown shareId", async () => {
+  it("two GETs for unchanged export return identical ETag", async () => {
+    if (!dbReady) return;
+
+    const shareId = "etag-invariant-share";
+    const exportHash = computeExportHash(validExportData);
+
+    await db.insert(sharedExports).values({
+      shareId,
+      organizationId: ORG_ID,
+      evaluationId: EVAL_ID,
+      evaluationRunId: null,
+      shareScope: "evaluation",
+      exportData: validExportData,
+      exportHash,
+      isPublic: true,
+      revokedAt: null,
+      createdAt: new Date().toISOString(),
+      expiresAt: null,
+    });
+
+    const req1 = new NextRequest(`http://localhost:3000/api/exports/${shareId}`);
+    const req2 = new NextRequest(`http://localhost:3000/api/exports/${shareId}`);
+    const [res1, res2] = await Promise.all([
+      GET(req1, { params: Promise.resolve({ shareId }) }),
+      GET(req2, { params: Promise.resolve({ shareId }) }),
+    ]);
+
+    expect(res1.status).toBe(200);
+    expect(res2.status).toBe(200);
+    const etag1 = res1.headers.get("ETag");
+    const etag2 = res2.headers.get("ETag");
+    expect(etag1).toBe(etag2);
+    expect(etag1).toBe(`"${exportHash}"`);
+  });
+
+  it("after export update (hash changes), ETag changes", async () => {
+    if (!dbReady) return;
+
+    const shareId = "etag-invariant-share";
+    const exportHash1 = computeExportHash(validExportData);
+    const updatedData = {
+      ...validExportData,
+      summary: { totalTests: 12, passed: 10, failed: 2, passRate: "83%" },
+    };
+    const exportHash2 = computeExportHash(updatedData);
+
+    await db.insert(sharedExports).values({
+      shareId,
+      organizationId: ORG_ID,
+      evaluationId: EVAL_ID,
+      evaluationRunId: null,
+      shareScope: "evaluation",
+      exportData: validExportData,
+      exportHash: exportHash1,
+      isPublic: true,
+      revokedAt: null,
+      createdAt: new Date().toISOString(),
+      expiresAt: null,
+    });
+
+    const res1 = await GET(new NextRequest(`http://localhost:3000/api/exports/${shareId}`), {
+      params: Promise.resolve({ shareId }),
+    });
+    expect(res1.status).toBe(200);
+    expect(res1.headers.get("ETag")).toBe(`"${exportHash1}"`);
+
+    await db
+      .update(sharedExports)
+      .set({ exportData: updatedData, exportHash: exportHash2 })
+      .where(eq(sharedExports.shareId, shareId));
+
+    const res2 = await GET(new NextRequest(`http://localhost:3000/api/exports/${shareId}`), {
+      params: Promise.resolve({ shareId }),
+    });
+    expect(res2.status).toBe(200);
+    expect(res2.headers.get("ETag")).toBe(`"${exportHash2}"`);
+    expect(res2.headers.get("ETag")).not.toBe(res1.headers.get("ETag"));
+  });
+
+  it("returns 404 for unknown shareId with error envelope", async () => {
     if (!dbReady) return;
     const req = new NextRequest("http://localhost:3000/api/exports/nonexistent-id");
     const res = await GET(req, { params: Promise.resolve({ shareId: "nonexistent-id" }) });
     expect(res.status).toBe(404);
     const data = await res.json();
     expect(data.error?.code).toBe("NOT_FOUND");
+    expect(data.error?.message).toBe("Share not found");
+    expect(data.error?.requestId).toBeDefined();
   });
 
-  it("returns 200 and ShareExportDTO that passes validateDemoData when share exists", async () => {
+  it("returns 200 with ETag and Cache-Control headers when share exists", async () => {
     if (!dbReady) return;
 
     const shareId = "contract-test-share";
-    const exportHash = computeHash(validExportData);
+    const exportHash = computeExportHash(validExportData);
 
     await db.insert(sharedExports).values({
       shareId,
@@ -220,6 +299,8 @@ describe("GET /api/exports/[shareId] contract", () => {
     const res = await GET(req, { params: Promise.resolve({ shareId }) });
 
     expect(res.status).toBe(200);
+    expect(res.headers.get("ETag")).toBe(`"${exportHash}"`);
+    expect(res.headers.get("Cache-Control")).toMatch(/public,\s*max-age=\d+/);
     const data = await res.json();
     expect(validateDemoData(data)).toBe(true);
     expect(data.id).toBeDefined();
@@ -237,7 +318,7 @@ describe("GET /api/exports/[shareId] contract", () => {
     if (!dbReady) return;
 
     const shareId = "revoked-share";
-    const exportHash = computeHash(validExportData);
+    const exportHash = computeExportHash(validExportData);
 
     await db.insert(sharedExports).values({
       shareId,
@@ -259,13 +340,44 @@ describe("GET /api/exports/[shareId] contract", () => {
     expect(res.status).toBe(410);
     const data = await res.json();
     expect(data.error?.code).toBe("SHARE_REVOKED");
+    expect(data.error?.message).toBeDefined();
+    expect(data.error?.requestId).toBeDefined();
+  });
+
+  it("returns 410 when share is unavailable (isPublic false)", async () => {
+    if (!dbReady) return;
+
+    const shareId = "unavailable-share";
+    const exportHash = computeExportHash(validExportData);
+
+    await db.insert(sharedExports).values({
+      shareId,
+      organizationId: ORG_ID,
+      evaluationId: EVAL_ID,
+      evaluationRunId: null,
+      shareScope: "evaluation",
+      exportData: validExportData,
+      exportHash,
+      isPublic: false,
+      revokedAt: null,
+      createdAt: new Date().toISOString(),
+      expiresAt: null,
+    });
+
+    const req = new NextRequest(`http://localhost:3000/api/exports/${shareId}`);
+    const res = await GET(req, { params: Promise.resolve({ shareId }) });
+
+    expect(res.status).toBe(410);
+    const data = await res.json();
+    expect(data.error?.code).toBe("SHARE_UNAVAILABLE");
+    expect(data.error?.message).toBe("This share link is no longer available");
   });
 
   it("returns 410 when share is expired", async () => {
     if (!dbReady) return;
 
     const shareId = "expired-share";
-    const exportHash = computeHash(validExportData);
+    const exportHash = computeExportHash(validExportData);
     const pastDate = new Date(Date.now() - 86400000).toISOString(); // 1 day ago
 
     await db.insert(sharedExports).values({
@@ -288,5 +400,7 @@ describe("GET /api/exports/[shareId] contract", () => {
     expect(res.status).toBe(410);
     const data = await res.json();
     expect(data.error?.code).toBe("SHARE_EXPIRED");
+    expect(data.error?.message).toBe("This share link has expired");
+    expect(data.error?.requestId).toBeDefined();
   });
 });

@@ -1,15 +1,19 @@
-// Set test DB env before any module imports db (test:db-setup creates test.db before vitest)
-import { resolve } from "node:path";
+// Deterministic test DB: temp file per worker, migrations run in setup
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 
-const testDb = resolve(process.cwd(), "test.db").replace(/\\/g, "/");
-process.env.TURSO_CONNECTION_URL = `file:${testDb}`;
+const workerId = process.env.VITEST_WORKER_ID ?? process.pid;
+const testDbPath = join(tmpdir(), `evalai-test-${workerId}-${Date.now()}.db`).replace(/\\/g, "/");
+process.env.TURSO_CONNECTION_URL = `file:${testDbPath}`;
 process.env.TURSO_AUTH_TOKEN = "test-token";
+
+const { runMigrations } = await import(join(process.cwd(), "scripts/run-migrations.ts"));
+await runMigrations({ url: `file:${testDbPath}`, authToken: "test-token", silent: true });
 
 import { beforeAll } from "vitest";
 import { db } from "@/db";
 import { organizations, user } from "@/db/schema";
 
-// Setup for tests (migrations run via pnpm test:db-setup before vitest)
 beforeAll(async () => {
   // Seed minimal data for FK constraints (user, org) used by MCP usage tracking
   const now = new Date();

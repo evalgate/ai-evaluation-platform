@@ -1,0 +1,83 @@
+# Tag-based release — creates GitHub Release with changelog snippet
+# Tag format: sdk/v1.2.3 or v1.2.3
+# Optional: add NPM_TOKEN secret to publish @pauly4010/evalai-sdk to npm
+name: Release
+
+on:
+  push:
+    tags:
+      - "sdk/v*"
+      - "v*"
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "pnpm"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Test (reproducible release)
+        run: pnpm test --run
+
+      - name: OpenAPI audit (reproducible release)
+        run: pnpm run audit:openapi
+
+      - name: Extract version from tag
+        id: version
+        run: |
+          TAG="${GITHUB_REF#refs/tags/}"
+          VERSION="${TAG#sdk/v}"
+          VERSION="${VERSION#v}"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+
+      - name: Build SDK
+        run: pnpm sdk:build
+
+      - name: Extract changelog snippet
+        id: changelog
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          SNIPPET=$(npx tsx scripts/release-changelog-snippet.ts "$VERSION")
+          echo "snippet<<EOF" >> $GITHUB_OUTPUT
+          echo "$SNIPPET" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          body: |
+            ## @pauly4010/evalai-sdk ${{ steps.version.outputs.version }}
+
+            ${{ steps.changelog.outputs.snippet }}
+
+            **Install:** `npm install @pauly4010/evalai-sdk@${{ steps.version.outputs.version }}`
+          tag_name: ${{ steps.version.outputs.tag }}
+          name: Release ${{ steps.version.outputs.tag }} — @pauly4010/evalai-sdk ${{ steps.version.outputs.version }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish to npm (optional)
+        if: env.NPM_TOKEN != ''
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          cd src/packages/sdk
+          echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > .npmrc
+          npm publish --access public --no-git-tag-version
+        continue-on-error: true

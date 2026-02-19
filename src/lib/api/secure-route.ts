@@ -161,11 +161,25 @@ export function secureRoute(
       const hasAuth = !!req.headers.get("authorization");
       if (!hasAuth) {
         return runWithRequestIdAsync(requestId, async () => {
+          logger.info("Request started", {
+            requestId,
+            route: req.nextUrl.pathname,
+            method: req.method,
+          });
+          const start = performance.now();
           const res = await withRateLimit(
             req,
             async () => handler(req, { authType: "anonymous" }, resolvedParams),
             { customTier: tier ?? "anonymous" },
           );
+          const durationMs = Math.round(performance.now() - start);
+          logger.info("Request completed", {
+            requestId,
+            route: req.nextUrl.pathname,
+            method: req.method,
+            durationMs,
+            statusCode: res.status,
+          });
           return addRequestIdHeader(res);
         });
       }
@@ -245,6 +259,11 @@ export function secureRoute(
 
     // ── Rate limiting wrapper (run in request-id context, add header to response, log duration) ──
     const runAndAddHeader = async (): Promise<NextResponse> => {
+      logger.info("Request started", {
+        requestId,
+        route: req.nextUrl.pathname,
+        method: req.method,
+      });
       const start = performance.now();
       const res = tier
         ? await withRateLimit(req, coreHandler, { customTier: tier })

@@ -12,8 +12,21 @@ import { eq, sql } from "drizzle-orm";
 import { type NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
 import { sharedExports } from "@/db/schema";
+import { apiError } from "@/lib/api/errors";
+import { getRequestId } from "@/lib/api/request-id";
 import { secureRoute } from "@/lib/api/secure-route";
 import { HASH_VERSION } from "@/lib/shared-exports/hash";
+
+function shareError(
+  code: "NOT_FOUND" | "SHARE_REVOKED" | "SHARE_EXPIRED" | "SHARE_UNAVAILABLE",
+  message: string,
+  status: number,
+) {
+  const res = apiError(code, message, status);
+  res.headers.set("Cache-Control", "public, max-age=30");
+  res.headers.set("Vary", "Authorization");
+  return res;
+}
 
 type ShareExportDTO = Record<string, unknown>;
 
@@ -60,44 +73,20 @@ export const GET = secureRoute(
       .limit(1);
 
     if (!row) {
-      const res = NextResponse.json(
-        { error: { code: "NOT_FOUND", message: "Share not found" } },
-        { status: 404 },
-      );
-      res.headers.set("Cache-Control", "public, max-age=30");
-      res.headers.set("Vary", "Authorization");
-      return res;
+      return shareError("NOT_FOUND", "Share not found", 404);
     }
 
     // 410 if expired, revoked, or not public — machine-readable codes for CLI/share page
     if (row.revokedAt) {
-      const res = NextResponse.json(
-        { error: { code: "SHARE_REVOKED", message: "This share link has been revoked" } },
-        { status: 410 },
-      );
-      res.headers.set("Cache-Control", "public, max-age=30");
-      res.headers.set("Vary", "Authorization");
-      return res;
+      return shareError("SHARE_REVOKED", "This share link has been revoked", 410);
     }
 
     if (row.isPublic === false) {
-      const res = NextResponse.json(
-        { error: { code: "SHARE_UNAVAILABLE", message: "This share link is no longer available" } },
-        { status: 410 },
-      );
-      res.headers.set("Cache-Control", "public, max-age=30");
-      res.headers.set("Vary", "Authorization");
-      return res;
+      return shareError("SHARE_UNAVAILABLE", "This share link is no longer available", 410);
     }
 
     if (row.expiresAt && new Date(row.expiresAt) < new Date()) {
-      const res = NextResponse.json(
-        { error: { code: "SHARE_EXPIRED", message: "This share link has expired" } },
-        { status: 410 },
-      );
-      res.headers.set("Cache-Control", "public, max-age=30");
-      res.headers.set("Vary", "Authorization");
-      return res;
+      return shareError("SHARE_EXPIRED", "This share link has expired", 410);
     }
 
     const exportData = (row.exportData as Record<string, unknown>) ?? {};
@@ -139,7 +128,7 @@ export const GET = secureRoute(
     const tenMinutes = 10 * 60 * 1000;
     const maxAge = expiresAtDate && expiresAtDate.getTime() - now.getTime() < tenMinutes ? 15 : 60;
 
-    const res = NextResponse.json(dto);
+    const res = NextResponse.json({ ...dto, requestId: getRequestId() });
     res.headers.set("Cache-Control", `public, max-age=${maxAge}, stale-while-revalidate=86400`);
     res.headers.set("ETag", etag);
     res.headers.set("X-Export-Hash", row.exportHash);

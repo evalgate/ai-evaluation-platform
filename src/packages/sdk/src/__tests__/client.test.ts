@@ -61,6 +61,26 @@ describe("AIEvalClient", () => {
       expect(options.headers["Content-Type"]).toBe("application/json");
     });
 
+    it("should send X-EvalAI-SDK-Version and X-EvalAI-Spec-Version headers", async () => {
+      mockFetch.mockResolvedValue({
+        ok: true,
+        json: async () => ({ data: "test" }),
+        status: 200,
+      });
+
+      const client = new AIEvalClient({
+        apiKey: "key",
+        baseUrl: "http://localhost:3000",
+      });
+      await client.request("/api/test");
+
+      const [, options] = mockFetch.mock.calls[0];
+      expect(options.headers["X-EvalAI-SDK-Version"]).toBeDefined();
+      expect(options.headers["X-EvalAI-Spec-Version"]).toBeDefined();
+      expect(typeof options.headers["X-EvalAI-SDK-Version"]).toBe("string");
+      expect(typeof options.headers["X-EvalAI-Spec-Version"]).toBe("string");
+    });
+
     it("should return parsed JSON on success", async () => {
       mockFetch.mockResolvedValue({
         ok: true,

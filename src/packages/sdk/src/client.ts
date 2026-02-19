@@ -58,6 +58,7 @@ import type {
   Webhook,
   WebhookDelivery,
 } from "./types";
+import { SDK_VERSION, SPEC_VERSION } from "./version";
 
 /**
  * Safe environment variable access (works in both Node.js and browsers)
@@ -101,6 +102,7 @@ export class AIEvalClient {
   private logger: Logger;
   private requestLogger: RequestLogger;
   private cache: RequestCache;
+  // biome-ignore lint/correctness/noUnusedPrivateClassMembers: used for request batching (assigned in constructor)
   private batcher: RequestBatcher | null;
   private retryConfig: {
     maxAttempts: number;
@@ -298,6 +300,8 @@ export class AIEvalClient {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${this.apiKey}`,
+          "X-EvalAI-SDK-Version": SDK_VERSION,
+          "X-EvalAI-Spec-Version": SPEC_VERSION,
           ...options.headers,
         },
         signal: controller.signal,

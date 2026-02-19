@@ -22,7 +22,10 @@ export type ApiErrorCode =
   | "INTERNAL_ERROR"
   | "SERVICE_UNAVAILABLE"
   | "QUOTA_EXCEEDED"
-  | "NO_ORG_MEMBERSHIP";
+  | "NO_ORG_MEMBERSHIP"
+  | "SHARE_REVOKED"
+  | "SHARE_EXPIRED"
+  | "SHARE_UNAVAILABLE";
 
 // ── Error response shape ──
 
@@ -48,6 +51,9 @@ const CODE_TO_STATUS: Record<ApiErrorCode, number> = {
   SERVICE_UNAVAILABLE: 503,
   QUOTA_EXCEEDED: 402,
   NO_ORG_MEMBERSHIP: 403,
+  SHARE_REVOKED: 410,
+  SHARE_EXPIRED: 410,
+  SHARE_UNAVAILABLE: 410,
 };
 
 // ── Builder ──

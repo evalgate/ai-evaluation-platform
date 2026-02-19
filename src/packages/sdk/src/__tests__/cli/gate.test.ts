@@ -61,6 +61,23 @@ describe("evaluateGate", () => {
     expect(result.passed).toBe(true);
   });
 
+  it("fails with REGRESSION (exit 2) when regressionDelta exceeds maxDrop", () => {
+    const args: CheckArgs = { ...baseArgs, maxDrop: 5, minScore: 80 };
+    const quality = {
+      score: 85,
+      total: 30,
+      evaluationRunId: 1,
+      baselineScore: 93,
+      regressionDelta: -8,
+    };
+    const result = evaluateGate(args, quality);
+    expect(result.exitCode).toBe(EXIT.REGRESSION);
+    expect(result.passed).toBe(false);
+    expect(result.reasonCode).toBe("DELTA_TOO_HIGH");
+    expect(result.reasonMessage).toContain("8");
+    expect(result.reasonMessage).toContain("5");
+  });
+
   it("fails with COST_BUDGET_EXCEEDED when costUsd exceeds maxCostUsd", () => {
     const args: CheckArgs = { ...baseArgs, maxCostUsd: 0.01 };
     const quality = {

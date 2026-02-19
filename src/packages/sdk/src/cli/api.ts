@@ -1,7 +1,15 @@
 /**
  * API fetch helpers for evalai check.
  * Captures x-request-id from response headers.
+ * Sends X-EvalAI-SDK-Version and X-EvalAI-Spec-Version on all requests.
  */
+
+import { SDK_VERSION, SPEC_VERSION } from "../version";
+
+const API_HEADERS: Record<string, string> = {
+  "X-EvalAI-SDK-Version": SDK_VERSION,
+  "X-EvalAI-Spec-Version": SPEC_VERSION,
+};
 
 export type QualityLatestData = {
   score?: number;
@@ -40,7 +48,7 @@ export async function fetchQualityLatest(
   | { ok: true; data: QualityLatestData; requestId?: string }
   | { ok: false; status: number; body: string; requestId?: string }
 > {
-  const headers = { Authorization: `Bearer ${apiKey}` };
+  const headers = { ...API_HEADERS, Authorization: `Bearer ${apiKey}` };
   const url = `${baseUrl.replace(/\/$/, "")}/api/quality?evaluationId=${evaluationId}&action=latest&baseline=${baseline}`;
 
   try {
@@ -66,7 +74,7 @@ export async function fetchRunDetails(
   evaluationId: string,
   runId: number,
 ): Promise<{ ok: true; data: RunDetailsData } | { ok: false }> {
-  const headers = { Authorization: `Bearer ${apiKey}` };
+  const headers = { ...API_HEADERS, Authorization: `Bearer ${apiKey}` };
   const url = `${baseUrl.replace(/\/$/, "")}/api/evaluations/${evaluationId}/runs/${runId}`;
 
   try {
@@ -112,7 +120,7 @@ export async function fetchRunExport(
 ): Promise<
   { ok: true; exportData: Record<string, unknown> } | { ok: false; status: number; body: string }
 > {
-  const headers = { Authorization: `Bearer ${apiKey}` };
+  const headers = { ...API_HEADERS, Authorization: `Bearer ${apiKey}` };
   const url = `${baseUrl.replace(/\/$/, "")}/api/evaluations/${evaluationId}/runs/${runId}/export`;
 
   try {
@@ -136,6 +144,7 @@ export async function publishShare(
   options?: { expiresInDays?: number },
 ): Promise<{ ok: true; data: PublishShareResult } | { ok: false; status: number; body: string }> {
   const headers: Record<string, string> = {
+    ...API_HEADERS,
     Authorization: `Bearer ${apiKey}`,
     "Content-Type": "application/json",
   };
@@ -176,6 +185,7 @@ export async function importRunOnFail(
   },
 ): Promise<{ ok: true; runId: number } | { ok: false; status: number; body: string }> {
   const headers: Record<string, string> = {
+    ...API_HEADERS,
     Authorization: `Bearer ${apiKey}`,
     "Content-Type": "application/json",
   };

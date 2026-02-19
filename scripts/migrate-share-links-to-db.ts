@@ -50,7 +50,7 @@ async function main() {
   const { db } = await import("@/db");
   const { eq } = await import("drizzle-orm");
   const { organizations, sharedExports } = await import("@/db/schema");
-  const { assertNoSecrets, sanitizeExportData } = await import("@/lib/shared-exports");
+  const { prepareExportForShare } = await import("@/lib/shared-exports");
 
   const exportsDir = join(process.cwd(), "public", "exports", "public");
   let files: string[];
@@ -93,8 +93,7 @@ async function main() {
 
       let sanitized: Record<string, unknown>;
       try {
-        sanitized = sanitizeExportData(parsed);
-        assertNoSecrets(sanitized);
+        sanitized = prepareExportForShare(parsed);
       } catch (err) {
         console.warn(`  [skip] ${file}: ${err instanceof Error ? err.message : err}`);
         skipped++;

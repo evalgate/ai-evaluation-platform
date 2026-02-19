@@ -1,6 +1,7 @@
 import crypto from "node:crypto";
 import * as Sentry from "@sentry/nextjs";
 import { type NextRequest, NextResponse } from "next/server";
+import { rateLimited } from "@/lib/api/errors";
 import { checkRateLimit } from "./rate-limit";
 
 export async function withRateLimit(
@@ -37,13 +38,9 @@ export async function withRateLimit(
     const { success, headers } = await checkRateLimit(identifier, tier);
 
     if (!success) {
-      return NextResponse.json(
-        { error: "Too many requests. Please try again later." },
-        {
-          status: 429,
-          headers: headers as HeadersInit,
-        },
-      );
+      const res = rateLimited();
+      Object.entries(headers).forEach(([key, value]) => res.headers.set(key, value));
+      return res;
     }
 
     // Call the handler
