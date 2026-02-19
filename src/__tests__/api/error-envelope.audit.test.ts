@@ -29,8 +29,9 @@ function hasAdHocErrorPattern(content: string): boolean {
   if (/NextResponse\.json\s*\(\s*\{\s*error:\s*['"`]/.test(content)) {
     return true;
   }
-  // Ad-hoc: { error: ..., code: '...' } - flat structure, not nested error: { code, message }
-  const adHocFlatError = /NextResponse\.json\s*\(\s*\{\s*error:\s*[^}]+code:\s*['"`]/;
+  // Ad-hoc: { error: ..., code: '...' } - flat structure (error and code as siblings)
+  // Exclude canonical: { error: { code, message } } where error is an object
+  const adHocFlatError = /NextResponse\.json\s*\(\s*\{\s*error:\s*[^{][^}]*,\s*code:\s*['"`]/;
   if (adHocFlatError.test(content)) {
     return true;
   }

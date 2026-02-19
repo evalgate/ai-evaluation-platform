@@ -70,6 +70,7 @@ describe("GET /api/exports/[shareId] contract", () => {
     } catch {
       dbReady = false;
     }
+    if (!dbReady) return;
     // Ensure org and evaluation exist for FK constraints
     let orgs = await db.select().from(organizations).limit(1);
     if (orgs.length === 0) {
@@ -143,6 +144,7 @@ describe("GET /api/exports/[shareId] contract", () => {
   });
 
   it("returns 404 for unknown shareId", async () => {
+    if (!dbReady) return;
     const req = new NextRequest("http://localhost:3000/api/exports/nonexistent-id");
     const res = await GET(req, { params: Promise.resolve({ shareId: "nonexistent-id" }) });
     expect(res.status).toBe(404);
