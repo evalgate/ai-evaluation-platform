@@ -8,6 +8,7 @@ import { parseBody } from "@/lib/api/parse";
 import { type AuthContext, secureRoute } from "@/lib/api/secure-route";
 import { ALL_SCOPES, scopesForRole } from "@/lib/auth/scopes";
 import { logger } from "@/lib/logger";
+import { auditService } from "@/lib/services/audit.service";
 import { createAPIKeyBodySchema, parsePaginationParams } from "@/lib/validation";
 
 export const POST = secureRoute(
@@ -69,6 +70,19 @@ export const POST = secureRoute(
       if (newApiKey.length === 0) {
         return internalError("Failed to create API key");
       }
+
+      await auditService.log({
+        organizationId,
+        userId: ctx.userId,
+        action: "api_key_created",
+        resourceType: "api_key",
+        resourceId: String(newApiKey[0].id),
+        metadata: {
+          apiKeyId: newApiKey[0].id,
+          name: newApiKey[0].name,
+          keyPrefix: newApiKey[0].keyPrefix,
+        },
+      });
 
       return NextResponse.json(
         {

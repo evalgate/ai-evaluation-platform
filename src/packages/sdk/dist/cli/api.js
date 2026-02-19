@@ -2,13 +2,21 @@
 /**
  * API fetch helpers for evalai check.
  * Captures x-request-id from response headers.
+ * Sends X-EvalAI-SDK-Version and X-EvalAI-Spec-Version on all requests.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.fetchQualityLatest = fetchQualityLatest;
 exports.fetchRunDetails = fetchRunDetails;
+exports.fetchRunExport = fetchRunExport;
+exports.publishShare = publishShare;
 exports.importRunOnFail = importRunOnFail;
+const version_1 = require("../version");
+const API_HEADERS = {
+    "X-EvalAI-SDK-Version": version_1.SDK_VERSION,
+    "X-EvalAI-Spec-Version": version_1.SPEC_VERSION,
+};
 async function fetchQualityLatest(baseUrl, apiKey, evaluationId, baseline) {
-    const headers = { Authorization: `Bearer ${apiKey}` };
+    const headers = { ...API_HEADERS, Authorization: `Bearer ${apiKey}` };
     const url = `${baseUrl.replace(/\/$/, "")}/api/quality?evaluationId=${evaluationId}&action=latest&baseline=${baseline}`;
     try {
         const res = await fetch(url, { headers });
@@ -26,7 +34,7 @@ async function fetchQualityLatest(baseUrl, apiKey, evaluationId, baseline) {
     }
 }
 async function fetchRunDetails(baseUrl, apiKey, evaluationId, runId) {
-    const headers = { Authorization: `Bearer ${apiKey}` };
+    const headers = { ...API_HEADERS, Authorization: `Bearer ${apiKey}` };
     const url = `${baseUrl.replace(/\/$/, "")}/api/evaluations/${evaluationId}/runs/${runId}`;
     try {
         const res = await fetch(url, { headers });
@@ -39,8 +47,55 @@ async function fetchRunDetails(baseUrl, apiKey, evaluationId, runId) {
         return { ok: false };
     }
 }
+async function fetchRunExport(baseUrl, apiKey, evaluationId, runId) {
+    const headers = { ...API_HEADERS, Authorization: `Bearer ${apiKey}` };
+    const url = `${baseUrl.replace(/\/$/, "")}/api/evaluations/${evaluationId}/runs/${runId}/export`;
+    try {
+        const res = await fetch(url, { headers });
+        const text = await res.text();
+        if (!res.ok)
+            return { ok: false, status: res.status, body: text };
+        const exportData = JSON.parse(text);
+        return { ok: true, exportData };
+    }
+    catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        return { ok: false, status: 0, body: msg };
+    }
+}
+async function publishShare(baseUrl, apiKey, evaluationId, exportData, evaluationRunId, options) {
+    const headers = {
+        ...API_HEADERS,
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+    };
+    const body = {
+        exportData,
+        shareScope: "run",
+        evaluationRunId,
+        ...(options?.expiresInDays != null && { expiresInDays: options.expiresInDays }),
+    };
+    const url = `${baseUrl.replace(/\/$/, "")}/api/evaluations/${evaluationId}/publish`;
+    try {
+        const res = await fetch(url, {
+            method: "POST",
+            headers,
+            body: JSON.stringify(body),
+        });
+        const text = await res.text();
+        if (!res.ok)
+            return { ok: false, status: res.status, body: text };
+        const data = JSON.parse(text);
+        return { ok: true, data };
+    }
+    catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        return { ok: false, status: 0, body: msg };
+    }
+}
 async function importRunOnFail(baseUrl, apiKey, evaluationId, results, options) {
     const headers = {
+        ...API_HEADERS,
         Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",
     };
@@ -52,6 +107,7 @@ async function importRunOnFail(baseUrl, apiKey, evaluationId, results, options) 
         results,
         importClientVersion: options.importClientVersion ?? "evalai-cli",
         ci: options.ci,
+        ...(options.checkReport != null && { checkReport: options.checkReport }),
     };
     const url = `${baseUrl.replace(/\/$/, "")}/api/evaluations/${evaluationId}/runs/import`;
     try {

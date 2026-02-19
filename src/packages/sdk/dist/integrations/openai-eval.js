@@ -76,7 +76,7 @@ function printSummary(result) {
  * No EvalAI account required. Returns score and prints CI-friendly summary.
  */
 async function openAIChatEval(options) {
-    const { name, model = "gpt-4o-mini", apiKey, cases } = options;
+    const { name, model = "gpt-4o-mini", apiKey, cases, retries = 0 } = options;
     const resolvedApiKey = apiKey ?? (typeof process !== "undefined" && process.env?.OPENAI_API_KEY);
     if (!resolvedApiKey) {
         throw new Error("OPENAI_API_KEY is required. Set it in the environment or pass apiKey to openAIChatEval.");
@@ -100,6 +100,7 @@ async function openAIChatEval(options) {
         cases: suiteCases,
         executor,
         parallel: true,
+        retries,
     });
     const result = await suite.run();
     const score = result.total > 0 ? Math.round((result.passed / result.total) * 100) : 0;
@@ -109,6 +110,8 @@ async function openAIChatEval(options) {
         score,
         results: result.results,
         durationMs: result.durationMs,
+        ...(result.retriedCases &&
+            result.retriedCases.length > 0 && { retriedCases: result.retriedCases }),
     };
     printSummary(evalResult);
     // v1.5: Optional report to EvalAI platform

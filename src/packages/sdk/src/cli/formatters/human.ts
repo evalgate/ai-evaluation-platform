@@ -11,12 +11,15 @@ const TOP_N = 3;
 export function formatHuman(report: CheckReport): string {
   const lines: string[] = [];
   const passed = report.verdict === "pass";
+  const warned = report.verdict === "warn";
   const failReason = report.reasonMessage;
 
   lines.push(
-    passed
+    passed && !warned
       ? "\n✓ EvalAI gate PASSED"
-      : `\n✗ EvalAI gate FAILED: ${failReason ?? report.reasonCode}`,
+      : warned
+        ? `\n⚠ EvalAI gate WARNED: ${failReason ?? report.reasonCode}`
+        : `\n✗ EvalAI gate FAILED: ${failReason ?? report.reasonCode}`,
   );
 
   const deltaStr =
@@ -45,9 +48,9 @@ export function formatHuman(report: CheckReport): string {
     lines.push(`Dashboard: ${report.dashboardUrl}`);
   }
 
-  if (!passed) {
+  if (!passed || warned) {
     lines.push(
-      "Next: View full report above, fix failing cases, or adjust gate with --minScore / --maxDrop",
+      "Next: View full report above, fix failing cases, or adjust gate with --minScore / --maxDrop / --warnDrop",
     );
   }
 

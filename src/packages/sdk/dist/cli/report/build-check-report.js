@@ -61,10 +61,28 @@ function buildCheckReport(input) {
     const failedCasesMore = failedCases.length - failedCasesShown;
     const breakdown01 = Object.keys(breakdown).length > 0 ? breakdown : undefined;
     const contribPts = args.explain && breakdown01 ? computeContribPts(breakdown01) : undefined;
+    const gateSkipped = gateResult.gateSkipped === true;
+    const gateApplied = !gateSkipped;
+    const gateMode = gateSkipped ? "neutral" : "enforced";
+    const actionableMessage = gateSkipped
+        ? "Gate not applied: baseline missing. Publish a baseline from the dashboard, or run with --baseline previous once you have runs."
+        : (gateResult.reasonMessage ?? undefined);
+    const verdict = gateResult.reasonCode === "WARN_REGRESSION"
+        ? "warn"
+        : gateResult.passed
+            ? "pass"
+            : "fail";
     const report = {
         evaluationId: args.evaluationId,
         runId: evaluationRunId,
-        verdict: gateResult.passed ? "pass" : "fail",
+        verdict,
+        gateApplied,
+        gateMode,
+        actionableMessage,
+        shareUrl: input.shareUrl,
+        policy: args.policy,
+        baselineRunId: input.baselineRunId ?? quality?.baselineRunId ?? undefined,
+        ciRunUrl: input.ciRunUrl ?? undefined,
         reasonCode: gateResult.reasonCode,
         reasonMessage: gateResult.reasonMessage ?? undefined,
         score,
@@ -73,15 +91,24 @@ function buildCheckReport(input) {
         n: total ?? undefined,
         evidenceLevel: quality?.evidenceLevel ?? undefined,
         baselineMissing: quality?.baselineMissing === true,
+        baselineStatus: quality?.baselineMissing === true
+            ? "missing"
+            : quality?.baselineScore != null
+                ? "found"
+                : undefined,
         flags: flags.length > 0 ? [...flags].sort() : undefined,
         breakdown01,
         contribPts,
         thresholds: {
             minScore: args.minScore,
             maxDrop: args.maxDrop,
+            warnDrop: args.warnDrop,
             minN: args.minN,
             allowWeakEvidence: args.allowWeakEvidence,
             baseline: args.baseline,
+            maxCostUsd: args.maxCostUsd,
+            maxLatencyMs: args.maxLatencyMs,
+            maxCostDeltaUsd: args.maxCostDeltaUsd,
         },
         dashboardUrl,
         failedCases,
@@ -89,6 +116,13 @@ function buildCheckReport(input) {
         failedCasesMore: failedCasesMore > 0 ? failedCasesMore : undefined,
         requestId,
         explain: args.explain,
+        policyEvidence: args.explain && gateResult.policyEvidence
+            ? {
+                failedCheck: gateResult.policyEvidence.failedCheck,
+                remediation: gateResult.policyEvidence.remediation,
+                snapshot: gateResult.policyEvidence.snapshot,
+            }
+            : undefined,
     };
     return report;
 }

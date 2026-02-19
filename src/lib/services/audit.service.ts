@@ -46,6 +46,23 @@ export class AuditService {
   }
 
   /**
+   * List audit logs for a specific entity (e.g. who changed the baseline and when).
+   */
+  async listForEntity(
+    organizationId: number,
+    entityType: string,
+    entityId: string,
+    options?: { limit?: number; offset?: number },
+  ) {
+    return this.list(organizationId, {
+      resourceType: entityType,
+      resourceId: entityId,
+      limit: options?.limit ?? 50,
+      offset: options?.offset ?? 0,
+    });
+  }
+
+  /**
    * List audit logs for an organization with filtering and pagination.
    */
   async list(

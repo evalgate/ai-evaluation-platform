@@ -12,5 +12,8 @@ export type BuildReportInput = {
     runDetails?: RunDetailsData | null;
     gateResult: GateResult;
     requestId?: string;
+    shareUrl?: string;
+    baselineRunId?: number | null;
+    ciRunUrl?: string | null;
 };
 export declare function buildCheckReport(input: BuildReportInput): CheckReport;

@@ -44,5 +44,17 @@ jobs:
       - name: Demo assets audit
         run: pnpm run audit:demo-assets
 
+      - name: Golden eval
+        run: pnpm run eval:golden
+
+      - name: Performance audit
+        run: pnpm run audit:performance
+
+      - name: Migration safety
+        run: pnpm run audit:migrations
+
+      - name: Retention audit
+        run: pnpm run audit:retention
+
       - name: Build
         run: pnpm build

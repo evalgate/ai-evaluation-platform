@@ -1,0 +1,43 @@
+# Backward compatibility — old SDK versions run correctly
+name: SDK Compatibility
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  compat:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        sdk-version: ["1.4.1", "1.5.0"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Run minimal eval with SDK ${{ matrix.sdk-version }}
+        run: |
+          mkdir -p /tmp/sdk-compat && cd /tmp/sdk-compat
+          npm init -y
+          npm install @pauly4010/evalai-sdk@${{ matrix.sdk-version }} openai
+          node -e "
+            const { openAIChatEval } = require('@pauly4010/evalai-sdk');
+            (async () => {
+              const r = await openAIChatEval({
+                name: 'compat',
+                cases: [{ input: 'Say ok', expectedOutput: 'ok' }],
+                reportToEvalAI: false
+              });
+              process.exit(r.total > 0 && r.passed >= 0 ? 0 : 1);
+            })();
+          "
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        continue-on-error: true

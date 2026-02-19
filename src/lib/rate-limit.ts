@@ -61,14 +61,19 @@ export async function checkRateLimit(
   // Check rate limit
   const result = await rateLimiter.limit(identifier);
 
-  return {
-    success: result.success,
-    headers: {
-      "X-RateLimit-Limit": result.limit.toString(),
-      "X-RateLimit-Remaining": result.remaining.toString(),
-      "X-RateLimit-Reset": result.reset.toString(),
-    },
+  const headers: Record<string, string> = {
+    "X-RateLimit-Limit": result.limit.toString(),
+    "X-RateLimit-Remaining": result.remaining.toString(),
+    "X-RateLimit-Reset": result.reset.toString(),
   };
+
+  // Retry-After (seconds) when rate limited — RFC 7231 (reset is Unix ms)
+  if (!result.success && result.reset) {
+    const retryAfter = Math.max(1, Math.ceil((result.reset - Date.now()) / 1000));
+    headers["Retry-After"] = String(retryAfter);
+  }
+
+  return { success: result.success, headers };
 }
 
 export function getRateLimitTier(plan?: string): RateLimitTier {

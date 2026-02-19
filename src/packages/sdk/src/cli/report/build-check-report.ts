@@ -97,10 +97,13 @@ export function buildCheckReport(input: BuildReportInput): CheckReport {
     ? "Gate not applied: baseline missing. Publish a baseline from the dashboard, or run with --baseline previous once you have runs."
     : (gateResult.reasonMessage ?? undefined);
 
+  const verdict: CheckReport["verdict"] =
+    gateResult.reasonCode === "WARN_REGRESSION" ? "warn" : gateResult.passed ? "pass" : "fail";
+
   const report: CheckReport = {
     evaluationId: args.evaluationId,
     runId: evaluationRunId,
-    verdict: gateResult.passed ? "pass" : "fail",
+    verdict,
     gateApplied,
     gateMode,
     actionableMessage,
@@ -128,6 +131,7 @@ export function buildCheckReport(input: BuildReportInput): CheckReport {
     thresholds: {
       minScore: args.minScore,
       maxDrop: args.maxDrop,
+      warnDrop: args.warnDrop,
       minN: args.minN,
       allowWeakEvidence: args.allowWeakEvidence,
       baseline: args.baseline,

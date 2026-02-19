@@ -30,6 +30,11 @@
     "audit:coverage": "npx tsx scripts/coverage-audit.ts",
     "audit:demo-assets": "npx tsx scripts/audit-demo-assets.ts",
     "create:demo-placeholders": "npx tsx scripts/create-demo-placeholders.ts",
+    "audit:determinism": "pnpm sdk:build && npx tsx scripts/audit-determinism.ts",
+    "audit:performance": "npx tsx scripts/audit-performance.ts",
+    "audit:retention": "npx tsx scripts/audit-retention.ts",
+    "audit:migrations": "npx tsx scripts/audit-migrations.ts",
+    "eval:golden": "pnpm sdk:build && npx tsx scripts/run-golden-eval.ts",
     "openapi:generate-paths": "npx tsx scripts/generate-openapi-paths.ts",
     "prepare": "husky"
   },

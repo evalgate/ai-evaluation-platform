@@ -20,6 +20,7 @@ import { type AuthContext, secureRoute } from "@/lib/api/secure-route";
 import { SCOPES } from "@/lib/auth/scopes";
 import { logger } from "@/lib/logger";
 import { computeAndStoreQualityScore } from "@/lib/services/aggregate-metrics.service";
+import { auditService } from "@/lib/services/audit.service";
 import { importRunBodySchema } from "@/lib/validation";
 
 export const POST = secureRoute(
@@ -186,6 +187,22 @@ export const POST = secureRoute(
       (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null) ||
       "http://localhost:3000";
     const dashboardUrl = `${String(baseUrl).replace(/\/$/, "")}/evaluations/${evaluationId}/runs/${run.id}`;
+
+    await auditService.log({
+      organizationId: ctx.organizationId,
+      userId: ctx.userId,
+      action: "run_imported",
+      resourceType: "evaluation_run",
+      resourceId: String(run.id),
+      metadata: {
+        evaluationId,
+        runId: run.id,
+        environment,
+        passedCount,
+        failedCount,
+        apiKeyId: ctx.apiKeyId,
+      },
+    });
 
     return NextResponse.json(
       {

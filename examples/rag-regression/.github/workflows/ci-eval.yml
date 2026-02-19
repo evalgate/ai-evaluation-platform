@@ -1,0 +1,26 @@
+name: RAG Regression Gate
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  rag-eval:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: RAG regression gate
+        env:
+          EVALAI_API_KEY: ${{ secrets.EVALAI_API_KEY }}
+        run: npx -y @pauly4010/evalai-sdk@^1 check --format github --onFail import

@@ -10,4 +10,6 @@ export const EXIT = {
   BAD_ARGS: 5,
   LOW_N: 6,
   WEAK_EVIDENCE: 7,
+  /** Near-regression: score dropped within warn band (warnDrop ≤ drop < maxDrop) */
+  WARN_REGRESSION: 8,
 } as const;

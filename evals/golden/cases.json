@@ -1,0 +1,10 @@
+{
+  "name": "golden-regression",
+  "minScore": 100,
+  "baselineScore": 100,
+  "cases": [
+    { "input": "What is 2 + 2?", "expectedOutput": "4" },
+    { "input": "What color is the sky?", "expectedOutput": "blue" },
+    { "input": "Say 'ok' in one word.", "expectedOutput": "ok" }
+  ]
+}

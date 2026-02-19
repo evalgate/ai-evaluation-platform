@@ -12,6 +12,7 @@ import { notFound, validationError } from "@/lib/api/errors";
 import { parseBody } from "@/lib/api/parse";
 import { type AuthContext, secureRoute } from "@/lib/api/secure-route";
 import { logger } from "@/lib/logger";
+import { auditService } from "@/lib/services/audit.service";
 import { publishRunBodySchema } from "@/lib/validation";
 
 export const POST = secureRoute(
@@ -67,6 +68,19 @@ export const POST = secureRoute(
       .where(and(eq(evaluations.id, evaluationId), eq(evaluations.organizationId, organizationId)));
 
     logger.info("Published run set", { evaluationId, runId, organizationId });
+
+    await auditService.log({
+      organizationId,
+      userId: ctx.userId,
+      action: "baseline_updated",
+      resourceType: "evaluation",
+      resourceId: String(evaluationId),
+      metadata: {
+        evaluationId,
+        publishedRunId: runId,
+        apiKeyId: ctx.apiKeyId,
+      },
+    });
 
     return NextResponse.json({
       success: true,

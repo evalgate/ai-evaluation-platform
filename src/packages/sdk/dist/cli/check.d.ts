@@ -18,6 +18,10 @@
  *   --evaluationId <id>  Required. The evaluation to gate on.
  *   --baseUrl <url>      API base URL (default: EVALAI_BASE_URL or http://localhost:3000)
  *   --apiKey <key>       API key (default: EVALAI_API_KEY env var)
+ *   --share <mode>       Share link: "always" | "fail" | "never" (default: never)
+ *                        fail = create public share link only when gate fails (CI-friendly)
+ *   --pr-comment-out <file>  Write PR comment markdown to file (for GitHub Action to post)
+ *   --profile <name>         Preset: strict (95/0/30), balanced (90/2/10), fast (85/5/5). Explicit flags override.
  *
  * Exit codes:
  *   0  — Gate passed
@@ -28,6 +32,7 @@
  *   5  — Invalid arguments
  *   6  — Gate failed: total test cases < minN
  *   7  — Gate failed: weak evidence (evidenceLevel === 'weak')
+ *   8  — Gate warned: near-regression (warnDrop ≤ drop < maxDrop)
  *
  * Environment:
  *   EVALAI_BASE_URL  — API base URL (default: http://localhost:3000)
@@ -35,19 +40,26 @@
  */
 export { EXIT } from "./constants";
 export type FormatType = "human" | "json" | "github";
+export type ShareMode = "always" | "fail" | "never";
 export interface CheckArgs {
     baseUrl: string;
     apiKey: string;
     minScore: number;
     maxDrop?: number;
+    warnDrop?: number;
     minN?: number;
     allowWeakEvidence: boolean;
     evaluationId: string;
     policy?: string;
-    baseline: "published" | "previous" | "production";
+    baseline: "published" | "previous" | "production" | "auto";
     format: FormatType;
     explain: boolean;
     onFail?: "import";
+    share: ShareMode;
+    prCommentOut?: string;
+    maxCostUsd?: number;
+    maxLatencyMs?: number;
+    maxCostDeltaUsd?: number;
 }
 export type ParseArgsResult = {
     ok: true;

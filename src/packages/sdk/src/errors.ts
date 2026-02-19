@@ -184,6 +184,9 @@ export class EvalAIError extends Error {
   /** When the limit resets (for feature limit errors) */
   resetAt?: Date;
 
+  /** Request ID from API (for correlation/debugging) */
+  requestId?: string;
+
   constructor(message: string, code: string, statusCode: number, details?: any) {
     super(message);
     this.name = "EvalAIError";
@@ -212,6 +215,8 @@ export class EvalAIError extends Error {
     if (code === "FEATURE_LIMIT_REACHED" && details?.resetAt) {
       this.resetAt = new Date(details.resetAt);
     }
+
+    this.requestId = details?.error?.requestId ?? details?.requestId;
 
     // Ensure proper prototype chain
     Object.setPrototypeOf(this, EvalAIError.prototype);
@@ -260,6 +265,7 @@ export class EvalAIError extends Error {
       retryable: this.retryable,
       retryAfter: this.retryAfter,
       resetAt: this.resetAt,
+      requestId: this.requestId,
       details: this.details,
     };
   }
@@ -270,11 +276,17 @@ export class EvalAIError extends Error {
  */
 export function createErrorFromResponse(response: Response, data: any): EvalAIError {
   const status = response.status;
-  let code = data?.code || "UNKNOWN_ERROR";
-  const message = data?.error || data?.message || response.statusText;
+  const errObj = data?.error && typeof data.error === "object" ? data.error : data;
+  let code = errObj?.code ?? data?.code ?? "UNKNOWN_ERROR";
+  const message =
+    typeof data?.error === "string"
+      ? data.error
+      : (errObj?.message ?? data?.message ?? response.statusText);
+  const requestId =
+    errObj?.requestId ?? data?.requestId ?? response.headers.get("x-request-id") ?? undefined;
 
-  // Map HTTP status to error codes
-  if (!data?.code) {
+  // Map HTTP status to error codes when code not in response
+  if (!errObj?.code && !data?.code) {
     if (status === 401) code = "UNAUTHORIZED";
     else if (status === 403) code = "FORBIDDEN";
     else if (status === 404) code = "NOT_FOUND";
@@ -284,7 +296,9 @@ export function createErrorFromResponse(response: Response, data: any): EvalAIEr
     else if (status >= 500) code = "INTERNAL_SERVER_ERROR";
   }
 
-  return new EvalAIError(message, code, status, data);
+  const err = new EvalAIError(message, code, status, data);
+  if (requestId) err.requestId = requestId;
+  return err;
 }
 
 // Specific error types

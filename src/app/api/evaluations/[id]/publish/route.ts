@@ -7,6 +7,7 @@ import { conflict, notFound, validationError } from "@/lib/api/errors";
 import { type AuthContext, secureRoute } from "@/lib/api/secure-route";
 import { SCOPES } from "@/lib/auth/scopes";
 import { logger } from "@/lib/logger";
+import { auditService } from "@/lib/services/audit.service";
 import { computeExportHash, prepareExportForShare } from "@/lib/shared-exports";
 
 const generateShareId = customAlphabet("0123456789abcdefghijklmnopqrstuvwxyz", 10);
@@ -176,6 +177,20 @@ export const POST = secureRoute(
       });
     }
 
+    await auditService.log({
+      organizationId: ctx.organizationId,
+      userId: ctx.userId,
+      action: "share_link_created",
+      resourceType: "shared_export",
+      resourceId: shareId,
+      metadata: {
+        evaluationId,
+        evaluationRunId: bodyRunId != null ? Number(bodyRunId) : null,
+        shareScope,
+        apiKeyId: ctx.apiKeyId,
+      },
+    });
+
     return NextResponse.json({
       success: true,
       shareScope,
@@ -239,6 +254,18 @@ export const DELETE = secureRoute(
       .where(eq(sharedExports.id, row.id));
 
     logger.info("Share revoked", { shareId, evaluationId: id, revokedBy });
+
+    await auditService.log({
+      organizationId: ctx.organizationId,
+      userId: ctx.userId,
+      action: "share_link_revoked",
+      resourceType: "shared_export",
+      resourceId: shareId,
+      metadata: {
+        evaluationId: parseInt(id, 10),
+        apiKeyId: ctx.apiKeyId,
+      },
+    });
 
     return NextResponse.json({
       success: true,

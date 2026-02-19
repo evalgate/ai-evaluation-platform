@@ -1,6 +1,7 @@
 /**
  * API fetch helpers for evalai check.
  * Captures x-request-id from response headers.
+ * Sends X-EvalAI-SDK-Version and X-EvalAI-Spec-Version on all requests.
  */
 export type QualityLatestData = {
     score?: number;
@@ -17,6 +18,10 @@ export type QualityLatestData = {
     flags?: string[];
     evaluationRunId?: number;
     evaluationId?: number;
+    avgLatencyMs?: number | null;
+    costUsd?: number | null;
+    baselineCostUsd?: number | null;
+    baselineRunId?: number | null;
 };
 export type RunDetailsData = {
     results?: Array<{
@@ -65,10 +70,34 @@ export type ImportResult = {
     costUsd?: number;
     assertionsJson?: Record<string, unknown>;
 };
+export type PublishShareResult = {
+    shareId: string;
+    shareUrl: string;
+    shareScope: string;
+};
+export declare function fetchRunExport(baseUrl: string, apiKey: string, evaluationId: string, runId: number): Promise<{
+    ok: true;
+    exportData: Record<string, unknown>;
+} | {
+    ok: false;
+    status: number;
+    body: string;
+}>;
+export declare function publishShare(baseUrl: string, apiKey: string, evaluationId: string, exportData: Record<string, unknown>, evaluationRunId: number, options?: {
+    expiresInDays?: number;
+}): Promise<{
+    ok: true;
+    data: PublishShareResult;
+} | {
+    ok: false;
+    status: number;
+    body: string;
+}>;
 export declare function importRunOnFail(baseUrl: string, apiKey: string, evaluationId: string, results: ImportResult[], options: {
     idempotencyKey?: string;
     ci?: CiContext;
     importClientVersion?: string;
+    checkReport?: Record<string, unknown>;
 }): Promise<{
     ok: true;
     runId: number;

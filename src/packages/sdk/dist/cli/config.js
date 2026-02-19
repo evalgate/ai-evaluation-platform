@@ -42,6 +42,7 @@ exports.loadConfig = loadConfig;
 exports.mergeConfigWithArgs = mergeConfigWithArgs;
 const fs = __importStar(require("node:fs"));
 const path = __importStar(require("node:path"));
+const profiles_1 = require("./profiles");
 const CONFIG_FILES = ["evalai.config.json", "evalai.config.js", "evalai.config.cjs"];
 /**
  * Find config file path in directory, walking up to root
@@ -81,33 +82,49 @@ function loadConfig(cwd = process.cwd()) {
     if (!configPath)
         return null;
     try {
+        let config = null;
         if (configPath.endsWith("package.json")) {
             const pkg = JSON.parse(fs.readFileSync(configPath, "utf-8"));
-            return pkg.evalai ?? null;
+            config = pkg.evalai ?? null;
         }
-        const content = fs.readFileSync(configPath, "utf-8");
-        if (configPath.endsWith(".json")) {
-            return JSON.parse(content);
-        }
-        // .js or .cjs - would need to require/import; for v1 we only support JSON
-        if (configPath.endsWith(".js") || configPath.endsWith(".cjs")) {
-            // Try to parse as JSON first (some projects use .js with JSON content)
-            try {
-                return JSON.parse(content);
+        else {
+            const content = fs.readFileSync(configPath, "utf-8");
+            if (configPath.endsWith(".json")) {
+                config = JSON.parse(content);
             }
-            catch {
-                // Dynamic require of .js could have side effects; skip for v1
-                return null;
+            else if (configPath.endsWith(".js") || configPath.endsWith(".cjs")) {
+                try {
+                    config = JSON.parse(content);
+                }
+                catch {
+                    return null;
+                }
             }
         }
-        return null;
+        if (!config)
+            return null;
+        if (config.packages && Object.keys(config.packages).length > 0) {
+            const configDir = path.dirname(configPath);
+            const rel = path.relative(configDir, path.resolve(cwd));
+            const relNorm = rel.split(path.sep).join("/");
+            const pkgConfig = config.packages[relNorm];
+            if (pkgConfig) {
+                return { ...config, ...pkgConfig, packages: config.packages };
+            }
+            for (const key of Object.keys(config.packages)) {
+                if (relNorm === key || relNorm.startsWith(`${key}/`)) {
+                    return { ...config, ...config.packages[key], packages: config.packages };
+                }
+            }
+        }
+        return config;
     }
     catch {
         return null;
     }
 }
 /**
- * Merge config with CLI args. Priority: args > config > defaults.
+ * Merge config with CLI args. Priority: args > profile > config > defaults.
  */
 function mergeConfigWithArgs(config, args) {
     const merged = {};
@@ -120,10 +137,31 @@ function mergeConfigWithArgs(config, args) {
             merged.minScore = config.minScore;
         if (config.minN != null)
             merged.minN = config.minN;
+        if (config.maxDrop != null)
+            merged.maxDrop = config.maxDrop;
+        if (config.warnDrop != null)
+            merged.warnDrop = config.warnDrop;
         if (config.allowWeakEvidence != null)
             merged.allowWeakEvidence = config.allowWeakEvidence;
         if (config.baseline)
             merged.baseline = config.baseline;
+        if (config.profile)
+            merged.profile = config.profile;
+    }
+    // Profile defaults (from --profile or config.profile). Apply before args override.
+    const profileName = (args.profile ?? merged.profile);
+    if (profileName && profileName in profiles_1.PROFILES) {
+        const profile = profiles_1.PROFILES[profileName];
+        if (merged.minScore === undefined && args.minScore === undefined)
+            merged.minScore = profile.minScore;
+        if (merged.maxDrop === undefined && args.maxDrop === undefined)
+            merged.maxDrop = profile.maxDrop;
+        if (merged.warnDrop === undefined && args.warnDrop === undefined && "warnDrop" in profile)
+            merged.warnDrop = profile.warnDrop;
+        if (merged.minN === undefined && args.minN === undefined)
+            merged.minN = profile.minN;
+        if (merged.allowWeakEvidence === undefined && args.allowWeakEvidence === undefined)
+            merged.allowWeakEvidence = profile.allowWeakEvidence;
     }
     // Args override
     if (args.evaluationId !== undefined && args.evaluationId !== "") {
@@ -136,6 +174,14 @@ function mergeConfigWithArgs(config, args) {
         merged.minScore =
             typeof args.minScore === "number" ? args.minScore : parseInt(String(args.minScore), 10);
     }
+    if (args.maxDrop !== undefined) {
+        merged.maxDrop =
+            typeof args.maxDrop === "number" ? args.maxDrop : parseInt(String(args.maxDrop), 10);
+    }
+    if (args.warnDrop !== undefined) {
+        merged.warnDrop =
+            typeof args.warnDrop === "number" ? args.warnDrop : parseInt(String(args.warnDrop), 10);
+    }
     if (args.minN !== undefined) {
         merged.minN = typeof args.minN === "number" ? args.minN : parseInt(String(args.minN), 10);
     }
@@ -147,12 +193,15 @@ function mergeConfigWithArgs(config, args) {
     }
     if (args.baseline !== undefined && args.baseline !== "") {
         const b = String(args.baseline);
-        if (b === "previous" || b === "production") {
+        if (b === "auto" || b === "previous" || b === "production") {
             merged.baseline = b;
         }
         else {
             merged.baseline = "published";
         }
+    }
+    if (args.profile !== undefined && args.profile !== "") {
+        merged.profile = String(args.profile);
     }
     return merged;
 }

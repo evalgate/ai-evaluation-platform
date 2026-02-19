@@ -33,6 +33,7 @@
  *   5  — Invalid arguments
  *   6  — Gate failed: total test cases < minN
  *   7  — Gate failed: weak evidence (evidenceLevel === 'weak')
+ *   8  — Gate warned: near-regression (warnDrop ≤ drop < maxDrop)
  *
  * Environment:
  *   EVALAI_BASE_URL  — API base URL (default: http://localhost:3000)
@@ -69,6 +70,7 @@ export interface CheckArgs {
   apiKey: string;
   minScore: number;
   maxDrop?: number;
+  warnDrop?: number;
   minN?: number;
   allowWeakEvidence: boolean;
   evaluationId: string;
@@ -108,6 +110,7 @@ export function parseArgs(argv: string[]): ParseArgsResult {
   const apiKey = args.apiKey || process.env.EVALAI_API_KEY || "";
   let minScore = parseInt(args.minScore || "0", 10);
   let maxDrop = args.maxDrop ? parseInt(args.maxDrop, 10) : undefined;
+  let warnDrop = args.warnDrop ? parseInt(args.warnDrop, 10) : undefined;
   let minN = args.minN ? parseInt(args.minN, 10) : undefined;
   let allowWeakEvidence = args.allowWeakEvidence === "true" || args.allowWeakEvidence === "1";
   let evaluationId = args.evaluationId || "";
@@ -150,6 +153,7 @@ export function parseArgs(argv: string[]): ParseArgsResult {
     baseUrl: args.baseUrl || process.env.EVALAI_BASE_URL,
     minScore: args.minScore,
     maxDrop: args.maxDrop,
+    warnDrop: args.warnDrop,
     minN: args.minN,
     allowWeakEvidence: args.allowWeakEvidence,
     baseline: args.baseline,
@@ -160,6 +164,7 @@ export function parseArgs(argv: string[]): ParseArgsResult {
   if (merged.baseUrl) baseUrl = merged.baseUrl;
   if (merged.minScore != null && args.minScore === undefined) minScore = merged.minScore ?? 0;
   if (merged.maxDrop != null && args.maxDrop === undefined) maxDrop = merged.maxDrop;
+  if (merged.warnDrop != null && args.warnDrop === undefined) warnDrop = merged.warnDrop;
   if (merged.minN != null && args.minN === undefined) minN = merged.minN;
   if (merged.allowWeakEvidence != null && args.allowWeakEvidence === undefined)
     allowWeakEvidence = merged.allowWeakEvidence ?? false;
@@ -200,6 +205,7 @@ export function parseArgs(argv: string[]): ParseArgsResult {
       apiKey,
       minScore,
       maxDrop,
+      warnDrop,
       minN,
       allowWeakEvidence,
       evaluationId,

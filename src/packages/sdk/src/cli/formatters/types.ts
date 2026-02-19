@@ -2,7 +2,7 @@
  * CheckReport and related types for formatters.
  */
 
-export type GateVerdict = "pass" | "fail";
+export type GateVerdict = "pass" | "warn" | "fail";
 
 /** "neutral" = exit 0 but gate not applied (e.g. baseline missing with --baseline auto) */
 export type GateMode = "enforced" | "neutral";
@@ -10,6 +10,7 @@ export type GateMode = "enforced" | "neutral";
 /** Canonical reason codes. Import REASON_CODES from ../reason-codes for constants. */
 export type FailureReasonCode =
   | "PASS"
+  | "WARN_REGRESSION"
   | "LOW_SAMPLE_SIZE"
   | "BASELINE_MISSING"
   | "SCORE_TOO_LOW"
@@ -49,6 +50,7 @@ export type GateThresholds = {
   minPassRate?: number;
   minSafety?: number;
   maxDrop?: number;
+  warnDrop?: number;
   minN?: number;
   allowWeakEvidence?: boolean;
   baseline?: "published" | "previous" | "production" | "auto";

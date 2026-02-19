@@ -126,12 +126,26 @@ export function evaluateGate(args: CheckArgs, quality: QualityLatestData): GateR
     };
   }
 
+  // warnDrop: soft warning band; maxDrop: hard fail
   if (args.maxDrop !== undefined && regressionDelta !== null && regressionDelta < -args.maxDrop) {
     return {
       exitCode: EXIT.REGRESSION,
       passed: false,
       reasonCode: REASON_CODES.DELTA_TOO_HIGH,
       reasonMessage: `score dropped ${Math.abs(regressionDelta)} pts from baseline (max allowed: ${args.maxDrop})`,
+    };
+  }
+  if (
+    args.warnDrop !== undefined &&
+    regressionDelta !== null &&
+    regressionDelta < -args.warnDrop &&
+    (args.maxDrop === undefined || regressionDelta >= -args.maxDrop)
+  ) {
+    return {
+      exitCode: EXIT.WARN_REGRESSION,
+      passed: true, // gate passes but with warning
+      reasonCode: REASON_CODES.WARN_REGRESSION,
+      reasonMessage: `score dropped ${Math.abs(regressionDelta)} pts from baseline (warn threshold: ${args.warnDrop}${args.maxDrop != null ? `, fail at ${args.maxDrop}` : ""})`,
     };
   }
 

@@ -86,7 +86,8 @@ See [examples/quickstart-ci](../../examples/quickstart-ci) for a minimal project
 | `--format github` | Annotations + step summary |
 | `--onFail import` | Import failing runs to dashboard on gate failure |
 | `--minScore N` | Override minimum score (default: from baseline) |
-| `--maxDrop N` | Max allowed drop from baseline (e.g. `--maxDrop 5`) |
+| `--maxDrop N` | Fail if score dropped > N from baseline |
+| `--warnDrop N` | Warn (exit 8) if score dropped > N but < maxDrop — near-regression early warning |
 | `--evaluationId ID` | Override `evalai.config.json` |
 | `--baseline published\|previous\|production` | Which baseline to compare against |
 

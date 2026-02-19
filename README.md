@@ -82,7 +82,7 @@ EvalAI is just a regression gate.
 
 **Live demo:** [https://v0-ai-evaluation-platform-nu.vercel.app](https://v0-ai-evaluation-platform-nu.vercel.app)
 
-**Docs:** [Exporting and Sharing](docs/EXPORTING_AND_SHARING.md) · [Share link privacy](docs/share-links.md) · [API contract](docs/api-contract.md) · [GitHub Actions CI](docs/ci/github-actions.md) · [Security](SECURITY.md)
+**Docs:** [Exporting and Sharing](docs/EXPORTING_AND_SHARING.md) · [Share link privacy](docs/share-links.md) · [API contract](docs/api-contract.md) · [GitHub Actions CI](docs/ci/github-actions.md) · [Observability](docs/observability.md) · [Security](SECURITY.md)
 
 ---
 

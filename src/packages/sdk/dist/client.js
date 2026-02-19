@@ -6,6 +6,7 @@ const cache_1 = require("./cache");
 const context_1 = require("./context");
 const errors_1 = require("./errors");
 const logger_1 = require("./logger");
+const version_1 = require("./version");
 /**
  * Safe environment variable access (works in both Node.js and browsers)
  */
@@ -198,6 +199,8 @@ class AIEvalClient {
                 headers: {
                     "Content-Type": "application/json",
                     Authorization: `Bearer ${this.apiKey}`,
+                    "X-EvalAI-SDK-Version": version_1.SDK_VERSION,
+                    "X-EvalAI-Spec-Version": version_1.SPEC_VERSION,
                     ...options.headers,
                 },
                 signal: controller.signal,

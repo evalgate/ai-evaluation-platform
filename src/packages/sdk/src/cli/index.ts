@@ -67,6 +67,7 @@ Options for check:
   --onFail import     When gate fails, import run with CI context
   --minScore <n>      Fail if score < n (0-100)
   --maxDrop <n>       Fail if score dropped > n from baseline
+  --warnDrop <n>      Warn (exit 8) if score dropped > n but < maxDrop
   --minN <n>          Fail if total test cases < n
   --allowWeakEvidence Allow weak evidence level
   --policy <name>     Enforce policy (HIPAA, SOC2, GDPR, etc.)

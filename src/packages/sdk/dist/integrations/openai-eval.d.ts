@@ -30,6 +30,8 @@ export interface OpenAIChatEvalOptions {
     model?: string;
     apiKey?: string;
     cases: OpenAIChatEvalCase[];
+    /** Retry failing cases N times (default: 0). Only failing cases are retried. */
+    retries?: number;
     /** v1.5: Upload results to EvalAI platform for an existing evaluation. Requires evaluationId and EVALAI_API_KEY. */
     reportToEvalAI?: boolean;
     /** Evaluation ID (from config or arg). Required when reportToEvalAI is true. */
@@ -45,6 +47,8 @@ export interface OpenAIChatEvalResult {
     score: number;
     results: TestSuiteCaseResult[];
     durationMs: number;
+    /** Case IDs that were retried (flaky recovery) */
+    retriedCases?: string[];
 }
 /**
  * Run OpenAI chat regression tests locally.

@@ -19,6 +19,10 @@
  *   --evaluationId <id>  Required. The evaluation to gate on.
  *   --baseUrl <url>      API base URL (default: EVALAI_BASE_URL or http://localhost:3000)
  *   --apiKey <key>       API key (default: EVALAI_API_KEY env var)
+ *   --share <mode>       Share link: "always" | "fail" | "never" (default: never)
+ *                        fail = create public share link only when gate fails (CI-friendly)
+ *   --pr-comment-out <file>  Write PR comment markdown to file (for GitHub Action to post)
+ *   --profile <name>         Preset: strict (95/0/30), balanced (90/2/10), fast (85/5/5). Explicit flags override.
  *
  * Exit codes:
  *   0  — Gate passed
@@ -29,15 +33,50 @@
  *   5  — Invalid arguments
  *   6  — Gate failed: total test cases < minN
  *   7  — Gate failed: weak evidence (evidenceLevel === 'weak')
+ *   8  — Gate warned: near-regression (warnDrop ≤ drop < maxDrop)
  *
  * Environment:
  *   EVALAI_BASE_URL  — API base URL (default: http://localhost:3000)
  *   EVALAI_API_KEY   — API key for authentication
  */
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.EXIT = void 0;
 exports.parseArgs = parseArgs;
 exports.runCheck = runCheck;
+const fs = __importStar(require("node:fs"));
 const api_1 = require("./api");
 const ci_context_1 = require("./ci-context");
 const config_1 = require("./config");
@@ -45,6 +84,7 @@ const constants_1 = require("./constants");
 const github_1 = require("./formatters/github");
 const human_1 = require("./formatters/human");
 const json_1 = require("./formatters/json");
+const pr_comment_1 = require("./formatters/pr-comment");
 const gate_1 = require("./gate");
 const build_check_report_1 = require("./report/build-check-report");
 var constants_2 = require("./constants");
@@ -68,7 +108,8 @@ function parseArgs(argv) {
     let baseUrl = args.baseUrl || process.env.EVALAI_BASE_URL || "http://localhost:3000";
     const apiKey = args.apiKey || process.env.EVALAI_API_KEY || "";
     let minScore = parseInt(args.minScore || "0", 10);
-    const maxDrop = args.maxDrop ? parseInt(args.maxDrop, 10) : undefined;
+    let maxDrop = args.maxDrop ? parseInt(args.maxDrop, 10) : undefined;
+    let warnDrop = args.warnDrop ? parseInt(args.warnDrop, 10) : undefined;
     let minN = args.minN ? parseInt(args.minN, 10) : undefined;
     let allowWeakEvidence = args.allowWeakEvidence === "true" || args.allowWeakEvidence === "1";
     let evaluationId = args.evaluationId || "";
@@ -77,34 +118,55 @@ function parseArgs(argv) {
     const format = formatRaw === "json" ? "json" : formatRaw === "github" ? "github" : "human";
     const explain = args.explain === "true" || args.explain === "1";
     const onFail = args.onFail === "import" ? "import" : undefined;
-    let baseline = (args.baseline === "previous"
-        ? "previous"
-        : args.baseline === "production"
-            ? "production"
-            : "published");
-    if (!evaluationId) {
-        const config = (0, config_1.loadConfig)(process.cwd());
-        const merged = (0, config_1.mergeConfigWithArgs)(config, {
-            evaluationId: args.evaluationId,
-            baseUrl: args.baseUrl || process.env.EVALAI_BASE_URL,
-            minScore: args.minScore,
-            minN: args.minN,
-            allowWeakEvidence: args.allowWeakEvidence,
-            baseline: args.baseline,
-        });
-        if (merged.evaluationId)
-            evaluationId = merged.evaluationId;
-        if (merged.baseUrl)
-            baseUrl = merged.baseUrl;
-        if (merged.minScore != null && !args.minScore)
-            minScore = merged.minScore ?? 0;
-        if (merged.minN != null && !args.minN)
-            minN = merged.minN;
-        if (merged.allowWeakEvidence != null && !args.allowWeakEvidence)
-            allowWeakEvidence = merged.allowWeakEvidence ?? false;
-        if (merged.baseline && !args.baseline)
-            baseline = merged.baseline;
-    }
+    const shareRaw = args.share || "never";
+    const share = shareRaw === "always" ? "always" : shareRaw === "fail" ? "fail" : "never";
+    const prCommentOut = args["pr-comment-out"] || args.prCommentOut || undefined;
+    const maxCostUsd = args["max-cost-usd"] || args.maxCostUsd
+        ? parseFloat(args["max-cost-usd"] || args.maxCostUsd || "0")
+        : undefined;
+    const maxLatencyMs = args["max-latency-ms"] || args.maxLatencyMs
+        ? parseInt(args["max-latency-ms"] || args.maxLatencyMs || "0", 10)
+        : undefined;
+    const maxCostDeltaUsd = args["max-cost-delta-usd"] || args.maxCostDeltaUsd
+        ? parseFloat(args["max-cost-delta-usd"] || args.maxCostDeltaUsd || "0")
+        : undefined;
+    const profile = (args.profile || args.profile);
+    let baseline = (args.baseline === "auto"
+        ? "auto"
+        : args.baseline === "previous"
+            ? "previous"
+            : args.baseline === "production"
+                ? "production"
+                : "published");
+    const config = (0, config_1.loadConfig)(process.cwd());
+    const merged = (0, config_1.mergeConfigWithArgs)(config, {
+        evaluationId: args.evaluationId,
+        baseUrl: args.baseUrl || process.env.EVALAI_BASE_URL,
+        minScore: args.minScore,
+        maxDrop: args.maxDrop,
+        warnDrop: args.warnDrop,
+        minN: args.minN,
+        allowWeakEvidence: args.allowWeakEvidence,
+        baseline: args.baseline,
+        profile: profile,
+        prCommentOut: args["pr-comment-out"] ?? args.prCommentOut,
+    });
+    if (!evaluationId && merged.evaluationId)
+        evaluationId = merged.evaluationId;
+    if (merged.baseUrl)
+        baseUrl = merged.baseUrl;
+    if (merged.minScore != null && args.minScore === undefined)
+        minScore = merged.minScore ?? 0;
+    if (merged.maxDrop != null && args.maxDrop === undefined)
+        maxDrop = merged.maxDrop;
+    if (merged.warnDrop != null && args.warnDrop === undefined)
+        warnDrop = merged.warnDrop;
+    if (merged.minN != null && args.minN === undefined)
+        minN = merged.minN;
+    if (merged.allowWeakEvidence != null && args.allowWeakEvidence === undefined)
+        allowWeakEvidence = merged.allowWeakEvidence ?? false;
+    if (merged.baseline && !args.baseline)
+        baseline = merged.baseline;
     if (!apiKey) {
         return {
             ok: false,
@@ -136,6 +198,7 @@ function parseArgs(argv) {
             apiKey,
             minScore,
             maxDrop,
+            warnDrop,
             minN,
             allowWeakEvidence,
             evaluationId,
@@ -144,6 +207,11 @@ function parseArgs(argv) {
             format,
             explain,
             onFail,
+            share,
+            prCommentOut,
+            maxCostUsd: maxCostUsd != null && !Number.isNaN(maxCostUsd) ? maxCostUsd : undefined,
+            maxLatencyMs: maxLatencyMs != null && !Number.isNaN(maxLatencyMs) ? maxLatencyMs : undefined,
+            maxCostDeltaUsd: maxCostDeltaUsd != null && !Number.isNaN(maxCostDeltaUsd) ? maxCostDeltaUsd : undefined,
         },
     };
 }
@@ -167,12 +235,30 @@ async function runCheck(args) {
             runDetails = runRes.data;
     }
     const gateResult = (0, gate_1.evaluateGate)(args, quality);
+    // Create share before report when PR comment needs shareUrl (--pr-comment-out + --share fail + gate failed)
+    let shareUrl;
+    const shouldCreateShare = quality?.evaluationRunId != null &&
+        (args.share === "always" || (args.share === "fail" && !gateResult.passed));
+    if (shouldCreateShare) {
+        const exportRes = await (0, api_1.fetchRunExport)(args.baseUrl, args.apiKey, args.evaluationId, quality.evaluationRunId);
+        if (exportRes.ok) {
+            const publishRes = await (0, api_1.publishShare)(args.baseUrl, args.apiKey, args.evaluationId, exportRes.exportData, quality.evaluationRunId);
+            if (publishRes.ok) {
+                shareUrl = publishRes.data.shareUrl;
+                console.error(`\nPublic share link created: ${shareUrl}`);
+            }
+        }
+    }
+    const ci = (0, ci_context_1.captureCiContext)();
     const report = (0, build_check_report_1.buildCheckReport)({
         args,
         quality,
         runDetails,
         gateResult,
         requestId,
+        shareUrl,
+        baselineRunId: quality?.baselineRunId ?? undefined,
+        ciRunUrl: ci?.runUrl ?? undefined,
     });
     const formatted = args.format === "json"
         ? (0, json_1.formatJson)(report)
@@ -180,6 +266,16 @@ async function runCheck(args) {
             ? (0, github_1.formatGitHub)(report)
             : (0, human_1.formatHuman)(report);
     console.log(formatted);
+    // --pr-comment-out: write markdown to file for GitHub Action to post
+    if (args.prCommentOut) {
+        try {
+            const markdown = (0, pr_comment_1.buildPrComment)(report);
+            fs.writeFileSync(args.prCommentOut, markdown, "utf8");
+        }
+        catch (err) {
+            console.error(`EvalAI: failed to write PR comment to ${args.prCommentOut}: ${err instanceof Error ? err.message : String(err)}`);
+        }
+    }
     // --onFail import: when gate fails, import run with CI context
     if (!gateResult.passed &&
         args.onFail === "import" &&
@@ -195,9 +291,13 @@ async function runCheck(args) {
             assertionsJson: r.assertionsJson,
         }));
         if (importResults.length > 0) {
-            const ci = (0, ci_context_1.captureCiContext)();
             const idempotencyKey = ci ? (0, ci_context_1.computeIdempotencyKey)(args.evaluationId, ci) : undefined;
-            const importRes = await (0, api_1.importRunOnFail)(args.baseUrl, args.apiKey, args.evaluationId, importResults, { idempotencyKey, ci, importClientVersion: "evalai-cli" });
+            const importRes = await (0, api_1.importRunOnFail)(args.baseUrl, args.apiKey, args.evaluationId, importResults, {
+                idempotencyKey,
+                ci,
+                importClientVersion: "evalai-cli",
+                checkReport: report,
+            });
             if (!importRes.ok) {
                 console.error(`EvalAI import (onFail): ${importRes.status} — ${importRes.body}`);
             }

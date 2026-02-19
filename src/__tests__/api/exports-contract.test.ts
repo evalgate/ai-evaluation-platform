@@ -110,6 +110,7 @@ describe("GET /api/exports/[shareId] contract", () => {
           "unavailable-share",
           "view-count-test",
           "etag-invariant-share",
+          "expires-at-visibility-share",
         ]),
       );
   });
@@ -312,6 +313,37 @@ describe("GET /api/exports/[shareId] contract", () => {
     expect(data.shareScope).toBe("evaluation");
     expect(data.privacyScrubbed).toBe(true);
     expect(data.sourceRunId).toBeUndefined();
+  });
+
+  it("includes expiresAt in response when set (retention visibility)", async () => {
+    if (!dbReady) return;
+
+    const shareId = "expires-at-visibility-share";
+    const exportHash = computeExportHash(validExportData);
+    const futureExpiry = new Date(Date.now() + 86400000 * 7).toISOString(); // 7 days
+
+    await db.insert(sharedExports).values({
+      shareId,
+      organizationId: ORG_ID,
+      evaluationId: EVAL_ID,
+      evaluationRunId: null,
+      shareScope: "evaluation",
+      exportData: validExportData,
+      exportHash,
+      isPublic: true,
+      revokedAt: null,
+      createdAt: new Date().toISOString(),
+      expiresAt: futureExpiry,
+    });
+
+    const req = new NextRequest(`http://localhost:3000/api/exports/${shareId}`);
+    const res = await GET(req, { params: Promise.resolve({ shareId }) });
+
+    expect(res.status).toBe(200);
+    const data = await res.json();
+    expect(data.expiresAt).toBe(futureExpiry);
+
+    await db.delete(sharedExports).where(eq(sharedExports.shareId, shareId));
   });
 
   it("returns 410 when share is revoked", async () => {

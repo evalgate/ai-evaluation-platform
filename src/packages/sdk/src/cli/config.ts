@@ -14,6 +14,7 @@ export interface EvalAIConfig {
   minScore?: number;
   minN?: number;
   maxDrop?: number;
+  warnDrop?: number;
   allowWeakEvidence?: boolean;
   baseline?: "published" | "previous" | "production" | "auto";
   profile?: ProfileName;
@@ -119,6 +120,7 @@ export function mergeConfigWithArgs(
     if (config.minScore != null) merged.minScore = config.minScore;
     if (config.minN != null) merged.minN = config.minN;
     if (config.maxDrop != null) merged.maxDrop = config.maxDrop;
+    if (config.warnDrop != null) merged.warnDrop = config.warnDrop;
     if (config.allowWeakEvidence != null) merged.allowWeakEvidence = config.allowWeakEvidence;
     if (config.baseline) merged.baseline = config.baseline;
     if (config.profile) merged.profile = config.profile;
@@ -132,6 +134,8 @@ export function mergeConfigWithArgs(
       merged.minScore = profile.minScore;
     if (merged.maxDrop === undefined && args.maxDrop === undefined)
       merged.maxDrop = profile.maxDrop;
+    if (merged.warnDrop === undefined && args.warnDrop === undefined && "warnDrop" in profile)
+      merged.warnDrop = profile.warnDrop;
     if (merged.minN === undefined && args.minN === undefined) merged.minN = profile.minN;
     if (merged.allowWeakEvidence === undefined && args.allowWeakEvidence === undefined)
       merged.allowWeakEvidence = profile.allowWeakEvidence;
@@ -151,6 +155,10 @@ export function mergeConfigWithArgs(
   if (args.maxDrop !== undefined) {
     merged.maxDrop =
       typeof args.maxDrop === "number" ? args.maxDrop : parseInt(String(args.maxDrop), 10);
+  }
+  if (args.warnDrop !== undefined) {
+    merged.warnDrop =
+      typeof args.warnDrop === "number" ? args.warnDrop : parseInt(String(args.warnDrop), 10);
   }
   if (args.minN !== undefined) {
     merged.minN = typeof args.minN === "number" ? args.minN : parseInt(String(args.minN), 10);

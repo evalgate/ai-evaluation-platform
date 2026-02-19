@@ -51,6 +51,8 @@ export interface TestSuiteConfig {
     stopOnFailure?: boolean;
     /** Timeout per test case in ms (default: 30000) */
     timeout?: number;
+    /** Retry failing cases N times (default: 0). Only failing cases are retried. */
+    retries?: number;
 }
 export interface TestSuiteCaseResult {
     /** Test case ID */
@@ -85,6 +87,8 @@ export interface TestSuiteResult {
     durationMs: number;
     /** Individual test results */
     results: TestSuiteCaseResult[];
+    /** Case IDs that were retried (flaky recovery) */
+    retriedCases?: string[];
 }
 /**
  * Test Suite for declarative evaluation testing

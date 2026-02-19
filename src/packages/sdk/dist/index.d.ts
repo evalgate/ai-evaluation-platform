@@ -27,6 +27,7 @@ export { traceAnthropic } from "./integrations/anthropic";
 export { traceOpenAI } from "./integrations/openai";
 export { type OpenAIChatEvalCase, type OpenAIChatEvalOptions, type OpenAIChatEvalResult, openAIChatEval, } from "./integrations/openai-eval";
 export { Logger } from "./logger";
+export { extendExpectWithToPassGate } from "./matchers";
 export { autoPaginate, createPaginatedIterator, decodeCursor, encodeCursor, PaginatedIterator, type PaginatedResponse, type PaginationParams, } from "./pagination";
 export { batchProcess, batchRead, RateLimiter, streamEvaluation } from "./streaming";
 export type { Annotation, AnnotationItem, AnnotationTask, APIKey, APIKeyUsage, APIKeyWithSecret, BatchOptions, ClientConfig as AIEvalConfig, CreateAnnotationItemParams, CreateAnnotationParams, CreateAnnotationTaskParams, CreateAPIKeyParams, CreateLLMJudgeConfigParams, CreateWebhookParams, Evaluation as EvaluationData, ExportOptions, GenericMetadata as AnnotationData, GetLLMJudgeAlignmentParams, GetUsageParams, ImportOptions, ListAnnotationItemsParams, ListAnnotationsParams, ListAnnotationTasksParams, ListAPIKeysParams, ListLLMJudgeConfigsParams, ListLLMJudgeResultsParams, ListWebhookDeliveriesParams, ListWebhooksParams, LLMJudgeAlignment, LLMJudgeConfig, LLMJudgeResult as LLMJudgeData, Organization, RetryConfig, SnapshotData, Span as SpanData, StreamOptions, TestCase, TestResult, Trace as TraceData, TracedResponse, UpdateAPIKeyParams, UpdateWebhookParams, UsageStats, UsageSummary, Webhook, WebhookDelivery, } from "./types";

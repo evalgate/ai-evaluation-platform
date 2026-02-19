@@ -78,6 +78,23 @@ describe("evaluateGate", () => {
     expect(result.reasonMessage).toContain("5");
   });
 
+  it("returns WARN_REGRESSION (exit 8) when drop within warn band (warnDrop ≤ drop < maxDrop)", () => {
+    const args: CheckArgs = { ...baseArgs, maxDrop: 5, warnDrop: 2, minScore: 80 };
+    const quality = {
+      score: 88,
+      total: 30,
+      evaluationRunId: 1,
+      baselineScore: 92,
+      regressionDelta: -4,
+    };
+    const result = evaluateGate(args, quality);
+    expect(result.exitCode).toBe(EXIT.WARN_REGRESSION);
+    expect(result.passed).toBe(true);
+    expect(result.reasonCode).toBe("WARN_REGRESSION");
+    expect(result.reasonMessage).toContain("4");
+    expect(result.reasonMessage).toContain("2");
+  });
+
   it("fails with COST_BUDGET_EXCEEDED when costUsd exceeds maxCostUsd", () => {
     const args: CheckArgs = { ...baseArgs, maxCostUsd: 0.01 };
     const quality = {

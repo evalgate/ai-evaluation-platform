@@ -47,6 +47,8 @@ export declare class EvalAIError extends Error {
     retryAfter?: number;
     /** When the limit resets (for feature limit errors) */
     resetAt?: Date;
+    /** Request ID from API (for correlation/debugging) */
+    requestId?: string;
     constructor(message: string, code: string, statusCode: number, details?: any);
     /**
      * Get formatted error message with solutions

@@ -11,6 +11,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const check_1 = require("./check");
 const doctor_1 = require("./doctor");
 const init_1 = require("./init");
+const share_1 = require("./share");
 const argv = process.argv.slice(2);
 const subcommand = argv[0];
 if (subcommand === "init") {
@@ -39,6 +40,19 @@ else if (subcommand === "check") {
         process.exit(4);
     });
 }
+else if (subcommand === "share") {
+    const parsed = (0, share_1.parseShareArgs)(argv.slice(1));
+    if ("error" in parsed) {
+        console.error(parsed.error);
+        process.exit(1);
+    }
+    (0, share_1.runShare)(parsed)
+        .then((code) => process.exit(code))
+        .catch((err) => {
+        console.error(`EvalAI ERROR: ${err instanceof Error ? err.message : String(err)}`);
+        process.exit(1);
+    });
+}
 else {
     console.log(`EvalAI CLI
 
@@ -46,6 +60,7 @@ Usage:
   evalai init              Create evalai.config.json
   evalai doctor [options]  Verify CI/CD setup (same endpoint as check)
   evalai check [options]   CI/CD evaluation gate
+  evalai share [options]   Create share link for a run
 
 Options for check:
   --evaluationId <id>  Evaluation to gate on (or from config)
@@ -55,16 +70,19 @@ Options for check:
   --onFail import     When gate fails, import run with CI context
   --minScore <n>      Fail if score < n (0-100)
   --maxDrop <n>       Fail if score dropped > n from baseline
+  --warnDrop <n>      Warn (exit 8) if score dropped > n but < maxDrop
   --minN <n>          Fail if total test cases < n
   --allowWeakEvidence Allow weak evidence level
   --policy <name>     Enforce policy (HIPAA, SOC2, GDPR, etc.)
   --baseline <mode>   "published", "previous", or "production"
+  --share <mode>      Share link: always | fail | never (fail = only when gate fails)
   --baseUrl <url>     API base URL
 
 Examples:
   evalai init
   evalai check --minScore 92 --evaluationId 42 --apiKey $EVALAI_API_KEY
   evalai check --policy HIPAA --evaluationId 42 --apiKey $EVALAI_API_KEY
+  evalai share --scope run --evaluationId 42 --runId 123 --expires 7d --apiKey $EVALAI_API_KEY
 `);
     process.exit(subcommand === "--help" || subcommand === "-h" ? 0 : 1);
 }

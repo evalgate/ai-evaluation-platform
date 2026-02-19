@@ -9,5 +9,13 @@ export type GateResult = {
     passed: boolean;
     reasonCode: string;
     reasonMessage: string | null;
+    /** true when gate was skipped (e.g. baseline missing + auto) */
+    gateSkipped?: boolean;
+    /** When policy failed: sub-check, remediation, snapshot for explain */
+    policyEvidence?: {
+        failedCheck: string;
+        remediation: string;
+        snapshot?: Record<string, unknown>;
+    };
 };
 export declare function evaluateGate(args: CheckArgs, quality: QualityLatestData): GateResult;

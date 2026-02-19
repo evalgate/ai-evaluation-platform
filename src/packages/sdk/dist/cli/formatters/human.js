@@ -10,10 +10,13 @@ const TOP_N = 3;
 function formatHuman(report) {
     const lines = [];
     const passed = report.verdict === "pass";
+    const warned = report.verdict === "warn";
     const failReason = report.reasonMessage;
-    lines.push(passed
+    lines.push(passed && !warned
         ? "\n✓ EvalAI gate PASSED"
-        : `\n✗ EvalAI gate FAILED: ${failReason ?? report.reasonCode}`);
+        : warned
+            ? `\n⚠ EvalAI gate WARNED: ${failReason ?? report.reasonCode}`
+            : `\n✗ EvalAI gate FAILED: ${failReason ?? report.reasonCode}`);
     const deltaStr = report.baselineScore != null && report.delta != null
         ? ` (baseline ${report.baselineScore}, ${report.delta >= 0 ? "+" : ""}${report.delta} pts)`
         : "";
@@ -36,10 +39,11 @@ function formatHuman(report) {
     if (report.dashboardUrl) {
         lines.push(`Dashboard: ${report.dashboardUrl}`);
     }
-    if (!passed) {
-        lines.push("Next: View full report above, fix failing cases, or adjust gate with --minScore / --maxDrop");
+    if (!passed || warned) {
+        lines.push("Next: View full report above, fix failing cases, or adjust gate with --minScore / --maxDrop / --warnDrop");
     }
-    if (report.explain && (report.breakdown01 || report.contribPts || report.flags?.length)) {
+    if (report.explain &&
+        (report.breakdown01 || report.contribPts || report.flags?.length || report.policyEvidence)) {
         lines.push("");
         lines.push("--- Explain ---");
         if (report.contribPts) {
@@ -88,6 +92,15 @@ function formatHuman(report) {
                 parts.push(`minN=${t.minN}`);
             if (parts.length)
                 lines.push(`Thresholds: ${parts.join(", ")}`);
+        }
+        if (report.policyEvidence) {
+            const pe = report.policyEvidence;
+            lines.push(`Policy sub-check failed: ${pe.failedCheck ?? "unknown"}`);
+            if (pe.remediation)
+                lines.push(`Remediation: ${pe.remediation}`);
+            if (pe.snapshot && Object.keys(pe.snapshot).length > 0) {
+                lines.push(`Snapshot: ${JSON.stringify(pe.snapshot)}`);
+            }
         }
     }
     return lines.join("\n");

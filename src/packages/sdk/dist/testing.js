@@ -124,6 +124,26 @@ class TestSuite {
                 }
             }
         }
+        const retriedCases = [];
+        const retries = this.config.retries ?? 0;
+        if (retries > 0 && results.length > 0) {
+            const failingIndices = results.map((r, i) => (r.passed ? -1 : i)).filter((i) => i >= 0);
+            for (let attempt = 0; attempt < retries && failingIndices.length > 0; attempt++) {
+                const toRetry = [...failingIndices];
+                failingIndices.length = 0;
+                for (const i of toRetry) {
+                    const tc = this.config.cases[i];
+                    const retryResult = await runTestCase(tc, i);
+                    if (retryResult.passed) {
+                        results[i] = retryResult;
+                        retriedCases.push(retryResult.id);
+                    }
+                    else {
+                        failingIndices.push(i);
+                    }
+                }
+            }
+        }
         const durationMs = Date.now() - startTime;
         const passed = results.filter((r) => r.passed).length;
         const failed = results.filter((r) => !r.passed).length;
@@ -134,6 +154,7 @@ class TestSuite {
             failed,
             durationMs,
             results,
+            ...(retriedCases.length > 0 && { retriedCases }),
         };
     }
     /**

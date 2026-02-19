@@ -27,11 +27,16 @@ export function appendStepSummary(report: CheckReport): void {
 
   const lines: string[] = [];
   const passed = report.verdict === "pass";
+  const warned = report.verdict === "warn";
 
   lines.push("## EvalAI Gate");
   lines.push("");
   lines.push(
-    passed ? "✅ **PASSED**" : `❌ **FAILED**: ${report.reasonMessage ?? report.reasonCode}`,
+    passed && !warned
+      ? "✅ **PASSED**"
+      : warned
+        ? `⚠️ **WARNED**: ${report.reasonMessage ?? report.reasonCode}`
+        : `❌ **FAILED**: ${report.reasonMessage ?? report.reasonCode}`,
   );
   lines.push("");
   const deltaStr =
@@ -82,8 +87,11 @@ export function formatGitHub(report: CheckReport): string {
 
   // Minimal summary: verdict + score + link
   const passed = report.verdict === "pass";
+  const warned = report.verdict === "warn";
   const failReason = report.reasonMessage ?? report.reasonCode;
-  stdoutLines.push(passed ? "\n✓ EvalAI gate PASSED" : `\n✗ EvalAI gate FAILED: ${failReason}`);
+  if (passed && !warned) stdoutLines.push("\n✓ EvalAI gate PASSED");
+  else if (warned) stdoutLines.push(`\n⚠ EvalAI gate WARNED: ${failReason}`);
+  else stdoutLines.push(`\n✗ EvalAI gate FAILED: ${failReason}`);
 
   const deltaStr =
     report.baselineScore != null && report.delta != null

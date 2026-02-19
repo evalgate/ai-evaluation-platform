@@ -5,6 +5,7 @@ import { apiKeys } from "@/db/schema";
 import { conflict, internalError, notFound, validationError } from "@/lib/api/errors";
 import { parseBody } from "@/lib/api/parse";
 import { type AuthContext, secureRoute } from "@/lib/api/secure-route";
+import { auditService } from "@/lib/services/audit.service";
 import { updateAPIKeyBodySchema } from "@/lib/validation";
 
 export const PATCH = secureRoute(async (req: NextRequest, ctx: AuthContext, params) => {
@@ -104,6 +105,15 @@ export const DELETE = secureRoute(async (_req: NextRequest, ctx: AuthContext, pa
     if (revoked.length === 0) {
       return internalError("Failed to revoke API key");
     }
+
+    await auditService.log({
+      organizationId: ctx.organizationId,
+      userId: ctx.userId,
+      action: "api_key_revoked",
+      resourceType: "api_key",
+      resourceId: id,
+      metadata: { apiKeyId: parseInt(id, 10) },
+    });
 
     return NextResponse.json(
       {
