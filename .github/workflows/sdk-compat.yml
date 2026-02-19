@@ -1,4 +1,4 @@
-# Backward compatibility — old SDK versions run correctly
+# Backward compatibility — old SDK versions can be required and expose core exports
 name: SDK Compatibility
 
 on:
@@ -13,31 +13,43 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        sdk-version: ["1.4.1", "1.5.0"]
+        sdk-version: ["1.4.1", "1.5.0", "1.5.5"]
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
-          cache: "npm"
 
-      - name: Run minimal eval with SDK ${{ matrix.sdk-version }}
+      - name: Verify SDK ${{ matrix.sdk-version }} exports
         run: |
           mkdir -p /tmp/sdk-compat && cd /tmp/sdk-compat
           npm init -y
-          npm install @pauly4010/evalai-sdk@${{ matrix.sdk-version }} openai
+          npm install @pauly4010/evalai-sdk@${{ matrix.sdk-version }}
           node -e "
-            const { openAIChatEval } = require('@pauly4010/evalai-sdk');
-            (async () => {
-              const r = await openAIChatEval({
-                name: 'compat',
-                cases: [{ input: 'Say ok', expectedOutput: 'ok' }],
-                reportToEvalAI: false
-              });
-              process.exit(r.total > 0 && r.passed >= 0 ? 0 : 1);
-            })();
+            const sdk = require('@pauly4010/evalai-sdk');
+
+            // Core exports that must exist in every version
+            const required = [
+              'AIEvalClient',
+              'EvalAIError',
+              'createTestSuite',
+              'traceOpenAI',
+            ];
+
+            const missing = required.filter(k => typeof sdk[k] === 'undefined');
+            if (missing.length > 0) {
+              console.error('Missing exports:', missing);
+              process.exit(1);
+            }
+
+            // Verify AIEvalClient is constructable (no API call needed)
+            try {
+              new sdk.AIEvalClient({ apiKey: 'test-key', baseUrl: 'http://localhost' });
+            } catch (e) {
+              console.error('AIEvalClient construction failed:', e.message);
+              process.exit(1);
+            }
+
+            console.log('SDK v${{ matrix.sdk-version }} OK —', Object.keys(sdk).length, 'exports');
           "
-        env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-        continue-on-error: true
