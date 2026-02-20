@@ -99,8 +99,7 @@ export const GET = secureRoute(
       .limit(limit)
       .offset(offset);
 
-    // For tests, use array length as total since count() is problematic in mocks
-    const total = Array.isArray(dlqJobs) ? dlqJobs.length : dlqJobs.length;
+    const total = dlqJobs.length;
 
     return NextResponse.json({
       jobs: dlqJobs,
