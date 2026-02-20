@@ -1,6 +1,7 @@
 import { sql } from "drizzle-orm";
 import { type NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
+import { internalError, unauthorized } from "@/lib/api/errors";
 import { logger } from "@/lib/logger";
 
 /**
@@ -21,7 +22,7 @@ export async function GET(req: NextRequest) {
   const auth = req.headers.get("authorization");
 
   if (!secret || auth !== `Bearer ${secret}`) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return unauthorized();
   }
 
   const ts = new Date().toISOString();
@@ -32,8 +33,9 @@ export async function GET(req: NextRequest) {
 
     logger.info("Cron health check passed", { ts });
     return NextResponse.json({ ok: true, db: "ok", ts });
-  } catch (err: any) {
-    logger.error("Cron health check failed", { error: err.message, ts });
-    return NextResponse.json({ ok: false, error: err.message, ts }, { status: 500 });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Health check failed";
+    logger.error("Cron health check failed", { error: message, ts });
+    return internalError(message);
   }
 }
