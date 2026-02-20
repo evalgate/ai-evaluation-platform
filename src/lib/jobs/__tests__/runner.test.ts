@@ -1,196 +1,205 @@
 /**
- * Job Runner Tests
+ * runner.test.ts (rewritten)
  *
- * Covers:
- *  - Backoff delay math (nextRetryAt)
- *  - Optimistic lock: job skipped when claimed by another invocation
- *  - Success path: status → success
- *  - Failure path: status → pending with incremented attempt
- *  - Dead-letter: status → dead_letter after maxAttempts
- *  - No handler registered: status → failed
+ * Purpose:
+ *  - Keep the "basic" runner assertions (success, retry, dead-letter, missing handler)
+ *  - Keep nextRetryAt jitter tests
+ *
+ * Key fixes vs the failing version:
+ *  - Mock "../payload-schemas" so validatePayload never calls schema.safeParse on undefined
+ *  - Mock "../handlers/webhook-delivery" and export WebhookDeliveryError (runner imports it)
+ *  - Use the shared jobs test harness, matching runner-hardening + god-tier suites
  */
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { JobErrorCodes } from "../types";
+import { harness, setupJobsTestHarness } from "./mocks/jobs-harness";
 
-// ── Mocks ────────────────────────────────────────────────────────────────────
+// ✅ MUST mock BEFORE importing ../runner anywhere
+vi.mock("../handlers/webhook-delivery", () => {
+  class WebhookDeliveryError extends Error {
+    errorCode: string;
+    retryAfterMs?: number;
+    constructor(message: string, errorCode: string, retryAfterMs?: number) {
+      super(message);
+      this.name = "WebhookDeliveryError";
+      this.errorCode = errorCode;
+      this.retryAfterMs = retryAfterMs;
+    }
+  }
 
-const mockHandler = vi.fn();
-
-vi.mock("../handlers/webhook-delivery", () => ({
-  handleWebhookDelivery: (...args: any[]) => mockHandler(...args),
-}));
-
-vi.mock("@/lib/logger", () => ({
-  logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn() },
-}));
-
-vi.mock("drizzle-orm", () => ({
-  and: (...args: any[]) => args,
-  eq: (col: any, val: any) => ({ col, val }),
-  lte: (col: any, val: any) => ({ col, val }),
-}));
-
-vi.mock("@/db/schema", () => ({ jobs: {} }));
-
-// DB mock — controlled via selectQueue and returningQueue
-const selectQueue: any[][] = [];
-const returningQueue: any[][] = [];
-
-const makeSelectBuilder = () => ({
-  from: function () {
-    return this;
-  },
-  where: function () {
-    return this;
-  },
-  limit: () => Promise.resolve(selectQueue.shift() ?? []),
+  return {
+    WebhookDeliveryError,
+    handleWebhookDelivery: (payload: any) => harness.state.handlerImpl(payload),
+  };
 });
 
-const makeUpdateBuilder = () => ({
-  set: () => ({
-    where: () => ({
-      returning: () => Promise.resolve(returningQueue.shift() ?? []),
-    }),
-  }),
-});
-
-vi.mock("@/db", () => ({
-  db: {
-    select: () => makeSelectBuilder(),
-    update: () => makeUpdateBuilder(),
+// ✅ Avoid "Cannot read properties of undefined (reading 'safeParse')"
+vi.mock("../payload-schemas", () => ({
+  validatePayload: (type: string, payload: unknown) => {
+    if (harness.state.validateImpl) return harness.state.validateImpl(type, payload);
+    // Default: treat as valid for runner unit tests
+    return { success: true, data: payload as any };
   },
 }));
+
+setupJobsTestHarness();
+
+beforeEach(() => {
+  harness.reset();
+});
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
-beforeEach(() => {
-  vi.clearAllMocks();
-  selectQueue.length = 0;
-  returningQueue.length = 0;
-  mockHandler.mockReset();
+let _id = 1;
+function makeJob(overrides: Partial<any> = {}): any {
+  return harness.makeJob({ id: _id++, ...overrides });
+}
+
+// ── Tests ─────────────────────────────────────────────────────────────────────
+
+describe("runDueJobs", () => {
+  beforeEach(() => {
+    harness.state.jobs = [];
+    harness.state.lock = { lockedUntil: 0, lockedBy: null, updatedAt: 0 };
+    harness.state.handlerImpl = async () => {};
+    harness.state.validateImpl = null;
+    _id = 1;
+
+    // if your harness uses these, ensure they exist/reset:
+    if (!harness.state.failClaimForJobIds) harness.state.failClaimForJobIds = new Set<number>();
+    else harness.state.failClaimForJobIds.clear();
+  });
+
+  it("returns processed=0 when no jobs are due", async () => {
+    const { runDueJobs } = await import("../runner");
+    const res = await runDueJobs("test-runner");
+    expect(res.processed).toBe(0);
+    expect(res.failed).toBe(0);
+  });
+
+  it("skips job when optimistic lock claim fails", async () => {
+    const { runDueJobs } = await import("../runner");
+    const job = makeJob({ id: 1 });
+    harness.state.jobs.push(job);
+
+    harness.state.failClaimForJobIds.add(1);
+
+    const res = await runDueJobs("test-runner");
+
+    expect(res.processed).toBe(0);
+    expect(res.failed).toBe(0);
+  });
+
+  it("marks job as success when handler resolves", async () => {
+    const { runDueJobs } = await import("../runner");
+    const job = makeJob();
+    harness.state.jobs.push(job);
+
+    const res = await runDueJobs("test-runner");
+
+    expect(res.processed).toBe(1);
+    expect(res.failed).toBe(0);
+    expect(job.status).toBe("success");
+  });
+
+  it("retries job (failed=1) when handler throws and not at maxAttempts", async () => {
+    const { runDueJobs } = await import("../runner");
+    harness.state.handlerImpl = async () => {
+      throw new Error("boom");
+    };
+
+    const job = makeJob({ maxAttempts: 3, attempt: 0 });
+    harness.state.jobs.push(job);
+
+    const res = await runDueJobs("test-runner");
+
+    expect(res.processed).toBe(0);
+    expect(res.failed).toBe(1);
+    expect(job.status).toBe("pending");
+    expect(job.attempt).toBe(1);
+    expect(job.lastErrorCode).toBe(JobErrorCodes.HANDLER_ERROR);
+  });
+
+  it("marks job as dead_letter when attempt reaches maxAttempts", async () => {
+    const { runDueJobs } = await import("../runner");
+    harness.state.handlerImpl = async () => {
+      throw new Error("boom");
+    };
+
+    const job = makeJob({ maxAttempts: 1, attempt: 0 });
+    harness.state.jobs.push(job);
+
+    const res = await runDueJobs("test-runner");
+
+    expect(res.processed).toBe(0);
+    expect(res.failed).toBe(1);
+    expect(job.status).toBe("dead_letter");
+  });
+
+  it("dead-letters with HANDLER_MISSING when no handler is registered for type", async () => {
+    const { runDueJobs } = await import("../runner");
+    const job = makeJob({ type: "unknown_type" });
+    harness.state.jobs.push(job);
+
+    const res = await runDueJobs("test-runner");
+
+    expect(res.processed).toBe(0);
+    expect(res.failed).toBe(1);
+    expect(job.status).toBe("dead_letter");
+    expect(job.lastErrorCode).toBe(JobErrorCodes.HANDLER_MISSING);
+  });
 });
 
 // ── nextRetryAt tests ────────────────────────────────────────────────────────
 
 describe("nextRetryAt", () => {
-  it("returns 1 min delay for attempt 1", async () => {
+  it("attempt 1 delay is within ±15% of 1 min", async () => {
     const { nextRetryAt } = await import("../runner");
+    const base = 60_000;
     const before = Date.now();
-    const result = nextRetryAt(1);
-    expect(result.getTime()).toBeGreaterThanOrEqual(before + 60_000 - 50);
-    expect(result.getTime()).toBeLessThanOrEqual(before + 60_000 + 200);
+    const delay = nextRetryAt(1).getTime() - before;
+    expect(delay).toBeGreaterThanOrEqual(base * 0.85);
+    expect(delay).toBeLessThanOrEqual(base * 1.15);
   });
 
-  it("returns 5 min delay for attempt 2", async () => {
+  it("attempt 2 delay is within ±15% of 5 min", async () => {
     const { nextRetryAt } = await import("../runner");
+    const base = 5 * 60_000;
     const before = Date.now();
-    const result = nextRetryAt(2);
-    expect(result.getTime()).toBeGreaterThanOrEqual(before + 5 * 60_000 - 50);
+    const delay = nextRetryAt(2).getTime() - before;
+    expect(delay).toBeGreaterThanOrEqual(base * 0.85);
+    expect(delay).toBeLessThanOrEqual(base * 1.15);
   });
 
-  it("returns 15 min delay for attempt 3", async () => {
+  it("attempt 3 delay is within ±15% of 15 min", async () => {
     const { nextRetryAt } = await import("../runner");
+    const base = 15 * 60_000;
     const before = Date.now();
-    const result = nextRetryAt(3);
-    expect(result.getTime()).toBeGreaterThanOrEqual(before + 15 * 60_000 - 50);
+    const delay = nextRetryAt(3).getTime() - before;
+    expect(delay).toBeGreaterThanOrEqual(base * 0.85);
+    expect(delay).toBeLessThanOrEqual(base * 1.15);
   });
 
-  it("returns 1 h delay for attempt 4", async () => {
+  it("attempt 4 delay is within ±15% of 1 h", async () => {
     const { nextRetryAt } = await import("../runner");
+    const base = 60 * 60_000;
     const before = Date.now();
-    const result = nextRetryAt(4);
-    expect(result.getTime()).toBeGreaterThanOrEqual(before + 60 * 60_000 - 50);
+    const delay = nextRetryAt(4).getTime() - before;
+    expect(delay).toBeGreaterThanOrEqual(base * 0.85);
+    expect(delay).toBeLessThanOrEqual(base * 1.15);
   });
 
-  it("caps at 4 h for attempt >= 5", async () => {
+  it("attempt >= 5 caps at ~4 h with jitter", async () => {
     const { nextRetryAt } = await import("../runner");
+    const base = 4 * 60 * 60_000;
     const before = Date.now();
-    const r5 = nextRetryAt(5);
-    const r99 = nextRetryAt(99);
-    expect(r5.getTime()).toBeGreaterThanOrEqual(before + 4 * 60 * 60_000 - 50);
-    expect(r99.getTime()).toBeGreaterThanOrEqual(before + 4 * 60 * 60_000 - 50);
-  });
-});
+    const d5 = nextRetryAt(5).getTime() - before;
+    const d99 = nextRetryAt(99).getTime() - before;
 
-// ── runDueJobs tests ─────────────────────────────────────────────────────────
-
-describe("runDueJobs", () => {
-  it("returns { processed: 0, failed: 0 } when no jobs are due", async () => {
-    selectQueue.push([]); // candidates query → empty
-    const { runDueJobs } = await import("../runner");
-    expect(await runDueJobs()).toEqual({ processed: 0, failed: 0 });
-  });
-
-  it("skips job when optimistic lock claim fails", async () => {
-    selectQueue.push([
-      { id: 1, type: "webhook_delivery", payload: {}, attempt: 0, maxAttempts: 5 },
-    ]);
-    returningQueue.push([]); // claim returns [] → another invocation claimed it
-
-    const { runDueJobs } = await import("../runner");
-    const result = await runDueJobs();
-
-    expect(result).toEqual({ processed: 0, failed: 0 });
-    expect(mockHandler).not.toHaveBeenCalled();
-  });
-
-  it("marks job as success when handler resolves", async () => {
-    const candidate = {
-      id: 2,
-      type: "webhook_delivery",
-      payload: { webhookId: 1 },
-      attempt: 0,
-      maxAttempts: 5,
-    };
-    selectQueue.push([candidate]);
-    returningQueue.push([{ id: 2 }]); // claim succeeds
-    returningQueue.push([]); // success update
-    mockHandler.mockResolvedValueOnce(undefined);
-
-    const { runDueJobs } = await import("../runner");
-    const result = await runDueJobs();
-
-    expect(result).toEqual({ processed: 1, failed: 0 });
-    expect(mockHandler).toHaveBeenCalledWith(candidate.payload);
-  });
-
-  it("retries job (status=pending, attempt+1) when handler throws and not at maxAttempts", async () => {
-    const candidate = { id: 3, type: "webhook_delivery", payload: {}, attempt: 0, maxAttempts: 5 };
-    selectQueue.push([candidate]);
-    returningQueue.push([{ id: 3 }]); // claim
-    // The failure update returning is consumed by the update chain
-    returningQueue.push([]);
-    mockHandler.mockRejectedValueOnce(new Error("timeout"));
-
-    const { runDueJobs } = await import("../runner");
-    const result = await runDueJobs();
-
-    expect(result).toEqual({ processed: 0, failed: 1 });
-  });
-
-  it("marks job as dead_letter when attempt reaches maxAttempts", async () => {
-    // attempt=4, maxAttempts=5 → nextAttempt=5 >= maxAttempts → dead_letter
-    const candidate = { id: 4, type: "webhook_delivery", payload: {}, attempt: 4, maxAttempts: 5 };
-    selectQueue.push([candidate]);
-    returningQueue.push([{ id: 4 }]); // claim
-    returningQueue.push([]); // dead_letter update
-    mockHandler.mockRejectedValueOnce(new Error("final failure"));
-
-    const { runDueJobs } = await import("../runner");
-    const result = await runDueJobs();
-
-    expect(result).toEqual({ processed: 0, failed: 1 });
-  });
-
-  it("marks job as failed when no handler is registered for type", async () => {
-    const candidate = { id: 5, type: "unknown_type", payload: {}, attempt: 0, maxAttempts: 5 };
-    selectQueue.push([candidate]);
-    returningQueue.push([{ id: 5 }]); // claim
-    returningQueue.push([]); // failed update
-
-    const { runDueJobs } = await import("../runner");
-    const result = await runDueJobs();
-
-    expect(result).toEqual({ processed: 0, failed: 1 });
+    expect(d5).toBeGreaterThanOrEqual(base * 0.85);
+    expect(d5).toBeLessThanOrEqual(base * 1.15);
+    expect(d99).toBeGreaterThanOrEqual(base * 0.85);
+    expect(d99).toBeLessThanOrEqual(base * 1.15);
   });
 });

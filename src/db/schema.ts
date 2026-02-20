@@ -306,19 +306,30 @@ export const providerKeys = sqliteTable("provider_keys", {
   updatedAt: text("updated_at").notNull(),
 });
 
-export const webhookDeliveries = sqliteTable("webhook_deliveries", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
-  webhookId: integer("webhook_id")
-    .references(() => webhooks.id)
-    .notNull(),
-  eventType: text("event_type").notNull(),
-  payload: text("payload", { mode: "json" }).notNull(),
-  status: text("status").notNull().default("pending"),
-  responseStatus: integer("response_status"),
-  responseBody: text("response_body"),
-  attemptCount: integer("attempt_count").default(0),
-  createdAt: text("created_at").notNull(),
-});
+export const webhookDeliveries = sqliteTable(
+  "webhook_deliveries",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    webhookId: integer("webhook_id")
+      .references(() => webhooks.id)
+      .notNull(),
+    eventType: text("event_type").notNull(),
+    payload: text("payload", { mode: "json" }).notNull(),
+    payloadHash: text("payload_hash"), // SHA-256 for deduplication
+    status: text("status").notNull().default("pending"),
+    responseStatus: integer("response_status"),
+    responseBody: text("response_body"),
+    attemptCount: integer("attempt_count").default(0),
+    createdAt: text("created_at").notNull(),
+  },
+  (table) => ({
+    dedupIndex: uniqueIndex("idx_webhook_deliveries_dedup").on(
+      table.webhookId,
+      table.eventType,
+      table.payloadHash,
+    ),
+  }),
+);
 
 export const apiUsageLogs = sqliteTable("api_usage_logs", {
   id: integer("id").primaryKey({ autoIncrement: true }),
@@ -853,17 +864,33 @@ export const jobs = sqliteTable("jobs", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   type: text("type").notNull(), // 'webhook_delivery'
   payload: text("payload", { mode: "json" }).notNull(),
-  status: text("status").notNull().default("pending"), // pending | running | success | failed | dead_letter
+  status: text("status").notNull().default("pending"), // pending | running | success | dead_letter
   attempt: integer("attempt").notNull().default(0),
   maxAttempts: integer("max_attempts").notNull().default(5),
   nextRunAt: integer("next_run_at", { mode: "timestamp" }).notNull(),
   lastError: text("last_error"),
+  lastErrorCode: text("last_error_code"),
   idempotencyKey: text("idempotency_key").unique(),
   organizationId: integer("organization_id").references(() => organizations.id),
+  // Lock / TTL fields (set on claim, cleared on finish)
+  lockedAt: integer("locked_at", { mode: "timestamp" }),
+  lockedUntil: integer("locked_until", { mode: "timestamp" }),
+  lockedBy: text("locked_by"),
+  // Attempt timing
+  lastStartedAt: integer("last_started_at", { mode: "timestamp" }),
+  lastFinishedAt: integer("last_finished_at", { mode: "timestamp" }),
+  lastDurationMs: integer("last_duration_ms"),
   createdAt: integer("created_at", { mode: "timestamp" })
     .$defaultFn(() => new Date())
     .notNull(),
   updatedAt: integer("updated_at", { mode: "timestamp" })
     .$defaultFn(() => new Date())
     .notNull(),
+});
+
+export const jobRunnerLocks = sqliteTable("job_runner_locks", {
+  lockName: text("lock_name").primaryKey(),
+  lockedUntil: integer("locked_until").notNull().default(0),
+  lockedBy: text("locked_by"),
+  updatedAt: integer("updated_at").notNull().default(0),
 });

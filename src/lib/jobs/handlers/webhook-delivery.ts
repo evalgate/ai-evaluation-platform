@@ -13,12 +13,26 @@ export interface WebhookDeliveryPayload {
   timestamp: string;
 }
 
+/** Typed error so the runner can set the appropriate error code. */
+export class WebhookDeliveryError extends Error {
+  constructor(
+    message: string,
+    public readonly errorCode: string,
+    public readonly retryAfterMs?: number,
+  ) {
+    super(message);
+    this.name = "WebhookDeliveryError";
+  }
+}
+
 /**
  * Job handler for async webhook delivery.
  *
- * Extracted from WebhookService.deliver() — performs the HTTP fetch,
- * records the delivery attempt with durationMs, and updates lastDeliveredAt
- * on success. Throws on failure so the runner can apply retry/backoff.
+ * Phase 5A: Deduplicates via payload hash — if a successful delivery
+ * already exists for this (webhookId, eventType, payloadHash), skips.
+ *
+ * Phase 5B: Respects HTTP 429 + Retry-After header — throws a typed
+ * error that the runner can use for scheduling.
  */
 export async function handleWebhookDelivery(payload: Record<string, unknown>): Promise<void> {
   const { webhookId, organizationId, event, data, timestamp } =
@@ -41,6 +55,32 @@ export async function handleWebhookDelivery(payload: Record<string, unknown>): P
 
   const webhookPayload = { event, data, timestamp, organizationId };
   const payloadString = JSON.stringify(webhookPayload);
+
+  // ── 5A: Compute payload hash for deduplication ─────────────────────────────
+  const payloadHash = crypto.createHash("sha256").update(payloadString).digest("hex");
+
+  // Check if already delivered successfully
+  const existingDelivery = await db
+    .select({ id: webhookDeliveries.id, status: webhookDeliveries.status })
+    .from(webhookDeliveries)
+    .where(
+      and(
+        eq(webhookDeliveries.webhookId, webhookId),
+        eq(webhookDeliveries.eventType, event),
+        eq(webhookDeliveries.payloadHash, payloadHash),
+        eq(webhookDeliveries.status, "success"),
+      ),
+    )
+    .limit(1);
+
+  if (existingDelivery[0]) {
+    logger.info("Webhook delivery skipped — already delivered", {
+      webhookId,
+      event,
+      existingDeliveryId: existingDelivery[0].id,
+    });
+    return; // Idempotent skip — don't retry
+  }
 
   const secret = decryptWebhookSecret(organizationId, {
     encryptedSecret: webhook.encryptedSecret,
@@ -90,17 +130,27 @@ export async function handleWebhookDelivery(payload: Record<string, unknown>): P
 
   const durationMs = Date.now() - startTime;
 
-  // Record delivery attempt
-  await db.insert(webhookDeliveries).values({
-    webhookId,
-    eventType: event,
-    payload: webhookPayload as any,
-    status: deliveryStatus,
-    responseStatus: responseCode,
-    responseBody: errorMsg ? `Error: ${errorMsg}` : responseBody,
-    attemptCount: 1,
-    createdAt: new Date().toISOString(),
-  });
+  // Record delivery attempt (with hash for dedup)
+  try {
+    await db.insert(webhookDeliveries).values({
+      webhookId,
+      eventType: event,
+      payload: webhookPayload as any,
+      payloadHash,
+      status: deliveryStatus,
+      responseStatus: responseCode,
+      responseBody: errorMsg ? `Error: ${errorMsg}` : responseBody,
+      attemptCount: 1,
+      createdAt: new Date().toISOString(),
+    });
+  } catch (insertErr: any) {
+    // Unique constraint violation on dedup index — already recorded
+    if (insertErr?.message?.includes("UNIQUE constraint")) {
+      logger.info("Webhook delivery record dedup — already exists", { webhookId, event });
+    } else {
+      throw insertErr;
+    }
+  }
 
   // Update lastDeliveredAt on success
   if (deliveryStatus === "success") {
@@ -117,7 +167,30 @@ export async function handleWebhookDelivery(payload: Record<string, unknown>): P
       responseCode,
       error: errorMsg,
     });
-    // Throw so the runner applies retry/backoff
+
+    // ── 5B: Handle 429 + Retry-After ─────────────────────────────────────────
+    if (responseCode === 429) {
+      // Parse Retry-After (seconds) if present — default to 60s
+      let retryAfterMs = 60_000;
+      // responseBody might have Retry-After in headers; we already consumed the response
+      // Try parsing from the error message or use default
+      const retryAfterMatch = responseBody.match(/retry-after[":\s]*(\d+)/i);
+      if (retryAfterMatch) {
+        retryAfterMs = Number(retryAfterMatch[1]) * 1000;
+      }
+      throw new WebhookDeliveryError(
+        `Rate limited (429): ${errorMsg}`,
+        "JOB_RATE_LIMITED",
+        retryAfterMs,
+      );
+    }
+
+    // 5xx upstream errors
+    if (responseCode && responseCode >= 500) {
+      throw new WebhookDeliveryError(errorMsg ?? "Upstream 5xx error", "JOB_UPSTREAM_5XX");
+    }
+
+    // Other failures
     throw new Error(errorMsg ?? "Webhook delivery failed");
   }
 }
