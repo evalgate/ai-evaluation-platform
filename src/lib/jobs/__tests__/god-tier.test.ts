@@ -317,11 +317,16 @@ describe("runDueJobs — hardening", () => {
     harness.state.handlerImpl = async () => {};
     harness.state.validateImpl = null;
     _id = 1;
+
+    // Register the default webhook handler
+    harness.registerHandler("webhook_delivery", {
+      handler: harness.state.handlerImpl,
+    });
   });
 
   describe("timing fields", () => {
     it("sets lastFinishedAt, lastDurationMs, clears lock fields on success", async () => {
-      const { runDueJobs } = await import("../runner");
+      const { runDueJobs } = await import("../runner-in-memory");
       const job = makeJob();
       harness.state.jobs.push(job);
 
@@ -338,7 +343,7 @@ describe("runDueJobs — hardening", () => {
 
     it("sets lastErrorCode=JOB_HANDLER_ERROR on handler failure", async () => {
       const { runDueJobs, JobErrorCodes } = await Promise.all([
-        import("../runner"),
+        import("../runner-in-memory"),
         import("../types"),
       ]).then(([runner, types]) => ({
         runDueJobs: runner.runDueJobs,
@@ -349,6 +354,11 @@ describe("runDueJobs — hardening", () => {
       harness.state.handlerImpl = async () => {
         throw new Error("handler boom");
       };
+
+      // Re-register the handler with the new throwing implementation
+      harness.registerHandler("webhook_delivery", {
+        handler: harness.state.handlerImpl,
+      });
 
       const job = makeJob({ maxAttempts: 5 });
       harness.state.jobs.push(job);

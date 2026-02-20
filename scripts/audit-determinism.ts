@@ -21,7 +21,7 @@ const { openAIChatEval } = require("../src/packages/sdk/dist/index.js");
 const N_RUNS = 5;
 const ABS_THRESHOLD = 5; // max - min <= 5
 const REL_THRESHOLD = 0.02; // (max - min) / mean <= 2%
-const FLAKY_VARIANCE_THRESHOLD = 0; // case is flaky if pass rate < 100% across runs
+const _FLAKY_VARIANCE_THRESHOLD = 0; // case is flaky if pass rate < 100% across runs
 const GOLDEN_CASES = [
   { input: "What is 2 + 2?", expectedOutput: "4" },
   { input: "Say hello in one word.", expectedOutput: "hello" },

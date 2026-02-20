@@ -61,7 +61,7 @@ function main(): number {
   const openApiPaths = new Set(Object.keys(openApi.paths || {}));
 
   // Paths in OpenAPI that match our routes (exact or prefix for nested)
-  const documented = [...docWorthyPaths].filter((p) => {
+  const _documented = [...docWorthyPaths].filter((p) => {
     if (openApiPaths.has(p)) return true;
     // Check if we have a more specific path (e.g. /api/evaluations/{id} covers /api/evaluations/{id}/runs)
     return [...openApiPaths].some(

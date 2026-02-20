@@ -3,7 +3,6 @@
  * Asserts 403 or 404 with normalized envelope when cross-tenant access is attempted.
  */
 
-import { eq } from "drizzle-orm";
 import { NextRequest } from "next/server";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { GET as getRun } from "@/app/api/evaluations/[id]/runs/[runId]/route";

@@ -64,39 +64,54 @@ vi.mock("@/db", () => ({
   db: {
     select: (_fields?: unknown) => ({
       from: (_table: unknown) => ({
-        where: (cond: unknown) => ({
-          orderBy: (_: unknown) => ({
+        where: (cond: unknown) => {
+          const conds = cond as Array<{ col: unknown; val: unknown }>;
+          const statusCond = conds.find?.((c) => c?.col === "status");
+          const orgCond = conds.find?.((c) => c?.col === "organizationId");
+          const idCond = conds.find?.((c) => c?.col === "id");
+
+          const filterJobs = () =>
+            jobStore.filter((j) => {
+              if (statusCond && j.status !== statusCond.val) return false;
+              if (orgCond && j.organizationId !== orgCond.val) return false;
+              if (idCond && j.id !== idCond.val) return false;
+              return true;
+            });
+
+          return {
+            orderBy: (_: unknown) => ({
+              limit: (limit: number) => ({
+                offset: (offset: number) => {
+                  const filtered = filterJobs()
+                    .slice(offset, offset + limit)
+                    .map((j) => ({
+                      id: j.id,
+                      type: j.type,
+                      status: j.status,
+                      attempt: j.attempt,
+                      maxAttempts: j.maxAttempts,
+                      lastErrorCode: j.lastErrorCode,
+                      lastError: j.lastError,
+                      lastStartedAt: j.lastStartedAt,
+                      lastFinishedAt: j.lastFinishedAt,
+                      lastDurationMs: j.lastDurationMs,
+                      nextRunAt: j.nextRunAt,
+                      createdAt: j.createdAt,
+                      updatedAt: j.updatedAt,
+                      organizationId: j.organizationId,
+                    }));
+                  return Promise.resolve(filtered);
+                },
+              }),
+            }),
             limit: (n: number) => {
-              const conds = cond as Array<{ col: unknown; val: unknown }>;
-              const statusCond = conds.find?.((c) => c?.col === "status");
-              const orgCond = conds.find?.((c) => c?.col === "organizationId");
-              return Promise.resolve(
-                jobStore
-                  .filter((j) => {
-                    if (statusCond && j.status !== statusCond.val) return false;
-                    if (orgCond && j.organizationId !== orgCond.val) return false;
-                    return true;
-                  })
-                  .slice(0, n),
-              );
-            },
-          }),
-          limit: (n: number) => {
-            const conds = cond as Array<{ col: unknown; val: unknown }>;
-            const idCond = conds.find?.((c) => c?.col === "id");
-            const orgCond = conds.find?.((c) => c?.col === "organizationId");
-            return Promise.resolve(
-              jobStore
-                .filter((j) => {
-                  if (idCond && j.id !== idCond.val) return false;
-                  if (orgCond && j.organizationId !== orgCond.val) return false;
-                  return true;
-                })
+              const filtered = filterJobs()
                 .slice(0, n)
-                .map((j) => ({ id: j.id, status: j.status, organizationId: j.organizationId })),
-            );
-          },
-        }),
+                .map((j) => ({ id: j.id, status: j.status, organizationId: j.organizationId }));
+              return Promise.resolve(filtered);
+            },
+          };
+        },
       }),
     }),
     update: (_table: unknown) => ({
@@ -266,14 +281,18 @@ describe("POST /api/jobs/:id/retry", () => {
     jobStore.push(job);
 
     const { POST } = await import("../../app/api/jobs/[id]/retry/route");
-    const res = await (POST as Function)(makeReq(), makeCtx(), { id: "99" });
+    const res = await (POST as (...args: unknown[]) => Promise<Response>)(makeReq(), makeCtx(), {
+      id: "99",
+    });
 
     expect(res.status).toBe(409);
   });
 
   it("returns 404 when job does not exist", async () => {
     const { POST } = await import("../../app/api/jobs/[id]/retry/route");
-    const res = await (POST as Function)(makeReq(), makeCtx(), { id: "9999" });
+    const res = await (POST as (...args: unknown[]) => Promise<Response>)(makeReq(), makeCtx(), {
+      id: "9999",
+    });
 
     expect(res.status).toBe(404);
   });
@@ -283,14 +302,20 @@ describe("POST /api/jobs/:id/retry", () => {
     jobStore.push(job);
 
     const { POST } = await import("../../app/api/jobs/[id]/retry/route");
-    const res = await (POST as Function)(makeReq(), makeCtx("admin", 1), { id: "77" });
+    const res = await (POST as (...args: unknown[]) => Promise<Response>)(
+      makeReq(),
+      makeCtx("admin", 1),
+      { id: "77" },
+    );
 
     expect(res.status).toBe(404);
   });
 
   it("returns 404 for non-numeric id", async () => {
     const { POST } = await import("../../app/api/jobs/[id]/retry/route");
-    const res = await (POST as Function)(makeReq(), makeCtx(), { id: "abc" });
+    const res = await (POST as (...args: unknown[]) => Promise<Response>)(makeReq(), makeCtx(), {
+      id: "abc",
+    });
 
     expect(res.status).toBe(404);
   });

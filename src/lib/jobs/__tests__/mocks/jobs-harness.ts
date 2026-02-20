@@ -87,6 +87,9 @@ export const harness = {
 
     // simulate optimistic claim contention
     failClaimForJobIds: new Set<number>(),
+
+    // handler registry for in-memory runner
+    handlers: new Map<string, { handler: (payload: any) => Promise<void>; schema?: any }>(),
   },
 
   reset() {
@@ -97,6 +100,7 @@ export const harness = {
     this.state.handlerImpl = async () => {};
     this.state.validateImpl = null;
     this.state.failClaimForJobIds = new Set();
+    this.state.handlers.clear();
   },
 
   makeJob(overrides: Partial<MockJob> = {}): MockJob {
@@ -137,6 +141,17 @@ export const harness = {
     };
 
     return { ...base, ...overrides };
+  },
+
+  registerHandler(
+    type: string,
+    registration: { handler: (payload: any) => Promise<void>; schema?: any },
+  ) {
+    this.state.handlers.set(type, registration);
+  },
+
+  clearHandlers() {
+    this.state.handlers.clear();
   },
 };
 

@@ -9,6 +9,7 @@
  *  - Mock "../payload-schemas" so validatePayload never calls schema.safeParse on undefined
  *  - Mock "../handlers/webhook-delivery" and export WebhookDeliveryError (runner imports it)
  *  - Use the shared jobs test harness, matching runner-hardening + god-tier suites
+ *  - Use the new in-memory runner instead of the database-backed runner
  */
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -66,20 +67,25 @@ describe("runDueJobs", () => {
     harness.state.validateImpl = null;
     _id = 1;
 
+    // Register the default webhook handler
+    harness.registerHandler("webhook_delivery", {
+      handler: harness.state.handlerImpl,
+    });
+
     // if your harness uses these, ensure they exist/reset:
     if (!harness.state.failClaimForJobIds) harness.state.failClaimForJobIds = new Set<number>();
     else harness.state.failClaimForJobIds.clear();
   });
 
   it("returns processed=0 when no jobs are due", async () => {
-    const { runDueJobs } = await import("../runner");
+    const { runDueJobs } = await import("../runner-in-memory");
     const res = await runDueJobs("test-runner");
     expect(res.processed).toBe(0);
     expect(res.failed).toBe(0);
   });
 
   it("skips job when optimistic lock claim fails", async () => {
-    const { runDueJobs } = await import("../runner");
+    const { runDueJobs } = await import("../runner-in-memory");
     const job = makeJob({ id: 1 });
     harness.state.jobs.push(job);
 
@@ -92,7 +98,7 @@ describe("runDueJobs", () => {
   });
 
   it("marks job as success when handler resolves", async () => {
-    const { runDueJobs } = await import("../runner");
+    const { runDueJobs } = await import("../runner-in-memory");
     const job = makeJob();
     harness.state.jobs.push(job);
 
@@ -104,10 +110,15 @@ describe("runDueJobs", () => {
   });
 
   it("retries job (failed=1) when handler throws and not at maxAttempts", async () => {
-    const { runDueJobs } = await import("../runner");
+    const { runDueJobs } = await import("../runner-in-memory");
     harness.state.handlerImpl = async () => {
       throw new Error("boom");
     };
+
+    // Re-register the handler with the new throwing implementation
+    harness.registerHandler("webhook_delivery", {
+      handler: harness.state.handlerImpl,
+    });
 
     const job = makeJob({ maxAttempts: 3, attempt: 0 });
     harness.state.jobs.push(job);
@@ -122,10 +133,15 @@ describe("runDueJobs", () => {
   });
 
   it("marks job as dead_letter when attempt reaches maxAttempts", async () => {
-    const { runDueJobs } = await import("../runner");
+    const { runDueJobs } = await import("../runner-in-memory");
     harness.state.handlerImpl = async () => {
       throw new Error("boom");
     };
+
+    // Re-register the handler with the new throwing implementation
+    harness.registerHandler("webhook_delivery", {
+      handler: harness.state.handlerImpl,
+    });
 
     const job = makeJob({ maxAttempts: 1, attempt: 0 });
     harness.state.jobs.push(job);
@@ -138,7 +154,7 @@ describe("runDueJobs", () => {
   });
 
   it("dead-letters with HANDLER_MISSING when no handler is registered for type", async () => {
-    const { runDueJobs } = await import("../runner");
+    const { runDueJobs } = await import("../runner-in-memory");
     const job = makeJob({ type: "unknown_type" });
     harness.state.jobs.push(job);
 

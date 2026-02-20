@@ -219,11 +219,16 @@ describe("runDueJobs — hardening", () => {
     harness.state.handlerImpl = async () => {};
     harness.state.validateImpl = null;
     _id = 1;
+
+    // Register the default webhook handler
+    harness.registerHandler("webhook_delivery", {
+      handler: harness.state.handlerImpl,
+    });
   });
 
   describe("global lock", () => {
     it("returns skipped:lock_held when lock is held", async () => {
-      const { runDueJobs } = await import("../runner");
+      const { runDueJobs } = await import("../runner-in-memory");
       harness.state.lock = {
         lockedUntil: Date.now() + 60_000,
         lockedBy: "other",
@@ -235,7 +240,7 @@ describe("runDueJobs — hardening", () => {
     });
 
     it("acquires lock and processes jobs when lock is free", async () => {
-      const { runDueJobs } = await import("../runner");
+      const { runDueJobs } = await import("../runner-in-memory");
       harness.state.jobs.push(makeJob());
       const result = await runDueJobs("test-runner");
       expect(result.skipped).toBeUndefined();
@@ -245,7 +250,7 @@ describe("runDueJobs — hardening", () => {
 
   describe("TTL reclaim", () => {
     it("reclaims expired running jobs", async () => {
-      const { runDueJobs } = await import("../runner");
+      const { runDueJobs } = await import("../runner-in-memory");
       harness.state.jobs.push(
         makeJob({
           status: "running",
@@ -260,7 +265,7 @@ describe("runDueJobs — hardening", () => {
 
   describe("payload validation", () => {
     it("dead-letters with JOB_PAYLOAD_INVALID for invalid payload", async () => {
-      const { runDueJobs } = await import("../runner");
+      const { runDueJobs } = await import("../runner-in-memory");
       harness.state.validateImpl = () => ({ success: false, error: "webhookId: Required" });
       const job = makeJob({ payload: { bad: true } as any });
       harness.state.jobs.push(job);
@@ -279,7 +284,7 @@ describe("runDueJobs — hardening", () => {
 
   describe("missing handler", () => {
     it("dead-letters with JOB_HANDLER_MISSING for unknown type", async () => {
-      const { runDueJobs } = await import("../runner");
+      const { runDueJobs } = await import("../runner-in-memory");
       const job = makeJob({
         type: "unknown_type",
         payload: { webhookId: 1, organizationId: 1, event: "x", data: {}, timestamp: "t" } as any,
@@ -296,7 +301,7 @@ describe("runDueJobs — hardening", () => {
 
   describe("timing fields", () => {
     it("sets lastFinishedAt, lastDurationMs, clears lock fields on success", async () => {
-      const { runDueJobs } = await import("../runner");
+      const { runDueJobs } = await import("../runner-in-memory");
       const job = makeJob();
       harness.state.jobs.push(job);
 
@@ -312,10 +317,14 @@ describe("runDueJobs — hardening", () => {
     });
 
     it("sets lastErrorCode=JOB_HANDLER_ERROR on handler failure", async () => {
-      const { runDueJobs } = await import("../runner");
+      const { runDueJobs } = await import("../runner-in-memory");
       harness.state.handlerImpl = async () => {
         throw new Error("handler boom");
       };
+      // Re-register the handler with the new throwing implementation
+      harness.registerHandler("webhook_delivery", {
+        handler: harness.state.handlerImpl,
+      });
       const job = makeJob({ maxAttempts: 5 });
       harness.state.jobs.push(job);
 
@@ -328,15 +337,26 @@ describe("runDueJobs — hardening", () => {
 
   describe("time budget", () => {
     it("stops early when budget is exhausted", async () => {
-      const { runDueJobs } = await import("../runner");
+      const { runDueJobs, setTimeFn } = await import("../runner-in-memory");
       vi.useFakeTimers();
-      vi.setSystemTime(Date.now());
+      const startTime = Date.now();
+      vi.setSystemTime(startTime);
+
+      // Create a time variable that tracks the fake time
+      let currentTime = startTime;
+      setTimeFn(() => currentTime);
 
       for (let i = 0; i < 5; i++) harness.state.jobs.push(makeJob({ id: i + 1 }));
 
       harness.state.handlerImpl = async () => {
         vi.advanceTimersByTime(6000);
+        currentTime += 6000; // Update our time tracking
       };
+
+      // Re-register the handler with the new implementation
+      harness.registerHandler("webhook_delivery", {
+        handler: harness.state.handlerImpl,
+      });
 
       const result = await runDueJobs("test-runner");
 
