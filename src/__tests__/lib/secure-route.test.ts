@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { hasMinRole, hasScopes, normalizeRole, ROLE_RANK } from "@/lib/api/secure-route";
+import {
+  deriveRateLimitTier,
+  hasMinRole,
+  hasScopes,
+  normalizeRole,
+  ROLE_RANK,
+} from "@/lib/api/secure-route";
 
 describe("normalizeRole", () => {
   it("normalizes known roles", () => {
@@ -58,5 +64,31 @@ describe("hasScopes", () => {
 
   it("returns false when granted is empty but scopes required", () => {
     expect(hasScopes([], ["eval:read"])).toBe(false);
+  });
+});
+
+describe("deriveRateLimitTier", () => {
+  it("apiKey auth type → mcp tier", () => {
+    expect(deriveRateLimitTier("apiKey")).toBe("mcp");
+  });
+
+  it("session auth with owner role → pro tier", () => {
+    expect(deriveRateLimitTier("session", "owner")).toBe("pro");
+  });
+
+  it("session auth with admin role → pro tier", () => {
+    expect(deriveRateLimitTier("session", "admin")).toBe("pro");
+  });
+
+  it("session auth with member role → free tier", () => {
+    expect(deriveRateLimitTier("session", "member")).toBe("free");
+  });
+
+  it("session auth with viewer role → free tier", () => {
+    expect(deriveRateLimitTier("session", "viewer")).toBe("free");
+  });
+
+  it("session auth with no role → free tier", () => {
+    expect(deriveRateLimitTier("session")).toBe("free");
   });
 });

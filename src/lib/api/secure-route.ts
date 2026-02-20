@@ -105,7 +105,10 @@ export function hasScopes(granted: string[], required: string[]): boolean {
   return required.every((s) => set.has(s));
 }
 
-function deriveRateLimitTier(authType: AuthType, role?: Role): Exclude<RateLimitTier, "anonymous"> {
+export function deriveRateLimitTier(
+  authType: AuthType,
+  role?: Role,
+): Exclude<RateLimitTier, "anonymous"> {
   if (authType === "apiKey") return "mcp";
   if (role === "owner" || role === "admin") return "pro";
   return "free";

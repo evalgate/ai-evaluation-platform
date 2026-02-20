@@ -35,21 +35,21 @@
       "a11y": "warn",
       "correctness": {
         "noUnusedImports": "warn",
-        "noUnusedVariables": "off",
+        "noUnusedVariables": "warn",
         "noUnusedFunctionParameters": "off",
         "useHookAtTopLevel": "warn",
         "noInvalidUseBeforeDeclaration": "off",
         "useExhaustiveDependencies": "warn"
       },
       "suspicious": {
-        "noExplicitAny": "off",
+        "noExplicitAny": "warn",
         "noArrayIndexKey": "off",
         "noRedeclare": "off",
         "noCommentText": "off",
         "noDocumentCookie": "off",
         "noTemplateCurlyInString": "off",
         "useIterableCallbackReturn": "off",
-        "noImplicitAnyLet": "off",
+        "noImplicitAnyLet": "warn",
         "noAssignInExpressions": "off"
       },
       "style": {

@@ -4,6 +4,9 @@
 
 PRAGMA foreign_keys=OFF;
 
+-- Retry-safe: drop if left from failed run
+DROP TABLE IF EXISTS traces_new;
+
 CREATE TABLE traces_new (
   id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
   name TEXT NOT NULL,
@@ -19,7 +22,7 @@ CREATE TABLE traces_new (
 INSERT INTO traces_new (id, name, trace_id, organization_id, status, duration_ms, metadata, created_at)
 SELECT
   id, name, trace_id, organization_id, status, duration_ms, metadata,
-  unixepoch(created_at)
+  COALESCE(unixepoch(created_at), strftime('%s', replace(created_at, 'T', ' ')), strftime('%s', 'now'))
 FROM traces;
 
 DROP TABLE traces;

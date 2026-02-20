@@ -4,6 +4,9 @@
 
 PRAGMA foreign_keys=OFF;
 
+-- Retry-safe: drop if left from failed run
+DROP TABLE IF EXISTS organization_members_new;
+
 CREATE TABLE organization_members_new (
   id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
   organization_id INTEGER NOT NULL REFERENCES organizations(id),
@@ -16,7 +19,7 @@ CREATE TABLE organization_members_new (
 INSERT INTO organization_members_new (id, organization_id, user_id, role, created_at)
 SELECT
   id, organization_id, user_id, role,
-  unixepoch(created_at)
+  COALESCE(unixepoch(created_at), strftime('%s', replace(created_at, 'T', ' ')), strftime('%s', 'now'))
 FROM organization_members;
 
 DROP TABLE organization_members;

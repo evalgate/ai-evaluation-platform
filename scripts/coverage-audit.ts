@@ -14,7 +14,7 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 
 const THRESHOLDS: Record<string, number> = {
-  "src/lib": 14,
+  "src/lib": 18,
   "src/db": 28,
   "src/app/api": 6,
   "src/packages/sdk": 39,

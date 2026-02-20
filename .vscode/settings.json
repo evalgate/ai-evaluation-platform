@@ -1,0 +1,6 @@
+{
+  "github-actions.workflows.pinned.workflows": [],
+  "github-actions.org-secrets.enabled": false,
+  "github-actions.remote-name": "origin",
+  "github-actions.use-enterprise-url": false
+}
