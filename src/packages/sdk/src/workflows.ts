@@ -68,6 +68,20 @@ export interface WorkflowDefinition {
 // TYPES - Workflow Execution
 // ============================================================================
 
+// External library interfaces for type safety
+interface LangChainExecutor {
+  invoke?: (input: unknown, config?: unknown) => Promise<unknown>;
+  call?: (input: unknown, config?: unknown) => Promise<unknown>;
+}
+
+interface CrewAI {
+  kickoff?: (input?: unknown) => Promise<unknown>;
+}
+
+interface LangChainConversation {
+  initiate_chat?: (...args: unknown[]) => Promise<unknown>;
+}
+
 /**
  * Active workflow context
  */
@@ -769,10 +783,10 @@ export class WorkflowTracer {
  * ```
  */
 export function traceLangChainAgent(
-  executor: unknown,
+  executor: LangChainExecutor,
   tracer: WorkflowTracer,
   options: { agentName?: string } = {},
-): unknown {
+): LangChainExecutor {
   const agentName = options.agentName || "LangChainAgent";
 
   const originalInvoke = executor.invoke?.bind(executor);
@@ -830,10 +844,10 @@ export function traceLangChainAgent(
  * ```
  */
 export function traceCrewAI(
-  crew: unknown,
+  crew: CrewAI,
   tracer: WorkflowTracer,
   options: { crewName?: string } = {},
-): unknown {
+): CrewAI {
   const crewName = options.crewName || "CrewAI";
 
   const originalKickoff = crew.kickoff?.bind(crew);
@@ -877,10 +891,10 @@ export function traceCrewAI(
  * ```
  */
 export function traceAutoGen(
-  conversation: unknown,
+  conversation: LangChainConversation,
   tracer: WorkflowTracer,
   options: { conversationName?: string } = {},
-): unknown {
+): LangChainConversation {
   const conversationName = options.conversationName || "AutoGenConversation";
 
   const originalInitiateChat = conversation.initiate_chat?.bind(conversation);
