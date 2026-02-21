@@ -24,9 +24,9 @@ export class LLMJudgeService {
    * Generate a judge prompt for evaluating an output
    */
   generateJudgePrompt(
-    input: any,
-    output: any,
-    expectedOutput: any | null,
+    input: unknown,
+    output: unknown,
+    expectedOutput: unknown | null,
     config: JudgePromptConfig,
   ): string {
     const criteriaText = config.criteria.map((c) => `- ${c.name}: ${c.description}`).join("\n");

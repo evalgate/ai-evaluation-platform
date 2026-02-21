@@ -33,7 +33,7 @@ export function ShadowEvalButton({ evaluationId, disabled }: ShadowEvalButtonPro
       if (!res.ok) throw new Error(data.error || "Shadow eval failed");
       setResult({ matched: data.matched ?? 0, total: data.total ?? 0 });
       setStatus("done");
-    } catch (e: any) {
+    } catch (e: unknown) {
       setErrorMsg(e.message);
       setStatus("error");
     }

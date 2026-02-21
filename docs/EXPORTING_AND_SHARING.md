@@ -32,7 +32,7 @@ Complete guide to exporting evaluation results and sharing them publicly.
 2. (Optional) Enter a custom share ID
 3. Click **Export & Publish**
 4. Copy the generated share link
-5. Share with anyone!
+5. Share with unknownone!
 
 ---
 
@@ -82,7 +82,7 @@ Downloads a comprehensive JSON file with all evaluation data:
 
 When you publish an evaluation as a demo:
 - ✅ It becomes publicly accessible via a share link
-- ✅ Anyone can view results without signing in
+- ✅ unknownone can view results without signing in
 - ✅ Viewers can copy or download the data
 - ✅ Perfect for showcasing your work or sharing with stakeholders
 
@@ -309,10 +309,10 @@ await client.evaluations.unpublish({
 ### Security Considerations
 
 **Public Demos:**
-- ⚠️ Anyone with the link can view
+- ⚠️ unknownone with the link can view
 - ⚠️ Data is stored in the database (sharedExports table)
 - ⚠️ Cannot be password-protected
-- ✅ Can be unpublished anytime
+- ✅ Can be unpublished unknowntime
 
 **Recommendations:**
 1. Review data before publishing
@@ -413,7 +413,7 @@ const data = await exportEvaluation('eval-123')
 
 // Send via email
 await sendEmail({
-  to: 'stakeholder@company.com',
+  to: 'stakeholder@compunknown.com',
   subject: 'Q4 AI Quality Report',
   body: 'Please find attached...',
   attachments: [{

@@ -99,7 +99,7 @@ Quality Criteria:
 - ✓ Well-structured
 - ✓ Appropriate length
 
-Flag any issues:
+Flag unknown issues:
 - ⚠️ Contains errors
 - ⚠️ Inappropriate content
 - ⚠️ Misses key information`,
@@ -134,7 +134,7 @@ Flag any issues:
 
 1. What did the AI do well?
 2. What could be improved?
-3. Any specific errors or concerns?
+3. unknown specific errors or concerns?
 4. Overall rating (1-5 stars)
 
 Be specific and provide examples where possible.`,
@@ -151,7 +151,12 @@ Be specific and provide examples where possible.`,
         type: "text",
         placeholder: "What could be better?",
       },
-      { name: "concerns", label: "Concerns", type: "text", placeholder: "Any errors or issues?" },
+      {
+        name: "concerns",
+        label: "Concerns",
+        type: "text",
+        placeholder: "unknown errors or issues?",
+      },
       { name: "rating", label: "Overall Rating", type: "rating", scale: 5 },
     ],
   },
@@ -168,7 +173,7 @@ interface AnnotationTask {
 }
 
 // Helper functions
-const fetchTasks = async (_session: any) => {
+const fetchTasks = async (_session: unknown) => {
   try {
     const response = await fetch("/api/annotations/tasks", {
       credentials: "include",
@@ -592,7 +597,7 @@ export default function AnnotationsPage() {
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="open">
-                              Open - Any team member can annotate
+                              Open - unknown team member can annotate
                             </SelectItem>
                             <SelectItem value="assigned">
                               Assigned - Specific annotators only
@@ -607,7 +612,7 @@ export default function AnnotationsPage() {
                         </Select>
                         <p className="text-xs text-muted-foreground">
                           {annotatorAssignment === "open" &&
-                            "All team members can annotate any item"}
+                            "All team members can annotate unknown item"}
                           {annotatorAssignment === "assigned" &&
                             "Only assigned annotators can work on specific items"}
                           {annotatorAssignment === "round-robin" &&

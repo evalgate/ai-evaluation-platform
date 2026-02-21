@@ -4,7 +4,7 @@
  * Evaluates a customer-hosted endpoint by sending test inputs via webhook
  * and scoring the responses.
  *
- * This is the universal executor pattern — it works with any model,
+ * This is the universal executor pattern — it works with unknown model,
  * framework, or language as long as the endpoint accepts a POST with
  * `{ input: string }` and returns `{ output: string }`.
  *

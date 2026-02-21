@@ -97,7 +97,7 @@ export function ExportModal({ open, onOpenChange, evaluationName, onExport }: Ex
               Evaluation Published!
             </DialogTitle>
             <DialogDescription>
-              Your evaluation is now publicly accessible. Share this link with anyone.
+              Your evaluation is now publicly accessible. Share this link with unknownone.
             </DialogDescription>
           </DialogHeader>
 
@@ -151,7 +151,7 @@ export function ExportModal({ open, onOpenChange, evaluationName, onExport }: Ex
                   Make this export public as demo
                 </label>
                 <p className="text-sm text-muted-foreground">
-                  Anyone with the link can view this evaluation
+                  unknownone with the link can view this evaluation
                 </p>
               </div>
             </div>

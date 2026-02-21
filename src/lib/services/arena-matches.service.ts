@@ -11,7 +11,7 @@ export const createArenaMatchSchema = z.object({
   prompt: z.string().min(1),
   models: z.array(z.string()).min(2).max(10),
   judgeConfigId: z.number().optional(),
-  metadata: z.record(z.any()).optional(),
+  metadata: z.record(z.unknown()).optional(),
 });
 
 export type CreateArenaMatchInput = z.infer<typeof createArenaMatchSchema>;
@@ -33,7 +33,7 @@ export interface ArenaMatchResult {
     cost: number;
   }>;
   scores: Record<string, number>;
-  metadata: Record<string, any>;
+  metadata: Record<string, unknown>;
   organizationId: number;
   createdBy: string;
   createdAt: string;
@@ -323,7 +323,7 @@ export class ArenaMatchesService {
    */
   private async runArenaMatch(
     prompt: string,
-    models: Array<{ id: string; label: string; config: any }>,
+    models: Array<{ id: string; label: string; config: unknown }>,
     organizationId: number,
     judgeConfigId: number,
   ): Promise<
@@ -368,7 +368,7 @@ export class ArenaMatchesService {
           tokenCount,
           cost,
         });
-      } catch (error: any) {
+      } catch (error: unknown) {
         logger.error(`Arena match failed for model ${model.label}`, error);
 
         results.push({
@@ -431,7 +431,7 @@ export class ArenaMatchesService {
   private async getAvailableModels(
     _organizationId: number,
     requestedModels: string[],
-  ): Promise<Array<{ id: string; label: string; config: any }>> {
+  ): Promise<Array<{ id: string; label: string; config: unknown }>> {
     // This would integrate with your model management system
     // For now, return mock data
     const allModels = [
@@ -528,7 +528,7 @@ Provide a clear explanation for your choice.`,
    * Call a model (placeholder for actual LLM integration).
    */
   private async callModel(
-    model: { id: string; label: string; config: any },
+    model: { id: string; label: string; config: unknown },
     _prompt: string,
   ): Promise<string> {
     // This would integrate with your actual LLM providers
@@ -559,7 +559,7 @@ Provide a clear explanation for your choice.`,
   /**
    * Calculate cost for a model call.
    */
-  private calculateCost(config: any, tokenCount: number): number {
+  private calculateCost(config: unknown, tokenCount: number): number {
     // This would integrate with your pricing system
     const pricing: Record<string, number> = {
       "gpt-4": 0.03, // $0.03 per 1K tokens

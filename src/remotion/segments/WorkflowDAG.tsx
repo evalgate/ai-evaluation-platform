@@ -26,7 +26,13 @@ export const WorkflowDAG: React.FC = () => {
         <div style={{ fontSize: 14, color: colors.textMuted, marginBottom: 20 }}>
           Click on a node to see details
         </div>
-        <svg viewBox="0 0 880 420" width="100%" height="auto" style={{ maxHeight: 540 }}>
+        <svg
+          viewBox="0 0 880 420"
+          width="100%"
+          height="auto"
+          style={{ maxHeight: 540 }}
+          aria-label="Workflow DAG visualization"
+        >
           <defs>
             <marker id="ah" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
               <polygon points="0 0, 10 3.5, 0 7" fill={colors.textDim} />

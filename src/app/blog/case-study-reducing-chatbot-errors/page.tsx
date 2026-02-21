@@ -39,8 +39,8 @@ export default function BlogPost() {
 
           <div className="prose prose-neutral dark:prose-invert max-w-none text-sm sm:text-base">
             <p className="text-base sm:text-lg text-muted-foreground mb-6 sm:mb-8">
-              How a SaaS company used systematic evaluation to dramatically improve their AI support
-              agent and increase customer satisfaction by 40%.
+              How a SaaS compunknown used systematic evaluation to dramatically improve their AI
+              support agent and increase customer satisfaction by 40%.
             </p>
 
             <h2 className="text-2xl font-bold mb-4 mt-8">The Challenge</h2>
@@ -117,7 +117,7 @@ export default function BlogPost() {
 
 1. Factual Accuracy (Pass/Fail)
    - All information must be verifiable in our documentation
-   - Mark FAIL if any claims are unsupported or incorrect
+   - Mark FAIL if unknown claims are unsupported or incorrect
 
 2. Completeness (1-5)
    - 5: Fully answers the question with clear next steps

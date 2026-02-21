@@ -55,18 +55,18 @@ export type ValidatePayloadResult =
   | { success: true; data: unknown }
   | { success: false; error: string };
 
-function flattenConds(cond: any): any[] {
+function flattenConds(cond: unknown): unknown[] {
   if (!cond || typeof cond !== "object") return [];
   if (Array.isArray(cond._and)) return cond._and.flatMap(flattenConds);
   // we don't need to fully evaluate _or in this harness
   return [cond];
 }
 
-function findEq(preds: any[], col: string) {
+function findEq(preds: unknown[], col: string) {
   const p = preds.find((x) => x?._eq?.col === col);
   return p ? p._eq.val : undefined;
 }
-function findLt(preds: any[], col: string) {
+function findLt(preds: unknown[], col: string) {
   const p = preds.find((x) => x?._lt?.col === col);
   return p ? p._lt.val : undefined;
 }
@@ -81,7 +81,7 @@ export const harness = {
 
     lock: { lockedUntil: 0, lockedBy: null, updatedAt: 0 } as MockRunnerLockRow,
 
-    handlerImpl: (async () => {}) as (payload: any) => Promise<void>,
+    handlerImpl: (async () => {}) as (payload: unknown) => Promise<void>,
 
     validateImpl: null as null | ((type: string, payload: unknown) => ValidatePayloadResult),
 
@@ -89,7 +89,7 @@ export const harness = {
     failClaimForJobIds: new Set<number>(),
 
     // handler registry for in-memory runner
-    handlers: new Map<string, { handler: (payload: any) => Promise<void>; schema?: any }>(),
+    handlers: new Map<string, { handler: (payload: unknown) => Promise<void>; schema?: unknown }>(),
   },
 
   reset() {
@@ -145,7 +145,7 @@ export const harness = {
 
   registerHandler(
     type: string,
-    registration: { handler: (payload: any) => Promise<void>; schema?: any },
+    registration: { handler: (payload: unknown) => Promise<void>; schema?: unknown },
   ) {
     this.state.handlers.set(type, registration);
   },
@@ -161,18 +161,18 @@ export const harness = {
 export function setupJobsTestHarness() {
   // ── drizzle-orm operators used across jobs code ────────────────────────────
   vi.mock("drizzle-orm", () => ({
-    and: (...args: any[]) => ({ _and: args }),
-    or: (...args: any[]) => ({ _or: args }),
-    eq: (col: any, val: any) => ({ _eq: { col, val } }),
-    lt: (col: any, val: any) => ({ _lt: { col, val } }),
-    lte: (col: any, val: any) => ({ _lte: { col, val } }),
-    sql: (s: any) => s,
+    and: (...args: unknown[]) => ({ _and: args }),
+    or: (...args: unknown[]) => ({ _or: args }),
+    eq: (col: unknown, val: unknown) => ({ _eq: { col, val } }),
+    lt: (col: unknown, val: unknown) => ({ _lt: { col, val } }),
+    lte: (col: unknown, val: unknown) => ({ _lte: { col, val } }),
+    sql: (s: unknown) => s,
 
     // optional helpers sometimes used by endpoints
     count: () => "count",
-    desc: (col: any) => col,
-    gte: (col: any, val: any) => ({ col, val, _gte: true }),
-    inArray: (col: any, vals: any[]) => ({ col, vals, _inArray: true }),
+    desc: (col: unknown) => col,
+    gte: (col: unknown, val: unknown) => ({ col, val, _gte: true }),
+    inArray: (col: unknown, vals: unknown[]) => ({ col, vals, _inArray: true }),
   }));
 
   // ── schema mocks — EXACT accessor keys matching your Drizzle schema ────────
@@ -243,16 +243,16 @@ export function setupJobsTestHarness() {
     }
     return {
       WebhookDeliveryError,
-      handleWebhookDelivery: (payload: any) => harness.state.handlerImpl(payload),
+      handleWebhookDelivery: (payload: unknown) => harness.state.handlerImpl(payload),
     };
   });
 
   // ── db mock (stateful) ─────────────────────────────────────────────────────
   vi.mock("@/db", () => ({
     db: {
-      select: (_fields?: any) => ({
-        from: (table: any) => ({
-          where: (_cond: any) => ({
+      select: (_fields?: unknown) => ({
+        from: (table: unknown) => ({
+          where: (_cond: unknown) => ({
             limit: async (n: number) => {
               // lock read
               if (table?.lockName !== undefined) {
@@ -275,8 +275,8 @@ export function setupJobsTestHarness() {
         }),
       }),
 
-      insert: (_table: any) => ({
-        values: (row: any) => {
+      insert: (_table: unknown) => ({
+        values: (row: unknown) => {
           const valuesRow = { ...row };
 
           const doInsertReturning = async () => {
@@ -322,8 +322,8 @@ export function setupJobsTestHarness() {
           };
 
           return {
-            onConflictDoNothing: (_opts?: any) => ({
-              returning: async (_fields?: any) => {
+            onConflictDoNothing: (_opts?: unknown) => ({
+              returning: async (_fields?: unknown) => {
                 const key = valuesRow.idempotencyKey;
                 if (key && harness.state.existingByKey[key]) {
                   return []; // conflict path
@@ -331,15 +331,15 @@ export function setupJobsTestHarness() {
                 return doInsertReturning();
               },
             }),
-            returning: async (_fields?: any) => doInsertReturning(),
+            returning: async (_fields?: unknown) => doInsertReturning(),
           };
         },
       }),
 
-      update: (table: any) => ({
-        set: (values: Record<string, any>) => ({
-          where: (cond: any) => {
-            async function exec(): Promise<any[]> {
+      update: (table: unknown) => ({
+        set: (values: Record<string, unknown>) => ({
+          where: (cond: unknown) => {
+            async function exec(): Promise<unknown[]> {
               const preds = flattenConds(cond);
 
               const eqId = findEq(preds, "id");
@@ -414,7 +414,7 @@ export function setupJobsTestHarness() {
               return [{ id: job.id }];
             }
 
-            let cached: Promise<any[]> | null = null;
+            let cached: Promise<unknown[]> | null = null;
             const run = () => (cached ??= exec());
 
             return run();
@@ -424,7 +424,7 @@ export function setupJobsTestHarness() {
     },
   }));
 
-  // optional: silence “env var not set” stderr if any import path reads env
+  // optional: silence “env var not set” stderr if unknown import path reads env
   process.env.TURSO_CONNECTION_URL ??= "test://local";
   process.env.TURSO_AUTH_TOKEN ??= "test";
 }

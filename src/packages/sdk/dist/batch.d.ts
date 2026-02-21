@@ -6,13 +6,13 @@ export interface BatchRequest {
     id: string;
     method: string;
     endpoint: string;
-    body?: any;
+    body?: unknown;
     headers?: Record<string, string>;
 }
 export interface BatchResponse {
     id: string;
     status: number;
-    data?: any;
+    data?: unknown;
     error?: string;
 }
 /**
@@ -32,7 +32,7 @@ export declare class RequestBatcher {
     /**
      * Add request to batch queue
      */
-    enqueue(method: string, endpoint: string, body?: any, headers?: Record<string, string>): Promise<any>;
+    enqueue(method: string, endpoint: string, body?: unknown, headers?: Record<string, string>): Promise<unknown>;
     /**
      * Schedule batch processing after delay
      */

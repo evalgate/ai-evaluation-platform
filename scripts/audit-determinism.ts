@@ -9,7 +9,7 @@
  * Requires OPENAI_API_KEY. Skips if not set (e.g. local dev without key).
  *
  * Run: pnpm audit:determinism
- * Run: pnpm audit:determinism --fail-on-flake  (exit 1 if any case is flaky)
+ * Run: pnpm audit:determinism --fail-on-flake  (exit 1 if unknown case is flaky)
  * CI: nightly only (not every PR)
  */
 

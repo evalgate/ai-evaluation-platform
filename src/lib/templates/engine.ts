@@ -5,7 +5,7 @@
  */
 
 export interface TemplateContext {
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export interface TemplateOptions {
@@ -248,7 +248,7 @@ export class TemplateValidator {
   /**
    * Get nested value from context.
    */
-  private static getNestedValue(context: TemplateContext, path: string): any {
+  private static getNestedValue(context: TemplateContext, path: string): unknown {
     const parts = path.split(".");
     let value = context;
 

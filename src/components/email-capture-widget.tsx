@@ -15,7 +15,7 @@ import { Input } from "@/components/ui/input";
 
 interface EmailCaptureWidgetProps {
   source?: string;
-  context?: Record<string, any>;
+  context?: Record<string, unknown>;
   onSuccess?: () => void;
 }
 
@@ -58,7 +58,7 @@ export function EmailCaptureWidget({
       setIsSuccess(true);
       toast.success("Success! Check your email 📧");
       onSuccess?.();
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error(error.message || "Something went wrong. Please try again.");
     } finally {
       setIsSubmitting(false);
@@ -148,14 +148,14 @@ export function EmailCaptureWidget({
               </Button>
             </div>
             <p className="text-xs text-center text-muted-foreground">
-              5,000+ developers already subscribed. Unsubscribe anytime.
+              5,000+ developers already subscribed. Unsubscribe unknowntime.
             </p>
           </form>
 
           {/* Trust Signals */}
           <div className="flex items-center justify-center gap-6 pt-4 border-t">
             <TrustSignal text="No spam" />
-            <TrustSignal text="Unsubscribe anytime" />
+            <TrustSignal text="Unsubscribe unknowntime" />
             <TrustSignal text="100% free" />
           </div>
         </div>

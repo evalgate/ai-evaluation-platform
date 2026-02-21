@@ -226,7 +226,7 @@ export class ScoringAlgorithms {
         algorithm: "bleu",
         metrics: {
           bleu: finalScore / 100,
-          precisions: precisions as any,
+          precisions: precisions as unknown,
           brevityPenalty: bp,
           refLength: refTokens.length,
           candLength: candTokens.length,
@@ -279,7 +279,7 @@ export class ScoringAlgorithms {
           levenshtein: normalizedLevenshtein,
           jaccard: normalizedJaccard,
           lengthPenalty,
-          weights: weights as any,
+          weights: weights as unknown,
         },
         explanation: `Combined score: ${finalScore}/100 (semantic: ${Math.round(normalizedCosine * 100)}, syntactic: ${Math.round(normalizedLevenshtein * 100)}, length: ${Math.round(normalizedJaccard * 100)}, penalty: ${Math.round(lengthPenalty * 100)}%)`,
       },

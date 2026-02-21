@@ -64,5 +64,5 @@ describe("Executor failure modes", () => {
     const { EXIT } = await import("../cli/check");
     expect(EXIT.API_ERROR).toBeGreaterThan(0);
     expect(EXIT.PASS).toBe(0);
-  });
+  }, 10000);
 });

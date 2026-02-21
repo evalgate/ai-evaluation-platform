@@ -10,7 +10,7 @@ interface CacheEntry<T> {
 }
 
 export class RequestCache {
-  private cache: Map<string, CacheEntry<any>>;
+  private cache: Map<string, CacheEntry<unknown>>;
   private maxSize: number;
 
   constructor(maxSize: number = 1000) {
@@ -21,7 +21,7 @@ export class RequestCache {
   /**
    * Generate cache key from request parameters
    */
-  private generateKey(method: string, url: string, params?: any): string {
+  private generateKey(method: string, url: string, params?: unknown): string {
     const paramString = params ? JSON.stringify(params) : "";
     return `${method}:${url}:${paramString}`;
   }
@@ -36,7 +36,7 @@ export class RequestCache {
   /**
    * Get cached response if valid
    */
-  get<T>(method: string, url: string, params?: any): T | null {
+  get<T>(method: string, url: string, params?: unknown): T | null {
     const key = this.generateKey(method, url, params);
     const entry = this.cache.get(key);
 
@@ -55,7 +55,7 @@ export class RequestCache {
   /**
    * Store response in cache
    */
-  set<T>(method: string, url: string, data: T, ttl: number, params?: any): void {
+  set<T>(method: string, url: string, data: T, ttl: number, params?: unknown): void {
     // Enforce cache size limit (LRU-style)
     if (this.cache.size >= this.maxSize) {
       const firstKey = this.cache.keys().next().value;
@@ -75,7 +75,7 @@ export class RequestCache {
   /**
    * Invalidate specific cache entry
    */
-  invalidate(method: string, url: string, params?: any): void {
+  invalidate(method: string, url: string, params?: unknown): void {
     const key = this.generateKey(method, url, params);
     this.cache.delete(key);
   }

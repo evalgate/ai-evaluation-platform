@@ -26,7 +26,7 @@ export interface WorkflowNode {
   id: string;
   type: "agent" | "tool" | "decision" | "parallel" | "human" | "llm";
   name: string;
-  config?: Record<string, any>;
+  config?: Record<string, unknown>;
   // Runtime data (optional)
   status?: "pending" | "running" | "completed" | "failed";
   durationMs?: number;
@@ -50,7 +50,7 @@ export interface WorkflowDefinition {
   nodes: WorkflowNode[];
   edges: WorkflowEdge[];
   entrypoint: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface WorkflowDAGProps {
@@ -147,7 +147,7 @@ function calculateLayout(
     queue = [...new Set(nextQueue)];
   }
 
-  // Add any unvisited nodes (disconnected components)
+  // Add unknown unvisited nodes (disconnected components)
   nodes.forEach((node) => {
     if (!visited.has(node.id)) {
       levels.push([node.id]);

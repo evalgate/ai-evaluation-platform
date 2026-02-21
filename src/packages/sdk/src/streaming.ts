@@ -52,14 +52,14 @@ export interface BatchError {
   /** The error */
   error: Error;
   /** The item that failed */
-  item: any;
+  item: unknown;
 }
 
 export interface BatchResult<T> {
   /** Successfully processed items */
   successful: T[];
   /** Failed items */
-  failed: Array<{ item: any; error: Error }>;
+  failed: Array<{ item: unknown; error: Error }>;
   /** Summary */
   summary: {
     total: number;
@@ -203,12 +203,12 @@ export async function batchProcess<TInput, TOutput>(
  */
 export async function* streamEvaluation<T>(config: {
   cases: T[];
-  executor: (testCase: T) => Promise<any>;
+  executor: (testCase: T) => Promise<unknown>;
   onProgress?: (progress: BatchProgress) => void;
 }): AsyncGenerator<{
   caseId: string;
   case: T;
-  result: any;
+  result: unknown;
   passed: boolean;
   completed: number;
   total: number;
@@ -306,7 +306,7 @@ export async function batchRead<T>(
  * ```
  */
 export class RateLimiter {
-  private queue: Array<() => Promise<any>> = [];
+  private queue: Array<() => Promise<unknown>> = [];
   private processing = false;
   private requestsPerSecond: number;
   private interval: number;

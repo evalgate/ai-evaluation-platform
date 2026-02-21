@@ -106,7 +106,7 @@ interface Workflow {
   name: string;
   description: string | null;
   status: "draft" | "active" | "archived";
-  definition: any;
+  definition: unknown;
   createdAt: string;
   updatedAt: string;
   _count?: {

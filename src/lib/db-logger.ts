@@ -6,7 +6,7 @@ import { logger } from "./logger";
 
 interface QueryLog {
   query: string;
-  params?: any[];
+  params?: unknown[];
   duration?: number;
   table?: string;
   operation?: "select" | "insert" | "update" | "delete";
@@ -79,6 +79,6 @@ export function logConnectionStats(stats: { active: number; idle: number; waitin
 /**
  * Log database errors
  */
-export function logDatabaseError(error: Error, context?: Record<string, any>) {
+export function logDatabaseError(error: Error, context?: Record<string, unknown>) {
   dbLogger.error("Database error", error, context);
 }

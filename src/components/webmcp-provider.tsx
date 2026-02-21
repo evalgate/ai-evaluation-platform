@@ -14,12 +14,12 @@ declare global {
 interface WebMCPTool {
   name: string;
   description: string;
-  inputSchema: Record<string, any>;
-  execute: (params: any) => Promise<any>;
+  inputSchema: Record<string, unknown>;
+  execute: (params: unknown) => Promise<unknown>;
 }
 
 /** Fetch wrapper with error handling for all WebMCP tools */
-async function safeFetch(url: string, init?: RequestInit): Promise<any> {
+async function safeFetch(url: string, init?: RequestInit): Promise<unknown> {
   const response = await fetch(url, init);
   if (!response.ok) {
     const text = await response.text().catch(() => "");
@@ -100,7 +100,7 @@ export function WebMCPProvider() {
           },
           required: ["name", "type"],
         },
-        execute: async (params: any) => {
+        execute: async (params: unknown) => {
           return safeFetch("/api/evaluations", {
             method: "POST",
             headers: { "Content-Type": "application/json" },

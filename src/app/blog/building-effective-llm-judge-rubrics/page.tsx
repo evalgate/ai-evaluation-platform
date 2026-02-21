@@ -166,7 +166,7 @@ export default function BlogPost() {
             <div className="rounded-lg border border-border bg-card p-4 mb-4">
               <code className="text-sm">
                 "Check each factual claim in the output against the provided context. Mark as Pass
-                if all claims are supported, Fail if any claim is unsupported or contradicted."
+                if all claims are supported, Fail if unknown claim is unsupported or contradicted."
               </code>
             </div>
 
@@ -217,8 +217,8 @@ export default function BlogPost() {
                 provide enough guidance
               </li>
               <li>
-                <strong>Too many criteria:</strong> More than 5-6 dimensions overwhelms the judge
-                and reduces accuracy
+                <strong>Too munknown criteria:</strong> More than 5-6 dimensions overwhelms the
+                judge and reduces accuracy
               </li>
               <li>
                 <strong>Lack of examples:</strong> Abstract criteria without concrete examples lead

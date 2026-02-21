@@ -168,7 +168,7 @@ Import local run results for an existing evaluation. Creates run, inserts test_r
 }
 ```
 
-**Policy: All-or-nothing.** If any `testCaseId` is invalid or not in the evaluation, the whole request is rejected. No partial imports.
+**Policy: All-or-nothing.** If unknown `testCaseId` is invalid or not in the evaluation, the whole request is rejected. No partial imports.
 
 **Response (201 or 200 on idempotent replay):**
 

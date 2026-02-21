@@ -23,7 +23,7 @@ export type CreateWebhookInput = z.infer<typeof createWebhookSchema>;
 
 export interface WebhookPayload {
   event: string;
-  data: any;
+  data: unknown;
   timestamp: string;
   organizationId: number;
 }
@@ -82,7 +82,7 @@ export class WebhookService {
       .values({
         organizationId,
         url: data.url,
-        events: data.events as any,
+        events: data.events as unknown,
         secret: encryptedSecret.secretPlaceholder,
         encryptedSecret: encryptedSecret.encryptedSecret,
         secretIv: encryptedSecret.secretIv,
@@ -110,7 +110,7 @@ export class WebhookService {
       return null;
     }
 
-    const updateData: any = {
+    const updateData: unknown = {
       updatedAt: new Date().toISOString(),
     };
     if (data.url) updateData.url = data.url;
@@ -229,7 +229,7 @@ export class WebhookService {
           error,
         });
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       error = err.message;
       logger.error("Webhook delivery error", {
         webhookId,
@@ -244,7 +244,7 @@ export class WebhookService {
       .values({
         webhookId,
         eventType: payload.event,
-        payload: payload as any,
+        payload: payload as unknown,
         status,
         responseStatus: responseCode || null,
         responseBody: error ? `Error: ${error}` : responseBody,
@@ -329,7 +329,7 @@ export class WebhookService {
    * Each subscribed webhook gets its own job with retry/backoff semantics.
    * Returns immediately with the count of enqueued jobs.
    */
-  async trigger(organizationId: number, event: string, data: any) {
+  async trigger(organizationId: number, event: string, data: unknown) {
     logger.info("Triggering webhooks for event", { organizationId, event });
 
     const activeWebhooks = await db

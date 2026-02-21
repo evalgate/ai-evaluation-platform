@@ -18,7 +18,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { harness, setupJobsTestHarness } from "./mocks/jobs-harness";
 
-// Set up mocks BEFORE any imports
+// Set up mocks BEFORE unknown imports
 vi.mock("../handlers/webhook-delivery", () => {
   class WebhookDeliveryError extends Error {
     errorCode: string;
@@ -33,7 +33,7 @@ vi.mock("../handlers/webhook-delivery", () => {
 
   return {
     WebhookDeliveryError,
-    handleWebhookDelivery: (payload: any) => harness.state.handlerImpl(payload),
+    handleWebhookDelivery: (payload: unknown) => harness.state.handlerImpl(payload),
   };
 });
 
@@ -80,7 +80,7 @@ describe("enqueue()", () => {
 
     expect(id1).toBe(id2);
     // Only one insert should have occurred
-    expect(harness.state.jobs.filter((j: any) => j.idempotencyKey === key)).toHaveLength(1);
+    expect(harness.state.jobs.filter((j: unknown) => j.idempotencyKey === key)).toHaveLength(1);
   });
 
   it("inserts multiple jobs when no idempotency key is provided", async () => {

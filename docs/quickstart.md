@@ -49,7 +49,7 @@ Add to your CI workflow:
 
 If your score drops below the baseline, CI fails. That's your regression gate. `--format github` gives annotations + step summary; `--onFail import` uploads failing runs to the dashboard for debugging.
 
-## Remove anytime
+## Remove unknowntime
 
 Delete `evalai.config.json`. That's it.
 

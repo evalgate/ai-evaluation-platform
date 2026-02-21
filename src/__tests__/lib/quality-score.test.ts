@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { calculateQualityScore, type EvaluationStats } from "@/lib/ai-quality-score";
 import { computeQualityScore } from "@/lib/scoring/quality-score";
 
 describe("computeQualityScore", () => {
@@ -229,6 +230,49 @@ describe("computeQualityScore", () => {
 
     expect(result.score).toBeGreaterThanOrEqual(0);
     expect(result.score).toBeLessThanOrEqual(100);
+  });
+
+  it("normalizes NaN/Infinity stats before scoring", () => {
+    const raw: EvaluationStats = {
+      totalEvaluations: NaN,
+      passedEvaluations: Infinity,
+      failedEvaluations: -Infinity,
+      averageLatency: NaN,
+      averageCost: Infinity,
+      averageScore: NaN,
+      consistencyScore: Infinity,
+    };
+
+    const result = calculateQualityScore(raw);
+
+    expect(result.metrics.accuracy).toBeGreaterThanOrEqual(0);
+    expect(Number.isFinite(result.metrics.latency)).toBe(true);
+    expect(Number.isFinite(result.metrics.cost)).toBe(true);
+    expect(result.trend).toBe(0);
+  });
+
+  it("returns zero trend when previous overall score is zero", () => {
+    const stats: EvaluationStats = {
+      totalEvaluations: 10,
+      passedEvaluations: 10,
+      failedEvaluations: 0,
+      averageLatency: 100,
+      averageCost: 0.01,
+      averageScore: 100,
+      consistencyScore: 100,
+    };
+    const previous: EvaluationStats = {
+      totalEvaluations: 0,
+      passedEvaluations: 0,
+      failedEvaluations: 0,
+      averageLatency: 0,
+      averageCost: 0,
+      averageScore: 0,
+      consistencyScore: 0,
+    };
+
+    const result = calculateQualityScore(stats, previous);
+    expect(result.trend).toBe(0);
   });
 
   it("evidenceLevel boundary: N=5 with one metric → medium", () => {

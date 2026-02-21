@@ -21,7 +21,7 @@ function getRedis(): Redis {
         setex: async () => "OK",
         del: async () => 0,
         keys: async () => [],
-      } as any as Redis;
+      } as unknown as Redis;
     }
   }
   return redis!;
@@ -55,7 +55,7 @@ export class RedisCache {
 
       logger.debug("Cache miss", { key: fullKey });
       return null;
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error("Cache get error", { key: fullKey, error: error.message });
       return null; // Fail gracefully
     }
@@ -64,7 +64,7 @@ export class RedisCache {
   /**
    * Set value in cache
    */
-  async set(key: string, value: any, ttl?: number, prefix = "cache"): Promise<boolean> {
+  async set(key: string, value: unknown, ttl?: number, prefix = "cache"): Promise<boolean> {
     const fullKey = `${prefix}:${key}`;
     const cacheTTL = ttl || this.defaultTTL;
 
@@ -72,7 +72,7 @@ export class RedisCache {
       await getRedis().setex(fullKey, cacheTTL, JSON.stringify(value));
       logger.debug("Cache set", { key: fullKey, ttl: cacheTTL });
       return true;
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error("Cache set error", { key: fullKey, error: error.message });
       return false; // Fail gracefully
     }
@@ -88,7 +88,7 @@ export class RedisCache {
       await getRedis().del(fullKey);
       logger.debug("Cache deleted", { key: fullKey });
       return true;
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error("Cache delete error", { key: fullKey, error: error.message });
       return false;
     }
@@ -110,7 +110,7 @@ export class RedisCache {
       await getRedis().del(...keys);
       logger.debug("Cache pattern deleted", { pattern: fullPattern, count: keys.length });
       return keys.length;
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error("Cache delete pattern error", { pattern: fullPattern, error: error.message });
       return 0;
     }
@@ -165,7 +165,7 @@ export class RedisCache {
   /**
    * Generate cache key for queries
    */
-  generateQueryKey(table: string, organizationId: number, params: Record<string, any>): string {
+  generateQueryKey(table: string, organizationId: number, params: Record<string, unknown>): string {
     const sortedParams = Object.keys(params)
       .sort()
       .map((k) => `${k}=${JSON.stringify(params[k])}`)
@@ -187,7 +187,7 @@ export class RedisCache {
       return {
         keys: keys.length,
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error("Failed to get cache stats", { error: error.message });
       return { keys: 0 };
     }

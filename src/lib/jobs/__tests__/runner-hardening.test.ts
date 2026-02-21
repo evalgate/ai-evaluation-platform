@@ -13,7 +13,7 @@ import { JobErrorCodes } from "../types";
 
 import { harness, setupJobsTestHarness } from "./mocks/jobs-harness";
 
-// Set up mocks BEFORE any imports
+// Set up mocks BEFORE unknown imports
 vi.mock("../handlers/webhook-delivery", () => {
   class WebhookDeliveryError extends Error {
     errorCode: string;
@@ -28,7 +28,7 @@ vi.mock("../handlers/webhook-delivery", () => {
 
   return {
     WebhookDeliveryError,
-    handleWebhookDelivery: (payload: any) => harness.state.handlerImpl(payload),
+    handleWebhookDelivery: (payload: unknown) => harness.state.handlerImpl(payload),
   };
 });
 
@@ -91,10 +91,10 @@ vi.mock("@/lib/logger", () => ({
 }));
 
 vi.mock("@/db", () => {
-  function flatCond(cond: unknown): Array<Record<string, any>> {
+  function flatCond(cond: unknown): Array<Record<string, unknown>> {
     if (!cond || typeof cond !== "object") return [];
-    const c = cond as Record<string, any>;
-    if (Array.isArray(c._and)) return (c._and as any[]).flatMap(flatCond);
+    const c = cond as Record<string, unknown>;
+    if (Array.isArray(c._and)) return (c._and as unknown[]).flatMap(flatCond);
     // NOTE: we don't need to flatten _or for these tests
     return [c];
   }
@@ -102,7 +102,7 @@ vi.mock("@/db", () => {
   return {
     db: {
       select: () => ({
-        from: (table: any) => ({
+        from: (table: unknown) => ({
           where: (_cond: unknown) => ({
             limit: async (n: number) => {
               if (table?.lockName !== undefined) {
@@ -124,10 +124,10 @@ vi.mock("@/db", () => {
         }),
       }),
 
-      update: (table: any) => ({
-        set: (values: Record<string, any>) => ({
-          where: (cond: any) => {
-            async function exec(): Promise<any[]> {
+      update: (table: unknown) => ({
+        set: (values: Record<string, unknown>) => ({
+          where: (cond: unknown) => {
+            async function exec(): Promise<unknown[]> {
               const preds = flatCond(cond);
 
               const getEq = (col: string) => {
@@ -190,7 +190,7 @@ vi.mock("@/db", () => {
               return [{ id: job.id }];
             }
 
-            let cached: Promise<any[]> | null = null;
+            let cached: Promise<unknown[]> | null = null;
             const run = () => (cached ??= exec());
 
             return run();
@@ -206,7 +206,7 @@ vi.mock("@/db", () => {
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 let _id = 1;
-function makeJob(overrides: Partial<any> = {}): any {
+function makeJob(overrides: Partial<unknown> = {}): unknown {
   return harness.makeJob({ id: _id++, ...overrides });
 }
 
@@ -267,7 +267,7 @@ describe("runDueJobs — hardening", () => {
     it("dead-letters with JOB_PAYLOAD_INVALID for invalid payload", async () => {
       const { runDueJobs } = await import("../runner-in-memory");
       harness.state.validateImpl = () => ({ success: false, error: "webhookId: Required" });
-      const job = makeJob({ payload: { bad: true } as any });
+      const job = makeJob({ payload: { bad: true } as unknown });
       harness.state.jobs.push(job);
 
       const result = await runDueJobs("test-runner");
@@ -287,7 +287,13 @@ describe("runDueJobs — hardening", () => {
       const { runDueJobs } = await import("../runner-in-memory");
       const job = makeJob({
         type: "unknown_type",
-        payload: { webhookId: 1, organizationId: 1, event: "x", data: {}, timestamp: "t" } as any,
+        payload: {
+          webhookId: 1,
+          organizationId: 1,
+          event: "x",
+          data: {},
+          timestamp: "t",
+        } as unknown,
       });
       harness.state.jobs.push(job);
 
@@ -372,12 +378,12 @@ describe("runDueJobs — hardening", () => {
       const { runDueJobs } = await import("../runner");
       const result = await runDueJobs("test-runner");
       expect(result).toMatchObject({
-        processed: expect.any(Number),
-        failed: expect.any(Number),
-        reclaimed: expect.any(Number),
-        deadLettered: expect.any(Number),
-        stoppedEarly: expect.any(Boolean),
-        runtimeMs: expect.any(Number),
+        processed: expect.unknown(Number),
+        failed: expect.unknown(Number),
+        reclaimed: expect.unknown(Number),
+        deadLettered: expect.unknown(Number),
+        stoppedEarly: expect.unknown(Boolean),
+        runtimeMs: expect.unknown(Number),
       });
     });
   });

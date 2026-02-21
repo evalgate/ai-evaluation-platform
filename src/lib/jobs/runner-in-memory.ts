@@ -1,4 +1,4 @@
-import type { ZodTypeAny } from "zod";
+import type { ZodTypeunknown } from "zod";
 import { harness } from "./__tests__/mocks/jobs-harness";
 import { type JobErrorCode, JobErrorCodes } from "./errors";
 
@@ -52,7 +52,7 @@ export type JobHandlerContext = {
 export type JobHandler<P = unknown> = (payload: P, ctx: JobHandlerContext) => Promise<void>;
 
 export type JobHandlerRegistration<P = unknown> = {
-  schema?: ZodTypeAny;
+  schema?: ZodTypeunknown;
   handler: JobHandler<P>;
 };
 
@@ -93,7 +93,7 @@ export function createJobTestHarness() {
     registerHandler: <P = unknown>(type: string, reg: JobHandlerRegistration<P>) => {
       // Convert the handler to match the harness's expected type
       const harnessReg = {
-        handler: reg.handler as (payload: any) => Promise<void>,
+        handler: reg.handler as (payload: unknown) => Promise<void>,
         schema: reg.schema,
       };
       harness.registerHandler(type, harnessReg);
@@ -148,7 +148,7 @@ export const createInMemoryJobsHarness = createJobTestHarness;
 export function registerJobHandler<P = unknown>(type: string, reg: JobHandlerRegistration<P>) {
   // Convert the handler to match the harness's expected type
   const harnessReg = {
-    handler: reg.handler as (payload: any) => Promise<void>,
+    handler: reg.handler as (payload: unknown) => Promise<void>,
     schema: reg.schema,
   };
   harness.registerHandler(type, harnessReg);
@@ -190,7 +190,7 @@ function computeBackoffMs(attempt: number): number {
   return Math.min(ms, 60_000);
 }
 
-function clearJobLocks(job: any) {
+function clearJobLocks(job: unknown) {
   job.lockOwner = null;
   job.lockAcquiredAt = null;
   job.lockUntil = null;
@@ -200,7 +200,7 @@ function clearJobLocks(job: any) {
   job.lockedUntil = null;
 }
 
-function markFinished(job: any, startedMs: number) {
+function markFinished(job: unknown, startedMs: number) {
   job.lastFinishedAt = nowDate();
   job.lastDurationMs = Math.max(0, Math.round(timeFn() - startedMs));
   clearJobLocks(job);
@@ -331,7 +331,7 @@ export async function runDueJobs(
         result.failed += 1;
         result.deadLettered += 1;
         deadLetter(
-          job as any,
+          job as unknown,
           JobErrorCodes.HANDLER_MISSING,
           `No job handler registered for type: ${job.type}`,
           jobStartedMs,
@@ -347,7 +347,7 @@ export async function runDueJobs(
           result.failed += 1;
           result.deadLettered += 1;
           deadLetter(
-            job as any,
+            job as unknown,
             JobErrorCodes.PAYLOAD_INVALID,
             `Invalid payload for job type ${job.type}: ${parsed.error.message}`,
             jobStartedMs,
@@ -361,7 +361,7 @@ export async function runDueJobs(
         if (!validation.success) {
           result.failed += 1;
           result.deadLettered += 1;
-          deadLetter(job as any, JobErrorCodes.PAYLOAD_INVALID, validation.error, jobStartedMs);
+          deadLetter(job as unknown, JobErrorCodes.PAYLOAD_INVALID, validation.error, jobStartedMs);
           continue;
         }
         payload = validation.data;
@@ -369,14 +369,14 @@ export async function runDueJobs(
 
       try {
         // Wrap the handler to provide the expected context
-        const simpleHandler = reg.handler as (payload: any) => Promise<void>;
+        const simpleHandler = reg.handler as (payload: unknown) => Promise<void>;
         await simpleHandler(payload);
 
         // Success
         job.status = "success";
         job.lastErrorCode = null;
         job.lastError = null;
-        markFinished(job as any, jobStartedMs);
+        markFinished(job as unknown, jobStartedMs);
         result.processed += 1; // Only increment processed for successful jobs
       } catch (err) {
         // Handler failure
@@ -385,7 +385,7 @@ export async function runDueJobs(
         job.lastError = safeErrorMessage(err);
         job.attempt = (job.attempt ?? 0) + 1;
 
-        markFinished(job as any, jobStartedMs);
+        markFinished(job as unknown, jobStartedMs);
 
         if (job.attempt >= job.maxAttempts) {
           job.status = "dead_letter";

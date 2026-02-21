@@ -55,7 +55,7 @@ describe("Forward compatibility", () => {
   it("handles missing optional fields without crash", async () => {
     mockFetch.mockResolvedValue({
       ok: true,
-      json: async () => ({ id: 1 }), // minimal response, many fields omitted
+      json: async () => ({ id: 1 }), // minimal response, munknown fields omitted
       status: 200,
       headers: new Headers(),
     });

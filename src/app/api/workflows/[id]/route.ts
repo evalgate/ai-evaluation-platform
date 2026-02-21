@@ -11,7 +11,7 @@ const workflowDefinitionSchema = z.object({
       id: z.string(),
       type: z.enum(["agent", "tool", "decision", "parallel", "human", "llm"]),
       name: z.string(),
-      config: z.record(z.any()).optional(),
+      config: z.record(z.unknown()).optional(),
     }),
   ),
   edges: z.array(
@@ -23,7 +23,7 @@ const workflowDefinitionSchema = z.object({
     }),
   ),
   entrypoint: z.string(),
-  metadata: z.record(z.any()).optional(),
+  metadata: z.record(z.unknown()).optional(),
 });
 
 const updateWorkflowSchema = z.object({

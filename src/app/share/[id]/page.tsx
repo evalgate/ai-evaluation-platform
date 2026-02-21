@@ -279,7 +279,7 @@ View full results: ${window.location.href}
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {demo.testResults.slice(0, 10).map((test: any, idx: number) => (
+                {demo.testResults.slice(0, 10).map((test: unknown, idx: number) => (
                   <div
                     key={test.id || idx}
                     className="flex items-start justify-between p-3 border rounded-lg"

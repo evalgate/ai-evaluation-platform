@@ -33,7 +33,7 @@ export default function Page({ params }: PageProps) {
   const [task, setTask] = useState<TaskType | null>(null);
   const [rating, setRating] = useState<number>(3);
   const [feedback, setFeedback] = useState("");
-  const [labels, setLabels] = useState<Record<string, any>>({});
+  const [labels, setLabels] = useState<Record<string, unknown>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -303,7 +303,7 @@ export default function Page({ params }: PageProps) {
           </CardHeader>
           <CardContent className="p-4 sm:p-6 pt-0">
             <Textarea
-              placeholder="What did you like or dislike about this output? Any specific issues or improvements?"
+              placeholder="What did you like or dislike about this output? unknown specific issues or improvements?"
               value={feedback}
               onChange={(e) => setFeedback(e.target.value)}
               rows={6}

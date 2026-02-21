@@ -3,7 +3,7 @@ import { logger } from "@/lib/logger";
 
 export interface SSEMessage {
   type: string;
-  data: any;
+  data: unknown;
   timestamp: string;
   id?: string;
 }
@@ -392,7 +392,7 @@ export const SSE_MESSAGE_TYPES = {
 /**
  * Create SSE message helpers
  */
-export const createSSEMessage = (type: string, data: any, id?: string): SSEMessage => ({
+export const createSSEMessage = (type: string, data: unknown, id?: string): SSEMessage => ({
   type,
   data,
   timestamp: new Date().toISOString(),
@@ -424,7 +424,10 @@ export const createEvaluationProgressMessage = (
     totalTests,
   });
 
-export const createEvaluationCompletedMessage = (evaluationId: number, results: any): SSEMessage =>
+export const createEvaluationCompletedMessage = (
+  evaluationId: number,
+  results: unknown,
+): SSEMessage =>
   createSSEMessage(SSE_MESSAGE_TYPES.EVALUATION_COMPLETED, {
     evaluationId,
     results,
@@ -501,7 +504,7 @@ export const createNotificationMessage = (
     type,
   });
 
-export const createErrorMessage = (error: string, context?: any): SSEMessage =>
+export const createErrorMessage = (error: string, context?: unknown): SSEMessage =>
   createSSEMessage(SSE_MESSAGE_TYPES.ERROR, {
     error,
     context,

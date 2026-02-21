@@ -484,7 +484,7 @@ export default function APIKeysPage() {
                 <div className="space-y-1">
                   <p className="text-sm font-medium">Important Security Notice</p>
                   <p className="text-xs text-muted-foreground">
-                    Store this key securely. Anyone with this key can access your organization's
+                    Store this key securely. unknownone with this key can access your organization's
                     data within the granted scopes. Never commit it to version control or share it
                     publicly.
                   </p>
@@ -504,7 +504,7 @@ export default function APIKeysPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Revoke API Key?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will immediately revoke the API key. Any applications using this key will no
+              This will immediately revoke the API key. unknown applications using this key will no
               longer be able to access the API. This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>

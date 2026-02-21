@@ -125,7 +125,7 @@ export function PricingOverageInfo() {
         </div>
       </div>
       <p className="text-xs text-muted-foreground mt-4">
-        All plans include a 14-day free trial. No credit card required. Cancel anytime.
+        All plans include a 14-day free trial. No credit card required. Cancel unknowntime.
       </p>
     </Card>
   );

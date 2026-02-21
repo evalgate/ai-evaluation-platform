@@ -39,7 +39,7 @@ export interface Decision {
   alternatives: DecisionAlternative[];
   reasoning?: string;
   confidence?: number;
-  inputContext?: Record<string, any>;
+  inputContext?: Record<string, unknown>;
   timestamp?: string;
   spanName?: string;
 }

@@ -76,7 +76,7 @@ const DEFAULT_ASSERTIONS = ASSERTION_GROUPS.flatMap((g) => g.assertions)
 export function InteractivePlayground({ onSignupPrompt }: PlaygroundProps = {}) {
   const [selectedScenario, setSelectedScenario] = useState<string | null>(null);
   const [isRunning, setIsRunning] = useState(false);
-  const [results, setResults] = useState<any>(null);
+  const [results, setResults] = useState<unknown>(null);
   const [showEmailCapture, setShowEmailCapture] = useState(false);
 
   // Custom eval state
@@ -161,7 +161,7 @@ export function InteractivePlayground({ onSignupPrompt }: PlaygroundProps = {}) 
       const overallScore = Math.round((data.overall || 0.87) * 100);
       const passRate =
         data.items?.length > 0
-          ? (data.items.filter((item: any) => item.pass).length / data.items.length) * 100
+          ? (data.items.filter((item: unknown) => item.pass).length / data.items.length) * 100
           : 87;
 
       const calculateGrade = (score: number): "A+" | "A" | "B+" | "B" | "C+" | "C" | "D" | "F" => {
@@ -179,8 +179,8 @@ export function InteractivePlayground({ onSignupPrompt }: PlaygroundProps = {}) 
         name: scenarios.find((s) => s.id === scenarioId)?.name || "Demo Evaluation",
         results: {
           totalTests: data.items?.length || 10,
-          passed: data.items?.filter((item: any) => item.pass).length || 8,
-          failed: data.items?.filter((item: any) => !item.pass).length || 2,
+          passed: data.items?.filter((item: unknown) => item.pass).length || 8,
+          failed: data.items?.filter((item: unknown) => !item.pass).length || 2,
           tests: data.items || [],
         },
         qualityScore: {
@@ -328,7 +328,7 @@ ${results.qualityScore.recommendations.map((r: string) => `- ${r}`).join("\n")}
         passRate: `${Math.round((results.results.passed / results.results.totalTests) * 100)}%`,
       },
       qualityScore: results.qualityScore,
-      testResults: results.results.tests.map((test: any) => ({
+      testResults: results.results.tests.map((test: unknown) => ({
         id: test.id,
         status: test.status,
         input: test.input || test.query || test.task,
@@ -652,23 +652,23 @@ ${results.qualityScore.recommendations.map((r: string) => `- ${r}`).join("\n")}
                 </TabsList>
 
                 <TabsContent value="all" className="space-y-4 mt-4">
-                  {results.results.tests.map((test: any) => (
+                  {results.results.tests.map((test: unknown) => (
                     <TestResultCard key={test.id} test={test} />
                   ))}
                 </TabsContent>
 
                 <TabsContent value="passed" className="space-y-4 mt-4">
                   {results.results.tests
-                    .filter((t: any) => t.status === "passed")
-                    .map((test: any) => (
+                    .filter((t: unknown) => t.status === "passed")
+                    .map((test: unknown) => (
                       <TestResultCard key={test.id} test={test} />
                     ))}
                 </TabsContent>
 
                 <TabsContent value="failed" className="space-y-4 mt-4">
                   {results.results.tests
-                    .filter((t: any) => t.status === "failed")
-                    .map((test: any) => (
+                    .filter((t: unknown) => t.status === "failed")
+                    .map((test: unknown) => (
                       <TestResultCard key={test.id} test={test} />
                     ))}
                 </TabsContent>
@@ -710,7 +710,7 @@ ${results.qualityScore.recommendations.map((r: string) => `- ${r}`).join("\n")}
                     </Button>
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    No credit card required &bull; 14-day free trial &bull; Cancel anytime
+                    No credit card required &bull; 14-day free trial &bull; Cancel unknowntime
                   </p>
                 </div>
               </CardContent>
@@ -722,7 +722,7 @@ ${results.qualityScore.recommendations.map((r: string) => `- ${r}`).join("\n")}
   );
 }
 
-function TestResultCard({ test }: { test: any }) {
+function TestResultCard({ test }: { test: unknown }) {
   const isPassed = test.status === "passed";
 
   return (

@@ -10,13 +10,13 @@ export interface VariableDefinition {
   name: string;
   type: "string" | "number" | "boolean" | "object" | "array";
   required: boolean;
-  defaultValue?: any;
+  defaultValue?: unknown;
   description?: string;
   validation?: {
     min?: number;
     max?: number;
     pattern?: string;
-    enum?: any[];
+    enum?: unknown[];
   };
 }
 
@@ -30,9 +30,9 @@ export interface InjectionResult {
 }
 
 export interface VariableContext {
-  variables: Record<string, any>;
-  functions: Record<string, (...args: any[]) => any>;
-  metadata: Record<string, any>;
+  variables: Record<string, unknown>;
+  functions: Record<string, (...args: unknown[]) => unknown>;
+  metadata: Record<string, unknown>;
 }
 
 /**
@@ -108,7 +108,7 @@ export class TemplateInjection {
         usedVariables,
         unusedVariables,
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       return {
         success: false,
         rendered: "",
@@ -162,15 +162,15 @@ export class TemplateInjection {
    * Validate variable values against their definitions.
    */
   static validateVariables(
-    variables: Record<string, any>,
+    variables: Record<string, unknown>,
     definitions: VariableDefinition[],
   ): {
     valid: boolean;
     errors: string[];
-    validated: Record<string, any>;
+    validated: Record<string, unknown>;
   } {
     const errors: string[] = [];
-    const validated: Record<string, any> = {};
+    const validated: Record<string, unknown> = {};
 
     for (const def of definitions) {
       const value = variables[def.name];
@@ -212,7 +212,7 @@ export class TemplateInjection {
   /**
    * Validate variable type.
    */
-  private static validateType(value: any, definition: VariableDefinition): boolean {
+  private static validateType(value: unknown, definition: VariableDefinition): boolean {
     switch (definition.type) {
       case "string":
         return typeof value === "string";
@@ -232,7 +232,7 @@ export class TemplateInjection {
   /**
    * Validate custom constraints.
    */
-  private static validateCustom(value: any, definition: VariableDefinition): string | null {
+  private static validateCustom(value: unknown, definition: VariableDefinition): string | null {
     const { validation } = definition;
 
     if (!validation) return null;
@@ -268,9 +268,9 @@ export class TemplateInjection {
    */
   static createContext(
     definitions: VariableDefinition[],
-    values: Record<string, any>,
-    functions?: Record<string, (...args: any[]) => any>,
-    metadata?: Record<string, any>,
+    values: Record<string, unknown>,
+    functions?: Record<string, (...args: unknown[]) => unknown>,
+    metadata?: Record<string, unknown>,
   ): VariableContext {
     const validation = TemplateInjection.validateVariables(values, definitions);
 
@@ -331,10 +331,10 @@ export class TemplateInjection {
         },
 
         // Array functions
-        join: (array: any[], separator: string = ", ") => array.join(separator),
-        length: (array: any[]) => array.length,
-        first: (array: any[]) => array[0],
-        last: (array: any[]) => array[array.length - 1],
+        join: (array: unknown[], separator: string = ", ") => array.join(separator),
+        length: (array: unknown[]) => array.length,
+        first: (array: unknown[]) => array[0],
+        last: (array: unknown[]) => array[array.length - 1],
 
         // Object functions
         keys: (obj: object) => Object.keys(obj),
@@ -342,8 +342,9 @@ export class TemplateInjection {
         entries: (obj: object) => Object.entries(obj),
 
         // Utility functions
-        default: (value: any, defaultValue: any) => (value !== undefined ? value : defaultValue),
-        json: (obj: any) => JSON.stringify(obj, null, 2),
+        default: (value: unknown, defaultValue: unknown) =>
+          value !== undefined ? value : defaultValue,
+        json: (obj: unknown) => JSON.stringify(obj, null, 2),
         parse: (str: string) => {
           try {
             return JSON.parse(str);
@@ -362,8 +363,8 @@ export class TemplateInjection {
   /**
    * Extract template metadata from comments.
    */
-  static extractMetadata(template: string): Record<string, any> {
-    const metadata: Record<string, any> = {};
+  static extractMetadata(template: string): Record<string, unknown> {
+    const metadata: Record<string, unknown> = {};
     const metadataRegex = /<!--\s*meta:\s*(.+?)\s*-->/g;
     let match;
 
@@ -423,9 +424,9 @@ export class TemplateInjection {
     definitions: VariableDefinition[],
   ): {
     preview: string;
-    sampleData: Record<string, any>;
+    sampleData: Record<string, unknown>;
   } {
-    const sampleData: Record<string, any> = {};
+    const sampleData: Record<string, unknown> = {};
 
     for (const def of definitions) {
       switch (def.type) {
@@ -471,7 +472,7 @@ export const injectTemplate = (
 };
 
 export const validateTemplateVariables = (
-  variables: Record<string, any>,
+  variables: Record<string, unknown>,
   definitions: VariableDefinition[],
 ) => {
   return TemplateInjection.validateVariables(variables, definitions);
@@ -479,9 +480,9 @@ export const validateTemplateVariables = (
 
 export const createTemplateContext = (
   definitions: VariableDefinition[],
-  values: Record<string, any>,
-  functions?: Record<string, (...args: any[]) => any>,
-  metadata?: Record<string, any>,
+  values: Record<string, unknown>,
+  functions?: Record<string, (...args: unknown[]) => unknown>,
+  metadata?: Record<string, unknown>,
 ): VariableContext => {
   return TemplateInjection.createContext(definitions, values, functions, metadata);
 };

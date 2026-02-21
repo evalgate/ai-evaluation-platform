@@ -8,7 +8,7 @@ import { evalWorker } from "@/lib/workers/eval-worker";
 
 interface StartRunOptions {
   testCases?: string[];
-  settings?: Record<string, any>;
+  settings?: Record<string, unknown>;
   idempotencyKey?: string;
 }
 
@@ -21,7 +21,7 @@ interface RunStatus {
   failedCases: number;
   startedAt?: string;
   completedAt?: string;
-  traceLog?: any;
+  traceLog?: unknown;
 }
 
 class EvalGateway {

@@ -64,7 +64,7 @@ export interface HumanEscalationRequest {
   id: string;
   workflowRunId?: number;
   error: string;
-  context: Record<string, any>;
+  context: Record<string, unknown>;
   attempts: RetryAttempt[];
   priority: "low" | "medium" | "high" | "critical";
   createdAt: string;
@@ -165,7 +165,7 @@ export async function executeWithRetry<T>(
   agentFn: () => Promise<T>,
   config: RetryConfig = {},
   tracer?: WorkflowTracer,
-  context?: Record<string, any>,
+  context?: Record<string, unknown>,
 ): Promise<ExecutionResult<T>> {
   const cfg = { ...DEFAULT_CONFIG, ...config };
   const startTime = Date.now();
@@ -365,7 +365,7 @@ const escalationQueue: HumanEscalationRequest[] = [];
 export async function escalateToHuman(
   params: {
     error: Error;
-    context: Record<string, any>;
+    context: Record<string, unknown>;
     attempts: RetryAttempt[];
     workflowRunId?: number;
   },
@@ -449,7 +449,7 @@ function determinePriority(
     return "high";
   }
 
-  // High: Many failed attempts
+  // High: Munknown failed attempts
   if (attempts.length >= 5) {
     return "high";
   }

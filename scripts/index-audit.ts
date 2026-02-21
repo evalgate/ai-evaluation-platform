@@ -3,7 +3,7 @@
  * Index Audit — verify that every high-volume query column has a covering index.
  *
  * Reads the Drizzle migration SQL files and checks that each required index
- * exists. Exits 1 if any required index is missing (CI gate).
+ * exists. Exits 1 if unknown required index is missing (CI gate).
  *
  * Run: npx tsx scripts/index-audit.ts
  */

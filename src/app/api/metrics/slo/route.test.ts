@@ -22,8 +22,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 // Each entry is the array of rows that one db.select()...chain call returns.
 const _queue: Array<Record<string, unknown>[]> = [];
 
-const makeBuilder = (): any => {
-  const builder: any = {
+const makeBuilder = (): unknown => {
+  const builder: unknown = {
     from: () => builder,
     where: () => builder,
     orderBy: () => builder,
@@ -31,19 +31,19 @@ const makeBuilder = (): any => {
     offset: () => builder,
     // Drizzle builders are thenables — awaiting them calls .then()
     // biome-ignore lint/suspicious/noThenProperty: intentional thenable mock for Drizzle await
-    then: (resolve: (v: any) => any, reject?: (e: any) => any) =>
+    then: (resolve: (v: unknown) => unknown, reject?: (e: unknown) => unknown) =>
       Promise.resolve(_queue.shift() ?? []).then(resolve, reject),
   };
   return builder;
 };
 
 vi.mock("@/db", () => ({
-  db: { select: (_fields?: any) => makeBuilder() },
+  db: { select: (_fields?: unknown) => makeBuilder() },
 }));
 
 // Bypass secureRoute — expose the raw handler
 vi.mock("@/lib/api/secure-route", () => ({
-  secureRoute: (handler: any, _opts?: any) => handler,
+  secureRoute: (handler: unknown, _opts?: unknown) => handler,
 }));
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -58,14 +58,14 @@ const fakeCtx = {
 };
 
 // Import route once — vi.resetModules() would break the _queue closure
-let GET: any;
+let GET: unknown;
 beforeEach(async () => {
   _queue.length = 0;
   ({ GET } = await import("./route"));
 });
 
 async function callRoute() {
-  return (GET as any)(fakeReq, fakeCtx);
+  return (GET as unknown)(fakeReq, fakeCtx);
 }
 
 // ── Tests ────────────────────────────────────────────────────────────────────

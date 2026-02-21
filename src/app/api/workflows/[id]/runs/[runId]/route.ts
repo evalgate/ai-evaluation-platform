@@ -10,14 +10,14 @@ import { workflowService } from "@/lib/services/workflow.service";
 
 const updateRunSchema = z.object({
   status: z.enum(["running", "completed", "failed", "cancelled"]).optional(),
-  output: z.record(z.any()).optional(),
+  output: z.record(z.unknown()).optional(),
   totalCost: z.string().optional(),
   totalDurationMs: z.number().int().nonnegative().optional(),
   agentCount: z.number().int().nonnegative().optional(),
   handoffCount: z.number().int().nonnegative().optional(),
   retryCount: z.number().int().nonnegative().optional(),
   errorMessage: z.string().optional().nullable(),
-  metadata: z.record(z.any()).optional(),
+  metadata: z.record(z.unknown()).optional(),
 });
 
 /**

@@ -90,7 +90,7 @@ export interface OrganizationLimits {
  * Trace object representing a single execution trace
  * Generic metadata support for type safety
  */
-export interface Trace<TMetadata = Record<string, any>> {
+export interface Trace<TMetadata = Record<string, unknown>> {
     id: number;
     name: string;
     traceId: string;
@@ -103,7 +103,7 @@ export interface Trace<TMetadata = Record<string, any>> {
 /**
  * Parameters for creating a new trace
  */
-export interface CreateTraceParams<TMetadata = Record<string, any>> {
+export interface CreateTraceParams<TMetadata = Record<string, unknown>> {
     name: string;
     traceId: string;
     organizationId?: number;
@@ -114,7 +114,7 @@ export interface CreateTraceParams<TMetadata = Record<string, any>> {
 /**
  * Parameters for updating an existing trace
  */
-export interface UpdateTraceParams<TMetadata = Record<string, any>> {
+export interface UpdateTraceParams<TMetadata = Record<string, unknown>> {
     status?: "pending" | "success" | "error";
     durationMs?: number;
     metadata?: TMetadata;
@@ -132,7 +132,7 @@ export interface ListTracesParams {
 /**
  * Span object representing a sub-operation within a trace
  */
-export interface Span<TMetadata = Record<string, any>> {
+export interface Span<TMetadata = Record<string, unknown>> {
     id: number;
     traceId: number;
     name: string;
@@ -147,7 +147,7 @@ export interface Span<TMetadata = Record<string, any>> {
 /**
  * Parameters for creating a span
  */
-export interface CreateSpanParams<TMetadata = Record<string, any>> {
+export interface CreateSpanParams<TMetadata = Record<string, unknown>> {
     name: string;
     spanId: string;
     parentSpanId?: string;
@@ -159,7 +159,7 @@ export interface CreateSpanParams<TMetadata = Record<string, any>> {
 /**
  * Evaluation object representing a test evaluation
  */
-export interface Evaluation<TMetadata = Record<string, any>> {
+export interface Evaluation<TMetadata = Record<string, unknown>> {
     id: number;
     name: string;
     description: string | null;
@@ -210,7 +210,7 @@ export interface TestCase {
     evaluationId: number;
     input: string;
     expectedOutput: string | null;
-    metadata: Record<string, any> | null;
+    metadata: Record<string, unknown> | null;
     createdAt: string;
 }
 /**
@@ -219,7 +219,7 @@ export interface TestCase {
 export interface CreateTestCaseParams {
     input: string;
     expectedOutput?: string;
-    metadata?: Record<string, any>;
+    metadata?: Record<string, unknown>;
 }
 /**
  * Evaluation run
@@ -228,7 +228,7 @@ export interface EvaluationRun {
     id: number;
     evaluationId: number;
     status: "pending" | "running" | "completed" | "failed";
-    results: Record<string, any> | null;
+    results: Record<string, unknown> | null;
     createdAt: string;
     completedAt: string | null;
 }
@@ -237,7 +237,7 @@ export interface EvaluationRun {
  */
 export interface CreateRunParams {
     status?: "pending" | "running" | "completed" | "failed";
-    results?: Record<string, any>;
+    results?: Record<string, unknown>;
 }
 /**
  * LLM Judge evaluation result
@@ -249,7 +249,7 @@ export interface LLMJudgeResult {
     output: string;
     score: number | null;
     reasoning: string | null;
-    metadata: Record<string, any> | null;
+    metadata: Record<string, unknown> | null;
     createdAt: string;
 }
 /**
@@ -261,7 +261,7 @@ export interface RunLLMJudgeParams {
     output: string;
     score?: number;
     reasoning?: string;
-    metadata?: Record<string, any>;
+    metadata?: Record<string, unknown>;
 }
 /**
  * SDK Error class with additional error details
@@ -285,26 +285,26 @@ export interface RunLLMJudgeParams {
 export declare class SDKError extends Error {
     code: string;
     statusCode: number;
-    details?: any;
+    details?: unknown;
     documentation?: string;
     solutions?: string[];
     retryable?: boolean;
     retryAfter?: number;
-    constructor(message: string, code: string, statusCode: number, details?: any);
+    constructor(message: string, code: string, statusCode: number, details?: unknown);
 }
 export type AIEvalConfig = ClientConfig;
-export type TraceData<TMetadata = any> = Trace<TMetadata>;
-export type SpanData<TMetadata = any> = Span<TMetadata>;
-export type EvaluationData<TMetadata = any> = Evaluation<TMetadata>;
+export type TraceData<TMetadata = unknown> = Trace<TMetadata>;
+export type SpanData<TMetadata = unknown> = Span<TMetadata>;
+export type EvaluationData<TMetadata = unknown> = Evaluation<TMetadata>;
 export type LLMJudgeData = LLMJudgeResult;
-export type AnnotationData = any;
+export type AnnotationData = unknown;
 export interface RetryConfig {
     maxAttempts?: number;
     backoff?: "exponential" | "linear" | "fixed";
     retryableErrors?: string[];
 }
 export interface GenericMetadata {
-    [key: string]: any;
+    [key: string]: unknown;
 }
 export interface TracedResponse<T> {
     data: T;
@@ -314,14 +314,14 @@ export interface TracedResponse<T> {
 export interface TestResult {
     passed: boolean;
     message?: string;
-    expected?: any;
-    actual?: any;
+    expected?: unknown;
+    actual?: unknown;
     metadata?: GenericMetadata;
 }
 export interface SnapshotData {
     id: string;
     name: string;
-    data: any;
+    data: unknown;
     metadata?: GenericMetadata;
     createdAt: string;
     updatedAt: string;
@@ -346,7 +346,7 @@ export interface ImportOptions {
     dryRun?: boolean;
 }
 export interface StreamOptions {
-    onData: (data: any) => void;
+    onData: (data: unknown) => void;
     onError?: (error: Error) => void;
     onComplete?: () => void;
     signal?: AbortSignal;
@@ -371,8 +371,8 @@ export interface Annotation {
     annotatorId: string;
     rating: number | null;
     feedback: string | null;
-    labels: Record<string, any>;
-    metadata: Record<string, any>;
+    labels: Record<string, unknown>;
+    metadata: Record<string, unknown>;
     createdAt: string;
     annotator?: {
         id: string;
@@ -391,8 +391,8 @@ export interface CreateAnnotationParams {
     testCaseId: number;
     rating?: number;
     feedback?: string;
-    labels?: Record<string, any>;
-    metadata?: Record<string, any>;
+    labels?: Record<string, unknown>;
+    metadata?: Record<string, unknown>;
 }
 /**
  * Parameters for listing annotations
@@ -414,7 +414,7 @@ export interface AnnotationTask {
     type: string;
     status: "pending" | "in_progress" | "completed" | "archived";
     organizationId: number;
-    annotationSettings: Record<string, any>;
+    annotationSettings: Record<string, unknown>;
     createdAt: string;
     updatedAt: string;
 }
@@ -427,7 +427,7 @@ export interface CreateAnnotationTaskParams {
     instructions?: string;
     type: string;
     organizationId: number;
-    annotationSettings?: Record<string, any>;
+    annotationSettings?: Record<string, unknown>;
 }
 /**
  * Parameters for listing annotation tasks
@@ -445,7 +445,7 @@ export interface AnnotationItem {
     id: number;
     taskId: number;
     content: string;
-    annotation: any | null;
+    annotation: unknown | null;
     annotatedBy: string | null;
     annotatedAt: string | null;
     createdAt: string;
@@ -455,7 +455,7 @@ export interface AnnotationItem {
  */
 export interface CreateAnnotationItemParams {
     content: string;
-    annotation?: any;
+    annotation?: unknown;
     annotatedBy?: string;
     annotatedAt?: string;
 }
@@ -573,7 +573,7 @@ export interface WebhookDelivery {
     id: number;
     webhookId: number;
     event: string;
-    payload: Record<string, any>;
+    payload: Record<string, unknown>;
     response: string | null;
     statusCode: number | null;
     success: boolean;
@@ -719,5 +719,5 @@ export interface Organization {
     status: "active" | "suspended" | "cancelled";
     createdAt: string;
     updatedAt: string;
-    metadata?: Record<string, any>;
+    metadata?: Record<string, unknown>;
 }

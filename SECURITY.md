@@ -21,7 +21,7 @@ Include:
 - Description of the vulnerability
 - Steps to reproduce
 - Impact assessment
-- Suggested fix (if any)
+- Suggested fix (if unknown)
 
 ## Response Timeline
 

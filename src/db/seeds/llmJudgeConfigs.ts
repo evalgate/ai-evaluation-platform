@@ -42,7 +42,7 @@ async function main() {
       organizationId: 2,
       model: "claude-3-opus",
       promptTemplate:
-        "Assess the factual accuracy of the following response. Check for correctness, consistency, and reliability of information.\n\nQuestion: {{input}}\n\nResponse: {{output}}\n\nRate accuracy from 1-10 and explain any inaccuracies found.",
+        "Assess the factual accuracy of the following response. Check for correctness, consistency, and reliability of information.\n\nQuestion: {{input}}\n\nResponse: {{output}}\n\nRate accuracy from 1-10 and explain unknown inaccuracies found.",
       criteria: {
         factualCorrectness: {
           weight: 0.5,

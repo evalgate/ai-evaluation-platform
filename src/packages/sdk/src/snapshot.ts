@@ -40,7 +40,7 @@ export interface SnapshotMetadata {
   /** Optional tags for organization */
   tags?: string[];
   /** Additional metadata */
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface SnapshotData {
@@ -138,7 +138,7 @@ export class SnapshotManager {
     output: string,
     options?: {
       tags?: string[];
-      metadata?: Record<string, any>;
+      metadata?: Record<string, unknown>;
       overwrite?: boolean;
     },
   ): Promise<SnapshotData> {
@@ -318,7 +318,7 @@ export async function snapshot(
   name: string,
   options?: {
     tags?: string[];
-    metadata?: Record<string, any>;
+    metadata?: Record<string, unknown>;
     overwrite?: boolean;
     dir?: string;
   },

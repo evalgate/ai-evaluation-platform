@@ -16,7 +16,7 @@ const webhookDeliverySchema = z.object({
   timestamp: z.string().min(1),
 });
 
-const PAYLOAD_SCHEMAS: Record<JobType, z.ZodTypeAny> = {
+const PAYLOAD_SCHEMAS: Record<JobType, z.ZodTypeunknown> = {
   webhook_delivery: webhookDeliverySchema,
 };
 

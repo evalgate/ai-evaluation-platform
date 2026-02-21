@@ -22,7 +22,7 @@
  * Context metadata that will be automatically injected
  */
 export interface ContextMetadata {
-    [key: string]: any;
+    [key: string]: unknown;
 }
 /**
  * Context manager for automatic metadata propagation
@@ -75,7 +75,7 @@ export declare class EvalContext {
  */
 export declare function createContext(metadata: ContextMetadata): EvalContext;
 /**
- * Get the current context metadata (if any)
+ * Get the current context metadata (if unknown)
  *
  * @example
  * ```typescript
@@ -98,7 +98,7 @@ export declare function getCurrentContext(): ContextMetadata | undefined;
  * };
  * ```
  */
-export declare function mergeWithContext(metadata?: Record<string, any>): Record<string, any>;
+export declare function mergeWithContext(metadata?: Record<string, unknown>): Record<string, unknown>;
 /**
  * Run with nested context (merges parent context)
  *
@@ -131,4 +131,4 @@ export declare function withContextSync<T>(metadata: ContextMetadata, fn: () => 
  * }
  * ```
  */
-export declare function WithContext(metadata: ContextMetadata): (_target: any, _propertyKey: string, descriptor: PropertyDescriptor) => PropertyDescriptor;
+export declare function WithContext(metadata: ContextMetadata): (_target: unknown, _propertyKey: string, descriptor: PropertyDescriptor) => PropertyDescriptor;

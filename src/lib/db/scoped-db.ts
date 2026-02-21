@@ -15,15 +15,17 @@ import { db } from "@/db";
 export function scopedDb(organizationId: number) {
   return {
     /** Scoped select: auto-appends org filter */
-    selectFrom<T extends { organizationId: any }>(table: T) {
+    selectFrom<T extends { organizationId: unknown }>(table: T) {
       return db
         .select()
-        .from(table as any)
-        .where(eq((table as any).organizationId, organizationId));
+        .from(table as unknown)
+        .where(eq((table as unknown).organizationId, organizationId));
     },
     /** Scoped delete: prevents cross-tenant deletion */
-    deleteFrom<T extends { organizationId: any }>(table: T) {
-      return db.delete(table as any).where(eq((table as any).organizationId, organizationId));
+    deleteFrom<T extends { organizationId: unknown }>(table: T) {
+      return db
+        .delete(table as unknown)
+        .where(eq((table as unknown).organizationId, organizationId));
     },
     /** Raw db for tables without org column (join-through patterns) */
     raw: db,

@@ -30,7 +30,7 @@ function formatHuman(report) {
             const exp = (0, snippet_1.truncateSnippet)(fc.expectedOutput ?? fc.expectedSnippet, 50);
             const out = (0, snippet_1.truncateSnippet)(fc.output ?? fc.outputSnippet, 50);
             const reason = out ? `got "${out}"` : "no output";
-            lines.push(`  - "${(0, snippet_1.truncateSnippet)(label, 50)}" → expected: ${exp || "(any)"}, ${reason}`);
+            lines.push(`  - "${(0, snippet_1.truncateSnippet)(label, 50)}" → expected: ${exp || "(unknown)"}, ${reason}`);
         }
         if (failedCases.length > toShow.length) {
             lines.push(`  + ${failedCases.length - toShow.length} more`);

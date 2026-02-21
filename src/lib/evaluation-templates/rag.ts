@@ -300,7 +300,7 @@ Output format:
     complexity: "advanced",
     testCases: [
       {
-        input: "Question about specific company policy",
+        input: "Question about specific compunknown policy",
         expectedOutput: "Answer based on retrieved documents with citations",
         rubric: "Must cite sources, stay within retrieved context, acknowledge uncertainty",
       },

@@ -9,7 +9,7 @@ const createArenaMatchSchema = z.object({
   prompt: z.string().min(1),
   models: z.array(z.string()).min(2).max(10),
   judgeConfigId: z.number().optional(),
-  metadata: z.record(z.any()).optional(),
+  metadata: z.record(z.unknown()).optional(),
 });
 
 export const POST = secureRoute(async (req: NextRequest, ctx: AuthContext) => {

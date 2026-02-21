@@ -479,7 +479,7 @@ const traced = traceCrewAI(crew, tracer, { crewName: 'ResearchCrew' });
 import { traceAutoGen } from '@pauly4010/evalai-sdk';
 const traced = traceAutoGen(conversation, tracer);
 
-// Generic helper — trace any async function
+// Generic helper — trace unknown async function
 import { traceWorkflowStep } from '@pauly4010/evalai-sdk';
 const result = await traceWorkflowStep(tracer, 'MyAgent', async () => {
   return await doWork();

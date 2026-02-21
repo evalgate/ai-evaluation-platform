@@ -345,7 +345,7 @@ export async function importFromFile(
  */
 export async function importFromLangSmith(
   client: AIEvalClient,
-  langsmithData: any,
+  langsmithData: unknown,
   options: ImportOptions,
 ): Promise<ImportResult> {
   // Transform LangSmith format to our format
@@ -361,7 +361,7 @@ export async function importFromLangSmith(
 
   // Transform runs to traces
   if (langsmithData.runs && Array.isArray(langsmithData.runs)) {
-    transformedData.traces = langsmithData.runs.map((run: any) => ({
+    transformedData.traces = langsmithData.runs.map((run: unknown) => ({
       name: run.name || "Imported Trace",
       traceId: run.id || `langsmith-${Date.now()}-${Math.random()}`,
       organizationId: options.organizationId!,
@@ -399,7 +399,7 @@ export function convertToCSV(data: ExportData, type: "traces" | "evaluations"): 
   const rows = items.map((item) =>
     headers
       .map((h) => {
-        const value = (item as any)[h];
+        const value = (item as unknown)[h];
         if (value === null || value === undefined) return "";
         if (typeof value === "object") return JSON.stringify(value);
         return String(value);

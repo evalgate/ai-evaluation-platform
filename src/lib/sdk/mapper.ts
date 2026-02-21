@@ -24,9 +24,9 @@ export const SDKTestResultSchema = z.object({
   score: z.number().min(0).max(100).nullable(),
   error: z.string().nullable(),
   durationMs: z.number().min(0),
-  messages: z.array(z.any()).optional(),
-  toolCalls: z.array(z.any()).optional(),
-  metadata: z.record(z.any()).optional(),
+  messages: z.array(z.unknown()).optional(),
+  toolCalls: z.array(z.unknown()).optional(),
+  metadata: z.record(z.unknown()).optional(),
   assertions: z.array(SDKAssertionResultSchema).optional(),
 });
 
@@ -43,7 +43,7 @@ export const SDKEvaluationResultSchema = z.object({
   completedAt: z.string().nullable(),
   durationMs: z.number().nullable(),
   results: z.array(SDKTestResultSchema),
-  metadata: z.record(z.any()).optional(),
+  metadata: z.record(z.unknown()).optional(),
 });
 
 // LLM message structure
@@ -51,7 +51,7 @@ export const SDKMessageSchema = z.object({
   role: z.enum(["system", "user", "assistant", "tool", "function_call", "function_result"]),
   content: z.string(),
   timestamp: z.string().optional(),
-  tool_calls: z.array(z.any()).optional(),
+  tool_calls: z.array(z.unknown()).optional(),
 });
 
 // Tool call structure
@@ -60,9 +60,9 @@ export const SDKToolCallSchema = z.object({
   type: z.string(),
   function: z.object({
     name: z.string(),
-    arguments: z.record(z.any()),
+    arguments: z.record(z.unknown()),
   }),
-  result: z.any().optional(),
+  result: z.unknown().optional(),
   timestamp: z.string().optional(),
 });
 
@@ -79,7 +79,7 @@ export const SDKTraceSpanSchema = z.object({
   output: z.string().nullable(),
   messages: z.array(SDKMessageSchema).optional(),
   toolCalls: z.array(SDKToolCallSchema).optional(),
-  metadata: z.record(z.any()).optional(),
+  metadata: z.record(z.unknown()).optional(),
 });
 
 // Full trace structure
@@ -92,7 +92,7 @@ export const SDKTraceSchema = z.object({
   endTime: z.string().nullable(),
   durationMs: z.number().nullable(),
   spans: z.array(SDKTraceSpanSchema),
-  metadata: z.record(z.any()).optional(),
+  metadata: z.record(z.unknown()).optional(),
 });
 
 /**

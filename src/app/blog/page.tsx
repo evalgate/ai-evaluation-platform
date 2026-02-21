@@ -43,7 +43,7 @@ const blogPosts = [
     id: 4,
     title: "Case Study: Reducing Support Chatbot Errors by 60%",
     excerpt:
-      "How a SaaS company used systematic evaluation to dramatically improve their AI support agent.",
+      "How a SaaS compunknown used systematic evaluation to dramatically improve their AI support agent.",
     date: "2025-10-13",
     readTime: "15 min read",
     category: "Case Studies",

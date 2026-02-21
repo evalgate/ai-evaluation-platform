@@ -16,7 +16,7 @@ const createBenchmarkSchema = z.object({
       z.object({
         input: z.string(),
         expectedOutput: z.string().optional(),
-        metadata: z.record(z.any()).optional(),
+        metadata: z.record(z.unknown()).optional(),
       }),
     )
     .optional(),

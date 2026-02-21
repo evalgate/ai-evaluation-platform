@@ -71,8 +71,8 @@ export default function NewEvaluationPage() {
     type: string;
     templates: Array<{
       id: string;
-      template: any;
-      config: any;
+      template: unknown;
+      config: unknown;
     }>;
   }) => {
     if (!session?.user) {

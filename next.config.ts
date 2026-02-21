@@ -96,7 +96,7 @@ export default withSentryConfig(configWithAxiom, {
   widenClientFileUpload: true,
 
   // Route browser requests to Sentry through a Next.js rewrite to circumvent ad-blockers.
-  // Note: This route must NOT match any Next.js middleware matcher pattern.
+  // Note: This route must NOT match unknown Next.js middleware matcher pattern.
   tunnelRoute: "/monitoring",
 
   // Automatic instrumentation of Vercel Cron Monitors

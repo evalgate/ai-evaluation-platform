@@ -137,7 +137,7 @@ export class AIEvalClient {
       config.organizationId || (orgIdFromEnv ? parseInt(orgIdFromEnv, 10) : undefined);
 
     // Default to relative URLs for browser, or allow custom baseUrl
-    const isBrowser = typeof (globalThis as any).window !== "undefined";
+    const isBrowser = typeof (globalThis as unknown).window !== "undefined";
     this.baseUrl = config.baseUrl || (isBrowser ? "" : "http://localhost:3000");
     this.timeout = config.timeout || 30000;
 
@@ -183,7 +183,7 @@ export class AIEvalClient {
                   headers: req.headers,
                 });
                 results.push({ id: req.id, status: 200, data });
-              } catch (err: any) {
+              } catch (err: unknown) {
                 results.push({
                   id: req.id,
                   status: err?.statusCode || 500,
@@ -310,7 +310,7 @@ export class AIEvalClient {
       clearTimeout(timeoutId);
       const duration = Date.now() - startTime;
 
-      let data: any;
+      let data: unknown;
       try {
         data = await response.json();
       } catch (_e) {
@@ -451,7 +451,7 @@ class TraceAPI {
    * });
    * ```
    */
-  async create<TMetadata = Record<string, any>>(
+  async create<TMetadata = Record<string, unknown>>(
     params: CreateTraceParams<TMetadata>,
   ): Promise<Trace<TMetadata>> {
     const orgId = params.organizationId || this.client.getOrganizationId();
@@ -514,7 +514,7 @@ class TraceAPI {
    * });
    * ```
    */
-  async update<TMetadata = Record<string, any>>(
+  async update<TMetadata = Record<string, unknown>>(
     id: number,
     params: UpdateTraceParams<TMetadata>,
   ): Promise<Trace<TMetadata>> {
@@ -661,12 +661,15 @@ class LLMJudgeAPI {
    */
   async evaluate(params: RunLLMJudgeParams): Promise<{
     result: LLMJudgeResult;
-    config: any;
+    config: unknown;
   }> {
-    return this.client.request<{ result: LLMJudgeResult; config: any }>("/api/llm-judge/evaluate", {
-      method: "POST",
-      body: JSON.stringify(params),
-    });
+    return this.client.request<{ result: LLMJudgeResult; config: unknown }>(
+      "/api/llm-judge/evaluate",
+      {
+        method: "POST",
+        body: JSON.stringify(params),
+      },
+    );
   }
 
   /**

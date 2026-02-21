@@ -111,7 +111,7 @@ export class AESEncryption {
    * @param key - Base64 encoded encryption key
    * @returns Encrypted JSON string with IV and tag
    */
-  encryptJSON(obj: any, key: string): string {
+  encryptJSON(obj: unknown, key: string): string {
     const jsonString = JSON.stringify(obj);
     const result = this.encrypt(jsonString, key);
 
@@ -129,7 +129,7 @@ export class AESEncryption {
    * @param key - Base64 encoded encryption key
    * @returns Decrypted object
    */
-  decryptJSON<T = any>(encryptedJSON: string, key: string): T | null {
+  decryptJSON<T = unknown>(encryptedJSON: string, key: string): T | null {
     try {
       const encryptedData = JSON.parse(encryptedJSON);
       const result = this.decrypt(encryptedData, key);

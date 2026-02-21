@@ -34,7 +34,7 @@ const FORBIDDEN_KEYS = new Set([
   "internal_notes",
 ]);
 
-/** Recursively check for forbidden keys in output. Returns true if any found. */
+/** Recursively check for forbidden keys in output. Returns true if unknown found. */
 function hasSensitiveKeys(obj: unknown, depth = 0): boolean {
   if (depth > 50) return false;
   if (obj === null || obj === undefined) return false;
@@ -92,7 +92,7 @@ describe("sanitizeExportData + assertNoSecrets", () => {
     expect(hasSensitiveKeys(prepared)).toBe(false);
   });
 
-  it("rejects apiKey anywhere nested", () => {
+  it("rejects apiKey unknownwhere nested", () => {
     const withSecret = {
       ...baseExport,
       evaluation: { ...baseExport.evaluation, apiKey: "sk-xxx" },
@@ -101,7 +101,7 @@ describe("sanitizeExportData + assertNoSecrets", () => {
     expect(() => assertNoSecrets(sanitized)).toThrow(/disallowed keys/);
   });
 
-  it("rejects organizationId anywhere nested", () => {
+  it("rejects organizationId unknownwhere nested", () => {
     const withOrg = {
       ...baseExport,
       evaluation: { ...baseExport.evaluation, organizationId: 42 },
@@ -148,12 +148,12 @@ describe("sanitizeExportData + assertNoSecrets", () => {
     }).toThrow(/disallowed keys/);
   });
 
-  it("rejects object with too many keys (max object keys guard)", () => {
-    const manyKeys: Record<string, unknown> = { ...baseExport };
+  it("rejects object with too munknown keys (max object keys guard)", () => {
+    const munknownKeys: Record<string, unknown> = { ...baseExport };
     for (let i = 0; i < 600; i++) {
-      manyKeys[`key${i}`] = "value";
+      munknownKeys[`key${i}`] = "value";
     }
-    expect(() => sanitizeExportData(manyKeys)).toThrow(/max 500/);
+    expect(() => sanitizeExportData(munknownKeys)).toThrow(/max 500/);
   });
 
   it("whitelists only allowed top-level keys", () => {

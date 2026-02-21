@@ -6,7 +6,7 @@
  */
 
 export interface TemplateContext {
-  [key: string]: string | number | boolean | string[] | Record<string, any> | undefined;
+  [key: string]: string | number | boolean | string[] | Record<string, unknown> | undefined;
 }
 
 /**

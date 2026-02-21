@@ -17,26 +17,26 @@
 export interface AssertionResult {
     name: string;
     passed: boolean;
-    expected: any;
-    actual: any;
+    expected: unknown;
+    actual: unknown;
     message?: string;
 }
 export declare class AssertionError extends Error {
-    expected: any;
-    actual: any;
-    constructor(message: string, expected: any, actual: any);
+    expected: unknown;
+    actual: unknown;
+    constructor(message: string, expected: unknown, actual: unknown);
 }
 /**
  * Fluent assertion builder
  */
 export declare class Expectation {
     private value;
-    constructor(value: any);
+    constructor(value: unknown);
     /**
      * Assert value equals expected
      * @example expect(output).toEqual("Hello")
      */
-    toEqual(expected: any, message?: string): AssertionResult;
+    toEqual(expected: unknown, message?: string): AssertionResult;
     /**
      * Assert value contains substring
      * @example expect(output).toContain("help")
@@ -71,7 +71,7 @@ export declare class Expectation {
      * Assert JSON matches schema
      * @example expect(output).toMatchJSON({ status: 'success' })
      */
-    toMatchJSON(schema: Record<string, any>, message?: string): AssertionResult;
+    toMatchJSON(schema: Record<string, unknown>, message?: string): AssertionResult;
     /**
      * Assert value has expected sentiment
      * @example expect(output).toHaveSentiment('positive')
@@ -148,7 +148,7 @@ export declare class Expectation {
  * expect(output).toHaveLength({ min: 10, max: 100 });
  * ```
  */
-export declare function expect(value: any): Expectation;
+export declare function expect(value: unknown): Expectation;
 /**
  * Run multiple assertions and collect results
  *
@@ -178,12 +178,12 @@ export declare function withinRange(value: number, min: number, max: number): bo
 export declare function isValidEmail(email: string): boolean;
 export declare function isValidURL(url: string): boolean;
 export declare function hasNoHallucinations(text: string, groundTruth: string[]): boolean;
-export declare function matchesSchema(value: any, schema: Record<string, any>): boolean;
+export declare function matchesSchema(value: unknown, schema: Record<string, unknown>): boolean;
 export declare function hasReadabilityScore(text: string, minScore: number): boolean;
 export declare function containsLanguage(text: string, language: string): boolean;
 export declare function hasFactualAccuracy(text: string, facts: string[]): boolean;
 export declare function respondedWithinTime(startTime: number, maxMs: number): boolean;
 export declare function hasNoToxicity(text: string): boolean;
 export declare function followsInstructions(text: string, instructions: string[]): boolean;
-export declare function containsAllRequiredFields(obj: any, requiredFields: string[]): boolean;
+export declare function containsAllRequiredFields(obj: unknown, requiredFields: string[]): boolean;
 export declare function hasValidCodeSyntax(code: string, language: string): boolean;

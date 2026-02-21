@@ -182,7 +182,10 @@ describe("GET /api/jobs/dead", () => {
     jobStore.push(makeJob({ organizationId: 2 })); // different org — should not appear
 
     const { GET } = await import("../../app/api/jobs/dead/route");
-    const res = await (GET as Function)(makeReq(), makeCtx("admin", 1));
+    const res = await (GET as (req: unknown, ctx: unknown) => Promise<Response>)(
+      makeReq(),
+      makeCtx("admin", 1),
+    );
     const body = await res.json();
 
     expect(body.jobs).toHaveLength(1);
@@ -193,7 +196,10 @@ describe("GET /api/jobs/dead", () => {
     jobStore.push(makeJob());
 
     const { GET } = await import("../../app/api/jobs/dead/route");
-    const res = await (GET as Function)(makeReq(), makeCtx());
+    const res = await (GET as (req: unknown, ctx: unknown) => Promise<Response>)(
+      makeReq(),
+      makeCtx(),
+    );
     const body = await res.json();
 
     expect(body.jobs[0]).not.toHaveProperty("payload");
@@ -201,7 +207,10 @@ describe("GET /api/jobs/dead", () => {
 
   it("returns empty array when no DLQ jobs", async () => {
     const { GET } = await import("../../app/api/jobs/dead/route");
-    const res = await (GET as Function)(makeReq(), makeCtx());
+    const res = await (GET as (req: unknown, ctx: unknown) => Promise<Response>)(
+      makeReq(),
+      makeCtx(),
+    );
     const body = await res.json();
 
     expect(body.jobs).toHaveLength(0);
@@ -212,7 +221,7 @@ describe("GET /api/jobs/dead", () => {
     for (let i = 0; i < 10; i++) jobStore.push(makeJob({ id: i + 1 }));
 
     const { GET } = await import("../../app/api/jobs/dead/route");
-    const res = await (GET as Function)(
+    const res = await (GET as (req: unknown, ctx: unknown) => Promise<Response>)(
       makeReq("http://localhost/api/jobs/dead?limit=3"),
       makeCtx(),
     );
@@ -223,7 +232,7 @@ describe("GET /api/jobs/dead", () => {
 
   it("returns 400 for non-numeric limit", async () => {
     const { GET } = await import("../../app/api/jobs/dead/route");
-    const res = await (GET as Function)(
+    const res = await (GET as (req: unknown, ctx: unknown) => Promise<Response>)(
       makeReq("http://localhost/api/jobs/dead?limit=abc"),
       makeCtx(),
     );
@@ -235,7 +244,10 @@ describe("GET /api/jobs/dead", () => {
     jobStore.push(makeJob());
 
     const { GET } = await import("../../app/api/jobs/dead/route");
-    const res = await (GET as Function)(makeReq(), makeCtx());
+    const res = await (GET as (req: unknown, ctx: unknown) => Promise<Response>)(
+      makeReq(),
+      makeCtx(),
+    );
     const body = await res.json();
     const job = body.jobs[0];
 
@@ -261,7 +273,11 @@ describe("POST /api/jobs/:id/retry", () => {
     jobStore.push(job);
 
     const { POST } = await import("../../app/api/jobs/[id]/retry/route");
-    const res = await (POST as Function)(makeReq(), makeCtx(), { id: "42" });
+    const res = await (POST as (req: unknown, ctx: unknown, params: unknown) => Promise<Response>)(
+      makeReq(),
+      makeCtx(),
+      { id: "42" },
+    );
     const body = await res.json();
 
     expect(res.status).toBe(200);

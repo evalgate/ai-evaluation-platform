@@ -80,14 +80,14 @@ export function buildPaginatedResult<T>(
 /**
  * Encode cursor for cursor-based pagination
  */
-export function encodeCursor(data: any): string {
+export function encodeCursor(data: unknown): string {
   return Buffer.from(JSON.stringify(data)).toString("base64");
 }
 
 /**
  * Decode cursor for cursor-based pagination
  */
-export function decodeCursor(cursor: string): any {
+export function decodeCursor(cursor: string): unknown {
   try {
     return JSON.parse(Buffer.from(cursor, "base64").toString("utf-8"));
   } catch (_error) {
@@ -101,7 +101,7 @@ export function decodeCursor(cursor: string): any {
 export function buildCursorPaginatedResult<T>(
   data: T[],
   limit: number,
-  getCursor: (item: T) => any,
+  getCursor: (item: T) => unknown,
 ): CursorPaginatedResult<T> {
   const hasMore = data.length > limit;
   const items = hasMore ? data.slice(0, limit) : data;
@@ -149,10 +149,10 @@ export async function cachedQuery<T>(
 export async function batchLoad<T, K extends keyof T>(
   items: T[],
   foreignKey: K,
-  loadFn: (ids: Array<T[K]>) => Promise<Record<string, any>>,
-): Promise<(T & { _loaded?: any })[]> {
+  loadFn: (ids: Array<T[K]>) => Promise<Record<string, unknown>>,
+): Promise<(T & { _loaded?: unknown })[]> {
   if (items.length === 0) {
-    return [] as (T & { _loaded?: any })[];
+    return [] as (T & { _loaded?: unknown })[];
   }
 
   // Extract unique foreign key values
@@ -187,7 +187,7 @@ export async function measureQuery<T>(name: string, queryFn: () => Promise<T>): 
     }
 
     return result;
-  } catch (error: any) {
+  } catch (error: unknown) {
     const duration = Date.now() - startTime;
     logger.error("Query failed", { name, duration, error: error.message });
     throw error;
@@ -232,7 +232,7 @@ export class QueryOptimizer {
       }
 
       return result;
-    } catch (error: any) {
+    } catch (error: unknown) {
       const duration = Date.now() - startTime;
       logger.error("Query error", { query: name, duration, error: error.message });
       throw error;
@@ -250,7 +250,7 @@ export class QueryOptimizer {
   }
 
   getStats(): Record<string, { count: number; avgTime: number; maxTime: number }> {
-    const result: Record<string, any> = {};
+    const result: Record<string, unknown> = {};
 
     this.queryStats.forEach((stats, name) => {
       result[name] = {

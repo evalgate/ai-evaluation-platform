@@ -7,7 +7,7 @@
 
 Stop LLM regressions in CI in 5 minutes.
 
-No infra. No lock-in. Remove it anytime.
+No infra. No lock-in. Remove it unknowntime.
 
 ## 1) Run a regression test locally (60 seconds)
 
@@ -70,7 +70,7 @@ Simple.
 
 See [examples/quickstart-ci](examples/quickstart-ci) for a minimal CI example, [docs/ci/github-actions.md](docs/ci/github-actions.md) for a copy-paste workflow, or [docs/demo.md](docs/demo.md) for before/after screenshots.
 
-## Remove anytime
+## Remove unknowntime
 
 Delete `evalai.config.json`. That's it.
 

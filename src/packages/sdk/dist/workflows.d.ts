@@ -34,7 +34,7 @@ export interface WorkflowNode {
     id: string;
     type: "agent" | "tool" | "decision" | "parallel" | "human" | "llm";
     name: string;
-    config?: Record<string, any>;
+    config?: Record<string, unknown>;
 }
 /**
  * Edge connecting nodes in a workflow DAG
@@ -52,7 +52,7 @@ export interface WorkflowDefinition {
     nodes: WorkflowNode[];
     edges: WorkflowEdge[];
     entrypoint: string;
-    metadata?: Record<string, any>;
+    metadata?: Record<string, unknown>;
 }
 /**
  * Active workflow context
@@ -63,7 +63,7 @@ export interface WorkflowContext {
     name: string;
     startedAt: string;
     definition?: WorkflowDefinition;
-    metadata?: Record<string, any>;
+    metadata?: Record<string, unknown>;
 }
 /**
  * Workflow run status
@@ -80,7 +80,7 @@ export interface AgentHandoff {
     fromAgent?: string;
     toAgent: string;
     handoffType: HandoffType;
-    context?: Record<string, any>;
+    context?: Record<string, unknown>;
     timestamp: string;
 }
 /**
@@ -115,7 +115,7 @@ export interface RecordDecisionParams {
     /** Factors that influenced the decision */
     contextFactors?: string[];
     /** Input context at decision time */
-    inputContext?: Record<string, any>;
+    inputContext?: Record<string, unknown>;
 }
 /**
  * LLM provider names
@@ -169,7 +169,7 @@ export interface AgentSpanContext {
     agentName: string;
     startTime: string;
     parentSpanId?: string;
-    metadata?: Record<string, any>;
+    metadata?: Record<string, unknown>;
 }
 /**
  * WorkflowTracer - Instrument multi-agent workflows with tracing, decision auditing, and cost tracking
@@ -213,11 +213,11 @@ export declare class WorkflowTracer {
      * });
      * ```
      */
-    startWorkflow(name: string, definition?: WorkflowDefinition, metadata?: Record<string, any>): Promise<WorkflowContext>;
+    startWorkflow(name: string, definition?: WorkflowDefinition, metadata?: Record<string, unknown>): Promise<WorkflowContext>;
     /**
      * End the current workflow
      */
-    endWorkflow(output?: Record<string, any>, status?: WorkflowStatus): Promise<void>;
+    endWorkflow(output?: Record<string, unknown>, status?: WorkflowStatus): Promise<void>;
     /**
      * Start an agent span within the workflow
      *
@@ -228,11 +228,11 @@ export declare class WorkflowTracer {
      * });
      * ```
      */
-    startAgentSpan(agentName: string, input?: Record<string, any>, parentSpanId?: string): Promise<AgentSpanContext>;
+    startAgentSpan(agentName: string, input?: Record<string, unknown>, parentSpanId?: string): Promise<AgentSpanContext>;
     /**
      * End an agent span
      */
-    endAgentSpan(span: AgentSpanContext, output?: Record<string, any>, error?: string): Promise<void>;
+    endAgentSpan(span: AgentSpanContext, output?: Record<string, unknown>, error?: string): Promise<void>;
     /**
      * Record a handoff between agents
      *
@@ -246,7 +246,7 @@ export declare class WorkflowTracer {
      * );
      * ```
      */
-    recordHandoff(fromAgent: string | undefined, toAgent: string, context?: Record<string, any>, handoffType?: HandoffType): Promise<void>;
+    recordHandoff(fromAgent: string | undefined, toAgent: string, context?: Record<string, unknown>, handoffType?: HandoffType): Promise<void>;
     /**
      * Record a decision made by an agent
      *
@@ -337,9 +337,9 @@ export declare class WorkflowTracer {
  * const result = await tracedExecutor.invoke({ input: 'Hello' });
  * ```
  */
-export declare function traceLangChainAgent(executor: any, tracer: WorkflowTracer, options?: {
+export declare function traceLangChainAgent(executor: unknown, tracer: WorkflowTracer, options?: {
     agentName?: string;
-}): any;
+}): unknown;
 /**
  * Create a traced wrapper for CrewAI crews
  *
@@ -352,9 +352,9 @@ export declare function traceLangChainAgent(executor: any, tracer: WorkflowTrace
  * const result = await tracedCrew.kickoff({ topic: 'AI Safety' });
  * ```
  */
-export declare function traceCrewAI(crew: any, tracer: WorkflowTracer, options?: {
+export declare function traceCrewAI(crew: unknown, tracer: WorkflowTracer, options?: {
     crewName?: string;
-}): any;
+}): unknown;
 /**
  * Create a traced wrapper for AutoGen conversations
  *
@@ -365,9 +365,9 @@ export declare function traceCrewAI(crew: any, tracer: WorkflowTracer, options?:
  * });
  * ```
  */
-export declare function traceAutoGen(conversation: any, tracer: WorkflowTracer, options?: {
+export declare function traceAutoGen(conversation: unknown, tracer: WorkflowTracer, options?: {
     conversationName?: string;
-}): any;
+}): unknown;
 /**
  * Create a workflow tracer from an existing client
  */
@@ -375,4 +375,4 @@ export declare function createWorkflowTracer(client: AIEvalClient, options?: Wor
 /**
  * Helper to trace an async function as a workflow step
  */
-export declare function traceWorkflowStep<T>(tracer: WorkflowTracer, agentName: string, fn: () => Promise<T>, input?: Record<string, any>): Promise<T>;
+export declare function traceWorkflowStep<T>(tracer: WorkflowTracer, agentName: string, fn: () => Promise<T>, input?: Record<string, unknown>): Promise<T>;

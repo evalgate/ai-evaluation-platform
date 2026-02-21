@@ -131,7 +131,7 @@ function createContext(metadata) {
     return new EvalContext(metadata);
 }
 /**
- * Get the current context metadata (if any)
+ * Get the current context metadata (if unknown)
  *
  * @example
  * ```typescript

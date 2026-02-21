@@ -13,8 +13,8 @@ interface DemoScenario {
   name: string;
   description: string;
   template: string;
-  results: any;
-  qualityScore: any;
+  results: unknown;
+  qualityScore: unknown;
 }
 
 /**
@@ -179,7 +179,7 @@ function getDemoScenario(id: string): DemoScenario | null {
             input: "Do you have a mobile app?",
             expected: "Yes, on iOS and Android",
             actual:
-              'Yes! Our app is available on both iOS and Android. Search for "CompanyName" in your app store.',
+              'Yes! Our app is available on both iOS and Android. Search for "CompunknownName" in your app store.',
             status: "passed",
             score: 94,
             notes: "Helpful with download instructions",
@@ -189,7 +189,7 @@ function getDemoScenario(id: string): DemoScenario | null {
             input: "What if my product arrives damaged?",
             expected: "Contact support for free replacement",
             actual:
-              "We'll send a replacement at no cost. Please email photos to support@company.com.",
+              "We'll send a replacement at no cost. Please email photos to support@compunknown.com.",
             status: "passed",
             score: 90,
             notes: "Clear instructions, good response",
@@ -240,8 +240,8 @@ function getDemoScenario(id: string): DemoScenario | null {
           {
             id: 2,
             query: "How do I contact support?",
-            context: "Contact our support team at support@company.com or call 1-800-555-0123.",
-            actual: "You can contact support at support@company.com or call 1-800-555-0123.",
+            context: "Contact our support team at support@compunknown.com or call 1-800-555-0123.",
+            actual: "You can contact support at support@compunknown.com or call 1-800-555-0123.",
             status: "passed",
             hallucinated: false,
             score: 100,
@@ -377,7 +377,7 @@ function getDemoScenario(id: string): DemoScenario | null {
             id: 5,
             task: "Write a function to debounce another function",
             generated:
-              "function debounce(fn: Function, delay: number) {\n  let timeout: NodeJS.Timeout;\n  return (...args: any[]) => {\n    clearTimeout(timeout);\n    timeout = setTimeout(() => fn(...args), delay);\n  };\n}",
+              "function debounce(fn: Function, delay: number) {\n  let timeout: NodeJS.Timeout;\n  return (...args: unknown[]) => {\n    clearTimeout(timeout);\n    timeout = setTimeout(() => fn(...args), delay);\n  };\n}",
             status: "passed",
             testsRun: 4,
             testsPassed: 4,
@@ -388,7 +388,7 @@ function getDemoScenario(id: string): DemoScenario | null {
             id: 6,
             task: "Create a function to deep clone an object",
             generated:
-              "function deepClone(obj: any): any {\n  return JSON.parse(JSON.stringify(obj));\n}",
+              "function deepClone(obj: unknown): unknown {\n  return JSON.parse(JSON.stringify(obj));\n}",
             status: "failed",
             testsRun: 7,
             testsPassed: 4,

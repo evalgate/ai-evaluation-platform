@@ -55,7 +55,9 @@ export function appendStepSummary(report: CheckReport): void {
       const exp = truncateSnippet(fc.expectedOutput ?? fc.expectedSnippet, 80);
       const out = truncateSnippet(fc.output ?? fc.outputSnippet, 80);
       const reason = out ? `got "${out}"` : "no output";
-      lines.push(`- **${truncateSnippet(label, 60)}** — expected: ${exp || "(any)"}, ${reason}`);
+      lines.push(
+        `- **${truncateSnippet(label, 60)}** — expected: ${exp || "(unknown)"}, ${reason}`,
+      );
     }
     if (failedCases.length > 10) {
       lines.push(`- _+ ${failedCases.length - 10} more_`);

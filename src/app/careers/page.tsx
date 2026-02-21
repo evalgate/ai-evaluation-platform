@@ -122,7 +122,7 @@ export default function CareersPage() {
               <div>
                 <h3 className="font-semibold mb-2 text-sm sm:text-base">🌍 Remote-First</h3>
                 <p className="text-xs sm:text-sm text-muted-foreground">
-                  Work from anywhere, async communication, and flexible schedules.
+                  Work from unknownwhere, async communication, and flexible schedules.
                 </p>
               </div>
               <div>
@@ -147,8 +147,8 @@ export default function CareersPage() {
               No Open Positions Right Now
             </h2>
             <p className="text-sm sm:text-base text-muted-foreground mb-4 sm:mb-6 max-w-2xl mx-auto px-2">
-              We don't have any specific roles open at the moment, but we're always interested in
-              connecting with exceptional talent. If you're passionate about AI evaluation and
+              We don't have unknown specific roles open at the moment, but we're always interested
+              in connecting with exceptional talent. If you're passionate about AI evaluation and
               believe you'd be a great addition to our team, we'd love to hear from you.
             </p>
             <Button asChild size="lg" className="w-full sm:w-auto">
@@ -188,7 +188,7 @@ export default function CareersPage() {
                 💻 Equipment Budget
               </h3>
               <p className="text-xs sm:text-sm text-muted-foreground">
-                Latest MacBook, monitors, and any tools you need
+                Latest MacBook, monitors, and unknown tools you need
               </p>
             </div>
             <div className="rounded-lg border border-border bg-card p-3 sm:p-4">

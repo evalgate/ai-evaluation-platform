@@ -20,8 +20,8 @@ import { useSession } from "@/lib/auth-client";
 export default function EvaluationsPage() {
   const { data: session, isPending } = useSession();
   const _router = useRouter();
-  const [evaluations, setEvaluations] = useState<any[]>([]);
-  const [filteredEvaluations, setFilteredEvaluations] = useState<any[]>([]);
+  const [evaluations, setEvaluations] = useState<unknown[]>([]);
+  const [filteredEvaluations, setFilteredEvaluations] = useState<unknown[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
@@ -66,7 +66,7 @@ export default function EvaluationsPage() {
     // Apply search filter
     if (searchQuery) {
       filtered = filtered.filter(
-        (evaluation: any) =>
+        (evaluation: unknown) =>
           evaluation.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
           evaluation.description?.toLowerCase().includes(searchQuery.toLowerCase()),
       );
@@ -74,7 +74,7 @@ export default function EvaluationsPage() {
 
     // Apply type filter
     if (typeFilter !== "all") {
-      filtered = filtered.filter((evaluation: any) => evaluation.type === typeFilter);
+      filtered = filtered.filter((evaluation: unknown) => evaluation.type === typeFilter);
     }
 
     setFilteredEvaluations(filtered);
@@ -162,7 +162,7 @@ export default function EvaluationsPage() {
         </div>
       ) : filteredEvaluations.length > 0 ? (
         <div className="grid gap-3 sm:gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {filteredEvaluations.map((evaluation: any) => (
+          {filteredEvaluations.map((evaluation: unknown) => (
             <Link key={evaluation.id} href={`/evaluations/${evaluation.id}`}>
               <Card className="hover:border-primary transition-colors cursor-pointer h-full">
                 <CardHeader className="space-y-2">

@@ -5,13 +5,13 @@ import type { AssertionResult } from "../assertions";
 export interface TestCaseInput {
   prompt?: string;
   messages?: Array<{ role: string; content: string }>;
-  context?: Record<string, any>;
+  context?: Record<string, unknown>;
 }
 
 export interface TestCaseResult {
   testCaseId: string;
   status: "passed" | "failed" | "skipped";
-  actualOutput: any;
+  actualOutput: unknown;
   assertions: AssertionResult[];
   durationMs: number;
   errorMessage?: string;
@@ -37,10 +37,10 @@ export class EvaluationService {
     testCase: {
       id: string;
       input: TestCaseInput;
-      expectedOutput?: any;
+      expectedOutput?: unknown;
     },
-    modelFunction: (input: TestCaseInput) => Promise<any>,
-    assertions: ((output: any) => AssertionResult)[],
+    modelFunction: (input: TestCaseInput) => Promise<unknown>,
+    assertions: ((output: unknown) => AssertionResult)[],
   ): Promise<TestCaseResult> {
     const startTime = Date.now();
 
@@ -94,10 +94,10 @@ export class EvaluationService {
     testCases: Array<{
       id: string;
       input: TestCaseInput;
-      expectedOutput?: any;
+      expectedOutput?: unknown;
     }>,
-    modelFunction: (input: TestCaseInput) => Promise<any>,
-    assertionFactory: (testCase: any) => ((output: any) => AssertionResult)[],
+    modelFunction: (input: TestCaseInput) => Promise<unknown>,
+    assertionFactory: (testCase: unknown) => ((output: unknown) => AssertionResult)[],
   ): Promise<EvaluationRunResult> {
     const startTime = new Date();
     const results: TestCaseResult[] = [];
@@ -128,7 +128,7 @@ export class EvaluationService {
   /**
    * Calculate metrics from evaluation results
    */
-  calculateMetrics(results: TestCaseResult[]): Record<string, any> {
+  calculateMetrics(results: TestCaseResult[]): Record<string, unknown> {
     const totalTests = results.length;
     const passedTests = results.filter((r) => r.status === "passed").length;
     const failedTests = results.filter((r) => r.status === "failed").length;

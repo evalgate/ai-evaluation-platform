@@ -14,7 +14,7 @@ describe("Logger", () => {
     logger.info("Test message");
 
     expect(console.log).toHaveBeenCalled();
-    const logOutput = (console.log as any).mock.calls[0][0];
+    const logOutput = (console.log as unknown as ReturnType<typeof vi.fn>).mock.calls[0][0];
     expect(logOutput).toContain("Test message");
     expect(logOutput).toContain("info");
   });
@@ -24,7 +24,7 @@ describe("Logger", () => {
     logger.error("Error occurred", error);
 
     expect(console.error).toHaveBeenCalled();
-    const logOutput = (console.error as any).mock.calls[0][0];
+    const logOutput = (console.error as unknown as ReturnType<typeof vi.fn>).mock.calls[0][0];
     expect(logOutput).toContain("Error occurred");
     expect(logOutput).toContain("Test error");
   });
@@ -33,7 +33,7 @@ describe("Logger", () => {
     logger.info("Test with metadata", { userId: "123", action: "create" });
 
     expect(console.log).toHaveBeenCalled();
-    const logOutput = (console.log as any).mock.calls[0][0];
+    const logOutput = (console.log as unknown as ReturnType<typeof vi.fn>).mock.calls[0][0];
     expect(logOutput).toContain("userId");
     expect(logOutput).toContain("123");
   });
@@ -43,7 +43,7 @@ describe("Logger", () => {
     moduleLogger.info("Auth event");
 
     expect(console.log).toHaveBeenCalled();
-    const logOutput = (console.log as any).mock.calls[0][0];
+    const logOutput = (console.log as unknown as ReturnType<typeof vi.fn>).mock.calls[0][0];
     expect(logOutput).toContain("auth");
     expect(logOutput).toContain("Auth event");
   });
@@ -52,7 +52,7 @@ describe("Logger", () => {
     logger.warn("Warning message");
 
     expect(console.warn).toHaveBeenCalled();
-    const logOutput = (console.warn as any).mock.calls[0][0];
+    const logOutput = (console.warn as unknown as ReturnType<typeof vi.fn>).mock.calls[0][0];
     expect(logOutput).toContain("Warning message");
   });
 });

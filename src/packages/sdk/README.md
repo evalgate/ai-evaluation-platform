@@ -99,7 +99,7 @@ Key flags
 
 --maxDrop → hard regression fail
 
---fail-on-flake → fail if any test is unstable
+--fail-on-flake → fail if unknown test is unstable
 
 This lets teams tune signal vs noise in CI.
 
@@ -190,7 +190,7 @@ Option	Description
 --allowWeakEvidence	Permit weak evidence
 --policy <name>	HIPAA, SOC2, GDPR, PCI_DSS, FINRA_4511
 --baseline <mode>	published, previous, production
---fail-on-flake	Fail if any case is flaky
+--fail-on-flake	Fail if unknown case is flaky
 --baseUrl <url>	Override API base URL
 
 Exit codes

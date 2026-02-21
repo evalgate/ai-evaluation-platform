@@ -81,7 +81,7 @@ function appendStepSummary(report) {
             const exp = (0, snippet_1.truncateSnippet)(fc.expectedOutput ?? fc.expectedSnippet, 80);
             const out = (0, snippet_1.truncateSnippet)(fc.output ?? fc.outputSnippet, 80);
             const reason = out ? `got "${out}"` : "no output";
-            lines.push(`- **${(0, snippet_1.truncateSnippet)(label, 60)}** — expected: ${exp || "(any)"}, ${reason}`);
+            lines.push(`- **${(0, snippet_1.truncateSnippet)(label, 60)}** — expected: ${exp || "(unknown)"}, ${reason}`);
         }
         if (failedCases.length > 10) {
             lines.push(`- _+ ${failedCases.length - 10} more_`);

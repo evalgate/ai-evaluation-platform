@@ -23,7 +23,7 @@
  * Context metadata that will be automatically injected
  */
 export interface ContextMetadata {
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 // Detect environment
@@ -52,7 +52,7 @@ class BrowserContextStorage {
  * Context storage implementation
  * Uses AsyncLocalStorage in Node.js, simple stack in browsers
  */
-let contextStorage: any;
+let contextStorage: unknown;
 
 if (isNode) {
   try {
@@ -135,7 +135,7 @@ export function createContext(metadata: ContextMetadata): EvalContext {
 }
 
 /**
- * Get the current context metadata (if any)
+ * Get the current context metadata (if unknown)
  *
  * @example
  * ```typescript
@@ -161,7 +161,7 @@ export function getCurrentContext(): ContextMetadata | undefined {
  * };
  * ```
  */
-export function mergeWithContext(metadata?: Record<string, any>): Record<string, any> {
+export function mergeWithContext(metadata?: Record<string, unknown>): Record<string, unknown> {
   const current = getCurrentContext();
   if (!current) return metadata || {};
   return { ...current, ...metadata };
@@ -210,10 +210,10 @@ export function withContextSync<T>(metadata: ContextMetadata, fn: () => T): T {
  * ```
  */
 export function WithContext(metadata: ContextMetadata) {
-  return (_target: any, _propertyKey: string, descriptor: PropertyDescriptor) => {
+  return (_target: unknown, _propertyKey: string, descriptor: PropertyDescriptor) => {
     const originalMethod = descriptor.value;
 
-    descriptor.value = async function (...args: any[]) {
+    descriptor.value = async function (...args: unknown[]) {
       return withContext(metadata, () => originalMethod.apply(this, args));
     };
 

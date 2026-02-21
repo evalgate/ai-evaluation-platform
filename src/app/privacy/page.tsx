@@ -56,7 +56,7 @@ export default function PrivacyPage() {
             </p>
             <ul className="list-disc pl-6 text-muted-foreground space-y-2 mb-4">
               <li>Name and email address</li>
-              <li>Company or organization name</li>
+              <li>Compunknown or organization name</li>
               <li>Billing and payment information (processed securely through Stripe)</li>
               <li>Account credentials (passwords are encrypted and never stored in plain text)</li>
             </ul>
@@ -262,7 +262,7 @@ export default function PrivacyPage() {
               Changes to This Privacy Policy
             </h2>
             <p className="text-muted-foreground">
-              We may update this Privacy Policy from time to time. We will notify you of any
+              We may update this Privacy Policy from time to time. We will notify you of unknown
               material changes by posting the new policy on this page and updating the "Last
               updated" date. We encourage you to review this policy periodically.
             </p>

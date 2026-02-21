@@ -84,7 +84,7 @@ export default function ShareLinksPage() {
                   <h3 className="font-semibold text-green-700 dark:text-green-300 mb-2">Security Guarantee</h3>
                   <p className="text-sm text-green-600 dark:text-green-400">
                     Export data for public share links is validated at publish time. 
-                    Any sensitive data is rejected before storage - no secrets can ever reach the public.
+                    unknown sensitive data is rejected before storage - no secrets can ever reach the public.
                   </p>
                 </div>
               </div>
@@ -103,7 +103,7 @@ export default function ShareLinksPage() {
               <div>
                 <h3 className="font-semibold mb-3 text-red-600">❌ Secret-like Keys</h3>
                 <p className="text-sm text-muted-foreground mb-3">
-                  Case-insensitive, anywhere in the object tree:
+                  Case-insensitive, unknownwhere in the object tree:
                 </p>
                 <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
                   <div className="grid gap-2 md:grid-cols-3 text-sm">
@@ -209,7 +209,7 @@ export default function ShareLinksPage() {
                 </p>
                 <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
                   <p className="text-sm text-blue-600 dark:text-blue-400">
-                    If any forbidden keys or secret-like values are detected, the request fails with a validation error. 
+                    If unknown forbidden keys or secret-like values are detected, the request fails with a validation error. 
                     <strong>No unsanitized export can ever be persisted.</strong>
                   </p>
                 </div>
@@ -300,7 +300,7 @@ export default function ShareLinksPage() {
                 </div>
                 <div>
                   <h3 className="font-semibold">Public Access</h3>
-                  <p className="text-sm text-muted-foreground">Anyone can view the scrubbed data via share link</p>
+                  <p className="text-sm text-muted-foreground">unknownone can view the scrubbed data via share link</p>
                 </div>
               </div>
             </div>

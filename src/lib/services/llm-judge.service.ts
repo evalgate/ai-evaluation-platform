@@ -14,8 +14,8 @@ export const createLLMJudgeConfigSchema = z.object({
   name: z.string().min(1).max(255),
   model: z.string().min(1),
   promptTemplate: z.string().min(1),
-  criteria: z.record(z.any()).optional(),
-  settings: z.record(z.any()).optional(),
+  criteria: z.record(z.unknown()).optional(),
+  settings: z.record(z.unknown()).optional(),
 });
 
 export const evaluateRequestSchema = z.object({
@@ -24,7 +24,7 @@ export const evaluateRequestSchema = z.object({
   output: z.string().min(1),
   context: z.string().optional(),
   expectedOutput: z.string().optional(),
-  metadata: z.record(z.any()).optional(),
+  metadata: z.record(z.unknown()).optional(),
 });
 
 export type CreateLLMJudgeConfigInput = z.infer<typeof createLLMJudgeConfigSchema>;
@@ -34,7 +34,7 @@ export interface JudgementResult {
   score: number;
   reasoning: string;
   passed: boolean;
-  details?: Record<string, any>;
+  details?: Record<string, unknown>;
 }
 
 export class LLMJudgeService {
@@ -254,7 +254,7 @@ export class LLMJudgeService {
    * Build evaluation prompt from config and data
    * @private
    */
-  private buildEvaluationPrompt(config: any, data: EvaluateRequestInput): string {
+  private buildEvaluationPrompt(config: unknown, data: EvaluateRequestInput): string {
     const parts = [
       "You are an expert evaluator.",
       "\n\n# Evaluation Template\n",
@@ -307,7 +307,7 @@ export class LLMJudgeService {
    * @private
    */
   private async callLLMProvider(
-    config: any,
+    config: unknown,
     prompt: string,
     organizationId: number,
   ): Promise<JudgementResult> {
@@ -315,7 +315,7 @@ export class LLMJudgeService {
     logger.info("Calling LLM provider", { provider, model: config.model, organizationId });
 
     const systemPrompt =
-      'You are an expert AI evaluator. Respond ONLY with valid JSON in this exact format: {"score": <0-100>, "reasoning": "<explanation>", "passed": <true/false>}. Do not include any other text.';
+      'You are an expert AI evaluator. Respond ONLY with valid JSON in this exact format: {"score": <0-100>, "reasoning": "<explanation>", "passed": <true/false>}. Do not include unknown other text.';
 
     try {
       if (provider === "openai") {
@@ -605,7 +605,7 @@ export class LLMJudgeService {
           judgeReasoning: evaluation.reasoning,
           passed: evaluation.passed,
         });
-      } catch (error: any) {
+      } catch (error: unknown) {
         logger.error("Failed to judge test case", {
           testCaseId: testResult.testCaseId,
           error: error.message,

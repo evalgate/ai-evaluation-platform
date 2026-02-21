@@ -29,11 +29,11 @@ export default function EvaluationDetailPage({ params }: PageProps) {
   const { id } = use(params); // Unwrap Promise with use()
   const { data: session, isPending } = useSession();
   const router = useRouter();
-  const [evaluation, setEvaluation] = useState<any>(null);
-  const [testCases, setTestCases] = useState<any[]>([]);
-  const [runs, setRuns] = useState<any[]>([]);
+  const [evaluation, setEvaluation] = useState<unknown>(null);
+  const [testCases, setTestCases] = useState<unknown[]>([]);
+  const [runs, setRuns] = useState<unknown[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [qualityScore, setQualityScore] = useState<any>(null);
+  const [qualityScore, setQualityScore] = useState<unknown>(null);
   const [exportModalOpen, setExportModalOpen] = useState(false);
   const [openDiffRunId, setOpenDiffRunId] = useState<number | null>(null);
 
@@ -248,7 +248,7 @@ ${qualityScore.recommendations.map((r: string) => `- ${r}`).join("\n")}
     }
   };
 
-  const downloadExportFile = (exportData: any, evaluation: any) => {
+  const downloadExportFile = (exportData: unknown, evaluation: unknown) => {
     const filename = generateExportFilename(
       evaluation.name,
       evaluation.type as EvaluationType,
@@ -267,11 +267,16 @@ ${qualityScore.recommendations.map((r: string) => `- ${r}`).join("\n")}
   };
 
   // Helper function to get type-specific export data
-  const getAdditionalExportData = (type: string, testCases: any[], runs: any[], latestRun: any) => {
+  const getAdditionalExportData = (
+    type: string,
+    testCases: unknown[],
+    runs: unknown[],
+    latestRun: unknown,
+  ) => {
     switch (type) {
       case "unit_test":
         return {
-          testResults: testCases.map((tc: any) => ({
+          testResults: testCases.map((tc: unknown) => ({
             id: tc.id,
             name: tc.name,
             input: tc.input,
@@ -302,7 +307,7 @@ ${qualityScore.recommendations.map((r: string) => `- ${r}`).join("\n")}
       case "ab_test":
         return {
           variants: evaluation?.variants || [],
-          results: runs.map((run: any) => ({
+          results: runs.map((run: unknown) => ({
             variant_id: run.variant_id,
             variant_name: run.variant_name,
             test_count: run.total_tests,
@@ -446,7 +451,7 @@ ${qualityScore.recommendations.map((r: string) => `- ${r}`).join("\n")}
 
         {testCases.length > 0 ? (
           <div className="space-y-2 sm:space-y-3">
-            {testCases.map((testCase: any) => (
+            {testCases.map((testCase: unknown) => (
               <Card key={testCase.id}>
                 <CardContent className="p-3 sm:p-4">
                   <div className="flex items-start justify-between">
@@ -496,7 +501,7 @@ ${qualityScore.recommendations.map((r: string) => `- ${r}`).join("\n")}
         <h2 className="mb-4 text-xl font-semibold">Recent Runs</h2>
         {runs.length > 0 ? (
           <div className="space-y-3">
-            {runs.map((run: any) => (
+            {runs.map((run: unknown) => (
               <Card key={run.id} id={`run-${run.id}`}>
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">

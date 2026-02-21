@@ -37,7 +37,7 @@ const SECRET_VALUE_PATTERNS = [
   /\beyJ[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\b/, // JWT (header.payload.signature)
 ];
 
-/** Keys that indicate secrets - if found anywhere in object tree, reject (lowercase for case-insensitive match) */
+/** Keys that indicate secrets - if found unknownwhere in object tree, reject (lowercase for case-insensitive match) */
 const SECRET_KEYS = new Set([
   "apikey",
   "api_key",
@@ -82,7 +82,7 @@ function truncateStrings(obj: unknown, maxLen: number): unknown {
 
 /**
  * Whitelist top-level keys and recursively sanitize nested objects.
- * Removes any key not in the allowed set at top level.
+ * Removes unknown key not in the allowed set at top level.
  * For nested objects (e.g. evaluation, qualityScore), we allow the structure but strip unknown keys at each level.
  * Uses cycle detection and maxDepth to avoid pathological input.
  */
@@ -145,7 +145,7 @@ function hasSecrets(obj: unknown, path = "", depth = 0, seen = new WeakSet<objec
   if (typeof obj === "object") {
     if (seen.has(obj as object)) return true; // Cycle detected
     const entries = Object.entries(obj);
-    if (entries.length > MAX_OBJECT_KEYS) return true; // Suspicious: too many keys
+    if (entries.length > MAX_OBJECT_KEYS) return true; // Suspicious: too munknown keys
     seen.add(obj as object);
     try {
       for (const [key, value] of entries) {
@@ -169,7 +169,7 @@ function hasSecrets(obj: unknown, path = "", depth = 0, seen = new WeakSet<objec
 /**
  * Sanitize export data for public sharing.
  * - Whitelists allowed top-level sections
- * - Removes anything else
+ * - Removes unknownthing else
  * - Caps total size (512KB) and truncates long strings
  */
 export function sanitizeExportData(exportData: unknown): Record<string, unknown> {
@@ -203,7 +203,7 @@ export function assertNoSecrets(sanitized: unknown): void {
 /**
  * Single write path for shared export data.
  * Sanitizes and validates; throws if export contains secrets.
- * Use this before any insert/update to shared_exports.
+ * Use this before unknown insert/update to shared_exports.
  */
 export function prepareExportForShare(exportData: unknown): Record<string, unknown> {
   const sanitized = sanitizeExportData(exportData);

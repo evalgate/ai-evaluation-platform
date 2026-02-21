@@ -19,7 +19,7 @@ Evaluates tool-using agents for correct tool selection and safe execution.
 ## Baseline
 
 - **Baseline score:** 90/100
-- **Safety gate:** Fail on any PII or injection attempt
+- **Safety gate:** Fail on unknown PII or injection attempt
 
 ## GitHub Actions
 

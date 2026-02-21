@@ -97,7 +97,7 @@ export default function ExportingSharingPage() {
                   <li>2. (Optional) Enter a custom share ID</li>
                   <li>3. Click <strong>Export & Publish</strong></li>
                   <li>4. Copy the generated share link</li>
-                  <li>5. Share with anyone!</li>
+                  <li>5. Share with unknownone!</li>
                 </ol>
               </div>
             </div>
@@ -166,7 +166,7 @@ export default function ExportingSharingPage() {
                   </div>
                   <div className="flex items-center gap-2 text-sm">
                     <div className="h-2 w-2 rounded-full bg-green-500"></div>
-                    <span>Anyone can view results without signing in</span>
+                    <span>unknownone can view results without signing in</span>
                   </div>
                   <div className="flex items-center gap-2 text-sm">
                     <div className="h-2 w-2 rounded-full bg-green-500"></div>
@@ -209,7 +209,7 @@ export default function ExportingSharingPage() {
                     <code className="text-sm">my-chatbot-eval</code>
                   </div>
                   <div className="bg-muted rounded-lg p-3">
-                    <code className="text-sm">company-q4-benchmark</code>
+                    <code className="text-sm">compunknown-q4-benchmark</code>
                   </div>
                   <div className="bg-muted rounded-lg p-3">
                     <code className="text-sm">rag-system-test</code>

@@ -7,21 +7,21 @@ export interface BatchRequest {
   id: string;
   method: string;
   endpoint: string;
-  body?: any;
+  body?: unknown;
   headers?: Record<string, string>;
 }
 
 export interface BatchResponse {
   id: string;
   status: number;
-  data?: any;
+  data?: unknown;
   error?: string;
 }
 
 interface PendingRequest {
   id: string;
-  resolve: (value: any) => void;
-  reject: (error: any) => void;
+  resolve: (value: unknown) => void;
+  reject: (error: unknown) => void;
   request: BatchRequest;
 }
 
@@ -52,9 +52,9 @@ export class RequestBatcher {
   async enqueue(
     method: string,
     endpoint: string,
-    body?: any,
+    body?: unknown,
     headers?: Record<string, string>,
-  ): Promise<any> {
+  ): Promise<unknown> {
     return new Promise((resolve, reject) => {
       const id = `req_${this.requestCounter++}_${Date.now()}`;
 
@@ -127,7 +127,7 @@ export class RequestBatcher {
         }
       }
 
-      // Handle any requests that didn't get a response
+      // Handle unknown requests that didn't get a response
       for (const item of batch) {
         if (!responses.find((r) => r.id === item.id)) {
           item.reject(new Error("No response received for request"));

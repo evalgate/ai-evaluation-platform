@@ -16,7 +16,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { JobErrorCodes } from "../types";
 import { harness, setupJobsTestHarness } from "./mocks/jobs-harness";
 
-// ✅ MUST mock BEFORE importing ../runner anywhere
+// ✅ MUST mock BEFORE importing ../runner unknownwhere
 vi.mock("../handlers/webhook-delivery", () => {
   class WebhookDeliveryError extends Error {
     errorCode: string;
@@ -31,7 +31,7 @@ vi.mock("../handlers/webhook-delivery", () => {
 
   return {
     WebhookDeliveryError,
-    handleWebhookDelivery: (payload: any) => harness.state.handlerImpl(payload),
+    handleWebhookDelivery: (payload: unknown) => harness.state.handlerImpl(payload),
   };
 });
 
@@ -40,7 +40,7 @@ vi.mock("../payload-schemas", () => ({
   validatePayload: (type: string, payload: unknown) => {
     if (harness.state.validateImpl) return harness.state.validateImpl(type, payload);
     // Default: treat as valid for runner unit tests
-    return { success: true, data: payload as any };
+    return { success: true, data: payload as unknown };
   },
 }));
 
@@ -53,7 +53,7 @@ beforeEach(() => {
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 let _id = 1;
-function makeJob(overrides: Partial<any> = {}): any {
+function makeJob(overrides: Partial<unknown> = {}): unknown {
   return harness.makeJob({ id: _id++, ...overrides });
 }
 

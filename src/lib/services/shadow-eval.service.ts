@@ -51,7 +51,7 @@ export interface ShadowEvalResult {
     scoreDiff: number;
     passed: boolean;
     duration: number;
-    metadata: Record<string, any>;
+    metadata: Record<string, unknown>;
   }>;
 }
 
@@ -64,9 +64,9 @@ export interface TraceReplayData {
     input: string;
     output: string;
     duration: number;
-    metadata: Record<string, any>;
+    metadata: Record<string, unknown>;
   }>;
-  metadata: Record<string, any>;
+  metadata: Record<string, unknown>;
 }
 
 /**
@@ -226,7 +226,7 @@ export class ShadowEvalService {
     return {
       id: run.evaluation_runs.id,
       evaluationId: run.evaluation_runs.evaluationId,
-      originalEvaluationId: (traceLog as any).originalEvaluationId || 0,
+      originalEvaluationId: (traceLog as unknown).originalEvaluationId || 0,
       status: run.evaluation_runs.status,
       totalTraces: run.evaluation_runs.totalCases ?? 0,
       processedTraces,
@@ -291,7 +291,7 @@ export class ShadowEvalService {
           metadata: spans.metadata,
         })
         .from(spans)
-        .where(eq(spans.traceId, trace.traceId as any));
+        .where(eq(spans.traceId, trace.traceId as unknown));
 
       traceReplayData.push({
         traceId: trace.traceId,
@@ -405,7 +405,7 @@ export class ShadowEvalService {
         passedCount,
         failedCount,
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error("Shadow evaluation failed", { shadowRunId, error: error.message });
 
       await db
@@ -423,7 +423,7 @@ export class ShadowEvalService {
    */
   private async replayTrace(
     trace: TraceReplayData,
-    evaluation: any,
+    evaluation: unknown,
   ): Promise<{
     passed: boolean;
     score: number;
@@ -431,8 +431,8 @@ export class ShadowEvalService {
     error?: string;
     originalScore?: number;
     duration: number;
-    messages?: any[];
-    toolCalls?: any[];
+    messages?: unknown[];
+    toolCalls?: unknown[];
   }> {
     try {
       // Extract the main input/output from the trace
@@ -524,7 +524,7 @@ export class ShadowEvalService {
         ],
         toolCalls: [],
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       return {
         passed: false,
         score: 0,
@@ -611,7 +611,7 @@ export class ShadowEvalService {
         and(
           eq(evaluations.organizationId, organizationId),
           // Filter for shadow evals by checking trace log type
-          like(evaluationRuns.traceLog as any, "%shadow_eval%"),
+          like(evaluationRuns.traceLog as unknown, "%shadow_eval%"),
         ),
       )
       .orderBy(desc(evaluationRuns.createdAt))

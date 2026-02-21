@@ -13,7 +13,7 @@ import judgeData from "../../../../../public/demo/judge.json";
 import ragData from "../../../../../public/demo/rag.json";
 import tracesData from "../../../../../public/demo/traces.json";
 
-const DEMO_DATA_MAP: Record<string, any> = {
+const DEMO_DATA_MAP: Record<string, unknown> = {
   chatbot: chatbotData,
   rag: ragData,
   codegen: codegenData,

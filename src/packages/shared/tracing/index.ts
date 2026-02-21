@@ -9,9 +9,9 @@ export interface SpanContext {
 export interface SpanData {
   name: string;
   spanType: "llm" | "tool" | "agent" | "retrieval" | "custom";
-  input: any;
-  output?: any;
-  metadata?: Record<string, any>;
+  input: unknown;
+  output?: unknown;
+  metadata?: Record<string, unknown>;
   error?: string;
 }
 
@@ -19,7 +19,7 @@ export class TraceCollector {
   private apiEndpoint: string;
   private organizationId: string;
   private currentTrace: SpanContext | null = null;
-  private spans: Map<string, any> = new Map();
+  private spans: Map<string, unknown> = new Map();
 
   constructor(apiEndpoint: string, organizationId: string) {
     this.apiEndpoint = apiEndpoint;
@@ -29,7 +29,11 @@ export class TraceCollector {
   /**
    * Start a new trace
    */
-  async startTrace(name: string, metadata?: Record<string, any>, tags?: string[]): Promise<string> {
+  async startTrace(
+    name: string,
+    metadata?: Record<string, unknown>,
+    tags?: string[],
+  ): Promise<string> {
     const traceId = this.generateId();
 
     try {
@@ -84,7 +88,7 @@ export class TraceCollector {
   /**
    * End a span and send it to the server
    */
-  async endSpan(spanId: string, output?: any, error?: string): Promise<void> {
+  async endSpan(spanId: string, output?: unknown, error?: string): Promise<void> {
     const span = this.spans.get(spanId);
     if (!span) {
       console.warn(`[v0] Span ${spanId} not found`);
@@ -126,7 +130,7 @@ export class TraceCollector {
     name: string,
     spanType: SpanData["spanType"],
     fn: () => Promise<T>,
-    input?: any,
+    input?: unknown,
   ): Promise<T> {
     const spanId = await this.startSpan({
       name,

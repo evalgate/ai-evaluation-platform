@@ -176,7 +176,7 @@ export class EvalAIError extends Error {
   retryable: boolean;
 
   /** Additional error details from the API */
-  details?: any;
+  details?: unknown;
 
   /** When to retry (for rate limit errors) in seconds */
   retryAfter?: number;
@@ -187,7 +187,7 @@ export class EvalAIError extends Error {
   /** Request ID from API (for correlation/debugging) */
   requestId?: string;
 
-  constructor(message: string, code: string, statusCode: number, details?: any) {
+  constructor(message: string, code: string, statusCode: number, details?: unknown) {
     super(message);
     this.name = "EvalAIError";
     this.code = code;
@@ -254,7 +254,7 @@ export class EvalAIError extends Error {
   /**
    * Convert to JSON for logging
    */
-  toJSON(): Record<string, any> {
+  toJSON(): Record<string, unknown> {
     return {
       name: this.name,
       code: this.code,
@@ -274,7 +274,7 @@ export class EvalAIError extends Error {
 /**
  * Create an error from an HTTP response
  */
-export function createErrorFromResponse(response: Response, data: any): EvalAIError {
+export function createErrorFromResponse(response: Response, data: unknown): EvalAIError {
   const status = response.status;
   const errObj = data?.error && typeof data.error === "object" ? data.error : data;
   let code = errObj?.code ?? data?.code ?? "UNKNOWN_ERROR";
@@ -317,7 +317,7 @@ export class AuthenticationError extends EvalAIError {
 }
 
 export class ValidationError extends EvalAIError {
-  constructor(message = "Validation failed", details?: any) {
+  constructor(message = "Validation failed", details?: unknown) {
     super(message, "VALIDATION_ERROR", 400, details);
     this.name = "ValidationError";
   }

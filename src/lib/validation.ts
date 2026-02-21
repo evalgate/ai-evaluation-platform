@@ -40,7 +40,7 @@ export const createTraceSchema = z.object({
   organizationId: organizationIdSchema,
   status: z.enum(["pending", "success", "error"]).default("pending"),
   durationMs: z.number().int().min(0).optional().nullable(),
-  metadata: z.record(z.any()).optional().nullable(),
+  metadata: z.record(z.unknown()).optional().nullable(),
 });
 
 export const listTracesSchema = z.object({
@@ -77,9 +77,9 @@ const modelSettingsSchema = z
 
 const testCaseItemSchema = z.object({
   name: z.string().optional(),
-  input: z.union([z.string(), z.any()]),
-  expectedOutput: z.union([z.string(), z.any()]).optional(),
-  metadata: z.any().optional(),
+  input: z.union([z.string(), z.unknown()]),
+  expectedOutput: z.union([z.string(), z.unknown()]).optional(),
+  metadata: z.unknown().optional(),
   label: z.string().optional(),
 });
 
@@ -90,9 +90,9 @@ export const createEvaluationBodySchema = z.object({
   type: z.string().min(1),
   executionSettings: executionSettingsSchema,
   modelSettings: modelSettingsSchema,
-  customMetrics: z.array(z.any()).optional(),
-  config: z.any().optional(),
-  templates: z.array(z.any()).optional(),
+  customMetrics: z.array(z.unknown()).optional(),
+  config: z.unknown().optional(),
+  templates: z.array(z.unknown()).optional(),
   testCases: z.array(testCaseItemSchema).optional(),
 });
 
@@ -106,15 +106,15 @@ export const createEvaluationSchema = z.object({
   createdBy: z.string(),
   executionSettings: executionSettingsSchema,
   modelSettings: modelSettingsSchema,
-  customMetrics: z.array(z.any()).optional(),
-  config: z.any().optional(),
+  customMetrics: z.array(z.unknown()).optional(),
+  config: z.unknown().optional(),
 });
 
 /** Body for PATCH /api/evaluations/:id */
 export const updateEvaluationBodySchema = z.object({
   name: z.string().min(1).max(255).optional(),
   description: z.string().optional().nullable(),
-  config: z.any().optional(),
+  config: z.unknown().optional(),
 });
 
 /** Body for PUT /api/evaluations?id= (update by query) */
@@ -152,7 +152,7 @@ export const importRunBodySchema = z
     importClientVersion: z.string().optional(),
     ci: ciContextSchema,
     /** CheckReport from evalai check --onFail import; stored in traceLog.import.checkReport */
-    checkReport: z.record(z.any()).optional(),
+    checkReport: z.record(z.unknown()).optional(),
     results: z
       .array(
         z.object({
@@ -161,7 +161,7 @@ export const importRunBodySchema = z
           output: z.string(),
           latencyMs: z.number().int().min(0).optional(),
           costUsd: z.number().min(0).optional(),
-          assertionsJson: z.record(z.any()).optional(),
+          assertionsJson: z.record(z.unknown()).optional(),
         }),
       )
       .min(1),
@@ -187,9 +187,9 @@ export const recomputeQualityBodySchema = z.object({
 /** Body for POST /api/evaluations/:id/test-cases */
 export const createTestCaseBodySchema = z.object({
   name: z.string().optional(),
-  input: z.union([z.string(), z.any()]),
-  expectedOutput: z.union([z.string(), z.any()]).optional(),
-  metadata: z.any().optional(),
+  input: z.union([z.string(), z.unknown()]),
+  expectedOutput: z.union([z.string(), z.unknown()]).optional(),
+  metadata: z.unknown().optional(),
 });
 
 // Trace schemas (POST /api/traces)
@@ -198,14 +198,14 @@ export const createTraceBodySchema = z.object({
   traceId: z.string().min(1).max(255),
   status: z.enum(["pending", "success", "error"]).optional(),
   durationMs: z.number().int().min(0).optional().nullable(),
-  metadata: z.record(z.any()).optional().nullable(),
+  metadata: z.record(z.unknown()).optional().nullable(),
 });
 
 /** Body for PATCH /api/traces/:id */
 export const updateTraceBodySchema = z.object({
   status: z.enum(["pending", "success", "error"]).optional(),
   durationMs: z.number().int().min(0).optional().nullable(),
-  metadata: z.record(z.any()).optional(),
+  metadata: z.record(z.unknown()).optional(),
 });
 
 /** Body for POST /api/traces/:id/spans */
@@ -214,12 +214,12 @@ export const createSpanBodySchema = z.object({
   name: z.string().min(1),
   type: z.string().min(1),
   parentSpanId: z.string().optional(),
-  input: z.any().optional(),
-  output: z.any().optional(),
+  input: z.unknown().optional(),
+  output: z.unknown().optional(),
   durationMs: z.number().int().min(0).optional().nullable(),
   startTime: z.string().optional(),
   endTime: z.string().optional(),
-  metadata: z.any().optional(),
+  metadata: z.unknown().optional(),
   evaluationRunId: z.number().int().positive().optional().nullable(),
 });
 
@@ -288,8 +288,8 @@ export const createAnnotationTaskSchema = z.object({
   description: z.string().optional(),
   instructions: z.string().min(1),
   template: z.string().optional(),
-  config: z.any().optional(),
-  annotationSettings: z.any().optional(),
+  config: z.unknown().optional(),
+  annotationSettings: z.unknown().optional(),
 });
 
 // LLM Judge schemas

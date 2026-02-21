@@ -53,7 +53,14 @@ export const CostsCharts: React.FC = () => {
           <div style={{ fontSize: 13, color: colors.textMuted, marginBottom: 16 }}>
             Daily spending
           </div>
-          <svg width={chartW} height={chartH} viewBox={`0 0 ${chartW} ${chartH}`}>
+          <svg
+            width={chartW}
+            height={chartH}
+            viewBox={`0 0 ${chartW} ${chartH}`}
+            role="img"
+            aria-label="Daily spending chart"
+          >
+            <title>Daily spending chart</title>
             {[0, 0.25, 0.5, 0.75, 1].map((pct) => {
               const y = 10 + plotH - pct * plotH;
               return (
@@ -123,7 +130,14 @@ export const CostsCharts: React.FC = () => {
         <div style={{ ...card, width: 380, padding: 24, opacity: pieOpacity }}>
           <div style={{ fontSize: 18, fontWeight: 600, marginBottom: 4 }}>Cost Distribution</div>
           <div style={{ fontSize: 13, color: colors.textMuted, marginBottom: 16 }}>By model</div>
-          <svg width={320} height={200} viewBox="0 0 320 200">
+          <svg
+            width={320}
+            height={200}
+            viewBox="0 0 320 200"
+            role="img"
+            aria-label="Cost distribution by model"
+          >
+            <title>Cost distribution by model</title>
             <g transform="translate(160, 100)">
               {TOP_MODELS.map((m) => {
                 const angle = (m.cost / totalCost) * 360;

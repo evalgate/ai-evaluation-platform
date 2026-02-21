@@ -49,7 +49,7 @@ function buildPrComment(report) {
         lines.push(`_${escapeMarkdown(report.reasonMessage)}_`);
     }
     lines.push("");
-    // Policy (if any)
+    // Policy (if unknown)
     if (report.policy) {
         lines.push(`**Policy:** ${report.policy}`);
         lines.push("");

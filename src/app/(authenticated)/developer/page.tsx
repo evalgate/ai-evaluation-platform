@@ -53,20 +53,24 @@ import { useOrganizationId } from "@/hooks/use-organization";
 import { useSession } from "@/lib/auth-client";
 
 // Lazy load Recharts components
-// Import as type "any" to avoid type conflicts with dynamic imports
-const LineChart = dynamic<any>(() => import("recharts").then((mod) => mod.LineChart), {
+// Import as type "unknown" to avoid type conflicts with dynamic imports
+const LineChart = dynamic<unknown>(() => import("recharts").then((mod) => mod.LineChart), {
   ssr: false,
 });
-const Line = dynamic<any>(() => import("recharts").then((mod) => mod.Line), { ssr: false });
-const BarChart = dynamic<any>(() => import("recharts").then((mod) => mod.BarChart), { ssr: false });
-const Bar = dynamic<any>(() => import("recharts").then((mod) => mod.Bar), { ssr: false });
-const XAxis = dynamic<any>(() => import("recharts").then((mod) => mod.XAxis), { ssr: false });
-const YAxis = dynamic<any>(() => import("recharts").then((mod) => mod.YAxis), { ssr: false });
-const CartesianGrid = dynamic<any>(() => import("recharts").then((mod) => mod.CartesianGrid), {
+const Line = dynamic<unknown>(() => import("recharts").then((mod) => mod.Line), { ssr: false });
+const BarChart = dynamic<unknown>(() => import("recharts").then((mod) => mod.BarChart), {
   ssr: false,
 });
-const Tooltip = dynamic<any>(() => import("recharts").then((mod) => mod.Tooltip), { ssr: false });
-const ResponsiveContainer = dynamic<any>(
+const Bar = dynamic<unknown>(() => import("recharts").then((mod) => mod.Bar), { ssr: false });
+const XAxis = dynamic<unknown>(() => import("recharts").then((mod) => mod.XAxis), { ssr: false });
+const YAxis = dynamic<unknown>(() => import("recharts").then((mod) => mod.YAxis), { ssr: false });
+const CartesianGrid = dynamic<unknown>(() => import("recharts").then((mod) => mod.CartesianGrid), {
+  ssr: false,
+});
+const Tooltip = dynamic<unknown>(() => import("recharts").then((mod) => mod.Tooltip), {
+  ssr: false,
+});
+const ResponsiveContainer = dynamic<unknown>(
   () => import("recharts").then((mod) => mod.ResponsiveContainer),
   { ssr: false },
 );
@@ -774,7 +778,7 @@ const trace = await client.traces.create({
           <AlertDialogHeader>
             <AlertDialogTitle>Revoke API Key?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will immediately revoke the API key. Any applications using this key will no
+              This will immediately revoke the API key. unknown applications using this key will no
               longer be able to access the API. This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>

@@ -29,7 +29,7 @@ export interface LogEntry {
     level: LogLevel;
     message: string;
     timestamp: string;
-    data?: any;
+    data?: unknown;
     prefix?: string;
 }
 /**
@@ -41,31 +41,31 @@ export declare class Logger {
     /**
      * Log a trace message
      */
-    trace(message: string, data?: any): void;
+    trace(message: string, data?: unknown): void;
     /**
      * Log a debug message
      */
-    debug(message: string, data?: any): void;
+    debug(message: string, data?: unknown): void;
     /**
      * Log an info message
      */
-    info(message: string, data?: any): void;
+    info(message: string, data?: unknown): void;
     /**
      * Log a warning message
      */
-    warn(message: string, data?: any): void;
+    warn(message: string, data?: unknown): void;
     /**
      * Log an error message
      */
-    error(message: string, data?: any): void;
+    error(message: string, data?: unknown): void;
     /**
      * Log HTTP request
      */
-    logRequest(method: string, url: string, data?: any): void;
+    logRequest(method: string, url: string, data?: unknown): void;
     /**
      * Log HTTP response
      */
-    logResponse(method: string, url: string, status: number, duration: number, data?: any): void;
+    logResponse(method: string, url: string, status: number, duration: number, data?: unknown): void;
     /**
      * Create child logger with prefix
      */
@@ -112,7 +112,7 @@ export declare class RequestLogger {
         method: string;
         url: string;
         headers?: Record<string, string>;
-        body?: any;
+        body?: unknown;
     }): void;
     /**
      * Log response after receiving
@@ -123,6 +123,6 @@ export declare class RequestLogger {
         status: number;
         duration: number;
         headers?: Record<string, string>;
-        body?: any;
+        body?: unknown;
     }): void;
 }

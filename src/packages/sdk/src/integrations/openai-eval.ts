@@ -61,7 +61,7 @@ export interface OpenAIChatEvalResult {
   retriedCases?: string[];
 }
 
-function getOpenAI(): any {
+function getOpenAI(): unknown {
   try {
     const OpenAI = require("openai");
     return OpenAI;
@@ -204,7 +204,7 @@ export async function openAIChatEval(
         for (let i = 0; i < result.results.length; i++) {
           const tcId = cases[i]?.testCaseId;
           if (tcId == null) {
-            console.log("reportToEvalAI: All cases must have testCaseId when any has it.");
+            console.log("reportToEvalAI: All cases must have testCaseId when unknown has it.");
             return evalResult;
           }
           importResults.push({

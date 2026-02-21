@@ -17,15 +17,15 @@ export declare class RequestCache {
     /**
      * Get cached response if valid
      */
-    get<T>(method: string, url: string, params?: any): T | null;
+    get<T>(method: string, url: string, params?: unknown): T | null;
     /**
      * Store response in cache
      */
-    set<T>(method: string, url: string, data: T, ttl: number, params?: any): void;
+    set<T>(method: string, url: string, data: T, ttl: number, params?: unknown): void;
     /**
      * Invalidate specific cache entry
      */
-    invalidate(method: string, url: string, params?: any): void;
+    invalidate(method: string, url: string, params?: unknown): void;
     /**
      * Invalidate all cache entries matching a pattern
      */

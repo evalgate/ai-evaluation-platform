@@ -111,11 +111,11 @@ export async function* autoPaginate<T>(
 /**
  * Encode cursor for pagination (base64)
  */
-export function encodeCursor(data: any): string {
+export function encodeCursor(data: unknown): string {
   const json = JSON.stringify(data);
 
   if (typeof globalThis !== "undefined" && "btoa" in globalThis) {
-    return (globalThis as any).btoa(json);
+    return (globalThis as unknown).btoa(json);
   } else {
     return Buffer.from(json).toString("base64");
   }
@@ -124,12 +124,12 @@ export function encodeCursor(data: any): string {
 /**
  * Decode cursor from base64
  */
-export function decodeCursor(cursor: string): any {
+export function decodeCursor(cursor: string): unknown {
   try {
     let json: string;
 
     if (typeof globalThis !== "undefined" && "atob" in globalThis) {
-      json = (globalThis as any).atob(cursor);
+      json = (globalThis as unknown).atob(cursor);
     } else {
       json = Buffer.from(cursor, "base64").toString("utf-8");
     }

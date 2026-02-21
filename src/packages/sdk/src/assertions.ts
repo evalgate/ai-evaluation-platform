@@ -18,16 +18,16 @@
 export interface AssertionResult {
   name: string;
   passed: boolean;
-  expected: any;
-  actual: any;
+  expected: unknown;
+  actual: unknown;
   message?: string;
 }
 
 export class AssertionError extends Error {
   constructor(
     message: string,
-    public expected: any,
-    public actual: any,
+    public expected: unknown,
+    public actual: unknown,
   ) {
     super(message);
     this.name = "AssertionError";
@@ -39,13 +39,13 @@ export class AssertionError extends Error {
  * Fluent assertion builder
  */
 export class Expectation {
-  constructor(private value: any) {}
+  constructor(private value: unknown) {}
 
   /**
    * Assert value equals expected
    * @example expect(output).toEqual("Hello")
    */
-  toEqual(expected: any, message?: string): AssertionResult {
+  toEqual(expected: unknown, message?: string): AssertionResult {
     const passed = JSON.stringify(this.value) === JSON.stringify(expected);
     return {
       name: "toEqual",
@@ -185,7 +185,7 @@ export class Expectation {
    * Assert JSON matches schema
    * @example expect(output).toMatchJSON({ status: 'success' })
    */
-  toMatchJSON(schema: Record<string, any>, message?: string): AssertionResult {
+  toMatchJSON(schema: Record<string, unknown>, message?: string): AssertionResult {
     let passed = false;
     let parsedJson = null;
 
@@ -469,7 +469,7 @@ export class Expectation {
  * expect(output).toHaveLength({ min: 10, max: 100 });
  * ```
  */
-export function expect(value: any): Expectation {
+export function expect(value: unknown): Expectation {
   return new Expectation(value);
 }
 
@@ -587,7 +587,7 @@ export function hasNoHallucinations(text: string, groundTruth: string[]): boolea
   return groundTruth.every((truth) => text.includes(truth));
 }
 
-export function matchesSchema(value: any, schema: Record<string, any>): boolean {
+export function matchesSchema(value: unknown, schema: Record<string, unknown>): boolean {
   // This is a simplified implementation
   if (typeof value !== "object" || value === null) return false;
   return Object.keys(schema).every((key) => key in value);
@@ -648,7 +648,7 @@ export function followsInstructions(text: string, instructions: string[]): boole
   });
 }
 
-export function containsAllRequiredFields(obj: any, requiredFields: string[]): boolean {
+export function containsAllRequiredFields(obj: unknown, requiredFields: string[]): boolean {
   return requiredFields.every((field) => field in obj);
 }
 

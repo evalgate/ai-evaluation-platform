@@ -58,7 +58,7 @@ export function BattleArena() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       setResult(data);
-    } catch (e: any) {
+    } catch (e: unknown) {
       setError(e.message);
     } finally {
       setLoading(false);

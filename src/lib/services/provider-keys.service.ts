@@ -12,12 +12,12 @@ export const createProviderKeySchema = z.object({
   keyName: z.string().min(1).max(255),
   keyType: z.enum(["api_key", "oauth_token", "service_account"]),
   apiKey: z.string().min(1),
-  metadata: z.record(z.any()).optional(),
+  metadata: z.record(z.unknown()).optional(),
 });
 
 export const updateProviderKeySchema = z.object({
   keyName: z.string().min(1).max(255).optional(),
-  metadata: z.record(z.any()).optional(),
+  metadata: z.record(z.unknown()).optional(),
   isActive: z.boolean().optional(),
 });
 
@@ -32,7 +32,7 @@ export interface DecryptedProviderKey {
   keyType: string;
   keyPrefix: string;
   decryptedKey: string;
-  metadata: Record<string, any>;
+  metadata: Record<string, unknown>;
   isActive: boolean;
   lastUsedAt: string | null;
   expiresAt: string | null;
@@ -151,7 +151,7 @@ export class ProviderKeysService {
       conditions.push(eq(providerKeys.provider, provider));
     }
     if (!includeInactive) {
-      conditions.push(eq(providerKeys.isActive, true as any));
+      conditions.push(eq(providerKeys.isActive, true as unknown));
     }
 
     return db
@@ -270,7 +270,7 @@ export class ProviderKeysService {
   ): Promise<{
     id: number;
     keyName: string;
-    metadata: Record<string, any>;
+    metadata: Record<string, unknown>;
     isActive: boolean;
     updatedAt: string;
   }> {
@@ -284,7 +284,7 @@ export class ProviderKeysService {
       throw new Error("Provider key not found");
     }
 
-    const updateData: any = {
+    const updateData: unknown = {
       updatedAt: new Date().toISOString(),
     };
 

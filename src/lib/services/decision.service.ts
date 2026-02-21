@@ -28,7 +28,7 @@ export interface CreateDecisionParams {
   alternatives: DecisionAlternative[];
   reasoning?: string;
   confidence?: number;
-  inputContext?: Record<string, any>;
+  inputContext?: Record<string, unknown>;
 }
 
 export interface ListDecisionsParams {
@@ -59,10 +59,10 @@ class DecisionService {
         agentName: params.agentName,
         decisionType: params.decisionType,
         chosen: params.chosen,
-        alternatives: params.alternatives as any,
+        alternatives: params.alternatives as unknown,
         reasoning: params.reasoning || null,
         confidence: params.confidence || null,
-        inputContext: (params.inputContext as any) || null,
+        inputContext: (params.inputContext as unknown) || null,
         createdAt: now,
       })
       .returning();

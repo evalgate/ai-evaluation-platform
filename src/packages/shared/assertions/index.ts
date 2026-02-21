@@ -4,16 +4,16 @@
 export interface AssertionResult {
   name: string;
   passed: boolean;
-  expected: any;
-  actual: any;
+  expected: unknown;
+  actual: unknown;
   message?: string;
 }
 
 export class AssertionError extends Error {
   constructor(
     message: string,
-    public expected: any,
-    public actual: any,
+    public expected: unknown,
+    public actual: unknown,
   ) {
     super(message);
     this.name = "AssertionError";
@@ -21,7 +21,11 @@ export class AssertionError extends Error {
 }
 
 // Core assertion functions
-export function assertEquals(actual: any, expected: any, message?: string): AssertionResult {
+export function assertEquals(
+  actual: unknown,
+  expected: unknown,
+  message?: string,
+): AssertionResult {
   const passed = JSON.stringify(actual) === JSON.stringify(expected);
   return {
     name: "assertEquals",
@@ -176,7 +180,7 @@ export function assertJsonValid(text: string, message?: string): AssertionResult
 
 export function assertJsonSchema(
   text: string,
-  schema: Record<string, any>,
+  schema: Record<string, unknown>,
   message?: string,
 ): AssertionResult {
   let passed = false;

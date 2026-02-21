@@ -38,7 +38,7 @@ type PageProps = {
 };
 
 interface WorkflowStats {
-  workflow: any;
+  workflow: unknown;
   stats: {
     totalRuns: number;
     completedRuns: number;
@@ -52,8 +52,8 @@ interface WorkflowStats {
 interface WorkflowRun {
   id: number;
   status: "running" | "completed" | "failed" | "cancelled";
-  input: any;
-  output: any;
+  input: unknown;
+  output: unknown;
   totalCost: string | null;
   totalDurationMs: number | null;
   agentCount: number | null;
@@ -67,7 +67,7 @@ interface Handoff {
   fromAgent: string | null;
   toAgent: string;
   handoffType: string;
-  context: any;
+  context: unknown;
   timestamp: string;
 }
 
@@ -77,7 +77,7 @@ export default function WorkflowDetailPage({ params }: PageProps) {
   const router = useRouter();
   const [workflowData, setWorkflowData] = useState<WorkflowStats | null>(null);
   const [runs, setRuns] = useState<WorkflowRun[]>([]);
-  const [handoffStats, setHandoffStats] = useState<any[]>([]);
+  const [handoffStats, setHandoffStats] = useState<unknown[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedNodeId, setSelectedNodeId] = useState<string | undefined>();
   const [activeTab, setActiveTab] = useState("overview");
@@ -295,13 +295,14 @@ export default function WorkflowDetailPage({ params }: PageProps) {
             <Card>
               <CardHeader>
                 <CardTitle className="text-base">
-                  Node: {workflow.definition.nodes.find((n: any) => n.id === selectedNodeId)?.name}
+                  Node:{" "}
+                  {workflow.definition.nodes.find((n: unknown) => n.id === selectedNodeId)?.name}
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <pre className="bg-muted p-4 rounded-lg text-xs overflow-auto">
                   {JSON.stringify(
-                    workflow.definition.nodes.find((n: any) => n.id === selectedNodeId),
+                    workflow.definition.nodes.find((n: unknown) => n.id === selectedNodeId),
                     null,
                     2,
                   )}

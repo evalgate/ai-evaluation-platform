@@ -58,7 +58,7 @@ export function buildPrComment(report: CheckReport): string {
   }
   lines.push("");
 
-  // Policy (if any)
+  // Policy (if unknown)
   if (report.policy) {
     lines.push(`**Policy:** ${report.policy}`);
     lines.push("");

@@ -61,7 +61,7 @@ export function initializeEvalAI(config: {
  */
 export function createEvalAICallback(tracer: WorkflowTracer) {
   return {
-    handleLLMStart: async (llm: any, prompts: string[]) => {
+    handleLLMStart: async (llm: unknown, prompts: string[]) => {
       // Track LLM call start
       const span = await tracer.startAgentSpan("LLM", {
         model: llm.modelName || llm.model || "unknown",
@@ -70,7 +70,7 @@ export function createEvalAICallback(tracer: WorkflowTracer) {
       return span;
     },
 
-    handleLLMEnd: async (output: any, _runId: string) => {
+    handleLLMEnd: async (output: unknown, _runId: string) => {
       // Track token usage and cost
       if (output.llmOutput?.tokenUsage) {
         await tracer.recordCost({
@@ -83,15 +83,15 @@ export function createEvalAICallback(tracer: WorkflowTracer) {
       }
     },
 
-    handleChainStart: async (chain: any, inputs: any) => {
+    handleChainStart: async (chain: unknown, inputs: unknown) => {
       return await tracer.startAgentSpan(chain.name || "Chain", { inputs });
     },
 
-    handleChainEnd: async (_outputs: any) => {
+    handleChainEnd: async (_outputs: unknown) => {
       // Chain completed
     },
 
-    handleToolStart: async (tool: any, input: string) => {
+    handleToolStart: async (tool: unknown, input: string) => {
       return await tracer.startAgentSpan(`Tool: ${tool.name}`, { input });
     },
 
@@ -99,7 +99,7 @@ export function createEvalAICallback(tracer: WorkflowTracer) {
       // Tool completed
     },
 
-    handleAgentAction: async (action: any) => {
+    handleAgentAction: async (action: unknown) => {
       // Record agent decision
       await tracer.recordDecision({
         agent: "LangChainAgent",

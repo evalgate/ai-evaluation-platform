@@ -14,7 +14,7 @@ import { logger } from "@/lib/logger";
 const subscribeSchema = z.object({
   email: z.string().email("Invalid email address"),
   source: z.string().min(1, "Source is required"),
-  context: z.record(z.any()).optional(),
+  context: z.record(z.unknown()).optional(),
   subscribedAt: z.string().optional(),
 });
 
@@ -176,7 +176,7 @@ export async function DELETE(request: NextRequest) {
 /**
  * Generate tags based on source and context
  */
-function generateTags(source: string, context: Record<string, any>): string[] {
+function generateTags(source: string, context: Record<string, unknown>): string[] {
   const tags: string[] = [];
 
   // Source tags

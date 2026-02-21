@@ -1,6 +1,6 @@
 # EvalAI — AI Evaluation Platform
 
-> Observability, evaluation, and governance platform for AI agents and LLM applications. Published SDK on npm. REST API for any language.
+> Observability, evaluation, and governance platform for AI agents and LLM applications. Published SDK on npm. REST API for unknown language.
 
 ## What is EvalAI?
 
@@ -16,7 +16,7 @@ You sign up, create an organization, add API keys or use the web UI, then instru
 
 1. **Evaluations**: Create an evaluation (unit_test, human_eval, model_eval, ab_test), add test cases (input + expected output or rubric), then run it. The platform executes tests, scores outputs, and stores results. Use the visual builder or SDK.
 2. **Workflows**: Instrument multi-agent pipelines with WorkflowTracer. Start a workflow, record agent spans, handoffs, decisions, and costs. View DAGs and run history in the dashboard.
-3. **Traces**: Create traces and spans for any AI call. Attach metadata, record decisions, and track costs. Useful for debugging and auditing.
+3. **Traces**: Create traces and spans for unknown AI call. Attach metadata, record decisions, and track costs. Useful for debugging and auditing.
 4. **Auth**: Use API keys (Settings → Developer) or OAuth (Google/GitHub). All API calls use `Authorization: Bearer <key>`.
 
 ## Quick Install

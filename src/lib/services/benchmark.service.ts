@@ -16,7 +16,7 @@ export interface CreateBenchmarkParams {
   description?: string;
   organizationId: number;
   taskType: "qa" | "coding" | "reasoning" | "tool_use" | "multi_step";
-  dataset?: Array<{ input: string; expectedOutput?: string; metadata?: Record<string, any> }>;
+  dataset?: Array<{ input: string; expectedOutput?: string; metadata?: Record<string, unknown> }>;
   metrics: string[];
   isPublic?: boolean;
   createdBy: string;
@@ -27,7 +27,7 @@ export interface CreateAgentConfigParams {
   organizationId: number;
   architecture: "react" | "cot" | "tot" | "custom";
   model: string;
-  config?: Record<string, any>;
+  config?: Record<string, unknown>;
   description?: string;
   createdBy: string;
 }
@@ -42,7 +42,7 @@ export interface SubmitBenchmarkResultParams {
   totalCost?: string;
   successRate?: number;
   toolUseEfficiency?: number;
-  customMetrics?: Record<string, any>;
+  customMetrics?: Record<string, unknown>;
 }
 
 export interface LeaderboardEntry {
@@ -110,8 +110,8 @@ class BenchmarkService {
         description: params.description?.trim() || null,
         organizationId: params.organizationId,
         taskType: params.taskType,
-        dataset: (params.dataset as any) || null,
-        metrics: params.metrics as any,
+        dataset: (params.dataset as unknown) || null,
+        metrics: params.metrics as unknown,
         isPublic: params.isPublic || false,
         createdBy: params.createdBy,
         createdAt: now,
@@ -174,7 +174,7 @@ class BenchmarkService {
         organizationId: params.organizationId,
         architecture: params.architecture,
         model: params.model,
-        config: (params.config as any) || null,
+        config: (params.config as unknown) || null,
         description: params.description?.trim() || null,
         createdBy: params.createdBy,
         createdAt: now,
@@ -255,7 +255,7 @@ class BenchmarkService {
             params.toolUseEfficiency !== undefined
               ? Math.round(((existingResult.toolUseEfficiency || 0) + params.toolUseEfficiency) / 2)
               : existingResult.toolUseEfficiency,
-          customMetrics: (params.customMetrics as any) || existingResult.customMetrics,
+          customMetrics: (params.customMetrics as unknown) || existingResult.customMetrics,
           runCount: newRunCount,
           workflowRunId: params.workflowRunId || existingResult.workflowRunId,
         })
@@ -278,7 +278,7 @@ class BenchmarkService {
         totalCost: params.totalCost || null,
         successRate: params.successRate || null,
         toolUseEfficiency: params.toolUseEfficiency || null,
-        customMetrics: (params.customMetrics as any) || null,
+        customMetrics: (params.customMetrics as unknown) || null,
         runCount: 1,
         createdAt: now,
       })

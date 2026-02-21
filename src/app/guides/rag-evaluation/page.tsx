@@ -61,10 +61,10 @@ export default function RAGEvaluationPage() {
             <h4>Metrics:</h4>
             <ul>
               <li>
-                <strong>Precision@K:</strong> Of the top K retrieved docs, how many are relevant?
+                <strong>Precision@K:</strong> Of the top K retrieved docs, how munknown are relevant?
               </li>
               <li>
-                <strong>Recall@K:</strong> Of all relevant docs, how many are in top K?
+                <strong>Recall@K:</strong> Of all relevant docs, how munknown are in top K?
               </li>
               <li>
                 <strong>MRR (Mean Reciprocal Rank):</strong> Position of first relevant document
@@ -242,7 +242,7 @@ assert(faithfulness >= 0.95);`}
             </div>
 
             <h3>2. Context Window Overflow</h3>
-            <p>Retrieved too many docs, exceeded LLM context limit.</p>
+            <p>Retrieved too munknown docs, exceeded LLM context limit.</p>
             <p>
               <strong>Solution:</strong> Rerank and truncate to most relevant chunks.
             </p>

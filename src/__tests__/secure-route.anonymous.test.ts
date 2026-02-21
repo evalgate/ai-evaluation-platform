@@ -58,9 +58,13 @@ describe("secureRoute allowAnonymous", () => {
     });
     await wrapped(req, { params: Promise.resolve({}) });
 
-    expect(withRateLimit).toHaveBeenCalledWith(expect.any(NextRequest), expect.any(Function), {
-      customTier: "anonymous",
-    });
+    expect(withRateLimit).toHaveBeenCalledWith(
+      expect.unknown(NextRequest),
+      expect.unknown(Function),
+      {
+        customTier: "anonymous",
+      },
+    );
   });
 
   it("uses custom tier when rateLimit specified", async () => {
@@ -77,8 +81,12 @@ describe("secureRoute allowAnonymous", () => {
     });
     await wrapped(req, { params: Promise.resolve({}) });
 
-    expect(withRateLimit).toHaveBeenCalledWith(expect.any(NextRequest), expect.any(Function), {
-      customTier: "free",
-    });
+    expect(withRateLimit).toHaveBeenCalledWith(
+      expect.unknown(NextRequest),
+      expect.unknown(Function),
+      {
+        customTier: "free",
+      },
+    );
   });
 });

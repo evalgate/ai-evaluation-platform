@@ -51,7 +51,7 @@ export function DebugPanel({ evaluationId, runId, onClose }: DebugPanelProps) {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       setAnalysis(data);
-    } catch (e: any) {
+    } catch (e: unknown) {
       setError(e.message);
     } finally {
       setLoading(false);

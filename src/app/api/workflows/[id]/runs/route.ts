@@ -12,8 +12,8 @@ import { parsePaginationParams } from "@/lib/validation";
 
 const createRunSchema = z.object({
   traceId: z.number().int().positive(),
-  input: z.record(z.any()).optional(),
-  metadata: z.record(z.any()).optional(),
+  input: z.record(z.unknown()).optional(),
+  metadata: z.record(z.unknown()).optional(),
 });
 
 /**

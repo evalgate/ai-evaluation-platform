@@ -31,6 +31,22 @@ export interface EvaluationStats {
   consistencyScore: number; // 0-100 (std deviation based)
 }
 
+function sanitizeNumber(value: number): number {
+  return Number.isFinite(value) ? value : 0;
+}
+
+function normalizeStats(stats: EvaluationStats): EvaluationStats {
+  return {
+    totalEvaluations: sanitizeNumber(stats.totalEvaluations),
+    passedEvaluations: sanitizeNumber(stats.passedEvaluations),
+    failedEvaluations: sanitizeNumber(stats.failedEvaluations),
+    averageLatency: sanitizeNumber(stats.averageLatency),
+    averageCost: sanitizeNumber(stats.averageCost),
+    averageScore: sanitizeNumber(stats.averageScore),
+    consistencyScore: sanitizeNumber(stats.consistencyScore),
+  };
+}
+
 /**
  * Calculate AI Quality Score from evaluation statistics
  */
@@ -38,13 +54,14 @@ export function calculateQualityScore(
   stats: EvaluationStats,
   previousStats?: EvaluationStats,
 ): QualityScore {
+  const safeStats = normalizeStats(stats);
   // Calculate individual metrics
   const metrics: QualityMetrics = {
-    accuracy: calculateAccuracyScore(stats),
-    safety: calculateSafetyScore(stats),
-    latency: calculateLatencyScore(stats),
-    cost: calculateCostScore(stats),
-    consistency: stats.consistencyScore || 0,
+    accuracy: calculateAccuracyScore(safeStats),
+    safety: calculateSafetyScore(safeStats),
+    latency: calculateLatencyScore(safeStats),
+    cost: calculateCostScore(safeStats),
+    consistency: safeStats.consistencyScore || 0,
   };
 
   // Calculate overall score (weighted average)
@@ -67,15 +84,18 @@ export function calculateQualityScore(
   // Calculate trend
   let trend = 0;
   if (previousStats) {
-    const previousOverall = calculateQualityScore(previousStats).overall;
-    trend = Math.round(((overall - previousOverall) / previousOverall) * 100);
+    const previousOverall =
+      previousStats.totalEvaluations === 0 ? 0 : calculateQualityScore(previousStats).overall;
+    if (previousOverall !== 0) {
+      trend = Math.round(((overall - previousOverall) / previousOverall) * 100);
+    }
   }
 
   // Generate grade
   const grade = calculateGrade(overall);
 
   // Generate insights
-  const insights = generateInsights(metrics, stats);
+  const insights = generateInsights(metrics, safeStats);
 
   // Generate recommendations
   const recommendations = generateRecommendations(metrics, stats);
@@ -94,10 +114,11 @@ export function calculateQualityScore(
  * Calculate accuracy score from pass/fail ratio
  */
 function calculateAccuracyScore(stats: EvaluationStats): number {
-  if (stats.totalEvaluations === 0) return 0;
+  const total = stats.totalEvaluations || 0;
+  if (total === 0) return 0;
 
-  const passRate = stats.passedEvaluations / stats.totalEvaluations;
-  return Math.round(passRate * 100);
+  const passRate = stats.passedEvaluations / total;
+  return Math.round(Math.min(Math.max(passRate, 0), 1) * 100);
 }
 
 /**

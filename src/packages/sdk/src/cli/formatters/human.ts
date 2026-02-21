@@ -37,7 +37,9 @@ export function formatHuman(report: CheckReport): string {
       const exp = truncateSnippet(fc.expectedOutput ?? fc.expectedSnippet, 50);
       const out = truncateSnippet(fc.output ?? fc.outputSnippet, 50);
       const reason = out ? `got "${out}"` : "no output";
-      lines.push(`  - "${truncateSnippet(label, 50)}" → expected: ${exp || "(any)"}, ${reason}`);
+      lines.push(
+        `  - "${truncateSnippet(label, 50)}" → expected: ${exp || "(unknown)"}, ${reason}`,
+      );
     }
     if (failedCases.length > toShow.length) {
       lines.push(`  + ${failedCases.length - toShow.length} more`);

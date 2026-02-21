@@ -15,9 +15,9 @@ export interface DemoEvaluation {
     failed: number;
     passRate: string;
   };
-  qualityScore: any;
+  qualityScore: unknown;
   timestamp: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 const DEFAULT_DEMO_URL = `${process.env.NEXT_PUBLIC_BASE_URL || ""}/exports/demo-eval.json`;
@@ -153,7 +153,7 @@ export function getShareUrl(id: string): string {
 /**
  * Validate demo data structure
  */
-export function validateDemoData(data: any): data is DemoEvaluation {
+export function validateDemoData(data: unknown): data is DemoEvaluation {
   return !!(
     data &&
     typeof data === "object" &&

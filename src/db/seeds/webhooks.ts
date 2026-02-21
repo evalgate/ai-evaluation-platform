@@ -36,7 +36,7 @@ async function main() {
     },
     {
       organizationId: 2,
-      url: "https://app.company.com/api/webhooks/evaluations",
+      url: "https://app.compunknown.com/api/webhooks/evaluations",
       events: JSON.stringify(["evaluation.started", "evaluation.completed"]),
       secret: crypto.randomBytes(32).toString("hex"),
       status: "active",

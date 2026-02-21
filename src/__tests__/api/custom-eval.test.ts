@@ -3,8 +3,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { POST } from "@/app/api/demo/custom-eval/route";
 
 // Mock rate limiting to bypass in tests
+type Handler = (req: unknown) => unknown | Promise<unknown>;
+
 vi.mock("@/lib/api-rate-limit", () => ({
-  withRateLimit: vi.fn((_req: any, handler: any) => handler(_req)),
+  withRateLimit: vi.fn((req: unknown, handler: Handler) => handler(req)),
 }));
 
 function createRequest(body: Record<string, unknown>) {

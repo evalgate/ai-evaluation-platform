@@ -208,7 +208,7 @@ export default function LLMJudgeGuide() {
               judges
             </li>
             <li>
-              <strong>Keep rubrics focused:</strong> 3-5 dimensions is ideal; too many dilutes
+              <strong>Keep rubrics focused:</strong> 3-5 dimensions is ideal; too munknown dilutes
               quality
             </li>
             <li>

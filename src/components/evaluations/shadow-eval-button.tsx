@@ -88,7 +88,7 @@ export function ShadowEvalButton({ evaluationId, onShadowEvalCreated }: ShadowEv
       setSelectedTraces([]);
       setDateRange({ from: undefined, to: undefined });
       setFilters({ status: [] });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Shadow eval error:", error);
     } finally {
       setIsLoading(false);

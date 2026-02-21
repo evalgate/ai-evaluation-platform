@@ -111,7 +111,7 @@ declare class TraceAPI {
      * });
      * ```
      */
-    create<TMetadata = Record<string, any>>(params: CreateTraceParams<TMetadata>): Promise<Trace<TMetadata>>;
+    create<TMetadata = Record<string, unknown>>(params: CreateTraceParams<TMetadata>): Promise<Trace<TMetadata>>;
     /**
      * List traces with optional filtering
      */
@@ -138,7 +138,7 @@ declare class TraceAPI {
      * });
      * ```
      */
-    update<TMetadata = Record<string, any>>(id: number, params: UpdateTraceParams<TMetadata>): Promise<Trace<TMetadata>>;
+    update<TMetadata = Record<string, unknown>>(id: number, params: UpdateTraceParams<TMetadata>): Promise<Trace<TMetadata>>;
     /**
      * Create a span for a trace
      */
@@ -208,7 +208,7 @@ declare class LLMJudgeAPI {
      */
     evaluate(params: RunLLMJudgeParams): Promise<{
         result: LLMJudgeResult;
-        config: any;
+        config: unknown;
     }>;
     /**
      * Create an LLM judge configuration

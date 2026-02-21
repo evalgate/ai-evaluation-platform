@@ -16,7 +16,7 @@ const createHandoffSchema = z.object({
   fromAgent: z.string().optional(),
   toAgent: z.string(),
   handoffType: z.enum(["delegation", "escalation", "parallel", "fallback"]),
-  context: z.record(z.any()).optional(),
+  context: z.record(z.unknown()).optional(),
 });
 
 /**

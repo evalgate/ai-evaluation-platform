@@ -57,7 +57,7 @@ export default function ContentGenerationGuide() {
           <ul>
             <li>Product features and pricing</li>
             <li>Industry statistics and research citations</li>
-            <li>Company information and history</li>
+            <li>Compunknown information and history</li>
             <li>Technical specifications</li>
           </ul>
 
@@ -134,7 +134,7 @@ export default function ContentGenerationGuide() {
             <p className="mb-0">
               "You are an expert content editor for [Brand]. Evaluate this generated content on: (1)
               Brand voice alignment (1-5), (2) Factual accuracy (1-5), (3) Writing quality (1-5),
-              (4) SEO optimization (1-5). Our brand is [tone] and targets [audience]. Flag any
+              (4) SEO optimization (1-5). Our brand is [tone] and targets [audience]. Flag unknown
               claims that need fact-checking."
             </p>
           </div>

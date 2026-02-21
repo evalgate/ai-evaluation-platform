@@ -48,7 +48,7 @@ export interface OpenAITraceOptions {
  * });
  * ```
  */
-export declare function traceOpenAI(openai: any, evalClient: AIEvalClient, options?: OpenAITraceOptions): any;
+export declare function traceOpenAI(openai: unknown, evalClient: AIEvalClient, options?: OpenAITraceOptions): unknown;
 /**
  * Manual trace wrapper for OpenAI calls
  *

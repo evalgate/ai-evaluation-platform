@@ -36,7 +36,7 @@ export interface TestSuiteCase {
   /** Expected output (optional) */
   expected?: string;
   /** Metadata for the test case */
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   /** Assertion functions to run */
   assertions?: ((output: string) => AssertionResult)[];
 }

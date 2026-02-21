@@ -5,9 +5,9 @@
   "items": [
     {
       "id": "1",
-      "prompt": "What are the company's vacation policies?",
+      "prompt": "What are the compunknown's vacation policies?",
       "context": "Employees receive 15 days of paid vacation per year, accruing at 1.25 days per month. Unused vacation can be carried over up to 5 days into the next year.",
-      "output": "According to the company policy, employees get 15 days of paid vacation annually, which accrues monthly at 1.25 days. You can carry over up to 5 unused days to the next year.",
+      "output": "According to the compunknown policy, employees get 15 days of paid vacation annually, which accrues monthly at 1.25 days. You can carry over up to 5 unused days to the next year.",
       "expected": "15 days paid vacation per year with up to 5 days carryover.",
       "score": 0.95,
       "pass": true,

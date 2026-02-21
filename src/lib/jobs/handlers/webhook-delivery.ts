@@ -124,7 +124,7 @@ export async function handleWebhookDelivery(payload: Record<string, unknown>): P
     } else {
       errorMsg = `HTTP ${responseCode}: ${responseBody.substring(0, 500)}`;
     }
-  } catch (err: any) {
+  } catch (err: unknown) {
     errorMsg = err.message;
   }
 
@@ -135,7 +135,7 @@ export async function handleWebhookDelivery(payload: Record<string, unknown>): P
     await db.insert(webhookDeliveries).values({
       webhookId,
       eventType: event,
-      payload: webhookPayload as any,
+      payload: webhookPayload as unknown,
       payloadHash,
       status: deliveryStatus,
       responseStatus: responseCode,
@@ -143,7 +143,7 @@ export async function handleWebhookDelivery(payload: Record<string, unknown>): P
       attemptCount: 1,
       createdAt: new Date().toISOString(),
     });
-  } catch (insertErr: any) {
+  } catch (insertErr: unknown) {
     // Unique constraint violation on dedup index — already recorded
     if (insertErr?.message?.includes("UNIQUE constraint")) {
       logger.info("Webhook delivery record dedup — already exists", { webhookId, event });

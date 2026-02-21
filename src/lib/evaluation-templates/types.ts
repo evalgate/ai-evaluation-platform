@@ -2,7 +2,7 @@ export interface EvaluationTemplate {
   id: string;
   name: string;
   category: string;
-  icon: any;
+  icon: unknown;
   description: string;
   type: "unit_test" | "human_eval" | "model_eval" | "ab_test";
   complexity: "beginner" | "intermediate" | "advanced";

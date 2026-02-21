@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
         const pricing = await costService.getAllPricing();
 
         // Group by provider
-        const grouped: Record<string, any[]> = {};
+        const grouped: Record<string, unknown[]> = {};
         for (const p of pricing) {
           if (!grouped[p.provider]) {
             grouped[p.provider] = [];

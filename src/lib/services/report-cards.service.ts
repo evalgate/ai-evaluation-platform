@@ -63,7 +63,7 @@ export interface ReportCardData {
     scoreTrend: "improving" | "declining" | "stable";
     performanceChange: number;
   };
-  metadata: Record<string, any>;
+  metadata: Record<string, unknown>;
 }
 
 export interface ReportCardSummary {
@@ -254,7 +254,7 @@ export class ReportCardsService {
   /**
    * Calculate performance metrics.
    */
-  private calculatePerformance(testResults: any[]): ReportCardData["performance"] {
+  private calculatePerformance(testResults: unknown[]): ReportCardData["performance"] {
     if (testResults.length === 0) {
       return {
         scoreDistribution: {},
@@ -323,7 +323,7 @@ export class ReportCardsService {
   /**
    * Calculate quality metrics.
    */
-  private calculateQuality(judgeResults: any[]): ReportCardData["quality"] {
+  private calculateQuality(judgeResults: unknown[]): ReportCardData["quality"] {
     if (judgeResults.length === 0) {
       return {
         judgeResults: {
@@ -375,7 +375,7 @@ export class ReportCardsService {
   /**
    * Calculate trends.
    */
-  private calculateTrends(runs: any[], testResults: any[]): ReportCardData["trends"] {
+  private calculateTrends(runs: unknown[], testResults: unknown[]): ReportCardData["trends"] {
     const recentRuns = runs
       .filter((r) => ["completed", "completed_with_failures"].includes(r.status))
       .slice(0, 10)
@@ -424,8 +424,8 @@ export class ReportCardsService {
    * Calculate overall statistics.
    */
   private calculateOverallStats(
-    runs: any[],
-    testResults: any[],
+    runs: unknown[],
+    testResults: unknown[],
   ): {
     averageScore: number;
     passRate: number;
@@ -464,7 +464,7 @@ export class ReportCardsService {
   /**
    * Extract cost from test result metadata.
    */
-  private extractCost(testResult: any): number {
+  private extractCost(testResult: unknown): number {
     try {
       const metadata =
         typeof testResult.metadata === "string"

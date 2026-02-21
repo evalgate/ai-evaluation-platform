@@ -6,7 +6,7 @@
  * Used by openAIChatEval({ reportToEvalAI: true }) to upload local results.
  *
  * Idempotency: Send Idempotency-Key header to avoid duplicate runs on CI retries.
- * Policy: All-or-nothing — if any testCaseId is invalid, the whole request is rejected.
+ * Policy: All-or-nothing — if unknown testCaseId is invalid, the whole request is rejected.
  */
 
 import { and, desc, eq, inArray } from "drizzle-orm";

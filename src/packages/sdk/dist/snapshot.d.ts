@@ -26,7 +26,7 @@ export interface SnapshotMetadata {
     /** Optional tags for organization */
     tags?: string[];
     /** Additional metadata */
-    metadata?: Record<string, any>;
+    metadata?: Record<string, unknown>;
 }
 export interface SnapshotData {
     /** The actual output that was snapshotted */
@@ -75,7 +75,7 @@ export declare class SnapshotManager {
      */
     save(name: string, output: string, options?: {
         tags?: string[];
-        metadata?: Record<string, any>;
+        metadata?: Record<string, unknown>;
         overwrite?: boolean;
     }): Promise<SnapshotData>;
     /**
@@ -140,7 +140,7 @@ export declare class SnapshotManager {
  */
 export declare function snapshot(output: string, name: string, options?: {
     tags?: string[];
-    metadata?: Record<string, any>;
+    metadata?: Record<string, unknown>;
     overwrite?: boolean;
     dir?: string;
 }): Promise<SnapshotData>;

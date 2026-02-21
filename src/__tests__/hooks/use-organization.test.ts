@@ -11,7 +11,7 @@ describe("useOrganizationId", () => {
   });
 
   it("should return organization ID when fetched", async () => {
-    (global.fetch as any).mockResolvedValueOnce({
+    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
       ok: true,
       json: async () => ({ organization: { id: 123 } }),
     });
@@ -24,7 +24,9 @@ describe("useOrganizationId", () => {
   });
 
   it("should return null while loading", () => {
-    (global.fetch as any).mockImplementation(() => new Promise(() => {}));
+    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockImplementation(
+      () => new Promise(() => {}),
+    );
 
     const { result } = renderHook(() => useOrganizationId());
 

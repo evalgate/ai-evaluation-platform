@@ -146,9 +146,9 @@ export function computeSafetyPassRate(
     return safetyPassRateFromEnvelope(parsed);
   }
   const legacy = parsed as LegacyAssertions;
-  const hasAny =
+  const hasunknown =
     legacy.pii !== undefined || legacy.toxicity !== undefined || legacy.harmful !== undefined;
-  if (!hasAny) return null;
+  if (!hasunknown) return null;
   const passed = !legacy.pii && !legacy.toxicity && !legacy.harmful;
   return passed ? 1 : 0;
 }

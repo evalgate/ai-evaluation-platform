@@ -4,7 +4,7 @@
  * Asserts that browser-authenticated pages use `credentials: "include"` and
  * never send an `Authorization: Bearer …` header sourced from localStorage.
  *
- * This is a static-analysis style test: it greps the source tree so that any
+ * This is a static-analysis style test: it greps the source tree so that unknown
  * future PR re-introducing localStorage bearer tokens will break CI.
  */
 

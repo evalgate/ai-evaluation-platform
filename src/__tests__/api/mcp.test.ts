@@ -196,7 +196,7 @@ describe("/api/mcp/call", () => {
       name: "Test Eval",
       organizationId: 1,
       status: "active",
-    } as any);
+    } as unknown as Record<string, unknown>);
 
     const req = new NextRequest("http://localhost:3000/api/mcp/call", {
       method: "POST",

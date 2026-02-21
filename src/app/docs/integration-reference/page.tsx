@@ -189,7 +189,7 @@ client.organizations   → OrganizationsAPI`}</pre>
   organizationId?: number,  // falls back to client's orgId
   status?: string,          // 'pending' | 'success' | 'error'
   durationMs?: number,
-  metadata?: Record<string, any>,
+  metadata?: Record<string, unknown>,
 }) → Promise<Trace>`}</pre>
                 </div>
               </div>
@@ -247,7 +247,7 @@ client.organizations   → OrganizationsAPI`}</pre>
                 <div className="bg-muted rounded-lg p-4 font-mono text-sm overflow-x-auto">
                   <pre>{`client.evaluations.run(id: number, {
   environment?: string,
-  metadata?: Record<string, any>,
+  metadata?: Record<string, unknown>,
 }) → Promise<EvaluationRun>`}</pre>
                 </div>
               </div>
@@ -292,7 +292,7 @@ client.organizations   → OrganizationsAPI`}</pre>
               <div className="space-y-3">
                 <h3 className="font-semibold text-green-600">REST API</h3>
                 <ul className="text-sm text-muted-foreground space-y-1">
-                  <li>• Any language/framework</li>
+                  <li>• unknown language/framework</li>
                   <li>• OpenAPI specification available</li>
                   <li>• Standard HTTP methods</li>
                   <li>• JSON request/response format</li>

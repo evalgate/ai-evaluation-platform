@@ -7,7 +7,7 @@ type DynamicOptions<_T> = {
   // Add other Next.js dynamic import options as needed
 };
 
-export function dynamicImport<T extends ComponentType<any>>(
+export function dynamicImport<T extends ComponentType<unknown>>(
   loader: () => Promise<{ default: T }>,
   options?: DynamicOptions<T>,
 ) {

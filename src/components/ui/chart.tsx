@@ -3,18 +3,18 @@
 import * as React from "react";
 import * as RechartsPrimitive from "recharts";
 
-type ValueType = string | number | Date | Array<string | number> | { [key: string]: any };
+type ValueType = string | number | Date | Array<string | number> | { [key: string]: unknown };
 type NameType = string | number;
 
 // Type for legend payload
 interface LegendPayload {
-  value: any;
+  value: unknown;
   id: string;
   type?: string;
-  valueFormatter?: (value: any, name: string, item: any, i: number) => any;
+  valueFormatter?: (value: unknown, name: string, item: unknown, i: number) => unknown;
   color?: string;
   name?: string;
-  payload?: any;
+  payload?: unknown;
   dataKey?: string | number | symbol | (string | number)[];
 }
 
@@ -119,18 +119,18 @@ interface ChartTooltipContentProps
   nameKey?: string;
   labelKey?: string;
   label?: string | number | React.ReactNode;
-  labelFormatter?: (value: any, payload: any) => React.ReactNode;
+  labelFormatter?: (value: unknown, payload: unknown) => React.ReactNode;
   formatter?: (
-    value: any,
+    value: unknown,
     name: NameType,
-    payload: any,
+    payload: unknown,
     index: number,
-    extra: any,
+    extra: unknown,
   ) => React.ReactNode;
   className?: string;
   labelClassName?: string;
   color?: string;
-  payload?: any[];
+  payload?: unknown[];
   active?: boolean;
 }
 
@@ -199,7 +199,7 @@ function ChartTooltipContent({
     >
       {!nestLabel ? tooltipLabel : null}
       <div className="grid gap-1.5">
-        {payload?.map((item: any, index: number) => {
+        {payload?.map((item: unknown, index: number) => {
           const key = `${nameKey || item.name || item.dataKey || "value"}`;
           const itemConfig = getPayloadConfigFromPayload(config, item, key);
           const indicatorColor = color || item.payload.fill || item.color;
@@ -273,7 +273,7 @@ const ChartLegend = RechartsPrimitive.Legend;
 interface ChartLegendContentProps extends React.ComponentProps<"div"> {
   className?: string;
   hideIcon?: boolean;
-  payload?: any[];
+  payload?: unknown[];
   verticalAlign?: "top" | "middle" | "bottom";
   nameKey?: string;
 }

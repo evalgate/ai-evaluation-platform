@@ -80,7 +80,7 @@ client.traces.create({
   organizationId?: number,  // falls back to client's orgId
   status?: string,          // 'pending' | 'success' | 'error'
   durationMs?: number,
-  metadata?: Record<string, any>,
+  metadata?: Record<string, unknown>,
 }) → Promise<Trace>
 
 // List traces
@@ -106,7 +106,7 @@ client.traces.createSpan(traceId: number, {
   startTime: string,     // ISO 8601
   endTime?: string,
   durationMs?: number,
-  metadata?: Record<string, any>,
+  metadata?: Record<string, unknown>,
 }) → Promise<Span>
 
 // List spans
@@ -136,7 +136,7 @@ const tracer = createWorkflowTracer(client, options);
 tracer.startWorkflow(
   name: string,
   definition?: WorkflowDefinition,
-  metadata?: Record<string, any>
+  metadata?: Record<string, unknown>
 ) → Promise<WorkflowContext>
 ```
 
@@ -147,7 +147,7 @@ tracer.startWorkflow(
     id: string,
     type: 'agent' | 'tool' | 'decision' | 'parallel' | 'human' | 'llm',
     name: string,
-    config?: Record<string, any>,
+    config?: Record<string, unknown>,
   }>,
   edges: Array<{
     from: string,
@@ -156,7 +156,7 @@ tracer.startWorkflow(
     label?: string,
   }>,
   entrypoint: string,
-  metadata?: Record<string, any>,
+  metadata?: Record<string, unknown>,
 }
 ```
 
@@ -168,7 +168,7 @@ tracer.startWorkflow(
   name: string,
   startedAt: string,       // ISO 8601
   definition?: WorkflowDefinition,
-  metadata?: Record<string, any>,
+  metadata?: Record<string, unknown>,
 }
 ```
 
@@ -176,7 +176,7 @@ tracer.startWorkflow(
 
 ```typescript
 tracer.endWorkflow(
-  output?: Record<string, any>,
+  output?: Record<string, unknown>,
   status?: 'running' | 'completed' | 'failed' | 'cancelled'  // default 'completed'
 ) → Promise<void>
 ```
@@ -186,7 +186,7 @@ tracer.endWorkflow(
 ```typescript
 tracer.startAgentSpan(
   agentName: string,
-  input?: Record<string, any>,
+  input?: Record<string, unknown>,
   parentSpanId?: string
 ) → Promise<AgentSpanContext>
 
@@ -195,7 +195,7 @@ tracer.startAgentSpan(
 
 tracer.endAgentSpan(
   span: AgentSpanContext,
-  output?: Record<string, any>,
+  output?: Record<string, unknown>,
   error?: string
 ) → Promise<void>
 ```
@@ -206,7 +206,7 @@ tracer.endAgentSpan(
 tracer.recordHandoff(
   fromAgent: string | undefined,
   toAgent: string,
-  context?: Record<string, any>,
+  context?: Record<string, unknown>,
   handoffType?: 'delegation' | 'escalation' | 'parallel' | 'fallback'  // default 'delegation'
 ) → Promise<void>
 ```
@@ -227,7 +227,7 @@ tracer.recordDecision({
   reasoning?: string,
   confidence?: number,       // 0-100
   contextFactors?: string[],
-  inputContext?: Record<string, any>,
+  inputContext?: Record<string, unknown>,
 }) → Promise<void>
 ```
 
@@ -296,7 +296,7 @@ import { traceAutoGen } from '@pauly4010/evalai-sdk';
 const tracedConversation = traceAutoGen(conversation, tracer, { conversationName?: string });
 // Wraps .initiate_chat() with automatic workflow start/end
 
-// Helper: trace any async function as a workflow step
+// Helper: trace unknown async function as a workflow step
 import { traceWorkflowStep } from '@pauly4010/evalai-sdk';
 const result = await traceWorkflowStep(tracer, 'MyAgent', async () => {
   return await doWork();
@@ -338,7 +338,7 @@ const result = await traceWorkflowStep(tracer, 'MyAgent', async () => {
   "organizationId": 123,                       // required, integer
   "status": "pending",                         // optional: 'pending' | 'success' | 'error'
   "durationMs": 1500,                          // optional
-  "metadata": { ... }                          // optional, any JSON
+  "metadata": { ... }                          // optional, unknown JSON
 }
 
 // Response 201
@@ -609,10 +609,10 @@ const engine = createComplianceGovernance('SOC2');
 ### 3.3 Blocking Rules
 
 Execution is **blocked** when:
-- Any alternative mentions "fraud" with confidence > 0.3
-- Any alternative mentions "security" with confidence > 0.4
+- unknown alternative mentions "fraud" with confidence > 0.3
+- unknown alternative mentions "security" with confidence > 0.4
 - Decision confidence < 30%
-- Any custom blocking rule returns true
+- unknown custom blocking rule returns true
 
 ### 3.4 Decision Context Shape
 
@@ -624,7 +624,7 @@ Execution is **blocked** when:
   userTier?: 'free' | 'pro' | 'enterprise',
   region?: string,
   dataClassification?: 'public' | 'internal' | 'confidential' | 'restricted',
-  customFields?: Record<string, any>,
+  customFields?: Record<string, unknown>,
 }
 ```
 

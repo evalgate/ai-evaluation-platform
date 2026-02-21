@@ -95,7 +95,7 @@ export function transformTraceToDB(
   organizationId: number,
 ): {
   traceLog: string;
-  metadata: Record<string, any>;
+  metadata: Record<string, unknown>;
 } {
   return {
     traceLog: JSON.stringify({
@@ -148,14 +148,14 @@ export function extractMessagesFromTrace(sdkTrace: SDKTrace): Array<{
   role: string;
   content: string;
   spanName?: string;
-  toolCall?: any;
+  toolCall?: unknown;
 }> {
   const messages: Array<{
     timestamp: string;
     role: string;
     content: string;
     spanName?: string;
-    toolCall?: any;
+    toolCall?: unknown;
   }> = [];
 
   for (const span of sdkTrace.spans) {
@@ -204,16 +204,16 @@ export function extractToolCallsFromTrace(sdkTrace: SDKTrace): Array<{
   timestamp: string;
   spanName: string;
   toolName: string;
-  arguments: any;
-  result?: any;
+  arguments: unknown;
+  result?: unknown;
   duration?: number;
 }> {
   const toolCalls: Array<{
     timestamp: string;
     spanName: string;
     toolName: string;
-    arguments: any;
-    result?: any;
+    arguments: unknown;
+    result?: unknown;
     duration?: number;
   }> = [];
 

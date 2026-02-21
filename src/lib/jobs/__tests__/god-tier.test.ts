@@ -23,7 +23,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { harness, setupJobsTestHarness } from "./mocks/jobs-harness";
 
-// Set up mocks BEFORE any imports
+// Set up mocks BEFORE unknown imports
 vi.mock("../handlers/webhook-delivery", () => {
   class WebhookDeliveryError extends Error {
     errorCode: string;
@@ -38,7 +38,7 @@ vi.mock("../handlers/webhook-delivery", () => {
 
   return {
     WebhookDeliveryError,
-    handleWebhookDelivery: (payload: any) => harness.state.handlerImpl(payload),
+    handleWebhookDelivery: (payload: unknown) => harness.state.handlerImpl(payload),
   };
 });
 
@@ -93,7 +93,9 @@ describe("enqueue() — god-tier", () => {
 
       expect(id1).toBe(id2);
       // Only one job should have been created
-      expect(harness.state.jobs.filter((j: any) => j.idempotencyKey === "dup-key")).toHaveLength(1);
+      expect(
+        harness.state.jobs.filter((j: unknown) => j.idempotencyKey === "dup-key"),
+      ).toHaveLength(1);
     });
 
     it("does not use onConflictDoNothing when no idempotencyKey", async () => {
@@ -127,7 +129,7 @@ describe("enqueue() — god-tier", () => {
   describe("Phase 1B: payload validation at enqueue", () => {
     it("rejects oversized payloads", async () => {
       const { enqueue } = await import("../enqueue");
-      const bigPayload = { data: "x".repeat(200_000) } as any;
+      const bigPayload = { data: "x".repeat(200_000) } as unknown;
       await expect(
         enqueue("webhook_delivery", bigPayload, { skipValidation: true }),
       ).rejects.toThrow("Payload too large");
@@ -135,20 +137,20 @@ describe("enqueue() — god-tier", () => {
 
     it("rejects deeply nested payloads", async () => {
       const { enqueue } = await import("../enqueue");
-      let nested: any = { val: "leaf" };
+      let nested: unknown = { val: "leaf" };
       for (let i = 0; i < 15; i++) nested = { child: nested };
       await expect(enqueue("webhook_delivery", nested, { skipValidation: true })).rejects.toThrow(
         "Payload too deep",
       );
     });
 
-    it("rejects payloads with too many keys", async () => {
+    it("rejects payloads with too munknown keys", async () => {
       const { enqueue } = await import("../enqueue");
-      const manyKeys: Record<string, unknown> = {};
-      for (let i = 0; i < 600; i++) manyKeys[`k${i}`] = i;
-      await expect(enqueue("webhook_delivery", manyKeys, { skipValidation: true })).rejects.toThrow(
-        "Payload too complex",
-      );
+      const munknownKeys: Record<string, unknown> = {};
+      for (let i = 0; i < 600; i++) munknownKeys[`k${i}`] = i;
+      await expect(
+        enqueue("webhook_delivery", munknownKeys, { skipValidation: true }),
+      ).rejects.toThrow("Payload too complex");
     });
 
     it("rejects invalid Zod payload when validation is not skipped", async () => {
@@ -159,13 +161,13 @@ describe("enqueue() — god-tier", () => {
 
     it("EnqueueError has correct code for oversized payload", async () => {
       const { enqueue, EnqueueError } = await import("../enqueue");
-      const bigPayload = { data: "x".repeat(200_000) } as any;
+      const bigPayload = { data: "x".repeat(200_000) } as unknown;
       try {
         await enqueue("webhook_delivery", bigPayload, { skipValidation: true });
         expect.unreachable();
       } catch (err) {
         expect(err).toBeInstanceOf(EnqueueError);
-        expect((err as any).code).toBe("PAYLOAD_TOO_LARGE");
+        expect((err as unknown).code).toBe("PAYLOAD_TOO_LARGE");
       }
     });
 
@@ -177,7 +179,7 @@ describe("enqueue() — god-tier", () => {
         expect.unreachable();
       } catch (err) {
         expect(err).toBeInstanceOf(EnqueueError);
-        expect((err as any).code).toBe("PAYLOAD_INVALID");
+        expect((err as unknown).code).toBe("PAYLOAD_INVALID");
       }
     });
   });
@@ -287,8 +289,8 @@ describe("WebhookDeliveryError", () => {
     const err = new WebhookDeliveryError("rate limited", "JOB_RATE_LIMITED", 30_000);
 
     expect(err.message).toBe("rate limited");
-    expect((err as any).errorCode).toBe("JOB_RATE_LIMITED");
-    expect((err as any).retryAfterMs).toBe(30_000);
+    expect((err as unknown).errorCode).toBe("JOB_RATE_LIMITED");
+    expect((err as unknown).retryAfterMs).toBe(30_000);
     expect(err.name).toBe("WebhookDeliveryError");
     expect(err instanceof Error).toBe(true);
   });
@@ -297,7 +299,7 @@ describe("WebhookDeliveryError", () => {
     const { WebhookDeliveryError } = await import("../handlers/webhook-delivery");
 
     const err = new WebhookDeliveryError("5xx", "JOB_UPSTREAM_5XX");
-    expect((err as any).retryAfterMs).toBeUndefined();
+    expect((err as unknown).retryAfterMs).toBeUndefined();
   });
 });
 
@@ -307,7 +309,7 @@ describe("WebhookDeliveryError", () => {
 
 describe("runDueJobs — hardening", () => {
   let _id = 1;
-  function makeJob(overrides: Partial<any> = {}) {
+  function makeJob(overrides: Partial<unknown> = {}) {
     return harness.makeJob({ id: _id++, ...overrides });
   }
 

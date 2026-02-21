@@ -102,7 +102,7 @@ class DebugAgentService {
   /**
    * Identify failure patterns from test results.
    */
-  private identifyPatterns(failedResults: any[], judgeResults: any[]): FailurePattern[] {
+  private identifyPatterns(failedResults: unknown[], judgeResults: unknown[]): FailurePattern[] {
     const patterns: Map<string, FailurePattern> = new Map();
 
     for (const result of failedResults) {
@@ -129,7 +129,7 @@ class DebugAgentService {
   /**
    * Categorize a failure based on result content.
    */
-  private categorizeFailure(result: any, judgeResults: any[]): FailurePattern["category"] {
+  private categorizeFailure(result: unknown, judgeResults: unknown[]): FailurePattern["category"] {
     const output = (result.actualOutput || result.output || "").toLowerCase();
     const judgeResult = judgeResults.find((jr) => jr.testResultId === result.id);
     const reasoning = (judgeResult?.reasoning || "").toLowerCase();
@@ -160,7 +160,7 @@ class DebugAgentService {
   /**
    * Determine root causes from failure patterns.
    */
-  private determineRootCauses(patterns: FailurePattern[], failedResults: any[]): string[] {
+  private determineRootCauses(patterns: FailurePattern[], failedResults: unknown[]): string[] {
     const causes: string[] = [];
 
     const dominant = patterns[0];

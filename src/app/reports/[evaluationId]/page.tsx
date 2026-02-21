@@ -75,7 +75,7 @@ interface ReportCardData {
     scoreTrend: "improving" | "declining" | "stable";
     performanceChange: number;
   };
-  metadata: Record<string, any>;
+  metadata: Record<string, unknown>;
 }
 
 export default function PublicReportPage() {
@@ -99,7 +99,7 @@ export default function PublicReportPage() {
 
       const data = await response.json();
       setReportCard(data);
-    } catch (error: any) {
+    } catch (error: unknown) {
       setError(error.message || "An error occurred");
     } finally {
       setIsLoading(false);

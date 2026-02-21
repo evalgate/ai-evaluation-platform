@@ -126,7 +126,7 @@ export const POST = secureRoute(async (req: NextRequest, ctx: AuthContext) => {
           name: string;
           input: string;
           expectedOutput?: string;
-          metadata?: any;
+          metadata?: unknown;
         }> = [];
 
         for (const template of templates) {

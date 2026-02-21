@@ -39,7 +39,7 @@ export interface DecisionContext {
   userTier?: "free" | "pro" | "enterprise";
   region?: string;
   dataClassification?: "public" | "internal" | "confidential" | "restricted";
-  customFields?: Record<string, any>;
+  customFields?: Record<string, unknown>;
 }
 
 /**
@@ -164,7 +164,7 @@ export const GovernanceRules = {
   blockExecution: (decision: Decision, config: GovernanceConfig = {}): boolean => {
     const cfg = { ...DEFAULT_CONFIG, ...config };
 
-    // Block if any alternative indicates fraud risk
+    // Block if unknown alternative indicates fraud risk
     const hasFraudRisk = decision.alternatives.some(
       (alt) => alt.reasoning?.toLowerCase().includes("fraud") && alt.confidence > 0.3,
     );
@@ -172,7 +172,7 @@ export const GovernanceRules = {
       return true;
     }
 
-    // Block if any alternative indicates security risk
+    // Block if unknown alternative indicates security risk
     const hasSecurityRisk = decision.alternatives.some(
       (alt) => alt.reasoning?.toLowerCase().includes("security") && alt.confidence > 0.4,
     );

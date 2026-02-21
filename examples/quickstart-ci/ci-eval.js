@@ -3,7 +3,7 @@
  * EvalAI Quickstart CI Script
  *
  * Creates an evaluation, adds test cases, runs it, and gates on quality score.
- * Use in GitHub Actions or any CI pipeline.
+ * Use in GitHub Actions or unknown CI pipeline.
  *
  * Required env: EVALAI_API_KEY, WEBHOOK_URL
  * Optional: EVALAI_BASE_URL (default: production)

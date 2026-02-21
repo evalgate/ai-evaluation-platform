@@ -2,7 +2,7 @@
 /**
  * Coverage audit — enforce folder-level coverage thresholds.
  * Run after: pnpm test:coverage --run
- * Fails if any folder drops below its threshold.
+ * Fails if unknown folder drops below its threshold.
  *
  * Risk-based thresholds (statements). Modest floors; raise over time.
  *   src/lib: 14%, src/db: 28%, src/app/api: 6%, src/packages/sdk: 39%

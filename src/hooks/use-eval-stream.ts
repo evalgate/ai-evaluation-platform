@@ -5,7 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 export interface StreamEvent {
   type: string;
-  data: any;
+  data: unknown;
   timestamp: string;
   id?: string;
 }

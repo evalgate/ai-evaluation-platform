@@ -32,7 +32,7 @@ export interface LogEntry {
   level: LogLevel;
   message: string;
   timestamp: string;
-  data?: any;
+  data?: unknown;
   prefix?: string;
 }
 
@@ -73,49 +73,49 @@ export class Logger {
   /**
    * Log a trace message
    */
-  trace(message: string, data?: any): void {
+  trace(message: string, data?: unknown): void {
     this.log("trace", message, data);
   }
 
   /**
    * Log a debug message
    */
-  debug(message: string, data?: any): void {
+  debug(message: string, data?: unknown): void {
     this.log("debug", message, data);
   }
 
   /**
    * Log an info message
    */
-  info(message: string, data?: any): void {
+  info(message: string, data?: unknown): void {
     this.log("info", message, data);
   }
 
   /**
    * Log a warning message
    */
-  warn(message: string, data?: any): void {
+  warn(message: string, data?: unknown): void {
     this.log("warn", message, data);
   }
 
   /**
    * Log an error message
    */
-  error(message: string, data?: any): void {
+  error(message: string, data?: unknown): void {
     this.log("error", message, data);
   }
 
   /**
    * Log HTTP request
    */
-  logRequest(method: string, url: string, data?: any): void {
+  logRequest(method: string, url: string, data?: unknown): void {
     this.debug(`→ ${method} ${url}`, data);
   }
 
   /**
    * Log HTTP response
    */
-  logResponse(method: string, url: string, status: number, duration: number, data?: any): void {
+  logResponse(method: string, url: string, status: number, duration: number, data?: unknown): void {
     const level = status >= 400 ? "error" : status >= 300 ? "warn" : "debug";
     this.log(level, `← ${method} ${url} ${status} (${duration}ms)`, data);
   }
@@ -144,7 +144,7 @@ export class Logger {
     return LOG_LEVELS[level] >= LOG_LEVELS[this.options.level];
   }
 
-  private log(level: LogLevel, message: string, data?: any): void {
+  private log(level: LogLevel, message: string, data?: unknown): void {
     if (!this.isLevelEnabled(level)) return;
 
     const entry: LogEntry = {
@@ -255,7 +255,7 @@ export class RequestLogger {
     method: string;
     url: string;
     headers?: Record<string, string>;
-    body?: any;
+    body?: unknown;
   }): void {
     this.logger.logRequest(request.method, request.url, {
       headers: request.headers,
@@ -272,7 +272,7 @@ export class RequestLogger {
     status: number;
     duration: number;
     headers?: Record<string, string>;
-    body?: any;
+    body?: unknown;
   }): void {
     this.logger.logResponse(response.method, response.url, response.status, response.duration, {
       headers: response.headers,

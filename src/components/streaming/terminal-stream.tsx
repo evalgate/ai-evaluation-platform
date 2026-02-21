@@ -24,11 +24,11 @@ import { cn } from "@/lib/utils";
 interface TerminalMessage {
   id: string;
   type: string;
-  data: any;
+  data: unknown;
   timestamp: string;
   level: "info" | "success" | "warning" | "error";
   content: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 interface TerminalStreamProps {
@@ -70,7 +70,7 @@ export function TerminalStream({
   }, []);
 
   const getMessageLevel = useCallback(
-    (type: string, _data: any): "info" | "success" | "warning" | "error" => {
+    (type: string, _data: unknown): "info" | "success" | "warning" | "error" => {
       if (type.includes("error") || type.includes("failed")) return "error";
       if (type.includes("completed") || type.includes("success")) return "success";
       if (type.includes("warning")) return "warning";
@@ -79,7 +79,7 @@ export function TerminalStream({
     [],
   );
 
-  const formatMessageContent = useCallback((type: string, data: any): string => {
+  const formatMessageContent = useCallback((type: string, data: unknown): string => {
     switch (type) {
       case "evaluation_started":
         return `🚀 Evaluation started: ${data.evaluationName}`;
@@ -111,7 +111,7 @@ export function TerminalStream({
   }, []);
 
   const parseSSEMessage = useCallback(
-    (type: string, data: any, id?: string): TerminalMessage => {
+    (type: string, data: unknown, id?: string): TerminalMessage => {
       const level = getMessageLevel(type, data);
       const content = formatMessageContent(type, data);
       return {
@@ -194,7 +194,7 @@ export function TerminalStream({
     };
   }, [organizationId, channels, isPaused, addMessage, parseSSEMessage, shouldIncludeMessage]);
 
-  // Auto-scroll to bottom (messages dependency omitted - scroll on any message change)
+  // Auto-scroll to bottom (messages dependency omitted - scroll on unknown message change)
   useEffect(() => {
     if (autoScroll && scrollAreaRef.current && messagesEndRef.current) {
       scrollAreaRef.current.scrollTop = scrollAreaRef.current.scrollHeight;

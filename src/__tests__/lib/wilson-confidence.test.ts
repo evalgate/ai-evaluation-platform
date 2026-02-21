@@ -41,7 +41,7 @@ describe("wilsonConfidence", () => {
     expect(r.lower).toBeLessThan(0.6);
   });
 
-  it("bounds are always in [0, 1] for any inputs", () => {
+  it("bounds are always in [0, 1] for unknown inputs", () => {
     const cases: Array<[number, number]> = [
       [0, 1],
       [1, 1],

@@ -16,9 +16,9 @@ export default function TraceDetailPage({ params }: PageProps) {
   const { id } = use(params);
   const { data: session, isPending } = useSession();
   const router = useRouter();
-  const [trace, setTrace] = useState<any>(null);
-  const [spans, setSpans] = useState<any[]>([]);
-  const [rootSpans, setRootSpans] = useState<any[]>([]);
+  const [trace, setTrace] = useState<unknown>(null);
+  const [spans, setSpans] = useState<unknown[]>([]);
+  const [rootSpans, setRootSpans] = useState<unknown[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -49,13 +49,13 @@ export default function TraceDetailPage({ params }: PageProps) {
           setSpans(fetchedSpans);
 
           const spanMap = new Map();
-          const roots: any[] = [];
+          const roots: unknown[] = [];
 
-          fetchedSpans.forEach((span: any) => {
+          fetchedSpans.forEach((span: unknown) => {
             spanMap.set(span.id, { ...span, children: [] });
           });
 
-          fetchedSpans.forEach((span: any) => {
+          fetchedSpans.forEach((span: unknown) => {
             const spanNode = spanMap.get(span.id);
             if (span.parent_span_id) {
               const parent = spanMap.get(span.parent_span_id);
@@ -79,7 +79,10 @@ export default function TraceDetailPage({ params }: PageProps) {
     return null;
   }
 
-  const totalDuration = spans.reduce((sum: number, span: any) => sum + (span.duration_ms || 0), 0);
+  const totalDuration = spans.reduce(
+    (sum: number, span: unknown) => sum + (span.duration_ms || 0),
+    0,
+  );
 
   return (
     <div className="space-y-4 sm:space-y-6">
@@ -145,7 +148,7 @@ export default function TraceDetailPage({ params }: PageProps) {
           </CardHeader>
           <CardContent>
             <div className="text-xl sm:text-2xl font-bold">
-              {spans.filter((s: any) => s.error).length}
+              {spans.filter((s: unknown) => s.error).length}
             </div>
           </CardContent>
         </Card>
@@ -174,7 +177,7 @@ export default function TraceDetailPage({ params }: PageProps) {
   );
 }
 
-function SpanNode({ span, level }: { span: any; level: number }) {
+function SpanNode({ span, level }: { span: unknown; level: number }) {
   const hasError = !!span.error;
 
   return (
@@ -240,7 +243,7 @@ function SpanNode({ span, level }: { span: any; level: number }) {
 
       {span.children && span.children.length > 0 && (
         <div className="space-y-2">
-          {span.children.map((child: any) => (
+          {span.children.map((child: unknown) => (
             <SpanNode key={child.id} span={child} level={level + 1} />
           ))}
         </div>

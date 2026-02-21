@@ -9,7 +9,7 @@ const FOCUSED_ELEMENT_KEY = "orchids_focused_element" as const;
 // Deduplicate helper for high-frequency traffic (HIT / FOCUS_MOVED / SCROLL)
 // -----------------------------------------------------------------------------
 let _orchidsLastMsg = "";
-const postMessageDedup = (data: any) => {
+const postMessageDedup = (data: unknown) => {
   try {
     const key = JSON.stringify(data);
     if (key === _orchidsLastMsg) return; // identical – drop
@@ -794,7 +794,7 @@ export default function HoverReceiver() {
           if (fam) {
             persistentFontMap.current.set(elementId, fam);
 
-            // Clear any existing timeout
+            // Clear unknown existing timeout
             const existingTimeout = persistentFontTimeouts.current.get(elementId);
             if (existingTimeout) {
               clearTimeout(existingTimeout);
@@ -874,7 +874,7 @@ export default function HoverReceiver() {
         if ((element as HTMLElement).tagName.toLowerCase() === "img") {
           const imgEl = element as HTMLImageElement;
           /*
-           * Clear any existing responsive sources so the newly uploaded image
+           * Clear unknown existing responsive sources so the newly uploaded image
            * always displays.  Some frameworks (e.g. Next.js) add a `srcset`
            * attribute which can override `src` in certain viewport/device
            * scenarios, so we strip it out before setting the new source.
@@ -921,7 +921,7 @@ export default function HoverReceiver() {
 
     const rect = focusedElementRef.current.getBoundingClientRect();
 
-    // Clear any hover overlay when starting resize
+    // Clear unknown hover overlay when starting resize
     setHoverBox(null);
     lastHitElementRef.current = null;
 
@@ -1133,7 +1133,7 @@ export default function HoverReceiver() {
     if (editingElementRef.current) {
       const element = editingElementRef.current;
 
-      // Immediately clear the ref to prevent any further operations
+      // Immediately clear the ref to prevent unknown further operations
       editingElementRef.current = null;
 
       // Flush pending style edits first for the same reason described above
@@ -1171,12 +1171,12 @@ export default function HoverReceiver() {
       element.blur();
 
       // Remove event handlers
-      const handlers = (element as any)._editHandlers;
+      const handlers = (element as unknown)._editHandlers;
       if (handlers) {
         element.removeEventListener("focus", handlers.focus);
         element.removeEventListener("blur", handlers.blur);
         element.removeEventListener("input", handlers.input);
-        delete (element as any)._editHandlers;
+        delete (element as unknown)._editHandlers;
       }
 
       wasEditableRef.current = false;
@@ -1508,13 +1508,13 @@ export default function HoverReceiver() {
 
         // If this is an editable element, set it up
         if (isEditable) {
-          // Cancel any pending cleanup
+          // Cancel unknown pending cleanup
           if (pendingCleanupRef.current) {
             clearTimeout(pendingCleanupRef.current);
             pendingCleanupRef.current = null;
           }
 
-          // Clean up any previous editing element first
+          // Clean up unknown previous editing element first
           if (editingElementRef.current && editingElementRef.current !== hit) {
             // Force blur on the previous element to trigger handlers
             editingElementRef.current.blur();
@@ -1581,7 +1581,7 @@ export default function HoverReceiver() {
             hit.addEventListener("input", handlers.handleInput);
 
             // Store handlers for cleanup
-            (hit as any)._editHandlers = {
+            (hit as unknown)._editHandlers = {
               focus: handlers.handleFocus,
               blur: handlers.handleBlur,
               input: handlers.handleInput,
@@ -1648,12 +1648,12 @@ export default function HoverReceiver() {
           // Before changing focus, flush pending image src change
           flushImageSrcChange();
 
-          // Flush style changes for the previously focused element (if any)
+          // Flush style changes for the previously focused element (if unknown)
           if (prevFocused && prevFocused !== hit) {
             handleStyleBlur(prevFocused);
           }
 
-          // Clean up any previous editing element (if it's different)
+          // Clean up unknown previous editing element (if it's different)
           if (editingElementRef.current && editingElementRef.current !== hit) {
             cleanupEditingElement();
           }
@@ -1662,7 +1662,7 @@ export default function HoverReceiver() {
         // Clicked on empty space or element without data-orchids-id
         // Clear focus and hover boxes
         if (focusedElementRef.current) {
-          // Flush any pending changes
+          // Flush unknown pending changes
           flushImageSrcChange();
           handleStyleBlur(focusedElementRef.current);
           cleanupEditingElement();
@@ -1766,7 +1766,7 @@ export default function HoverReceiver() {
           // Flush image src change for current focus
           flushImageSrcChange();
 
-          // Clean up any editing element
+          // Clean up unknown editing element
           cleanupEditingElement();
 
           // Clear image element reference
@@ -1825,7 +1825,7 @@ export default function HoverReceiver() {
           ];
 
           stylesToClear.forEach((prop) => {
-            (element.style as any)[prop] = "";
+            (element.style as unknown)[prop] = "";
           });
         });
 
@@ -1926,7 +1926,7 @@ export default function HoverReceiver() {
       if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
     };
   }, [
-    focusedElementId, // Clean up any editing element
+    focusedElementId, // Clean up unknown editing element
     cleanupEditingElement,
     expandBox, // already handled, flush too
     // Flush image src change for current focus

@@ -75,7 +75,7 @@ async function main() {
     },
     {
       taskId: 2,
-      content: "Monthly newsletter with product updates and company news for subscribers.",
+      content: "Monthly newsletter with product updates and compunknown news for subscribers.",
       annotation: JSON.stringify({
         classification: "legitimate",
         confidence: 0.98,

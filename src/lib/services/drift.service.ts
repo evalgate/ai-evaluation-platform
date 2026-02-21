@@ -100,7 +100,7 @@ export class DriftService {
       if (latestBreakdown?.safety !== undefined) {
         const safetyValues = historical.map((s) => {
           const bd = typeof s.breakdown === "string" ? JSON.parse(s.breakdown) : s.breakdown;
-          return (bd as any)?.safety ?? 1;
+          return (bd as unknown)?.safety ?? 1;
         });
         const safetyStats = meanAndStd(safetyValues);
         const safetyZ = zScore(latestBreakdown.safety, safetyStats.mean, safetyStats.std);
@@ -122,7 +122,7 @@ export class DriftService {
       if (latestBreakdown?.cost !== undefined) {
         const costValues = historical.map((s) => {
           const bd = typeof s.breakdown === "string" ? JSON.parse(s.breakdown) : s.breakdown;
-          return (bd as any)?.cost ?? 1;
+          return (bd as unknown)?.cost ?? 1;
         });
         const costStats = meanAndStd(costValues);
         const costZ = zScore(latestBreakdown.cost, costStats.mean, costStats.std);
@@ -201,7 +201,7 @@ export class DriftService {
   private async createAlert(
     organizationId: number,
     alert: { evaluationId: number; alertType: AlertType; severity: Severity; explanation: string },
-    latest: any,
+    latest: unknown,
     baselineValue: number,
     zScoreValue: number,
   ) {

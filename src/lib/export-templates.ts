@@ -31,9 +31,9 @@ export interface UnitTestExportData extends BaseExportData {
   testResults: Array<{
     id: string;
     name: string;
-    input: any;
-    expected_output: any;
-    actual_output: any;
+    input: unknown;
+    expected_output: unknown;
+    actual_output: unknown;
     passed: boolean;
     execution_time_ms?: number;
     error_message?: string;
@@ -81,7 +81,7 @@ export interface ModelEvalExportData extends BaseExportData {
       label: string;
       score: number;
       reasoning: string;
-      metadata?: Record<string, any>;
+      metadata?: Record<string, unknown>;
     };
     timestamp: string;
   }>;
@@ -102,7 +102,7 @@ export interface ABTestExportData extends BaseExportData {
     description: string;
     model?: string;
     prompt_template?: string;
-    parameters?: Record<string, any>;
+    parameters?: Record<string, unknown>;
   }>;
   results: Array<{
     variant_id: string;
@@ -132,7 +132,7 @@ export interface ABTestExportData extends BaseExportData {
  */
 export function formatExportData(
   baseData: BaseExportData,
-  additionalData: any,
+  additionalData: unknown,
 ): UnitTestExportData | HumanEvalExportData | ModelEvalExportData | ABTestExportData {
   const type = baseData.evaluation.type;
 
@@ -146,11 +146,14 @@ export function formatExportData(
     case "ab_test":
       return formatABTestExport(baseData, additionalData);
     default:
-      return baseData as any;
+      return baseData as unknown;
   }
 }
 
-function formatUnitTestExport(baseData: BaseExportData, additionalData: any): UnitTestExportData {
+function formatUnitTestExport(
+  baseData: BaseExportData,
+  additionalData: unknown,
+): UnitTestExportData {
   return {
     ...baseData,
     type: "unit_test",
@@ -159,7 +162,10 @@ function formatUnitTestExport(baseData: BaseExportData, additionalData: any): Un
   };
 }
 
-function formatHumanEvalExport(baseData: BaseExportData, additionalData: any): HumanEvalExportData {
+function formatHumanEvalExport(
+  baseData: BaseExportData,
+  additionalData: unknown,
+): HumanEvalExportData {
   return {
     ...baseData,
     type: "human_eval",
@@ -169,7 +175,10 @@ function formatHumanEvalExport(baseData: BaseExportData, additionalData: any): H
   };
 }
 
-function formatModelEvalExport(baseData: BaseExportData, additionalData: any): ModelEvalExportData {
+function formatModelEvalExport(
+  baseData: BaseExportData,
+  additionalData: unknown,
+): ModelEvalExportData {
   return {
     ...baseData,
     type: "model_eval",
@@ -180,7 +189,7 @@ function formatModelEvalExport(baseData: BaseExportData, additionalData: any): M
   };
 }
 
-function formatABTestExport(baseData: BaseExportData, additionalData: any): ABTestExportData {
+function formatABTestExport(baseData: BaseExportData, additionalData: unknown): ABTestExportData {
   return {
     ...baseData,
     type: "ab_test",

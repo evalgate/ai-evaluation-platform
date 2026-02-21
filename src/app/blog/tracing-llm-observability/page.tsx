@@ -51,7 +51,7 @@ export default function BlogPost() {
             </p>
             <ul className="list-disc pl-6 text-muted-foreground space-y-2 mb-4">
               <li>Why is this LLM call taking 8 seconds when it usually takes 2?</li>
-              <li>How many tokens am I actually using per request?</li>
+              <li>How munknown tokens am I actually using per request?</li>
               <li>Which part of my RAG pipeline is causing quality issues?</li>
               <li>Did that prompt change reduce latency or just make outputs shorter?</li>
             </ul>

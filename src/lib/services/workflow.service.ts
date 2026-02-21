@@ -16,7 +16,7 @@ export interface WorkflowDefinition {
     id: string;
     type: "agent" | "tool" | "decision" | "parallel" | "human" | "llm";
     name: string;
-    config?: Record<string, any>;
+    config?: Record<string, unknown>;
   }[];
   edges: {
     from: string;
@@ -25,7 +25,7 @@ export interface WorkflowDefinition {
     label?: string;
   }[];
   entrypoint: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface CreateWorkflowParams {
@@ -48,20 +48,20 @@ export interface CreateWorkflowRunParams {
   workflowId?: number;
   traceId: number;
   organizationId: number;
-  input?: Record<string, any>;
-  metadata?: Record<string, any>;
+  input?: Record<string, unknown>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface UpdateWorkflowRunParams {
   status?: "running" | "completed" | "failed" | "cancelled";
-  output?: Record<string, any>;
+  output?: Record<string, unknown>;
   totalCost?: string;
   totalDurationMs?: number;
   agentCount?: number;
   handoffCount?: number;
   retryCount?: number;
   errorMessage?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface CreateHandoffParams {
@@ -72,7 +72,7 @@ export interface CreateHandoffParams {
   fromAgent?: string;
   toAgent: string;
   handoffType: "delegation" | "escalation" | "parallel" | "fallback";
-  context?: Record<string, any>;
+  context?: Record<string, unknown>;
 }
 
 export interface ListWorkflowsParams {
@@ -149,7 +149,7 @@ class WorkflowService {
         name: params.name.trim(),
         description: params.description?.trim() || null,
         organizationId: params.organizationId,
-        definition: params.definition as any,
+        definition: params.definition as unknown,
         status: params.status || "draft",
         createdBy: params.createdBy,
         createdAt: now,
@@ -176,7 +176,7 @@ class WorkflowService {
         ...(params.description !== undefined && {
           description: params.description?.trim() || null,
         }),
-        ...(params.definition && { definition: params.definition as any }),
+        ...(params.definition && { definition: params.definition as unknown }),
         ...(params.status && { status: params.status }),
         updatedAt: now,
       })
@@ -288,8 +288,8 @@ class WorkflowService {
         traceId: params.traceId,
         organizationId: params.organizationId,
         status: "running",
-        input: (params.input as any) || null,
-        metadata: (params.metadata as any) || null,
+        input: (params.input as unknown) || null,
+        metadata: (params.metadata as unknown) || null,
         startedAt: now,
       })
       .returning();
@@ -310,14 +310,14 @@ class WorkflowService {
       .update(workflowRuns)
       .set({
         ...(params.status && { status: params.status }),
-        ...(params.output && { output: params.output as any }),
+        ...(params.output && { output: params.output as unknown }),
         ...(params.totalCost !== undefined && { totalCost: params.totalCost }),
         ...(params.totalDurationMs !== undefined && { totalDurationMs: params.totalDurationMs }),
         ...(params.agentCount !== undefined && { agentCount: params.agentCount }),
         ...(params.handoffCount !== undefined && { handoffCount: params.handoffCount }),
         ...(params.retryCount !== undefined && { retryCount: params.retryCount }),
         ...(params.errorMessage !== undefined && { errorMessage: params.errorMessage }),
-        ...(params.metadata && { metadata: params.metadata as any }),
+        ...(params.metadata && { metadata: params.metadata as unknown }),
         ...(params.status === "completed" || params.status === "failed"
           ? { completedAt: now }
           : {}),
@@ -385,7 +385,7 @@ class WorkflowService {
         fromAgent: params.fromAgent || null,
         toAgent: params.toAgent,
         handoffType: params.handoffType,
-        context: (params.context as any) || null,
+        context: (params.context as unknown) || null,
         timestamp: now,
       })
       .returning();

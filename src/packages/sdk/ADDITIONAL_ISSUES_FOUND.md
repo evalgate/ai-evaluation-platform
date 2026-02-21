@@ -54,7 +54,7 @@ export interface TestCase {
   evaluationId: number;
   input: string;
   expectedOutput: string | null;
-  metadata: Record<string, any> | null;
+  metadata: Record<string, unknown> | null;
   createdAt: string;
 }
 ```
@@ -65,7 +65,7 @@ export interface TestCase {
   id?: string;
   input: string;
   expected?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   assertions?: ((output: string) => AssertionResult)[];
 }
 ```

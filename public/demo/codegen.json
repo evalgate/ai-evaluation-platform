@@ -54,7 +54,7 @@
     {
       "id": "4",
       "prompt": "Create a debounce function in TypeScript",
-      "output": "function debounce<T extends (...args: any[]) => any>(\n  func: T,\n  delay: number\n): (...args: Parameters<T>) => void {\n  let timeoutId: NodeJS.Timeout;\n  return (...args: Parameters<T>) => {\n    clearTimeout(timeoutId);\n    timeoutId = setTimeout(() => func(...args), delay);\n  };\n}",
+      "output": "function debounce<T extends (...args: unknown[]) => unknown>(\n  func: T,\n  delay: number\n): (...args: Parameters<T>) => void {\n  let timeoutId: NodeJS.Timeout;\n  return (...args: Parameters<T>) => {\n    clearTimeout(timeoutId);\n    timeoutId = setTimeout(() => func(...args), delay);\n  };\n}",
       "expected": "proper TypeScript typing with generic function signature",
       "score": 0.90,
       "pass": true,

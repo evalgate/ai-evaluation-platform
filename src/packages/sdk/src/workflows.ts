@@ -41,7 +41,7 @@ export interface WorkflowNode {
   id: string;
   type: "agent" | "tool" | "decision" | "parallel" | "human" | "llm";
   name: string;
-  config?: Record<string, any>;
+  config?: Record<string, unknown>;
 }
 
 /**
@@ -61,7 +61,7 @@ export interface WorkflowDefinition {
   nodes: WorkflowNode[];
   edges: WorkflowEdge[];
   entrypoint: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 // ============================================================================
@@ -77,7 +77,7 @@ export interface WorkflowContext {
   name: string;
   startedAt: string;
   definition?: WorkflowDefinition;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 /**
@@ -97,7 +97,7 @@ export interface AgentHandoff {
   fromAgent?: string;
   toAgent: string;
   handoffType: HandoffType;
-  context?: Record<string, any>;
+  context?: Record<string, unknown>;
   timestamp: string;
 }
 
@@ -139,7 +139,7 @@ export interface RecordDecisionParams {
   /** Factors that influenced the decision */
   contextFactors?: string[];
   /** Input context at decision time */
-  inputContext?: Record<string, any>;
+  inputContext?: Record<string, unknown>;
 }
 
 // ============================================================================
@@ -211,7 +211,7 @@ export interface AgentSpanContext {
   agentName: string;
   startTime: string;
   parentSpanId?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 // ============================================================================
@@ -278,7 +278,7 @@ export class WorkflowTracer {
   async startWorkflow(
     name: string,
     definition?: WorkflowDefinition,
-    metadata?: Record<string, any>,
+    metadata?: Record<string, unknown>,
   ): Promise<WorkflowContext> {
     if (this.currentWorkflow) {
       throw new Error("A workflow is already active. Call endWorkflow() first.");
@@ -325,7 +325,7 @@ export class WorkflowTracer {
    * End the current workflow
    */
   async endWorkflow(
-    output?: Record<string, any>,
+    output?: Record<string, unknown>,
     status: WorkflowStatus = "completed",
   ): Promise<void> {
     if (!this.currentWorkflow) {
@@ -382,7 +382,7 @@ export class WorkflowTracer {
    */
   async startAgentSpan(
     agentName: string,
-    input?: Record<string, any>,
+    input?: Record<string, unknown>,
     parentSpanId?: string,
   ): Promise<AgentSpanContext> {
     if (!this.currentWorkflow) {
@@ -424,7 +424,7 @@ export class WorkflowTracer {
    */
   async endAgentSpan(
     span: AgentSpanContext,
-    output?: Record<string, any>,
+    output?: Record<string, unknown>,
     error?: string,
   ): Promise<void> {
     if (!this.currentWorkflow) {
@@ -473,7 +473,7 @@ export class WorkflowTracer {
   async recordHandoff(
     fromAgent: string | undefined,
     toAgent: string,
-    context?: Record<string, any>,
+    context?: Record<string, unknown>,
     handoffType: HandoffType = "delegation",
   ): Promise<void> {
     if (!this.currentWorkflow) {
@@ -709,7 +709,7 @@ export class WorkflowTracer {
   /**
    * Log if debug mode is enabled
    */
-  private log(message: string, data?: Record<string, any>): void {
+  private log(message: string, data?: Record<string, unknown>): void {
     if (this.options.debug) {
       console.log(`[WorkflowTracer] ${message}`, data || "");
     }
@@ -769,17 +769,17 @@ export class WorkflowTracer {
  * ```
  */
 export function traceLangChainAgent(
-  executor: any,
+  executor: unknown,
   tracer: WorkflowTracer,
   options: { agentName?: string } = {},
-): any {
+): unknown {
   const agentName = options.agentName || "LangChainAgent";
 
   const originalInvoke = executor.invoke?.bind(executor);
   const originalCall = executor.call?.bind(executor);
 
   if (originalInvoke) {
-    executor.invoke = async (input: any, config?: any) => {
+    executor.invoke = async (input: unknown, config?: unknown) => {
       const span = await tracer.startAgentSpan(agentName, { input });
       try {
         const result = await originalInvoke(input, config);
@@ -797,7 +797,7 @@ export function traceLangChainAgent(
   }
 
   if (originalCall) {
-    executor.call = async (input: any, config?: any) => {
+    executor.call = async (input: unknown, config?: unknown) => {
       const span = await tracer.startAgentSpan(agentName, { input });
       try {
         const result = await originalCall(input, config);
@@ -830,16 +830,16 @@ export function traceLangChainAgent(
  * ```
  */
 export function traceCrewAI(
-  crew: any,
+  crew: unknown,
   tracer: WorkflowTracer,
   options: { crewName?: string } = {},
-): any {
+): unknown {
   const crewName = options.crewName || "CrewAI";
 
   const originalKickoff = crew.kickoff?.bind(crew);
 
   if (originalKickoff) {
-    crew.kickoff = async (input?: any) => {
+    crew.kickoff = async (input?: unknown) => {
       await tracer.startWorkflow(`${crewName} Execution`);
       const span = await tracer.startAgentSpan(crewName, { input });
 
@@ -877,16 +877,16 @@ export function traceCrewAI(
  * ```
  */
 export function traceAutoGen(
-  conversation: any,
+  conversation: unknown,
   tracer: WorkflowTracer,
   options: { conversationName?: string } = {},
-): any {
+): unknown {
   const conversationName = options.conversationName || "AutoGenConversation";
 
   const originalInitiateChat = conversation.initiate_chat?.bind(conversation);
 
   if (originalInitiateChat) {
-    conversation.initiate_chat = async (...args: any[]) => {
+    conversation.initiate_chat = async (...args: unknown[]) => {
       await tracer.startWorkflow(`${conversationName}`);
       const span = await tracer.startAgentSpan(conversationName, { args });
 
@@ -934,7 +934,7 @@ export async function traceWorkflowStep<T>(
   tracer: WorkflowTracer,
   agentName: string,
   fn: () => Promise<T>,
-  input?: Record<string, any>,
+  input?: Record<string, unknown>,
 ): Promise<T> {
   const span = await tracer.startAgentSpan(agentName, input);
   try {

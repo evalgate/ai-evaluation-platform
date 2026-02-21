@@ -8,7 +8,7 @@ This document describes how export data is validated and what guarantees the `pr
 
 Export data for public share links is validated at publish time. The following are **rejected** (never stored):
 
-- **Secret-like keys** (case-insensitive, anywhere in the object tree): `apiKey`, `api_key`, `authorization`, `bearer`, `bearer_token`, `secret`, `password`, `token`, `organizationId`, `organization_id`, `userId`, `user_id`, `createdBy`, `created_by`, `annotatorId`, `annotator_id`, `internalNotes`, `internal_notes`
+- **Secret-like keys** (case-insensitive, unknownwhere in the object tree): `apiKey`, `api_key`, `authorization`, `bearer`, `bearer_token`, `secret`, `password`, `token`, `organizationId`, `organization_id`, `userId`, `user_id`, `createdBy`, `created_by`, `annotatorId`, `annotator_id`, `internalNotes`, `internal_notes`
 - **Secret-like values** in strings: OpenAI-style API keys (`sk-...`), Bearer tokens, JWTs
 - **Top-level keys** not in the allowlist (e.g. `_internal`, `share_id`, `published_at` in the stored payload)
 
@@ -20,7 +20,7 @@ Implementation: [src/lib/shared-exports/sanitize.ts](../src/lib/shared-exports/s
 
 ## When Scrubbing Happens
 
-- **Write-time only:** The single write path for `shared_exports` uses `prepareExportForShare()` (sanitize + validate). All inserts/updates to `shared_exports.exportData` go through this path. If any forbidden keys or secret-like values are detected, the request fails with a validation error. **No unsanitized export can ever be persisted.**
+- **Write-time only:** The single write path for `shared_exports` uses `prepareExportForShare()` (sanitize + validate). All inserts/updates to `shared_exports.exportData` go through this path. If unknown forbidden keys or secret-like values are detected, the request fails with a validation error. **No unsanitized export can ever be persisted.**
 - **Read-time:** The export endpoint `GET /api/exports/[shareId]` returns stored `exportData` (already validated at publish) and sets `privacyScrubbed: true` in the DTO.
 
 ---

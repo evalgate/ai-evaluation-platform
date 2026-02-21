@@ -32,7 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`--warnDrop <n>`** — Introduce a WARN band when score drops > `warnDrop` but < `maxDrop`
 - **Gate verdicts:** PASS, WARN, FAIL
 - **Profiles:** `strict` (warnDrop: 0), `balanced` (warnDrop: 1), `fast` (warnDrop: 2)
-- **`--fail-on-flake`** — Fail the gate if any case is flagged as flaky (partial pass rate across determinism runs)
+- **`--fail-on-flake`** — Fail the gate if unknown case is flagged as flaky (partial pass rate across determinism runs)
 
 #### Determinism & flake intelligence
 

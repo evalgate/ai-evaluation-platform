@@ -53,10 +53,10 @@ export interface OpenAITraceOptions {
  * ```
  */
 export function traceOpenAI(
-  openai: any,
+  openai: unknown,
   evalClient: AIEvalClient,
   options: OpenAITraceOptions = {},
-): any {
+): unknown {
   const {
     captureInput = true,
     captureOutput = true,
@@ -68,7 +68,7 @@ export function traceOpenAI(
   // Create proxy for chat.completions.create
   const originalCreate = openai.chat.completions.create.bind(openai.chat.completions);
 
-  openai.chat.completions.create = async (params: any, requestOptions?: any) => {
+  openai.chat.completions.create = async (params: unknown, requestOptions?: unknown) => {
     const startTime = Date.now();
     const traceId = `${tracePrefix}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 

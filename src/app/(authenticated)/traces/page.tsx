@@ -105,8 +105,8 @@ export async function customWorkflow(input: string) {
 export default function TracesPage() {
   const { data: session, isPending } = useSession();
   const _router = useRouter();
-  const [traces, setTraces] = useState<any[]>([]);
-  const [filteredTraces, setFilteredTraces] = useState<any[]>([]);
+  const [traces, setTraces] = useState<unknown[]>([]);
+  const [filteredTraces, setFilteredTraces] = useState<unknown[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
@@ -147,7 +147,7 @@ export default function TracesPage() {
   }, [session, isPending]);
 
   // Get all unique tags from traces
-  const allTags = Array.from(new Set(traces.flatMap((trace: any) => trace.tags || [])));
+  const allTags = Array.from(new Set(traces.flatMap((trace: unknown) => trace.tags || [])));
 
   // Filter traces based on search and tags
   useEffect(() => {
@@ -156,7 +156,7 @@ export default function TracesPage() {
     // Apply search filter
     if (searchQuery) {
       filtered = filtered.filter(
-        (trace: any) =>
+        (trace: unknown) =>
           trace.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
           trace.session_id?.toLowerCase().includes(searchQuery.toLowerCase()),
       );
@@ -164,7 +164,7 @@ export default function TracesPage() {
 
     // Apply tag filter
     if (selectedTags.length > 0) {
-      filtered = filtered.filter((trace: any) =>
+      filtered = filtered.filter((trace: unknown) =>
         selectedTags.every((tag) => trace.tags?.includes(tag)),
       );
     }
@@ -390,7 +390,7 @@ export default function TracesPage() {
         </div>
       ) : filteredTraces.length > 0 ? (
         <div className="space-y-3">
-          {filteredTraces.map((trace: any) => (
+          {filteredTraces.map((trace: unknown) => (
             <Link key={trace.id} href={`/traces/${trace.id}`}>
               <Card className="hover:border-primary transition-colors cursor-pointer">
                 <CardContent className="p-3 sm:p-4">

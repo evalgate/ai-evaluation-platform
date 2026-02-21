@@ -42,14 +42,14 @@ export declare class EvalAIError extends Error {
     /** Whether this error is retryable */
     retryable: boolean;
     /** Additional error details from the API */
-    details?: any;
+    details?: unknown;
     /** When to retry (for rate limit errors) in seconds */
     retryAfter?: number;
     /** When the limit resets (for feature limit errors) */
     resetAt?: Date;
     /** Request ID from API (for correlation/debugging) */
     requestId?: string;
-    constructor(message: string, code: string, statusCode: number, details?: any);
+    constructor(message: string, code: string, statusCode: number, details?: unknown);
     /**
      * Get formatted error message with solutions
      */
@@ -61,12 +61,12 @@ export declare class EvalAIError extends Error {
     /**
      * Convert to JSON for logging
      */
-    toJSON(): Record<string, any>;
+    toJSON(): Record<string, unknown>;
 }
 /**
  * Create an error from an HTTP response
  */
-export declare function createErrorFromResponse(response: Response, data: any): EvalAIError;
+export declare function createErrorFromResponse(response: Response, data: unknown): EvalAIError;
 export declare class RateLimitError extends EvalAIError {
     constructor(message: string, retryAfter?: number);
 }
@@ -74,7 +74,7 @@ export declare class AuthenticationError extends EvalAIError {
     constructor(message?: string);
 }
 export declare class ValidationError extends EvalAIError {
-    constructor(message?: string, details?: any);
+    constructor(message?: string, details?: unknown);
 }
 export declare class NetworkError extends EvalAIError {
     constructor(message?: string);

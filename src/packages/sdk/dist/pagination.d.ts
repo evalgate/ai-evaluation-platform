@@ -56,11 +56,11 @@ export declare function autoPaginate<T>(fetchFn: (offset: number, limit: number)
 /**
  * Encode cursor for pagination (base64)
  */
-export declare function encodeCursor(data: any): string;
+export declare function encodeCursor(data: unknown): string;
 /**
  * Decode cursor from base64
  */
-export declare function decodeCursor(cursor: string): any;
+export declare function decodeCursor(cursor: string): unknown;
 /**
  * Create pagination metadata from response
  */

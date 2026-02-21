@@ -15,7 +15,7 @@ import { requireAuthWithOrg } from "@/lib/autumn-server";
  *     return { result: 'success' };
  *   });
  */
-export function protectedAction<TArgs extends any[], TReturn>(
+export function protectedAction<TArgs extends unknown[], TReturn>(
   action: (context: { userId: string; organizationId: number }, ...args: TArgs) => Promise<TReturn>,
 ) {
   return async (
@@ -42,7 +42,7 @@ export function protectedAction<TArgs extends any[], TReturn>(
       const result = await action({ userId, organizationId }, ...args);
 
       return { success: true, data: result };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Protected action error:", error);
       return { success: false, error: error.message || "Internal server error" };
     }

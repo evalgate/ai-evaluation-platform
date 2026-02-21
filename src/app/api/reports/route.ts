@@ -79,7 +79,7 @@ export const POST = secureRoute(
       .where(eq(organizations.id, ctx.organizationId))
       .limit(1);
 
-    // Fetch latest published version snapshot (if any)
+    // Fetch latest published version snapshot (if unknown)
     let snapshotHash: string | null = null;
     let publishedVersion: number | null = null;
     if (evaluation.publishedVersion) {

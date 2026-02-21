@@ -126,7 +126,7 @@ export function KeyboardShortcutsHelp() {
         <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-800">
           <p className="text-xs text-gray-500 dark:text-gray-400">
             Press <KeyboardKey>Ctrl</KeyboardKey> + <KeyboardKey>/</KeyboardKey> or{" "}
-            <KeyboardKey>?</KeyboardKey> to show this dialog anytime
+            <KeyboardKey>?</KeyboardKey> to show this dialog unknowntime
           </p>
         </div>
       </DialogContent>

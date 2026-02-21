@@ -14,7 +14,7 @@ const submitResultSchema = z.object({
   totalCost: z.string().optional(),
   successRate: z.number().min(0).max(100).optional(),
   toolUseEfficiency: z.number().min(0).max(100).optional(),
-  customMetrics: z.record(z.any()).optional(),
+  customMetrics: z.record(z.unknown()).optional(),
 });
 
 /**

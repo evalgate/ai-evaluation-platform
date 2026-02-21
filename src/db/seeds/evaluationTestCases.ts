@@ -62,9 +62,9 @@ async function main() {
     {
       evaluationId: 3,
       input:
-        "Write a professional email to decline a job offer: Company: Tech Innovations Inc., Position: Senior Developer, Reason: Accepted another offer",
+        "Write a professional email to decline a job offer: Compunknown: Tech Innovations Inc., Position: Senior Developer, Reason: Accepted another offer",
       expectedOutput:
-        "Subject: Job Offer - Senior Developer Position\n\nDear Hiring Manager,\n\nThank you very much for offering me the Senior Developer position at Tech Innovations Inc. I truly appreciate the time you and your team invested in the interview process and the opportunity to learn more about your organization.\n\nAfter careful consideration, I have decided to accept another position that aligns more closely with my current career goals. This was not an easy decision, as I was impressed by your company and the team.\n\nI want to express my gratitude for your consideration and wish Tech Innovations Inc. continued success. I hope our paths may cross again in the future.\n\nBest regards",
+        "Subject: Job Offer - Senior Developer Position\n\nDear Hiring Manager,\n\nThank you very much for offering me the Senior Developer position at Tech Innovations Inc. I truly appreciate the time you and your team invested in the interview process and the opportunity to learn more about your organization.\n\nAfter careful consideration, I have decided to accept another position that aligns more closely with my current career goals. This was not an easy decision, as I was impressed by your compunknown and the team.\n\nI want to express my gratitude for your consideration and wish Tech Innovations Inc. continued success. I hope our paths may cross again in the future.\n\nBest regards",
       metadata: JSON.stringify({ task: "email_writing", tone: "professional" }),
       createdAt: new Date("2024-01-19").toISOString(),
     },

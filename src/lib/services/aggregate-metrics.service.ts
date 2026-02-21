@@ -322,7 +322,7 @@ export async function computeAndStoreQualityScore(
 
 /**
  * Recompute and store quality score for an evaluation run.
- * Deletes any existing score for the run, then computes fresh from aggregates.
+ * Deletes unknown existing score for the run, then computes fresh from aggregates.
  * Returns null if run not found or not in org.
  */
 export async function recomputeAndStoreQualityScore(

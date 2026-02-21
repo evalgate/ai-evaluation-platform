@@ -225,7 +225,7 @@ describe("AIEvalClient", () => {
       });
 
       const client = new AIEvalClient({ apiKey: "key", baseUrl: "http://localhost:3000" });
-      await client.evaluations.createRun(42, { status: "running" } as any);
+      await client.evaluations.createRun(42, { status: "running" } as unknown);
 
       const [url, options] = mockFetch.mock.calls[0];
       expect(url).toBe("http://localhost:3000/api/evaluations/42/runs");

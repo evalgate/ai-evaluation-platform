@@ -131,7 +131,7 @@ export class ComparisonEngine {
       const cost = this.estimateCost(modelId, tokenCount);
 
       return { modelId, output, latencyMs, tokenCount, cost };
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error(`ComparisonEngine: ${modelId} failed`, { error: error.message });
       return {
         modelId,

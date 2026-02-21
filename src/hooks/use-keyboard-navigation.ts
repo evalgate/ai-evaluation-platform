@@ -134,10 +134,10 @@ export function useKeyboardNavigation(options: KeyboardNavigationOptions = {}) {
     const container = containerRef.current;
     if (!container) return;
 
-    container.addEventListener("keydown", handleKeyDown as any);
+    container.addEventListener("keydown", handleKeyDown as unknown);
 
     return () => {
-      container.removeEventListener("keydown", handleKeyDown as any);
+      container.removeEventListener("keydown", handleKeyDown as unknown);
     };
   }, [handleKeyDown]);
 

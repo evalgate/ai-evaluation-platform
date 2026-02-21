@@ -31,7 +31,7 @@ export const metadata: Metadata = {
 interface Validator {
   name: string;
   description: string;
-  icon: any;
+  icon: unknown;
   category: "Quality" | "Safety" | "Performance" | "Structure";
   color: string;
 }

@@ -28,7 +28,7 @@ interface DiffResult {
   duration: number;
   originalOutput?: string;
   shadowOutput?: string;
-  metadata: Record<string, any>;
+  metadata: Record<string, unknown>;
 }
 
 interface VisualDiffProps {

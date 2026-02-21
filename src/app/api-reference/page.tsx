@@ -312,7 +312,7 @@ export default function APIReferencePage() {
                   Invalid API key
                 </p>
                 <p>
-                  • <code className="font-mono bg-muted px-2 py-1 rounded">429</code> Too Many
+                  • <code className="font-mono bg-muted px-2 py-1 rounded">429</code> Too Munknown
                   Requests - Rate limit exceeded
                 </p>
                 <p>

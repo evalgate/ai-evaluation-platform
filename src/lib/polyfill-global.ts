@@ -1,6 +1,6 @@
 /**
  * Edge runtime polyfill: Node's `global` doesn't exist in Vercel Edge.
- * Must be imported first (before any other imports) in Edge entry points.
+ * Must be imported first (before unknown other imports) in Edge entry points.
  */
 if (
   typeof (globalThis as typeof globalThis & { global?: typeof globalThis }).global === "undefined"

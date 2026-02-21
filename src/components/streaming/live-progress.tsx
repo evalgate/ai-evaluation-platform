@@ -56,7 +56,7 @@ interface EvaluationProgress {
   startedAt?: string;
   completedAt?: string;
   testCases: TestCaseProgress[];
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export function LiveProgress({
@@ -141,7 +141,7 @@ export function LiveProgress({
             return {
               ...prev,
               currentTest: data.testCaseName,
-              testCases: updatedTestCases as any,
+              testCases: updatedTestCases as unknown,
             };
           });
         } else if (event.type === "test_case_completed" && data.evaluationId === evaluationId) {
@@ -163,7 +163,7 @@ export function LiveProgress({
               ...prev,
               completedTests: prev.completedTests + 1,
               passedTests: prev.passedTests + (data.passed ? 1 : 0),
-              testCases: updatedTestCases as any,
+              testCases: updatedTestCases as unknown,
             };
           });
         } else if (event.type === "test_case_failed" && data.evaluationId === evaluationId) {
@@ -185,7 +185,7 @@ export function LiveProgress({
               ...prev,
               completedTests: prev.completedTests + 1,
               failedTests: prev.failedTests + 1,
-              testCases: updatedTestCases as any,
+              testCases: updatedTestCases as unknown,
             };
           });
         }

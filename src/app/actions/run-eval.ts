@@ -9,7 +9,7 @@ import { evalGateway } from "@/lib/gateway/eval-gateway";
 const StartEvalSchema = z.object({
   evaluationId: z.number(),
   testCases: z.array(z.string()).optional(), // Optional override test case IDs
-  settings: z.record(z.any()).optional(), // Optional runtime settings
+  settings: z.record(z.unknown()).optional(), // Optional runtime settings
 });
 
 /**

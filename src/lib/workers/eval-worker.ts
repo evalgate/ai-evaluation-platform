@@ -20,7 +20,7 @@ import {
 
 interface WorkerOptions {
   testCases?: string[];
-  settings?: Record<string, any>;
+  settings?: Record<string, unknown>;
 }
 
 /**
@@ -82,8 +82,8 @@ class EvalWorker {
           testCaseId: number;
           input: string;
           output: string;
-          messages: any[];
-          toolCalls: any[];
+          messages: unknown[];
+          toolCalls: unknown[];
           timestamp: string;
           duration: number;
         }>,
@@ -155,7 +155,7 @@ class EvalWorker {
             result.status === "passed",
           );
           sseServer.sendToOrganization(organizationId, completedMessage);
-        } catch (error: any) {
+        } catch (error: unknown) {
           logger.error("Worker: Test case failed", {
             runId,
             testCaseId: testCase.id,
@@ -263,7 +263,7 @@ class EvalWorker {
         status: finalStatus,
       });
       sseServer.sendToOrganization(organizationId, completedMessage);
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error("Worker: Evaluation run failed", { runId, error: error.message });
 
       // Update run status to failed
@@ -336,7 +336,7 @@ class EvalWorker {
     runId: number,
     evaluationId: number,
     organizationId: number,
-    testCases: any[],
+    testCases: unknown[],
   ): Promise<void> {
     logger.info("Worker: Triggering Meta-Judge evaluation", { runId, evaluationId });
 
@@ -389,7 +389,7 @@ class EvalWorker {
         passedJudged: judgeResults.passedJudged,
         averageJudgeScore: judgeResults.averageJudgeScore,
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error("Worker: Meta-Judge evaluation failed", { runId, error: error.message });
 
       // Update evaluation run with error information
@@ -416,7 +416,7 @@ class EvalWorker {
 
     try {
       const parsed = JSON.parse(messages);
-      const userMessage = parsed.find((msg: any) => msg.role === "user");
+      const userMessage = parsed.find((msg: unknown) => msg.role === "user");
       return userMessage?.content || "";
     } catch {
       return "";
@@ -426,7 +426,7 @@ class EvalWorker {
   /**
    * Get expected output for a test case.
    */
-  private getExpectedOutput(testCases: any[], testCaseId: number): string | null {
+  private getExpectedOutput(testCases: unknown[], testCaseId: number): string | null {
     const testCase = testCases.find((tc) => tc.id === testCaseId);
     return testCase?.expectedOutput || null;
   }
@@ -436,16 +436,16 @@ class EvalWorker {
    * This integrates the actual @pauly4010/evalai-sdk for real evaluation.
    */
   private async evaluateTestCase(
-    testCase: any,
-    evaluation: any,
-    settings?: Record<string, any>,
+    testCase: unknown,
+    evaluation: unknown,
+    settings?: Record<string, unknown>,
   ): Promise<{
     status: string;
     output: string;
     score: number;
     error?: string;
-    messages?: any[];
-    toolCalls?: any[];
+    messages?: unknown[];
+    toolCalls?: unknown[];
   }> {
     const systemPrompt =
       evaluation.modelSettings?.systemPrompt ||
@@ -528,7 +528,7 @@ class EvalWorker {
       const status = score >= 70 ? "passed" : "failed";
 
       return { status, output, score, messages, toolCalls: [] };
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error("Evaluation failed", { testCaseId: testCase.id, error: error.message });
       messages.push({ role: "assistant", content: "" });
       return {

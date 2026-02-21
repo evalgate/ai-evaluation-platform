@@ -53,7 +53,7 @@ export interface AuthOnlyContext {
 }
 
 /** Explicit context for anonymous or authed handlers — never return empty {} */
-export type AnyAuthContext =
+export type unknownAuthContext =
   | { authType: "anonymous" }
   | {
       authType: "session" | "apiKey";
@@ -140,7 +140,7 @@ export function secureRoute(
 export function secureRoute(
   handler: (
     req: NextRequest,
-    ctx: AnyAuthContext,
+    ctx: unknownAuthContext,
     params: Record<string, string>,
   ) => Promise<NextResponse>,
   options: SecureRouteOptions & { allowAnonymous: true },
@@ -149,7 +149,11 @@ export function secureRoute(
 // ── Implementation ──
 
 export function secureRoute(
-  handler: (req: NextRequest, ctx: any, params: Record<string, string>) => Promise<NextResponse>,
+  handler: (
+    req: NextRequest,
+    ctx: unknown,
+    params: Record<string, string>,
+  ) => Promise<NextResponse>,
   options: SecureRouteOptions = {},
 ): (req: NextRequest, props: { params: Promise<Record<string, string>> }) => Promise<NextResponse> {
   const {

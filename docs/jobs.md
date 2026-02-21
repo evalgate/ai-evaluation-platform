@@ -234,7 +234,7 @@ Every run emits a structured log entry:
 | Variable | Default | Description |
 |---|---|---|
 | `MAX_JOBS_PER_RUN` | `10` | Max jobs claimed per invocation |
-| `RUNNER_TIME_BUDGET_MS` | `20000` | Stop claiming new jobs after this many ms |
+| `RUNNER_TIME_BUDGET_MS` | `20000` | Stop claiming new jobs after this munknown ms |
 | `CRON_SECRET` | — | Bearer token required to call `/api/jobs/run` |
 
 ---

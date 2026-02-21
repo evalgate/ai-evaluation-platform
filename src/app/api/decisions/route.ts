@@ -22,7 +22,7 @@ const createDecisionSchema = z.object({
   ),
   reasoning: z.string().optional(),
   confidence: z.number().min(0).max(100).optional(),
-  inputContext: z.record(z.any()).optional(),
+  inputContext: z.record(z.unknown()).optional(),
 });
 
 export const GET = secureRoute(

@@ -62,7 +62,11 @@ describe("assertions envelope invariants", () => {
         version: "v1",
         assertions: [
           { key: "pii", category: "privacy", passed: true },
-          { key: "unknown_key" as any, category: "safety", passed: false },
+          {
+            key: "unknown_key" as unknown as "pii" | "toxicity",
+            category: "safety",
+            passed: false,
+          },
           { key: "toxicity", category: "safety", passed: true },
         ],
       };
@@ -139,7 +143,11 @@ describe("assertions envelope invariants", () => {
         version: "v1",
         assertions: [
           { key: "pii", category: "privacy", passed: true },
-          { key: "invalid_key" as any, category: "safety", passed: false },
+          {
+            key: "invalid_key" as unknown as "pii" | "toxicity",
+            category: "safety",
+            passed: false,
+          },
         ],
       });
       expect(out).not.toBeNull();

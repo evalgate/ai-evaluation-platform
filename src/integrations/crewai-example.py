@@ -15,7 +15,7 @@ Requirements:
 import os
 import time
 import functools
-from typing import Any, Dict, List, Optional, Callable
+from typing import unknown, Dict, List, Optional, Callable
 from dataclasses import dataclass, field
 from datetime import datetime
 
@@ -42,7 +42,7 @@ class Decision:
     reasoning: Optional[str] = None
     confidence: Optional[int] = None
     context_factors: Optional[List[str]] = None
-    input_context: Optional[Dict[str, Any]] = None
+    input_context: Optional[Dict[str, unknown]] = None
 
 
 @dataclass
@@ -66,7 +66,7 @@ class WorkflowContext:
     id: str
     name: str
     started_at: str
-    metadata: Optional[Dict[str, Any]] = None
+    metadata: Optional[Dict[str, unknown]] = None
 
 
 # ============================================================================
@@ -99,13 +99,13 @@ class EvalAITracer:
         self._current_workflow: Optional[WorkflowContext] = None
         self._decisions: List[Decision] = []
         self._costs: List[CostRecord] = []
-        self._handoffs: List[Dict[str, Any]] = []
+        self._handoffs: List[Dict[str, unknown]] = []
     
-    def workflow(self, name: str, metadata: Optional[Dict[str, Any]] = None):
+    def workflow(self, name: str, metadata: Optional[Dict[str, unknown]] = None):
         """Context manager for workflow tracing"""
         return WorkflowContextManager(self, name, metadata)
     
-    def start_workflow(self, name: str, metadata: Optional[Dict[str, Any]] = None) -> WorkflowContext:
+    def start_workflow(self, name: str, metadata: Optional[Dict[str, unknown]] = None) -> WorkflowContext:
         """Start a new workflow"""
         if self._current_workflow:
             raise RuntimeError('A workflow is already active. Call end_workflow() first.')
@@ -123,7 +123,7 @@ class EvalAITracer:
         self._log(f'Started workflow: {name}')
         return self._current_workflow
     
-    def end_workflow(self, output: Optional[Dict[str, Any]] = None, status: str = 'completed'):
+    def end_workflow(self, output: Optional[Dict[str, unknown]] = None, status: str = 'completed'):
         """End the current workflow"""
         if not self._current_workflow:
             raise RuntimeError('No active workflow.')
@@ -168,7 +168,7 @@ class EvalAITracer:
         self,
         from_agent: Optional[str],
         to_agent: str,
-        context: Optional[Dict[str, Any]] = None,
+        context: Optional[Dict[str, unknown]] = None,
         handoff_type: str = 'delegation'
     ):
         """Record a handoff between agents"""
@@ -189,7 +189,7 @@ class EvalAITracer:
         """Get total cost for current workflow"""
         return sum(float(c.total_cost) for c in self._costs)
     
-    def _log(self, message: str, data: Optional[Dict[str, Any]] = None):
+    def _log(self, message: str, data: Optional[Dict[str, unknown]] = None):
         """Log if debug mode enabled"""
         if self.debug:
             print(f'[EvalAI] {message}', data or '')
@@ -198,7 +198,7 @@ class EvalAITracer:
 class WorkflowContextManager:
     """Context manager for workflow tracing"""
     
-    def __init__(self, tracer: EvalAITracer, name: str, metadata: Optional[Dict[str, Any]] = None):
+    def __init__(self, tracer: EvalAITracer, name: str, metadata: Optional[Dict[str, unknown]] = None):
         self.tracer = tracer
         self.name = name
         self.metadata = metadata
@@ -403,7 +403,7 @@ class GovernanceConfig:
 def check_governance(
     decision: Decision,
     config: GovernanceConfig
-) -> Dict[str, Any]:
+) -> Dict[str, unknown]:
     """
     Check if a decision requires approval or should be blocked
     

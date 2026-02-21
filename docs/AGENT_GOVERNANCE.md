@@ -116,7 +116,7 @@ if (needsApproval(decision)) {
 
 Execution is automatically blocked when:
 
-1. **Fraud Risk**: Any alternative indicates potential fraud with >30% confidence
+1. **Fraud Risk**: unknown alternative indicates potential fraud with >30% confidence
 2. **Security Risk**: Security concerns detected with >40% confidence
 3. **Extremely Low Confidence**: Decision confidence below 30%
 
@@ -272,7 +272,7 @@ console.log(`Recent Violations: ${status.recentViolations}`);
 |------|-------------|---------------------|
 | `latency` | Execution time exceeded | >50% over = critical |
 | `cost` | Run cost exceeded | >50% over = critical |
-| `error_rate` | Too many failures | >150% of threshold = critical |
+| `error_rate` | Too munknown failures | >150% of threshold = critical |
 
 ---
 

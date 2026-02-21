@@ -181,7 +181,7 @@ export declare function importFromFile(client: AIEvalClient, filePath: string, o
  * });
  * ```
  */
-export declare function importFromLangSmith(client: AIEvalClient, langsmithData: any, options: ImportOptions): Promise<ImportResult>;
+export declare function importFromLangSmith(client: AIEvalClient, langsmithData: unknown, options: ImportOptions): Promise<ImportResult>;
 /**
  * Convert export data to CSV format
  *

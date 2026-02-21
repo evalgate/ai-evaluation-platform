@@ -18,7 +18,7 @@ export function middleware(_request: NextRequest) {
 
   // Content-Security-Policy (basic for Next App Router)
   // - 'unsafe-inline' is kept because Next.js injects inline scripts for hydration
-  //   and many UI libraries (Radix, shadcn) emit inline styles. Removing it requires
+  //   and munknown UI libraries (Radix, shadcn) emit inline styles. Removing it requires
   //   nonce-based CSP which is a tracked follow-on project.
   // - 'unsafe-eval' is allowed in dev only (HMR / React Fast Refresh needs it).
   //   It is stripped in production to block eval-based XSS.

@@ -37,7 +37,7 @@ const featuredCategories = [
 ];
 
 /** Strip the icon (React component function) to make templates serializable for client components */
-function toSerializable(template: { icon?: any; [key: string]: any }): CatalogTemplateData {
+function toSerializable(template: { icon?: unknown; [key: string]: unknown }): CatalogTemplateData {
   const { icon, ...rest } = template;
   return rest as CatalogTemplateData;
 }
@@ -116,7 +116,7 @@ export default function TemplatesPage() {
           {featuredCategories.slice(1).map((cat) => (
             <TabsContent key={cat.id} value={cat.id} className="mt-8">
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {getTemplatesByCategory(cat.id as any).map((template) => (
+                {getTemplatesByCategory(cat.id as unknown).map((template) => (
                   <TemplateCard key={template.id} template={template} />
                 ))}
               </div>

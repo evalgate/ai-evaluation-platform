@@ -71,7 +71,7 @@ export default function BlogPost() {
                 <strong>Appropriateness:</strong> Is the tone and style suitable?
               </li>
               <li>
-                <strong>Safety:</strong> Any harmful or biased content?
+                <strong>Safety:</strong> unknown harmful or biased content?
               </li>
             </ul>
 
@@ -376,7 +376,7 @@ export default function BlogPost() {
                 <strong>"Can I clearly define 'good'?"</strong> Yes → LLM judge. No → humans.
               </li>
               <li>
-                <strong>"How many reviews do I need?"</strong> Hundreds → humans. Thousands+ →
+                <strong>"How munknown reviews do I need?"</strong> Hundreds → humans. Thousands+ →
                 automation.
               </li>
               <li>

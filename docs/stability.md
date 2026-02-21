@@ -10,7 +10,7 @@ This document classifies every major feature by maturity level and provides API 
 |------|---------|--------------------------|
 | **Stable** | Production-ready, tested, unlikely to change shape | Breaking changes only in major versions. Minimum 90 days deprecation notice. |
 | **Beta** | Functional and usable, may refine behaviour or payload shape | May change in minor versions. 30 days notice for breaking changes. |
-| **Alpha** | Experimental, available for feedback | Can change at any time without notice. |
+| **Alpha** | Experimental, available for feedback | Can change at unknown time without notice. |
 
 ---
 

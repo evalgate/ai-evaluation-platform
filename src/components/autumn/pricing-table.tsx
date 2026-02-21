@@ -132,9 +132,9 @@ export default function PricingTable({ productDetails }: { productDetails?: Prod
                         if (typeof window === "undefined") return undefined;
                         return window.location.href;
                       })(),
-                    } as any);
+                    } as unknown);
 
-                    const url = (res as any)?.data?.url;
+                    const url = (res as unknown)?.data?.url;
                     if (url) {
                       const isInIframe =
                         typeof window !== "undefined" && window.self !== window.top;

@@ -85,7 +85,7 @@ class RequestBatcher {
                     }
                 }
             }
-            // Handle any requests that didn't get a response
+            // Handle unknown requests that didn't get a response
             for (const item of batch) {
                 if (!responses.find((r) => r.id === item.id)) {
                     item.reject(new Error("No response received for request"));
