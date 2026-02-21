@@ -11,6 +11,47 @@ import {
 } from "@/db/schema";
 import { logger } from "@/lib/logger";
 
+// Data interfaces for type safety
+interface TestResult {
+  id: number;
+  score: number | null;
+  status: string;
+  durationMs: number | null;
+  metadata: unknown;
+  createdAt: string;
+  evaluationRunId: number;
+  testCaseId: number;
+  organizationId: number;
+  output: string | null;
+  error: string | null;
+  assertionsJson: unknown;
+  traceLinkedMatched: boolean | null;
+  evaluationId: number;
+  updatedAt: string;
+}
+
+interface JudgeResult {
+  id: number;
+  configId: number;
+  evaluationRunId: number | null;
+  testCaseId: number | null;
+  input: string;
+  output: string;
+  score: number | null;
+  reasoning: string | null;
+  metadata: unknown;
+  createdAt: string;
+}
+
+interface EvaluationRun {
+  id: number;
+  status: string;
+  createdAt: string;
+  evaluationRunId?: number;
+  startedAt?: string;
+  completedAt?: string;
+}
+
 export interface ReportCardData {
   evaluationId: number;
   evaluationName: string;
@@ -194,7 +235,7 @@ export class ReportCardsService {
       overallScore,
       grade,
       status,
-      lastUpdated: reportCard.metadata.generatedAt,
+      lastUpdated: (reportCard.metadata as any).generatedAt as string,
       keyMetrics: {
         averageScore: reportCard.averageScore,
         passRate: reportCard.passRate,
@@ -254,7 +295,7 @@ export class ReportCardsService {
   /**
    * Calculate performance metrics.
    */
-  private calculatePerformance(testResults: unknown[]): ReportCardData["performance"] {
+  private calculatePerformance(testResults: TestResult[]): ReportCardData["performance"] {
     if (testResults.length === 0) {
       return {
         scoreDistribution: {},
@@ -323,7 +364,7 @@ export class ReportCardsService {
   /**
    * Calculate quality metrics.
    */
-  private calculateQuality(judgeResults: unknown[]): ReportCardData["quality"] {
+  private calculateQuality(judgeResults: JudgeResult[]): ReportCardData["quality"] {
     if (judgeResults.length === 0) {
       return {
         judgeResults: {
@@ -375,7 +416,10 @@ export class ReportCardsService {
   /**
    * Calculate trends.
    */
-  private calculateTrends(runs: unknown[], testResults: unknown[]): ReportCardData["trends"] {
+  private calculateTrends(
+    runs: EvaluationRun[],
+    testResults: TestResult[],
+  ): ReportCardData["trends"] {
     const recentRuns = runs
       .filter((r) => ["completed", "completed_with_failures"].includes(r.status))
       .slice(0, 10)
@@ -424,8 +468,8 @@ export class ReportCardsService {
    * Calculate overall statistics.
    */
   private calculateOverallStats(
-    runs: unknown[],
-    testResults: unknown[],
+    runs: EvaluationRun[],
+    testResults: TestResult[],
   ): {
     averageScore: number;
     passRate: number;
@@ -464,7 +508,7 @@ export class ReportCardsService {
   /**
    * Extract cost from test result metadata.
    */
-  private extractCost(testResult: unknown): number {
+  private extractCost(testResult: TestResult): number {
     try {
       const metadata =
         typeof testResult.metadata === "string"
