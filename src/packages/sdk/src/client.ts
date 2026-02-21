@@ -137,7 +137,7 @@ export class AIEvalClient {
       config.organizationId || (orgIdFromEnv ? parseInt(orgIdFromEnv, 10) : undefined);
 
     // Default to relative URLs for browser, or allow custom baseUrl
-    const isBrowser = typeof (globalThis as unknown).window !== "undefined";
+    const isBrowser = typeof (globalThis as any).window !== "undefined";
     this.baseUrl = config.baseUrl || (isBrowser ? "" : "http://localhost:3000");
     this.timeout = config.timeout || 30000;
 
@@ -184,11 +184,12 @@ export class AIEvalClient {
                 });
                 results.push({ id: req.id, status: 200, data });
               } catch (err: unknown) {
+                const errorObj = err as { statusCode?: number; message?: string };
                 results.push({
                   id: req.id,
-                  status: err?.statusCode || 500,
+                  status: errorObj?.statusCode || 500,
                   data: null,
-                  error: err?.message || "Unknown error",
+                  error: errorObj?.message || "Unknown error",
                 });
               }
             })();

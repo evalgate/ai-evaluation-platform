@@ -49,10 +49,18 @@ class BrowserContextStorage {
 }
 
 /**
+ * Context storage interface
+ */
+interface ContextStorage {
+  run<T>(context: ContextMetadata, fn: () => T): T;
+  getStore(): ContextMetadata | undefined;
+}
+
+/**
  * Context storage implementation
  * Uses AsyncLocalStorage in Node.js, simple stack in browsers
  */
-let contextStorage: unknown;
+let contextStorage: ContextStorage;
 
 if (isNode) {
   try {
