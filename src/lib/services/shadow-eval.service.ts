@@ -226,7 +226,7 @@ export class ShadowEvalService {
     return {
       id: run.evaluation_runs.id,
       evaluationId: run.evaluation_runs.evaluationId,
-      originalEvaluationId: (traceLog as unknown).originalEvaluationId || 0,
+      originalEvaluationId: (traceLog as any).originalEvaluationId || 0,
       status: run.evaluation_runs.status,
       totalTraces: run.evaluation_runs.totalCases ?? 0,
       processedTraces,
@@ -291,7 +291,7 @@ export class ShadowEvalService {
           metadata: spans.metadata,
         })
         .from(spans)
-        .where(eq(spans.traceId, trace.traceId as unknown));
+        .where(eq(spans.traceId, trace.traceId as any));
 
       traceReplayData.push({
         traceId: trace.traceId,
@@ -406,7 +406,7 @@ export class ShadowEvalService {
         failedCount,
       });
     } catch (error: unknown) {
-      logger.error("Shadow evaluation failed", { shadowRunId, error: error.message });
+      logger.error("Shadow evaluation failed", { shadowRunId, error: (error as any).message });
 
       await db
         .update(evaluationRuns)
@@ -446,9 +446,9 @@ export class ShadowEvalService {
       const _originalDuration = mainSpan.duration;
 
       const systemPrompt =
-        evaluation.modelSettings?.systemPrompt || "You are a helpful AI assistant.";
-      const model = evaluation.modelSettings?.model || "gpt-4o-mini";
-      const organizationId = evaluation.organizationId;
+        (evaluation as any).modelSettings?.systemPrompt || "You are a helpful AI assistant.";
+      const model = (evaluation as any).modelSettings?.model || "gpt-4o-mini";
+      const organizationId = (evaluation as any).organizationId;
 
       // Determine provider and get API key
       const provider = this.getProviderFromModel(model);
@@ -529,7 +529,7 @@ export class ShadowEvalService {
         passed: false,
         score: 0,
         output: "",
-        error: error.message,
+        error: (error as any).message,
         duration: 0,
         messages: [],
         toolCalls: [],
@@ -576,7 +576,7 @@ export class ShadowEvalService {
 
   private extractOriginalScoreFromTrace(trace: TraceReplayData): number | null {
     try {
-      return trace.metadata?.score || null;
+      return (trace.metadata as any)?.score || null;
     } catch {
       return null;
     }
@@ -611,7 +611,7 @@ export class ShadowEvalService {
         and(
           eq(evaluations.organizationId, organizationId),
           // Filter for shadow evals by checking trace log type
-          like(evaluationRuns.traceLog as unknown, "%shadow_eval%"),
+          like(evaluationRuns.traceLog as any, "%shadow_eval%"),
         ),
       )
       .orderBy(desc(evaluationRuns.createdAt))
