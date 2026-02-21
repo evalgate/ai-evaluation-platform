@@ -6,9 +6,10 @@ export interface SpanContext {
   parentSpanId?: string;
 }
 
-export interface SpanData {
+export interface SpanData extends SpanContext {
   name: string;
   spanType: "llm" | "tool" | "agent" | "retrieval" | "custom";
+  startTime: string;
   input: unknown;
   output?: unknown;
   metadata?: Record<string, unknown>;
@@ -19,7 +20,7 @@ export class TraceCollector {
   private apiEndpoint: string;
   private organizationId: string;
   private currentTrace: SpanContext | null = null;
-  private spans: Map<string, unknown> = new Map();
+  private spans: Map<string, SpanData> = new Map();
 
   constructor(apiEndpoint: string, organizationId: string) {
     this.apiEndpoint = apiEndpoint;
@@ -132,9 +133,13 @@ export class TraceCollector {
     fn: () => Promise<T>,
     input?: unknown,
   ): Promise<T> {
-    const spanId = await this.startSpan({
+    const spanId = this.generateId();
+    await this.startSpan({
+      traceId: this.currentTrace?.traceId || spanId,
+      spanId,
       name,
       spanType,
+      startTime: new Date().toISOString(),
       input: input || {},
     });
 

@@ -72,7 +72,11 @@ vi.mock("@/lib/security/webhook-secrets", () => ({
   decryptWebhookSecret: vi.fn(() => "decrypted-secret"),
 }));
 
-const { handleWebhookDelivery } = await import("@/lib/jobs/handlers/webhook-delivery");
+let handleWebhookDelivery: any;
+beforeAll(async () => {
+  const module = await import("@/lib/jobs/handlers/webhook-delivery");
+  handleWebhookDelivery = module.handleWebhookDelivery;
+});
 
 describe("webhook delivery handler", () => {
   beforeEach(async () => {

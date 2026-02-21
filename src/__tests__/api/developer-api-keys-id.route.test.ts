@@ -88,12 +88,16 @@ vi.mock("@/lib/api/secure-route", () => ({
           headers: { "content-type": "application/json" },
         });
       }
-      return handler(req, state.ctx, params);
+      return (handler as any)(req, state.ctx, params);
     };
   },
 }));
 
-const { DELETE } = await import("@/app/api/developer/api-keys/[id]/route");
+let DELETE: any;
+beforeAll(async () => {
+  const module = await import("@/app/api/developer/api-keys/[id]/route");
+  DELETE = module.DELETE;
+});
 
 describe("DELETE /api/developer/api-keys/[id]", () => {
   beforeEach(() => {
