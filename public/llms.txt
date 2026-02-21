@@ -1,6 +1,6 @@
 # EvalAI — AI Evaluation Platform
 
-> Open-source observability, evaluation, and governance platform for AI agents and LLM applications. Published SDK on npm. REST API for any language.
+> Observability, evaluation, and governance platform for AI agents and LLM applications. Published SDK on npm. REST API for any language.
 
 ## What is EvalAI?
 
@@ -30,8 +30,11 @@ EvalAI provides:
 - **Evaluation Engine**: 50+ evaluation templates, createTestSuite runner, 20 Expectation methods + 21 standalone assertion functions
 - **Cost Analytics**: Track LLM spending per model/provider with built-in pricing for OpenAI, Anthropic, Google (12+ models)
 - **Agent Benchmarking**: Compare agent architectures (ReAct, CoT, ToT) across accuracy, latency, cost, and safety metrics
-- **Governance Engine**: Compliance presets (SOC2, GDPR, HIPAA, FINRA, PCI-DSS) with approval/blocking rules
-- **Decision Auditing**: Record every agent decision with alternatives, confidence scores, and reasoning
+- **Governance Engine**: Enterprise-grade compliance with presets (SOC2, GDPR, HIPAA, FINRA_4511, PCI-DSS) and approval/blocking rules
+- **Decision Auditing**: Record every agent decision with alternatives, confidence scores, and reasoning chains
+- **Workflow Orchestration**: Multi-agent workflow management with DAG definitions and handoff tracking
+- **Human Evaluation**: Annotation system for human evaluation tasks and collaborative review
+- **Arena Competition**: AI model comparison platform with leaderboards and competition tracking
 - **Interactive Playground**: Test your own AI outputs with assertions — no signup required
 - **Published SDK**: TypeScript/JavaScript SDK with zero-config init, auto-retry, caching, batching, and framework integrations
 
@@ -132,18 +135,36 @@ import { traceAutoGen } from '@pauly4010/evalai-sdk';
 const traced = traceAutoGen(conversation, tracer);
 ```
 
-## Key SDK Exports
+## Enhanced SDK Features
 
+### Core Client & Tracing
 - `AIEvalClient` — Main client with traces, evaluations, llmJudge, annotations, developer, organizations APIs
-- `WorkflowTracer`, `createWorkflowTracer` — Multi-agent workflow instrumentation
+- `WorkflowTracer`, `createWorkflowTracer` — Multi-agent workflow instrumentation with DAG visualization
+- `RequestCache`, `PaginatedIterator`, `RequestBatcher` — Performance utilities
+- Context Propagation: `createContext`, `withContext`, `EvalContext` — Request context management
+
+### Evaluation & Testing
 - `createTestSuite` — Test suite builder with executor, cases, and assertion support
-- `expect` — Assertion factory with 20 built-in methods (toContainKeywords, toNotContainPII, toBeProfessional, toBeValidJSON, toNotHallucinate, toHaveSentiment, etc.)
-- 21 standalone assertion functions (`containsKeywords`, `matchesPattern`, `hasNoHallucinations`, `notContainsPII`, `hasNoToxicity`, etc.)
+- `expect` — Assertion factory with 21 built-in methods
+- 21 standalone assertion functions (`containsKeywords`, `matchesPattern`, `hasNoHallucinations`, `notContainsPII`, `hasNoToxicity`, `hasFactualAccuracy`, `hasReadabilityScore`, etc.)
+- `batchProcess`, `streamEvaluation` — Streaming & batch processing
+
+### Framework Integrations
 - `traceOpenAI`, `traceAnthropic` — LLM provider wrappers
 - `traceLangChainAgent`, `traceCrewAI`, `traceAutoGen` — Framework integrations
-- `RequestCache`, `PaginatedIterator`, `RequestBatcher` — Performance utilities
-- `batchProcess`, `streamEvaluation` — Streaming & batch processing
-- `GovernanceEngine`, `CompliancePresets` — Governance rules (server-side only, not in npm package)
+
+### Error Handling
+- `EvalAIError`, `RateLimitError`, `AuthenticationError`, `NetworkError`, `SDKError` — Enhanced error hierarchy
+
+### Governance (Server-side)
+- `GovernanceEngine`, `CompliancePresets` — Governance rules (not in npm package, server-side only)
+
+## Developer Tools & Analytics
+- `GET /api/developer/api-keys` — Create and manage API keys
+- `GET /api/developer/usage` — Usage analytics and billing portal
+- `GET /api/developer/webhooks` — Webhook management and delivery tracking
+- `GET /api/developer/usage/summary` — Usage summary and cost breakdown
+- `GET /api/developer/api-keys/:id/usage` — API key usage tracking
 
 ## REST API Endpoints
 
@@ -191,6 +212,13 @@ All endpoints accept JSON. Authenticated endpoints require `Authorization: Beare
 - `POST /api/workflows/:id/handoffs` — Record agent handoff
 - `GET /api/workflows/:id/handoffs` — List handoffs
 
+### Annotations & Human Evaluation
+- `GET /api/annotations` — List human evaluation annotations with filtering
+- `GET /api/annotations/tasks` — Manage annotation tasks and assignments
+- `GET /api/annotations/tasks/:id` — Get annotation task details
+- `GET /api/annotations/tasks/:id/items` — List annotation items for a task
+- `POST /api/annotations/tasks/:id/complete` — Complete annotation task
+
 ### Decisions & Costs
 - `POST /api/decisions` — Record agent decision with alternatives
 - `GET /api/decisions` — Query decisions by workflowRunId or spanId
@@ -209,21 +237,72 @@ All endpoints accept JSON. Authenticated endpoints require `Authorization: Beare
 - `POST /api/benchmarks/:id/results` — Submit benchmark results
 - `GET /api/benchmarks/:id/leaderboard` — Get benchmark leaderboard
 
+### Arena & AI Competition
+- `POST /api/arena-matches` — Create AI model competitions and comparisons
+- `GET /api/arena/leaderboard` — Competition leaderboards and rankings
+- `GET /api/arena-matches` — List arena matches and results
+- `GET /api/arena-matches/:id` — Get match details and participant results
+- `POST /api/arena-matches/:id/results` — Submit competition results
+
+### Shadow Evaluations
+- `GET /api/shadow-evals` — List shadow evaluations for A/B testing
+- `GET /api/shadow-evals/:id` — Get shadow evaluation details
+- `GET /api/shadow-evals/stats` — Shadow evaluation statistics and comparisons
+
+### Reports & Quality
+- `POST /api/reports` — Create signed report
+- `GET /api/reports` — List org's shared reports
+- `GET /api/quality` — Get quality score with trend analysis
+- `POST /api/quality` — Recompute quality score for evaluation run
+- `GET /api/quality/spec` — Get quality scoring specification
+- `GET /api/report-cards` — Get evaluation report cards
+- `GET /api/report-cards/:evaluationId` — Get report card for specific evaluation
+
+### Organizations
+- `GET /api/organizations` — List organizations (admin)
+- `GET /api/organizations/current` — Get current user's organization
+
 ### Demo (public, no auth)
 - `POST /api/demo/custom-eval` — Run assertions on custom AI input/output (rate-limited)
 - `GET /api/demo/chatbot` — Chatbot demo data
 - `GET /api/demo/rag` — RAG demo data
 - `GET /api/demo/codegen` — Code generation demo data
 
-## WebMCP Tool Contracts
+## MCP Tools
 
-EvalAI supports Google's Web Model Context Protocol (WebMCP). When a user visits the site in a WebMCP-enabled browser (e.g. Cursor, Claude), the page registers tools that AI agents can call to interact with the platform—create evals, run them, fetch results. The user must be signed in for create/run/get tools; list_templates is public.
+EvalAI supports the Model Context Protocol (MCP) with comprehensive tool discovery and execution. When a user visits the site in an MCP-enabled browser (e.g. Cursor, Claude), the page registers tools that AI agents can call to interact with the platform.
 
-- `list_evaluation_templates` — List evaluation templates by category from both quick-start (6) and full catalog (50+). Public, no auth.
-- `create_evaluation` — Create a new evaluation (unit_test, human_eval, model_eval, ab_test). Requires auth.
-- `run_evaluation` — Execute an evaluation run with real test case execution. Requires auth.
+### Tool Discovery (Public)
+- `GET /api/mcp/tools` — List all available tools with input schemas. No authentication required.
+
+### Tool Execution (Authenticated)
+- `eval.quality.latest` — Get latest quality score for an evaluation with baseline comparison
+- `trace.create` — Create traces for observability and debugging
+- `trace.span.create` — Create spans within traces for detailed call tracking
+- `eval.testcase.add` — Add test cases to evaluations
+- `eval.run` — Execute evaluation runs (long-running operations)
+- `eval.get` — Get evaluation details including test cases and recent runs
+- `eval.list` — List evaluations for the organization
+
+### WebMCP Legacy Support
+For legacy WebMCP compatibility:
+- `list_evaluation_templates` — List evaluation templates by category (50+ templates). Public, no auth.
+- `create_evaluation` — Create a new evaluation. Requires auth.
+- `run_evaluation` — Execute an evaluation run. Requires auth.
 - `get_evaluation_results` — Fetch run results with pass/fail metrics. Requires auth.
-- `get_quality_score` — Get quality score for an evaluation based on latest run (pass rate, case counts). Requires auth.
+- `get_quality_score` — Get quality score for an evaluation. Requires auth.
+
+### Background Jobs System
+- `POST /api/jobs/run` — Cron endpoint for job processing (internal)
+- `GET /api/jobs/dead` — Dead letter queue for failed jobs
+- `POST /api/jobs/dead/bulk-retry` — Bulk retry dead jobs
+- Job queue with retry logic, exponential backoff, and TTL-based reclamation
+
+### Advanced Monitoring
+- `GET /api/drift/alerts` — Performance regression alerts and drift detection
+- `GET /api/metrics/slo` — Platform SLO metrics and performance monitoring
+- `GET /api/audit-logs` — Admin audit trail for compliance
+- `GET /api/stream` — Real-time SSE streaming for live updates
 
 ## Links
 

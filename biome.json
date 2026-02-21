@@ -19,7 +19,9 @@
       "!**/*.mjs",
       "!**/component-tagger-loader.cjs",
       "!**/examples",
-      "!**/visual-edits"
+      "!**/visual-edits",
+      "!**/guides",
+      "!**/docs"
     ]
   },
   "formatter": {

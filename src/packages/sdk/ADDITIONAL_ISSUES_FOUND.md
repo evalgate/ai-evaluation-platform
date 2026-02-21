@@ -2,7 +2,7 @@
 
 ## 🔴 Issues Discovered
 
-### 1. **process.env Usage in Browser Context** ⚠️ HIGH PRIORITY
+### 1. **process.env Usage in Browser Context** ✅ FIXED
 
 **Files**: `client.ts` (lines 105, 116, 178)
 
@@ -19,12 +19,25 @@ const orgIdFromEnv = process.env.EVALAI_ORGANIZATION_ID || ...
 baseUrl: process.env.EVALAI_BASE_URL,
 ```
 
-**Impact**: 
-- Will cause "Cannot read property of undefined" errors in browsers
-- Breaks zero-config initialization in browsers
-- `AIEvalClient.init()` won't work in browsers
+**Solution**: Added `getEnvVar()` helper function that safely checks for `process.env` existence:
 
-**Severity**: HIGH - Core functionality breaks in browsers
+```typescript
+function getEnvVar(name: string): string | undefined {
+  if (typeof process !== "undefined" && process.env) {
+    return process.env[name];
+  }
+  return undefined;
+}
+```
+
+**Status**: ✅ **COMPLETED** - All direct `process.env` usage replaced with safe `getEnvVar()` calls
+
+**Impact**: 
+- ✅ Works in both Node.js and browsers
+- ✅ Zero-config initialization works in browsers  
+- ✅ `AIEvalClient.init()` is browser-safe
+
+**Severity**: RESOLVED - Core functionality now works in browsers
 
 ---
 
@@ -118,34 +131,36 @@ fs.writeFileSync(filePath, ...);
 
 ## 📊 Summary
 
-| Issue | Severity | Impact | Affected |
-|-------|----------|--------|----------|
-| process.env in browser | 🔴 HIGH | Breaks in browsers | Core client |
-| TestCase collision | 🟡 MEDIUM | Developer confusion | Types |
-| Dynamic imports | 🟢 LOW | Unusual pattern | export.ts |
-| Module config | 🟢 INFO | Potential confusion | Build system |
+| Issue | Severity | Status | Impact | Affected |
+|-------|----------|--------|--------|----------|
+| process.env in browser | 🔴 HIGH | ✅ FIXED | Works in browsers | Core client |
+| TestCase collision | 🟡 MEDIUM | 🟡 OPEN | Developer confusion | Types |
+| Dynamic imports | 🟢 LOW | 🟢 OPEN | Unusual pattern | export.ts |
+| Module config | 🟢 INFO | 🟢 OPEN | Potential confusion | Build system |
 
 ---
 
 ## ✅ Recommended Fixes
 
-### Fix 1: Safe process.env Access
+### ✅ Fix 1: Safe process.env Access - COMPLETED
 
-Add helper function:
+**Status**: ✅ **IMPLEMENTED**
+
+Added helper function:
 ```typescript
-// utils.ts or client.ts
+// client.ts (lines 66-71)
 function getEnvVar(name: string): string | undefined {
-  if (typeof process !== 'undefined' && process.env) {
+  if (typeof process !== "undefined" && process.env) {
     return process.env[name];
   }
   return undefined;
 }
 ```
 
-Then use:
-```typescript
-this.apiKey = config.apiKey || getEnvVar('EVALAI_API_KEY') || ...
-```
+**Applied to all locations**:
+- Line 123: `getEnvVar('EVALAI_API_KEY')`
+- Line 135: `getEnvVar('EVALAI_ORGANIZATION_ID')`  
+- Line 264: `getEnvVar('EVALAI_BASE_URL')`
 
 ### Fix 2: Rename Test Suite TestCase
 

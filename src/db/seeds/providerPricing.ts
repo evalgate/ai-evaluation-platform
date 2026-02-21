@@ -6,37 +6,44 @@ async function main() {
   const effectiveDate = "2024-01-01";
 
   // Current pricing data for major LLM providers (prices per million tokens)
+  // Updated February 2026 with latest OpenAI GPT-5 and Claude 4.5 pricing
   const pricingData = [
-    // OpenAI Models
+    // OpenAI Models - Updated 2025-2026
     {
       provider: "openai",
-      model: "gpt-4",
-      inputPricePerMillion: "30.00",
-      outputPricePerMillion: "60.00",
+      model: "gpt-5",
+      inputPricePerMillion: "1.25",
+      outputPricePerMillion: "10.00",
     },
     {
       provider: "openai",
-      model: "gpt-4-turbo",
-      inputPricePerMillion: "10.00",
-      outputPricePerMillion: "30.00",
+      model: "gpt-5-mini",
+      inputPricePerMillion: "0.25",
+      outputPricePerMillion: "2.00",
     },
     {
       provider: "openai",
-      model: "gpt-4-turbo-preview",
-      inputPricePerMillion: "10.00",
-      outputPricePerMillion: "30.00",
+      model: "gpt-5-nano",
+      inputPricePerMillion: "0.05",
+      outputPricePerMillion: "0.40",
+    },
+    {
+      provider: "openai",
+      model: "gpt-4.1",
+      inputPricePerMillion: "3.00",
+      outputPricePerMillion: "12.00",
     },
     {
       provider: "openai",
       model: "gpt-4o",
       inputPricePerMillion: "5.00",
-      outputPricePerMillion: "15.00",
+      outputPricePerMillion: "20.00",
     },
     {
       provider: "openai",
       model: "gpt-4o-mini",
-      inputPricePerMillion: "0.15",
-      outputPricePerMillion: "0.60",
+      inputPricePerMillion: "0.60",
+      outputPricePerMillion: "2.40",
     },
     {
       provider: "openai",
@@ -62,6 +69,199 @@ async function main() {
       inputPricePerMillion: "3.00",
       outputPricePerMillion: "12.00",
     },
+    // OpenAI o3/o4 Reasoning Models - Latest 2025
+    {
+      provider: "openai",
+      model: "o3",
+      inputPricePerMillion: "2.00",
+      outputPricePerMillion: "8.00",
+    },
+    {
+      provider: "openai",
+      model: "o3-mini",
+      inputPricePerMillion: "0.55",
+      outputPricePerMillion: "2.20",
+    },
+    {
+      provider: "openai",
+      model: "o3-mini-high",
+      inputPricePerMillion: "0.55",
+      outputPricePerMillion: "2.20",
+    },
+    {
+      provider: "openai",
+      model: "o3-pro",
+      inputPricePerMillion: "2.00",
+      outputPricePerMillion: "8.00",
+    },
+    {
+      provider: "openai",
+      model: "o3-deep-research",
+      inputPricePerMillion: "10.00",
+      outputPricePerMillion: "40.00",
+    },
+    {
+      provider: "openai",
+      model: "o4-mini",
+      inputPricePerMillion: "1.10",
+      outputPricePerMillion: "4.40",
+    },
+    {
+      provider: "openai",
+      model: "o4-mini-high",
+      inputPricePerMillion: "1.10",
+      outputPricePerMillion: "4.40",
+    },
+    {
+      provider: "openai",
+      model: "o4-mini-deep-research",
+      inputPricePerMillion: "1.10",
+      outputPricePerMillion: "4.40",
+    },
+    // OpenAI GPT-5.x Extended Family - Latest 2025-2026
+    {
+      provider: "openai",
+      model: "gpt-5.1",
+      inputPricePerMillion: "1.25",
+      outputPricePerMillion: "10.00",
+    },
+    {
+      provider: "openai",
+      model: "gpt-5.1-chat",
+      inputPricePerMillion: "1.25",
+      outputPricePerMillion: "10.00",
+    },
+    {
+      provider: "openai",
+      model: "gpt-5.1-codex",
+      inputPricePerMillion: "1.25",
+      outputPricePerMillion: "10.00",
+    },
+    {
+      provider: "openai",
+      model: "gpt-5.1-codex-mini",
+      inputPricePerMillion: "0.25",
+      outputPricePerMillion: "2.00",
+    },
+    {
+      provider: "openai",
+      model: "gpt-5.1-codex-max",
+      inputPricePerMillion: "2.50",
+      outputPricePerMillion: "20.00",
+    },
+    {
+      provider: "openai",
+      model: "gpt-5.2",
+      inputPricePerMillion: "1.25",
+      outputPricePerMillion: "10.00",
+    },
+    {
+      provider: "openai",
+      model: "gpt-5.2-chat",
+      inputPricePerMillion: "1.25",
+      outputPricePerMillion: "10.00",
+    },
+    {
+      provider: "openai",
+      model: "gpt-5.2-codex",
+      inputPricePerMillion: "1.25",
+      outputPricePerMillion: "10.00",
+    },
+    {
+      provider: "openai",
+      model: "gpt-5.2-pro",
+      inputPricePerMillion: "2.50",
+      outputPricePerMillion: "20.00",
+    },
+    // OpenAI GPT-5 Chat & Codex Variants
+    {
+      provider: "openai",
+      model: "gpt-5-chat",
+      inputPricePerMillion: "1.25",
+      outputPricePerMillion: "10.00",
+    },
+    {
+      provider: "openai",
+      model: "gpt-5-codex",
+      inputPricePerMillion: "1.25",
+      outputPricePerMillion: "10.00",
+    },
+    // OpenAI GPT-4.1 Extended Family
+    {
+      provider: "openai",
+      model: "gpt-4.1-mini",
+      inputPricePerMillion: "0.60",
+      outputPricePerMillion: "2.40",
+    },
+    {
+      provider: "openai",
+      model: "gpt-4.1-nano",
+      inputPricePerMillion: "0.15",
+      outputPricePerMillion: "0.60",
+    },
+    // OpenAI Image & Audio Models
+    {
+      provider: "openai",
+      model: "gpt-5-image",
+      inputPricePerMillion: "10.00",
+      outputPricePerMillion: "10.00",
+    },
+    {
+      provider: "openai",
+      model: "gpt-5-image-mini",
+      inputPricePerMillion: "2.50",
+      outputPricePerMillion: "2.50",
+    },
+    {
+      provider: "openai",
+      model: "gpt-audio",
+      inputPricePerMillion: "15.00",
+      outputPricePerMillion: "15.00",
+    },
+    {
+      provider: "openai",
+      model: "gpt-audio-mini",
+      inputPricePerMillion: "2.50",
+      outputPricePerMillion: "2.50",
+    },
+    {
+      provider: "openai",
+      model: "gpt-4o-audio-preview",
+      inputPricePerMillion: "5.00",
+      outputPricePerMillion: "20.00",
+    },
+    // OpenAI Search Preview Models
+    {
+      provider: "openai",
+      model: "gpt-4o-search-preview",
+      inputPricePerMillion: "5.00",
+      outputPricePerMillion: "20.00",
+    },
+    {
+      provider: "openai",
+      model: "gpt-4o-mini-search-preview",
+      inputPricePerMillion: "0.60",
+      outputPricePerMillion: "2.40",
+    },
+    // OpenAI Open Source Models
+    {
+      provider: "openai",
+      model: "gpt-oss-20b",
+      inputPricePerMillion: "0.10",
+      outputPricePerMillion: "0.10",
+    },
+    {
+      provider: "openai",
+      model: "gpt-oss-120b",
+      inputPricePerMillion: "0.50",
+      outputPricePerMillion: "0.50",
+    },
+    {
+      provider: "openai",
+      model: "gpt-oss-safeguard-20b",
+      inputPricePerMillion: "0.10",
+      outputPricePerMillion: "0.10",
+    },
 
     // OpenAI Embeddings
     {
@@ -83,7 +283,7 @@ async function main() {
       outputPricePerMillion: "0.00",
     },
 
-    // Anthropic Models
+    // Anthropic Models - Updated 2025-2026
     {
       provider: "anthropic",
       model: "claude-3-opus",
@@ -95,30 +295,6 @@ async function main() {
       model: "claude-3-opus-20240229",
       inputPricePerMillion: "15.00",
       outputPricePerMillion: "75.00",
-    },
-    {
-      provider: "anthropic",
-      model: "claude-3-sonnet",
-      inputPricePerMillion: "3.00",
-      outputPricePerMillion: "15.00",
-    },
-    {
-      provider: "anthropic",
-      model: "claude-3-sonnet-20240229",
-      inputPricePerMillion: "3.00",
-      outputPricePerMillion: "15.00",
-    },
-    {
-      provider: "anthropic",
-      model: "claude-3-haiku",
-      inputPricePerMillion: "0.25",
-      outputPricePerMillion: "1.25",
-    },
-    {
-      provider: "anthropic",
-      model: "claude-3-haiku-20240307",
-      inputPricePerMillion: "0.25",
-      outputPricePerMillion: "1.25",
     },
     {
       provider: "anthropic",
@@ -144,8 +320,71 @@ async function main() {
       inputPricePerMillion: "1.00",
       outputPricePerMillion: "5.00",
     },
+    {
+      provider: "anthropic",
+      model: "claude-3-haiku",
+      inputPricePerMillion: "0.25",
+      outputPricePerMillion: "1.25",
+    },
+    {
+      provider: "anthropic",
+      model: "claude-3-haiku-20240307",
+      inputPricePerMillion: "0.25",
+      outputPricePerMillion: "1.25",
+    },
+    {
+      provider: "anthropic",
+      model: "claude-3-sonnet",
+      inputPricePerMillion: "3.00",
+      outputPricePerMillion: "15.00",
+    },
+    {
+      provider: "anthropic",
+      model: "claude-3-sonnet-20240229",
+      inputPricePerMillion: "3.00",
+      outputPricePerMillion: "15.00",
+    },
+    // Claude 4.5 Series - Latest 2025
+    {
+      provider: "anthropic",
+      model: "claude-sonnet-4.5",
+      inputPricePerMillion: "3.00",
+      outputPricePerMillion: "15.00",
+    },
+    {
+      provider: "anthropic",
+      model: "claude-haiku-4.5",
+      inputPricePerMillion: "1.00",
+      outputPricePerMillion: "5.00",
+    },
+    // Claude 4.6 Series - Latest 2026
+    {
+      provider: "anthropic",
+      model: "claude-sonnet-4.6",
+      inputPricePerMillion: "3.00",
+      outputPricePerMillion: "15.00",
+    },
+    {
+      provider: "anthropic",
+      model: "claude-opus-4.5",
+      inputPricePerMillion: "5.00",
+      outputPricePerMillion: "25.00",
+    },
+    {
+      provider: "anthropic",
+      model: "claude-opus-4.6",
+      inputPricePerMillion: "5.00",
+      outputPricePerMillion: "25.00",
+    },
+    // Claude 4.1 Series
+    {
+      provider: "anthropic",
+      model: "claude-opus-4.1",
+      inputPricePerMillion: "15.00",
+      outputPricePerMillion: "75.00",
+    },
 
-    // Google Models
+    // Google Models - Updated 2025-2026
     {
       provider: "google",
       model: "gemini-pro",
@@ -176,6 +415,49 @@ async function main() {
       inputPricePerMillion: "0.00",
       outputPricePerMillion: "0.00",
     }, // Free during preview
+    {
+      provider: "google",
+      model: "gemini-2.0-flash-thinking-exp",
+      inputPricePerMillion: "0.00",
+      outputPricePerMillion: "0.00",
+    }, // Free during preview
+    {
+      provider: "google",
+      model: "gemini-2.0-flash-thinking",
+      inputPricePerMillion: "0.075",
+      outputPricePerMillion: "0.30",
+    }, // Latest Gemini 2.0
+    // Gemini 3.0/3.1 Series - Latest 2025-2026
+    {
+      provider: "google",
+      model: "gemini-3-pro",
+      inputPricePerMillion: "2.00",
+      outputPricePerMillion: "6.00",
+    },
+    {
+      provider: "google",
+      model: "gemini-3-pro-preview",
+      inputPricePerMillion: "2.00",
+      outputPricePerMillion: "6.00",
+    },
+    {
+      provider: "google",
+      model: "gemini-3.1-pro",
+      inputPricePerMillion: "2.00",
+      outputPricePerMillion: "6.00",
+    },
+    {
+      provider: "google",
+      model: "gemini-3.1-pro-preview",
+      inputPricePerMillion: "2.00",
+      outputPricePerMillion: "6.00",
+    },
+    {
+      provider: "google",
+      model: "gemini-3-pro-image-preview",
+      inputPricePerMillion: "2.50",
+      outputPricePerMillion: "7.50",
+    },
 
     // Mistral Models
     {

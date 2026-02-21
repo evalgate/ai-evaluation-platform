@@ -1,6 +1,3 @@
 {
-  "*.{ts,tsx,js,jsx,json,md}": [
-    "biome check --write --diagnostic-level=error",
-    "biome format --write"
-  ]
+  "*.{ts,tsx,js,jsx,json,md}": ["node scripts/ci/biome-staged.js"]
 }

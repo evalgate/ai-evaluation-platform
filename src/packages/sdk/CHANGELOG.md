@@ -5,6 +5,16 @@ All notable changes to the @pauly4010/evalai-sdk package will be documented in t
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.7] - 2026-02-20
+
+### 📚 Documentation
+
+- **Version bump** — Updated documentation to reflect v1.5.6 changes including CJS compatibility
+- **README consistency** — Aligned version references across CLI section and changelog
+- **Environment support** — Added CJS/ESM compatibility to supported features list
+
+---
+
 ## [1.5.6] - 2026-02-19
 
 ### 🔧 Changed

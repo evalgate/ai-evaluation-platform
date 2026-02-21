@@ -82,7 +82,7 @@ Step summary
 
 Optional dashboard link
 
-PASS / WARN / FAIL (v1.5.5)
+PASS / WARN / FAIL (v1.5.7)
 EvalAI introduces a WARN band so teams can see meaningful regressions without always blocking merges.
 
 Behavior
@@ -139,6 +139,8 @@ Test Suites
 
 Error Handling
 
+CJS/ESM Compatibility
+
 🟡 Node.js Only
 These require Node.js:
 
@@ -167,7 +169,7 @@ const client2 = new AIEvalClient({
   organizationId: 123,
   debug: true,
 });
-🧪 evalai CLI (v1.5.5)
+🧪 evalai CLI (v1.5.7)
 The CLI gates deployments on quality, regression, and policy.
 
 Quick start
@@ -255,7 +257,14 @@ await openai.chat.completions.create({
 
 
 🧭 Changelog
-v1.5.5 (Latest)
+v1.5.7 (Latest)
+Documentation updates for CJS compatibility
+
+Version alignment across README and changelog
+
+Environment support section updated
+
+v1.5.6
 PASS/WARN/FAIL gate semantics
 
 --warnDrop soft regression band
@@ -269,6 +278,8 @@ Golden regression suite
 Nightly determinism + performance audits
 
 Audit trail, observability, retention, and migration safety docs
+
+CJS compatibility for all subpath exports
 
 v1.5.0
 GitHub annotations formatter
