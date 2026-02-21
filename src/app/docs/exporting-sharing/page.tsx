@@ -235,11 +235,11 @@ export default function ExportingSharingPage() {
                 <div className="space-y-2">
                   <div className="bg-muted rounded-lg p-3 font-mono text-sm">
                     <div>Web Interface:</div>
-                    <code>https://eval.ai/demo/{shareId}</code>
+                    <code>https://eval.ai/demo/&#123;shareId&#125;</code>
                   </div>
                   <div className="bg-muted rounded-lg p-3 font-mono text-sm">
                     <div>API Access:</div>
-                    <code>https://eval.ai/api/demo/{shareId}</code>
+                    <code>https://eval.ai/api/demo/&#123;shareId&#125;</code>
                   </div>
                 </div>
               </div>

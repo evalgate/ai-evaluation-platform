@@ -60,14 +60,14 @@ export default function LocalDevelopmentPage() {
             <p className="text-lg text-muted-foreground mb-6">
               Set up your development environment to contribute to the AI Evaluation Platform
             </p>
-            <div className="flex flex-wrap gap-4">
+            <div className="space-y-2 text-sm">
               <div className="flex items-center gap-2 text-sm text-green-600">
                 <CheckCircle className="h-4 w-4" />
-                Node.js >= 18
+                <span>Node.js {'&gt;='} 18</span>
               </div>
               <div className="flex items-center gap-2 text-sm text-green-600">
                 <CheckCircle className="h-4 w-4" />
-                pnpm >= 10
+                <span>pnpm {'&gt;='} 10</span>
               </div>
               <div className="flex items-center gap-2 text-sm text-green-600">
                 <CheckCircle className="h-4 w-4" />
@@ -85,7 +85,7 @@ export default function LocalDevelopmentPage() {
                   1
                 </div>
                 <div>
-                  <h3 className="font-semibold">Node.js >= 18</h3>
+                  <h3 className="font-semibold">Install Node.js &amp; pnpm</h3>
                   <p className="text-sm text-muted-foreground">
                     Make sure you have Node.js version 18 or higher installed
                   </p>
@@ -100,7 +100,7 @@ export default function LocalDevelopmentPage() {
                   2
                 </div>
                 <div>
-                  <h3 className="font-semibold">pnpm >= 10</h3>
+                  <h3 className="font-semibold">pnpm {'>='} 10</h3>
                   <p className="text-sm text-muted-foreground">
                     Install pnpm package manager if you don't have it
                   </p>

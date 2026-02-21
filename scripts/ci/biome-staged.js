@@ -8,7 +8,12 @@ const shouldSkip = (file) => {
   return normalized.includes("src/app/guides/") || normalized.includes("src/app/docs/");
 };
 
-const files = args.filter((file) => !shouldSkip(file));
+const files = args.filter((file) => {
+  if (file.endsWith(".lock")) {
+    return false;
+  }
+  return !shouldSkip(file);
+});
 
 if (files.length === 0) {
   process.exit(0);

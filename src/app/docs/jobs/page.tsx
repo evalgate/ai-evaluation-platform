@@ -108,7 +108,7 @@ export default function JobsPage() {
                 <ul className="text-sm text-muted-foreground space-y-1">
                   <li>• Backoff math is stable (exponential with ±10% jitter)</li>
                   <li>• <code className="bg-muted px-1 rounded">next_run_at</code> stored and queryable for every pending retry</li>
-                  <li>• <code className="bg-muted px-1 rounded">attempt >= maxAttempts</code> → <code className="bg-muted px-1 rounded">dead_letter</code></li>
+                  <li>• <code className="bg-muted px-1 rounded">attempt {'>='} maxAttempts</code> → <code className="bg-muted px-1 rounded">dead_letter</code></li>
                 </ul>
               </div>
               

@@ -8,6 +8,30 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useSession } from "@/lib/auth-client";
 
+const validationSnippet = String.raw`// Shared validation function
+function validateTestResult(result: TestResult): TestResult {
+  // 1. Validate status enum
+  if (!['passed', 'failed', 'error'].includes(result.status)) {
+    throw new Error('Invalid status');
+  }
+
+  // 2. Validate assertionsJson structure
+  if (result.assertionsJson) {
+    const knownKeys = ['pii', 'toxicity', 'json_schema', 'functional', 'safety', 'judge'];
+    const unknownKeys = Object.keys(result.assertionsJson).filter(k => !knownKeys.includes(k));
+    if (unknownKeys.length > 0) {
+      throw new Error('Unknown assertion keys: [list omitted for brevity]');
+    }
+  }
+
+  // 3. Ensure consistency
+  if (result.status === 'error' && !result.error) {
+    throw new Error('Error status requires error field');
+  }
+
+  return result;
+}`;
+
 export default function TestResultSemanticsPage() {
   const { data: session } = useSession();
 
@@ -327,34 +351,11 @@ export default function TestResultSemanticsPage() {
               <Code className="h-5 w-5" />
               Implementation Guidelines
             </h2>
-            
             <div className="space-y-4">
               <div>
                 <h3 className="font-semibold mb-2">Validation Pipeline</h3>
                 <div className="bg-muted rounded-lg p-4 font-mono text-sm overflow-x-auto">
-                  <pre>{`// Shared validation function
-function validateTestResult(result: TestResult): TestResult {
-  // 1. Validate status enum
-  if (!['passed', 'failed', 'error'].includes(result.status)) {
-    throw new Error('Invalid status');
-  }
-  
-  // 2. Validate assertionsJson structure
-  if (result.assertionsJson) {
-    const knownKeys = ['pii', 'toxicity', 'json_schema', 'functional', 'safety', 'judge'];
-    const unknownKeys = Object.keys(result.assertionsJson).filter(k => !knownKeys.includes(k));
-    if (unknownKeys.length > 0) {
-      throw new Error(`Unknown assertion keys: ${unknownKeys.join(', ')}`);
-    }
-  }
-  
-  // 3. Ensure consistency
-  if (result.status === 'error' && !result.error) {
-    throw new Error('Error status requires error field');
-  }
-  
-  return result;
-}`}</pre>
+                  <pre>{validationSnippet}</pre>
                 </div>
               </div>
               
