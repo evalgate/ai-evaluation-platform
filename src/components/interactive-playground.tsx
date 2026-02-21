@@ -31,6 +31,49 @@ interface PlaygroundProps {
   onSignupPrompt?: () => void;
 }
 
+// Demo data interfaces
+interface DemoItem {
+  pass: boolean;
+  score?: number;
+  input?: string;
+  expected?: string;
+  actual?: string;
+  reasoning?: string;
+}
+
+interface DemoResult {
+  name: string;
+  overall?: number;
+  items?: DemoItem[];
+  qualityScore?: {
+    grade: string;
+    overall: number;
+    metrics: {
+      accuracy: number;
+      safety: number;
+      latency: number;
+      cost: number;
+      consistency: number;
+    };
+    insights: string[];
+    recommendations: string[];
+  };
+  results?: {
+    summary: {
+      totalTests: number;
+      passed: number;
+      failed: number;
+      passRate: string;
+    };
+    testResults: DemoItem[];
+    qualityMetrics: unknown;
+    totalTests?: number;
+    passed?: number;
+    failed?: number;
+    tests?: DemoItem[];
+  };
+}
+
 const ASSERTION_GROUPS = [
   {
     name: "Safety",
@@ -76,7 +119,7 @@ const DEFAULT_ASSERTIONS = ASSERTION_GROUPS.flatMap((g) => g.assertions)
 export function InteractivePlayground({ onSignupPrompt }: PlaygroundProps = {}) {
   const [selectedScenario, setSelectedScenario] = useState<string | null>(null);
   const [isRunning, setIsRunning] = useState(false);
-  const [results, setResults] = useState<unknown>(null);
+  const [results, setResults] = useState<DemoResult | null>(null);
   const [showEmailCapture, setShowEmailCapture] = useState(false);
 
   // Custom eval state
@@ -156,12 +199,12 @@ export function InteractivePlayground({ onSignupPrompt }: PlaygroundProps = {}) 
       const demoType = demoTypeMap[scenarioId] || "chatbot";
       const response = await fetch(`/api/demo/${demoType}`);
       if (!response.ok) throw new Error("Failed to run evaluation");
-      const data = await response.json();
+      const data = (await response.json()) as DemoResult;
 
       const overallScore = Math.round((data.overall || 0.87) * 100);
       const passRate =
-        data.items?.length > 0
-          ? (data.items.filter((item: unknown) => item.pass).length / data.items.length) * 100
+        data.results?.summary?.totalTests && data.results?.summary?.passed
+          ? (data.results.summary.passed / data.results.summary.totalTests) * 100
           : 87;
 
       const calculateGrade = (score: number): "A+" | "A" | "B+" | "B" | "C+" | "C" | "D" | "F" => {
@@ -179,8 +222,8 @@ export function InteractivePlayground({ onSignupPrompt }: PlaygroundProps = {}) 
         name: scenarios.find((s) => s.id === scenarioId)?.name || "Demo Evaluation",
         results: {
           totalTests: data.items?.length || 10,
-          passed: data.items?.filter((item: unknown) => item.pass).length || 8,
-          failed: data.items?.filter((item: unknown) => !item.pass).length || 2,
+          passed: data.items?.filter((item: any) => item.pass).length || 8,
+          failed: data.items?.filter((item: any) => !item.pass).length || 2,
           tests: data.items || [],
         },
         qualityScore: {
@@ -216,7 +259,7 @@ export function InteractivePlayground({ onSignupPrompt }: PlaygroundProps = {}) 
         },
       };
 
-      setResults(transformedData);
+      setResults(transformedData as DemoResult);
       setTimeout(() => setShowEmailCapture(true), 2000);
       toast.success("Evaluation complete!", {
         description: "Sign up to save and share your results",
@@ -288,28 +331,30 @@ export function InteractivePlayground({ onSignupPrompt }: PlaygroundProps = {}) 
   };
 
   const handleCopyResults = () => {
+    if (!results) return;
+
     const summary = `
 Evaluation Results: ${results.name}
-Grade: ${results.qualityScore.grade} (${results.qualityScore.overall}/100)
+Grade: ${results.qualityScore?.grade || "N/A"} (${results.qualityScore?.overall || 0}/100)
 
 Summary:
-- Total Tests: ${results.results.totalTests}
-- Passed: ${results.results.passed}
-- Failed: ${results.results.failed}
-- Pass Rate: ${Math.round((results.results.passed / results.results.totalTests) * 100)}%
+- Total Tests: ${results.results?.totalTests || 0}
+- Passed: ${results.results?.passed || 0}
+- Failed: ${results.results?.failed || 0}
+- Pass Rate: ${results.results?.totalTests ? Math.round(((results.results?.passed || 0) / results.results?.totalTests) * 100) : 0}%
 
 Quality Metrics:
-- Accuracy: ${results.qualityScore.metrics.accuracy}/100
-- Safety: ${results.qualityScore.metrics.safety}/100
-- Latency: ${results.qualityScore.metrics.latency}/100
-- Cost: ${results.qualityScore.metrics.cost}/100
-- Consistency: ${results.qualityScore.metrics.consistency}/100
+- Accuracy: ${results.qualityScore?.metrics?.accuracy || 0}/100
+- Safety: ${results.qualityScore?.metrics?.safety || 0}/100
+- Latency: ${results.qualityScore?.metrics?.latency || 0}/100
+- Cost: ${results.qualityScore?.metrics?.cost || 0}/100
+- Consistency: ${results.qualityScore?.metrics?.consistency || 0}/100
 
 Key Insights:
-${results.qualityScore.insights.map((i: string) => `- ${i}`).join("\n")}
+${(results.qualityScore?.insights || []).map((i: string) => `- ${i}`).join("\n")}
 
 Recommendations:
-${results.qualityScore.recommendations.map((r: string) => `- ${r}`).join("\n")}
+${(results.qualityScore?.recommendations || []).map((r: string) => `- ${r}`).join("\n")}
     `.trim();
 
     navigator.clipboard.writeText(summary);
