@@ -259,7 +259,7 @@ export function InteractivePlayground({ onSignupPrompt }: PlaygroundProps = {}) 
         },
       };
 
-      setResults(transformedData as DemoResult);
+      setResults(transformedData as unknown as DemoResult);
       setTimeout(() => setShowEmailCapture(true), 2000);
       toast.success("Evaluation complete!", {
         description: "Sign up to save and share your results",
