@@ -6,7 +6,6 @@ import { defineConfig } from "vitest/config";
 const r = (p: string) => path.resolve(__dirname, p);
 
 export default defineConfig({
-  name: "unit",
   resolve: {
     alias: {
       "@": r("./src"),
