@@ -1,6 +1,7 @@
 // vitest.unit.config.ts
-import { defineConfig } from "vitest/config";
+
 import path from "node:path";
+import { defineConfig } from "vitest/config";
 
 const r = (p: string) => path.resolve(__dirname, p);
 
@@ -11,7 +12,6 @@ export default defineConfig({
       "@": r("./src"),
     },
   },
-
   test: {
     globals: true,
     environment: "node",
@@ -49,7 +49,7 @@ export default defineConfig({
       "visual-edits/**",
       "types/**",
       "src/lib/evaluation-templates/**",
-      
+
       // standard excludes
       "**/__tests__/**",
       "**/__mocks__/**",
@@ -75,5 +75,19 @@ export default defineConfig({
       "src/db/seeds/**",
       "src/lib/trace-linked/**",
     ],
+    thresholds: {
+      global: {
+        branches: 30,
+        functions: 30,
+        lines: 30,
+        statements: 30,
+      },
+      "src/app/api/**/*.{ts,tsx}": {
+        branches: 60,
+        functions: 60,
+        lines: 60,
+        statements: 60,
+      },
+    },
   },
 });
