@@ -70,6 +70,12 @@ jobs:
     env:
       TURSO_CONNECTION_URL: 'file:memory.db'
       TURSO_AUTH_TOKEN: test-token
+      GITHUB_CLIENT_ID: ci-placeholder
+      GITHUB_CLIENT_SECRET: ci-placeholder
+      GOOGLE_CLIENT_ID: ci-placeholder
+      GOOGLE_CLIENT_SECRET: ci-placeholder
+      BETTER_AUTH_SECRET: ci-placeholder-secret-at-least-32-chars!!
+      BETTER_AUTH_BASE_URL: http://localhost:3000
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
