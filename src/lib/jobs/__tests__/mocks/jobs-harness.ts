@@ -160,6 +160,19 @@ export const harness = {
   clearHandlers() {
     this.state.handlers.clear();
   },
+
+  holdGlobalLock(runner: string, ttlMs: number) {
+    const nowMs = Date.now();
+    this.state.lock.lockedUntil = nowMs + ttlMs;
+    this.state.lock.lockedBy = runner;
+    this.state.lock.updatedAt = nowMs;
+  },
+
+  releaseGlobalLock() {
+    this.state.lock.lockedUntil = 0;
+    this.state.lock.lockedBy = null;
+    this.state.lock.updatedAt = Date.now();
+  },
 };
 
 /**
@@ -267,9 +280,20 @@ export function setupJobsTestHarness() {
                 return [{ ...harness.state.lock }];
               }
 
-              // runner candidates
+              // runner candidates (pending due + stale running for reclaim)
+              const now = new Date();
               return harness.state.jobs
-                .filter((j) => j.status === "pending" && j.nextRunAt <= new Date())
+                .filter((j) => {
+                  // Pending jobs that are due to run
+                  if (j.status === "pending" && j.nextRunAt <= now) {
+                    return true;
+                  }
+                  // Running jobs with expired locks (for reclamation)
+                  if (j.status === "running" && j.lockedUntil && j.lockedUntil <= now) {
+                    return true;
+                  }
+                  return false;
+                })
                 .slice(0, n)
                 .map((j) => ({
                   id: j.id,
@@ -365,6 +389,7 @@ export function setupJobsTestHarness() {
                   const nowMs = (
                     typeof ltLockedUntil === "number" ? ltLockedUntil : Date.now()
                   ) as number;
+
                   if (harness.state.lock.lockedUntil < nowMs) {
                     harness.state.lock.lockedUntil = values.lockedUntil;
                     harness.state.lock.lockedBy = (values.lockedBy as string | null) ?? null;
