@@ -1,98 +1,91 @@
 // vitest.config.ts
-import { dirname, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
-import react from "@vitejs/plugin-react";
 import { defineConfig } from "vitest/config";
+import path from "node:path";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-const alias = {
-  "@": resolve(__dirname, "./src"),
-};
-
-const common = {
-  globals: true,
-  setupFiles: ["./src/__tests__/setup.ts"],
-  exclude: [
-    "**/node_modules/**",
-    "**/dist/**",
-    "**/.next/**",
-    "**/e2e/**",
-    "**/playwright/**",
-    "**/cypress/**",
-    "**/.{idea,git,cache,output,temp}/**",
-  ],
-};
+const r = (p: string) => path.resolve(__dirname, p);
 
 export default defineConfig({
-  plugins: [react()],
-
-  // keep it here too (helps editor + non-project usage)
-  resolve: { alias },
+  resolve: {
+    alias: {
+      "@": r("./src"),
+    },
+  },
 
   test: {
-    // ✅ projects replace environmentMatchGlobs
-    projects: [
-      // --- Node project (API routes, server libs, jobs, db) ---
-      {
-        resolve: { alias },
-        test: {
-          ...common,
-          environment: "node",
-          include: [
-            "src/__tests__/api/**/*.test.{ts,tsx}",
-            "src/__tests__/lib/**/*.test.{ts,tsx}",
-            "src/app/api/**/*.test.{ts,tsx}",
-            "src/lib/**/*.test.{ts,tsx}",
-          ],
-        },
-      },
-
-      // --- DOM project (components/hooks/ui) ---
-      {
-        resolve: { alias },
-        test: {
-          ...common,
-          environment: "happy-dom",
-          include: [
-            "src/__tests__/components/**/*.test.{ts,tsx}",
-            "src/__tests__/hooks/**/*.test.{ts,tsx}",
-            "src/**/*.test.{ts,tsx}",
-            "src/**/*.spec.{ts,tsx}",
-          ],
-          exclude: [
-            ...common.exclude,
-            "src/__tests__/api/**/*.test.{ts,tsx}",
-            "src/__tests__/lib/**/*.test.{ts,tsx}",
-            "src/app/api/**/*.test.{ts,tsx}",
-            "src/lib/**/*.test.{ts,tsx}",
-          ],
-        },
-      },
+    globals: true,
+    environment: "node",
+    setupFiles: ["tests/setup.unit.ts"],
+    include: ["tests/unit/**/*.test.ts"],
+    exclude: [
+      "**/node_modules/**",
+      "**/dist/**",
+      "**/.idea/**",
+      "**/.git/**",
+      "**/.cache/**",
+      "**/build/**",
+      "**/coverage/**",
+      "**/out/**",
+      "**/public/**",
+      "**/scripts/**",
+      "**/docs/**",
+      "**/drizzle/**",
+      "**/examples/**",
+      "**/evals/**",
+      "tests/audits-disabled/**",
     ],
-
     coverage: {
       provider: "v8",
+      reporter: ["text", "json", "html"],
+      reportsDirectory: "coverage/unit",
       include: ["src/**/*.{ts,tsx}"],
+      excludeAfterRemap: true,
       exclude: [
-        "**/*.d.ts",
-        "src/**/__tests__/**",
-        "src/**/*.test.{ts,tsx}",
-        "src/**/*.spec.{ts,tsx}",
-        "src/integrations/**",
-        "src/remotion/**",
-        "src/visual-edits/**",
-        "src/components/ui/**",
+        // monorepo / non-app code
+        "packages/**",
+        "remotion/**",
+        "visual-edits/**",
+        "types/**",
+        "src/lib/evaluation-templates/**",
+        
+        // standard excludes
+        "**/__tests__/**",
+        "**/__mocks__/**",
+        "**/*.{test,spec}.{ts,tsx}",
+        "**/*.bench.{ts,tsx}",
+        "**/*.stories.@(js|jsx|mjs|ts|tsx)",
+
+        // next/app boilerplate
+        "src/**/index.ts",
+        "src/app/**/layout.tsx",
+        "src/app/**/loading.tsx",
+        "src/app/**/not-found.tsx",
+        "src/app/**/error.tsx",
+        "src/app/**/route.ts",
+        "src/middleware.ts",
+        "src/instrumentation.ts",
+        "src/instrumentation-client.ts",
+        "src/sentry.edge.config.ts",
+        "src/sentry.server.config.ts",
+        "src/debug.ts",
+        "src/debug-db.ts",
+        "src/debug_vercel_db.mjs",
+        "src/db/seeds/**",
+        "src/lib/trace-linked/**",
       ],
       thresholds: {
-        lines: 20,
-        functions: 20,
-        branches: 20,
-        statements: 20,
+        global: {
+          branches: 30,
+          functions: 30,
+          lines: 30,
+          statements: 30,
+        },
+        "src/app/api/**/*.{ts,tsx}": {
+          branches: 60,
+          functions: 60,
+          lines: 60,
+          statements: 60,
+        },
       },
-      reporter: ["text", "html", "json-summary"],
-      reportsDirectory: "./coverage",
     },
   },
 });

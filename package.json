@@ -13,10 +13,22 @@
     "format": "biome format --write .",
     "format:check": "biome format .",
     "start": "next start",
-    "test": "vitest",
+    "test": "vitest --workspace",
+    "test:run": "vitest run --workspace",
+
+    "test:unit": "vitest run -c vitest.unit.config.ts",
+    "test:unit:coverage": "vitest run -c vitest.unit.config.ts --coverage",
+
+    "test:db": "vitest run -c vitest.db.config.ts", 
+    "test:db:coverage": "vitest run -c vitest.db.config.ts --coverage",
+
+    "test:dom": "vitest run -c vitest.dom.config.ts",
+    "test:dom:coverage": "vitest run -c vitest.dom.config.ts --coverage",
+
+    "test:coverage": "pnpm -s test:unit:coverage && pnpm -s test:dom:coverage && pnpm -s test:db:coverage",
+    "test:coverage:gate": "vitest run --coverage --reporter=verbose --run --config vitest.gate.config.ts",
     "test:db-setup": "npx tsx scripts/test-db-setup.ts",
     "test:ui": "vitest --ui",
-    "test:coverage": "vitest --coverage",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "sdk:build": "cd src/packages/sdk && pnpm build",
@@ -130,6 +142,7 @@
     "@biomejs/biome": "^2.4.2",
     "@playwright/test": "^1.58.2",
     "@tailwindcss/postcss": "^4.1.9",
+    "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.0",
     "@types/node": "^24.10.11",
     "@types/react": "^19.2.13",
