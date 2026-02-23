@@ -71,7 +71,7 @@ export class RedisCache {
     const cacheTTL = ttl || this.defaultTTL;
 
     try {
-      await getRedis().setex(fullKey, cacheTTL, JSON.stringify(value));
+      await getRedis().setex(fullKey, cacheTTL, value);
       logger.debug("Cache set", { key: fullKey, ttl: cacheTTL });
       return true;
     } catch (error: unknown) {
@@ -174,7 +174,7 @@ export class RedisCache {
   generateQueryKey(table: string, organizationId: number, params: Record<string, unknown>): string {
     const sortedParams = Object.keys(params)
       .sort()
-      .map((k) => `${k}=${JSON.stringify(params[k])}`)
+      .map((k) => `${k}=${String(params[k])}`)
       .join("&");
 
     return `${table}:org:${organizationId}:${sortedParams}`;

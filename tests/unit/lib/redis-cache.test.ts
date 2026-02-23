@@ -1,15 +1,18 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // Mock Redis at the top level before any imports
+// Singleton ensures test's fromEnv() and code's getRedis() share the same mock fns
+const mockRedisInstance = {
+  get: vi.fn(),
+  setex: vi.fn(),
+  del: vi.fn(),
+  keys: vi.fn(),
+};
+
 vi.mock("@upstash/redis", () => ({
   Redis: class MockRedis {
     static fromEnv() {
-      return {
-        get: vi.fn(),
-        setex: vi.fn(),
-        del: vi.fn(),
-        keys: vi.fn(),
-      };
+      return mockRedisInstance;
     }
   },
 }));
@@ -17,7 +20,7 @@ vi.mock("@upstash/redis", () => ({
 describe("redis-cache", () => {
   beforeEach(() => {
     vi.resetModules();
-    vi.clearAllMocks();
+    vi.resetAllMocks();
 
     // Set up valid Redis environment
     process.env.UPSTASH_REDIS_REST_URL = "https://fake-redis.upstash.io";
@@ -30,7 +33,7 @@ describe("redis-cache", () => {
       const mockGet = vi.mocked(Redis.fromEnv()).get;
       const mockSetex = vi.mocked(Redis.fromEnv()).setex;
 
-      mockGet.mockResolvedValue('{"data":"test"}');
+      mockGet.mockResolvedValue({ data: "test" });
       mockSetex.mockResolvedValue("OK");
 
       const { cache } = await import("@/lib/redis-cache");
@@ -38,11 +41,7 @@ describe("redis-cache", () => {
       // Test set
       const setResult = await cache.set("test-key", { data: "test" }, 300);
       expect(setResult).toBe(true);
-      expect(mockSetex).toHaveBeenCalledWith(
-        "cache:test-key",
-        300,
-        JSON.stringify({ data: "test" }),
-      );
+      expect(mockSetex).toHaveBeenCalledWith("cache:test-key", 300, { data: "test" });
 
       // Test get
       const getResult = await cache.get("test-key");
