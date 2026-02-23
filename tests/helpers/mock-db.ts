@@ -1,19 +1,19 @@
 /**
  * Type-safe DB mocking utilities based on Pattern A from service tests.
- * 
+ *
  * This provides a reusable, typed pattern for mocking Drizzle ORM queries
  * while working with Vitest's vi.hoisted() constraints.
- * 
+ *
  * Usage pattern:
  * ```ts
  * import { createDbState, createDbMockFactory, makeBuilder } from "../helpers/mock-db";
- * 
+ *
  * // State must be created inline in vi.hoisted() - can't import modules there
  * const state = vi.hoisted(() => createDbState());
- * 
+ *
  * // Use the factory to create the mock object
  * vi.mock("@/db", () => createDbMockFactory(state));
- * 
+ *
  * // Control test data
  * state.selectRows = [{ id: 1, name: "test" }];
  * state.updateQueue = [[{ id: 1, name: "updated" }]];
@@ -63,9 +63,6 @@ export function makeBuilder(result: unknown[]): Record<string, unknown> {
     having: vi.fn(() => chain),
     distinct: vi.fn(() => chain),
     for: vi.fn(() => chain),
-    then: vi.fn((resolve: (value: unknown) => void) => {
-      resolve(result);
-    }),
   };
   return chain;
 }

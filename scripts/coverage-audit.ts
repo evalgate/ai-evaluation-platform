@@ -37,9 +37,22 @@ function parseCoverage(): Map<string, number> {
       string,
       { s?: Record<string, number> }
     >;
+    const filtered: Record<string, { s?: Record<string, number> }> = {};
+    for (const [filePath, data] of Object.entries(raw)) {
+      // Skip test files and test directories
+      if (
+        filePath.includes("/__tests__/") ||
+        filePath.includes("/tests/") ||
+        filePath.includes("/__mocks__/") ||
+        /\.(test|spec|bench)\.[cm]?[jt]sx?$/.test(filePath)
+      ) {
+        continue;
+      }
+      filtered[filePath] = data;
+    }
     const byDir = new Map<string, { covered: number; total: number }>();
 
-    for (const [filePath, data] of Object.entries(raw)) {
+    for (const [filePath, data] of Object.entries(filtered)) {
       const norm = filePath.replace(/\\/g, "/");
       const statements = data.s ?? {};
       const total = Object.keys(statements).length;

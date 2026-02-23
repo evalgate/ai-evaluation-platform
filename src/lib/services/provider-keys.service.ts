@@ -77,6 +77,15 @@ export class ProviderKeysService {
       throw new Error("Organization not found");
     }
 
+    // Check for master encryption key
+    const masterKey = process.env.PROVIDER_KEY_ENCRYPTION_KEY;
+    if (!masterKey) {
+      throw new Error(
+        "PROVIDER_KEY_ENCRYPTION_KEY environment variable is required. " +
+          "Generate a strong secret and set it in your .env file.",
+      );
+    }
+
     // Generate encryption key for this organization (or use existing)
     const encryptionKey = await this.getOrCreateEncryptionKey(organizationId);
 
@@ -305,7 +314,7 @@ export class ProviderKeysService {
       updateData.isActive = input.isActive;
     }
 
-    const [result] = await db
+    const returningRes = await db
       .update(providerKeys)
       .set(updateData)
       .where(eq(providerKeys.id, keyId))
@@ -316,6 +325,11 @@ export class ProviderKeysService {
         isActive: providerKeys.isActive,
         updatedAt: providerKeys.updatedAt,
       });
+
+    const result = Array.isArray(returningRes) ? returningRes[0] : returningRes;
+    if (!result) {
+      throw new Error("Provider key not found");
+    }
 
     logger.info("Provider key updated", { keyId, organizationId });
 
@@ -380,15 +394,17 @@ export class ProviderKeysService {
    * Validate provider key format.
    */
   validateProviderKey(provider: string, apiKey: string): boolean {
+    const p = provider.toLowerCase();
     const patterns: Record<string, RegExp> = {
       openai: /^sk-[A-Za-z0-9]{48}$/,
-      anthropic: /^sk-ant-api03-[A-Za-z0-9_-]{95}$/,
+      // accept api03/api04/... and variable length tokens
+      anthropic: /^sk-ant-api\d{2}-[A-Za-z0-9_-]{20,}$/,
       google: /^[A-Za-z0-9_-]{39}$/,
       cohere: /^[A-Za-z0-9]{40}$/,
       huggingface: /^hf_[A-Za-z0-9]{34}$/,
     };
 
-    const pattern = patterns[provider];
+    const pattern = patterns[p];
     if (!pattern) {
       // For unknown providers, just check basic requirements
       return apiKey.length >= 20;
