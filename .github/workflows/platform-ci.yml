@@ -100,10 +100,19 @@ jobs:
         run: pnpm exec playwright install chromium --with-deps
 
       - name: Start server
-        run: pnpm start -- --port 3000 & echo $! > server.pid
+        run: |
+          pnpm start -- --port 3000 > server.log 2>&1 &
+          echo $! > server.pid
+          sleep 5
+          echo '--- server.log (first 50 lines) ---'
+          head -50 server.log || true
 
       - name: Wait for server
         run: npx wait-on http://localhost:3000 --timeout 60000
+
+      - name: Dump server log on failure
+        if: failure()
+        run: cat server.log || true
 
       - name: Smoke tests (E2E)
         run: pnpm test:e2e
