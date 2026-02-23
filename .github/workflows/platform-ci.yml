@@ -7,61 +7,74 @@ on:
   pull_request:
     branches: [main]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# ─── Jobs ────────────────────────────────────────────────────────────
+# quality  → fast gate (lint + typecheck)
+# test     → coverage runs (execute tests + collect coverage) + audit
+# build    → Next.js build + Playwright E2E
+# audits   → all non-coverage audits (independent of test results)
+#
+# quality runs first; test, build, audits run in parallel after it passes.
+
 jobs:
-  platform:
+  # ── 1. Quality gate ───────────────────────────────────────────────
+  quality:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
       - uses: pnpm/action-setup@v4
-
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'pnpm'
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
+      - run: pnpm install --frozen-lockfile
       - name: Lint
         run: pnpm lint
-
       - name: Typecheck
         run: pnpm typecheck
 
-      - name: Test
-        run: pnpm test:unit && pnpm test:db && pnpm test:dom
+  # ── 2. Test + Coverage ────────────────────────────────────────────
+  test:
+    needs: quality
+    runs-on: ubuntu-latest
+    env:
+      NODE_ENV: test
+      TURSO_CONNECTION_URL: 'file:memory.db'
+      TURSO_AUTH_TOKEN: test-token
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+      - run: pnpm install --frozen-lockfile
 
-      - name: Coverage
-        run: pnpm test:unit:coverage && pnpm test:db:coverage && pnpm test:dom:coverage
+      - name: Unit coverage
+        run: pnpm test:unit:coverage
+      - name: DB coverage
+        run: pnpm test:db:coverage
+      - name: DOM coverage
+        run: pnpm test:dom:coverage
 
       - name: Coverage audit
         run: pnpm run audit:coverage
 
-      - name: OpenAPI audit
-        run: pnpm run audit:openapi
-
-      - name: Demo assets audit
-        run: pnpm run audit:demo-assets
-
-      - name: Golden eval
-        run: pnpm run eval:golden
-
-      - name: Performance audit
-        run: pnpm run audit:performance
-
-      - name: Migration safety
-        run: pnpm run audit:migrations
-
-      - name: Index audit
-        run: pnpm run audit:indexes
-
-      - name: Dependency security audit
-        run: pnpm audit --audit-level=high
-        continue-on-error: false
-
-      - name: Retention audit
-        run: pnpm run audit:retention
+  # ── 3. Build + E2E ────────────────────────────────────────────────
+  build:
+    needs: quality
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+      - run: pnpm install --frozen-lockfile
 
       - name: Build
         run: pnpm build
@@ -91,3 +104,37 @@ jobs:
       - name: Kill server
         if: always()
         run: kill $(cat server.pid) || true
+
+  # ── 4. Audits (non-coverage) ──────────────────────────────────────
+  audits:
+    needs: quality
+    runs-on: ubuntu-latest
+    env:
+      NODE_ENV: test
+      TURSO_CONNECTION_URL: 'file:memory.db'
+      TURSO_AUTH_TOKEN: test-token
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+      - run: pnpm install --frozen-lockfile
+
+      - name: OpenAPI audit
+        run: pnpm run audit:openapi
+      - name: Demo assets audit
+        run: pnpm run audit:demo-assets
+      - name: Golden eval
+        run: pnpm run eval:golden
+      - name: Performance audit
+        run: pnpm run audit:performance
+      - name: Migration safety
+        run: pnpm run audit:migrations
+      - name: Index audit
+        run: pnpm run audit:indexes
+      - name: Dependency security audit
+        run: pnpm audit --audit-level=high
+      - name: Retention audit
+        run: pnpm run audit:retention
