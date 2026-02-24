@@ -546,7 +546,7 @@ function updateBaseline(): number {
     },
   };
 
-  writeFileSync(BASELINE_PATH, JSON.stringify(newBaseline, null, 2) + "\n");
+  writeFileSync(BASELINE_PATH, `${JSON.stringify(newBaseline, null, 2)}\n`);
   console.log(`✅ Baseline updated: ${BASELINE_PATH}`);
   console.log(`   Commit: ${sha}`);
   console.log(`   Golden: score=${goldenScore}, passRate=${goldenPassRate}%`);

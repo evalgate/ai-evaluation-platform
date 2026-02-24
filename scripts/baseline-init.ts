@@ -62,7 +62,7 @@ function main(): number {
     productMetrics: {},
   };
 
-  writeFileSync(BASELINE_PATH, JSON.stringify(baseline, null, 2) + "\n");
+  writeFileSync(BASELINE_PATH, `${JSON.stringify(baseline, null, 2)}\n`);
 
   console.log("✅ Created evals/baseline.json with sample values\n");
   console.log("Next steps:");
