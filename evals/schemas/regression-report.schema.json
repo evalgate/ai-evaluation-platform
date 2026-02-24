@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "regression-report.schema.json",
+  "title": "Regression Report",
+  "description": "Schema for the regression gate report artifact (evals/regression-report.json)",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "timestamp",
+    "passed",
+    "exitCode",
+    "category",
+    "deltas",
+    "failures",
+    "baseline"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Report schema version — increment only on breaking changes"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "passed": {
+      "type": "boolean"
+    },
+    "exitCode": {
+      "type": "integer",
+      "enum": [0, 1, 2, 3, 4]
+    },
+    "category": {
+      "type": "string",
+      "enum": ["pass", "regression", "infra_error"]
+    },
+    "deltas": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["metric", "baseline", "current", "delta", "status"],
+        "properties": {
+          "metric": { "type": "string" },
+          "baseline": {},
+          "current": {},
+          "delta": { "type": "string" },
+          "status": {
+            "type": "string",
+            "enum": ["pass", "fail", "warn"]
+          }
+        }
+      }
+    },
+    "failures": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "baseline": {
+      "oneOf": [
+        { "type": "null" },
+        {
+          "type": "object",
+          "required": ["updatedAt", "updatedBy"],
+          "properties": {
+            "updatedAt": { "type": "string" },
+            "updatedBy": { "type": "string" }
+          }
+        }
+      ]
+    }
+  },
+  "additionalProperties": false
+}

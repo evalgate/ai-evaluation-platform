@@ -1,0 +1,10 @@
+# Baseline changes require owner approval (enforced by GitHub branch protection)
+/evals/baseline.json @pauly7610
+
+# Regression gate scripts — changes need careful review
+/scripts/regression-gate.ts @pauly7610
+/scripts/run-confidence.ts @pauly7610
+/scripts/baseline-init.ts @pauly7610
+
+# Eval schemas — breaking changes need review
+/evals/schemas/ @pauly7610

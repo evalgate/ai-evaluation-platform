@@ -49,7 +49,59 @@ Add to your CI workflow:
 
 If your score drops below the baseline, CI fails. That's your regression gate. `--format github` gives annotations + step summary; `--onFail import` uploads failing runs to the dashboard for debugging.
 
-## Remove unknowntime
+## Step 4 (optional): Local Regression Gate in 3 Steps
+
+For projects that want a **self-contained** regression gate without an API key:
+
+### 1. Init baseline
+```bash
+pnpm eval:baseline-init
+```
+Creates `evals/baseline.json` with sample values. Commit this file.
+
+### 2. Add workflow
+Copy `.github/workflows/evalai.yml` to your repo (or use it as a reference).
+
+### 3. Open a PR and see the gate
+The regression gate runs automatically. It compares golden eval scores, confidence test counts, and product metrics against the baseline and fails if regression exceeds tolerance.
+
+To update baseline with live scores:
+```bash
+pnpm eval:baseline-update
+```
+
+## Complete GitHub Actions Workflow (copy-paste)
+
+```yaml
+name: EvalAI CI Gate
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  eval-gate:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # Option A: SDK gate (requires API key + dashboard)
+      - name: EvalAI gate
+        env:
+          EVALAI_API_KEY: ${{ secrets.EVALAI_API_KEY }}
+        run: npx -y @pauly4010/evalai-sdk@^1 check --format github --onFail import
+
+      # Option B: Local regression gate (no API key needed)
+      # - run: pnpm install --frozen-lockfile
+      # - run: pnpm eval:regression-gate
+```
+
+## Removal
 
 Delete `evalai.config.json`. That's it.
 
@@ -69,6 +121,14 @@ npx -y @pauly4010/evalai-sdk@^1 doctor   # Verify CI setup
 ```
 
 **check options:** `--evaluationId`, `--minScore`, `--minN`, `--allowWeakEvidence`, `--maxDrop`, `--policy`, `--format github|json|human`, `--onFail import`, `--explain`
+
+## Local Regression Gate Commands
+
+```bash
+pnpm eval:regression-gate     # Compare current vs baseline, fail on regression
+pnpm eval:baseline-update     # Update baseline with current scores
+pnpm test:confidence          # Run all confidence tests (unit + DB)
+```
 
 ## CI Integration
 

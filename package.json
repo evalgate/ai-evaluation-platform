@@ -26,6 +26,7 @@
     "test:dom:coverage": "vitest run -c vitest.dom.config.ts --coverage",
 
     "test:coverage": "pnpm -s test:unit:coverage && pnpm -s test:dom:coverage && pnpm -s test:db:coverage",
+    "test:confidence": "npx tsx scripts/run-confidence.ts",
     "test:coverage:gate": "vitest run --coverage --reporter=verbose --run --config vitest.gate.config.ts",
     "test:db-setup": "npx tsx scripts/test-db-setup.ts",
     "test:ui": "vitest --ui",
@@ -50,6 +51,10 @@
     "audit:migrations": "npx tsx scripts/audit-migrations.ts",
     "audit:indexes": "npx tsx scripts/index-audit.ts",
     "eval:golden": "pnpm sdk:build && npx tsx scripts/run-golden-eval.ts",
+    "eval:regression-gate": "npx tsx scripts/regression-gate.ts",
+    "eval:baseline-update": "npx tsx scripts/regression-gate.ts update",
+    "eval:baseline-init": "npx tsx scripts/baseline-init.ts",
+    "eval:latency-benchmark": "npx tsx scripts/latency-benchmark.ts",
     "openapi:generate-paths": "npx tsx scripts/generate-openapi-paths.ts",
     "prepare": "husky"
   },

@@ -1,0 +1,180 @@
+# Baseline Governance — enforces that baseline.json changes require intent
+#
+# Guards:
+#   1. baseline-update label required on PR
+#   2. CODEOWNERS approval required (see .github/CODEOWNERS)
+#   3. Delta limits — large score jumps or loosened tolerances need baseline-exception label
+#   4. Provenance metadata printed in step summary
+name: Baseline Governance
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'evals/baseline.json'
+
+jobs:
+  baseline-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check for baseline-update label
+        env:
+          HAS_LABEL: ${{ contains(toJSON(github.event.pull_request.labels.*.name), 'baseline-update') }}
+        run: |
+          echo "## Baseline Governance" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+
+          if [ "$HAS_LABEL" != "true" ]; then
+            echo "::error::evals/baseline.json was changed but PR does not have the 'baseline-update' label."
+            echo "❌ **Missing label:** PRs that change \`evals/baseline.json\` must have the \`baseline-update\` label." >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "Add the label and include justification in the PR description." >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+
+          echo "✅ **Label found:** \`baseline-update\`" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Delta limits (guardrail)
+        env:
+          HAS_EXCEPTION: ${{ contains(toJSON(github.event.pull_request.labels.*.name), 'baseline-exception') }}
+        run: |
+          OLD=$(git show origin/${{ github.base_ref }}:evals/baseline.json 2>/dev/null || echo '{}')
+          NEW=$(cat evals/baseline.json)
+          VIOLATIONS=""
+
+          # ── Rule 1: Golden score cannot jump more than +5 ──
+          OLD_SCORE=$(echo "$OLD" | jq -r '.goldenEval.score // 0')
+          NEW_SCORE=$(echo "$NEW" | jq -r '.goldenEval.score // 0')
+          SCORE_JUMP=$((NEW_SCORE - OLD_SCORE))
+          if [ "$SCORE_JUMP" -gt 5 ]; then
+            VIOLATIONS="${VIOLATIONS}Golden score increased by +${SCORE_JUMP} (max allowed: +5)\n"
+          fi
+
+          # ── Rule 2: scoreDrop tolerance cannot increase (loosen) ──
+          OLD_SD=$(echo "$OLD" | jq -r '.tolerance.scoreDrop // 5')
+          NEW_SD=$(echo "$NEW" | jq -r '.tolerance.scoreDrop // 5')
+          if [ "$NEW_SD" -gt "$OLD_SD" ]; then
+            VIOLATIONS="${VIOLATIONS}tolerance.scoreDrop loosened: ${OLD_SD} → ${NEW_SD}\n"
+          fi
+
+          # ── Rule 3: passRateDrop tolerance cannot increase ──
+          OLD_PRD=$(echo "$OLD" | jq -r '.tolerance.passRateDrop // 5')
+          NEW_PRD=$(echo "$NEW" | jq -r '.tolerance.passRateDrop // 5')
+          if [ "$NEW_PRD" -gt "$OLD_PRD" ]; then
+            VIOLATIONS="${VIOLATIONS}tolerance.passRateDrop loosened: ${OLD_PRD} → ${NEW_PRD}\n"
+          fi
+
+          # ── Rule 4: maxLatencyIncreaseMs cannot increase ──
+          OLD_LAT=$(echo "$OLD" | jq -r '.tolerance.maxLatencyIncreaseMs // 200')
+          NEW_LAT=$(echo "$NEW" | jq -r '.tolerance.maxLatencyIncreaseMs // 200')
+          if [ "$NEW_LAT" -gt "$OLD_LAT" ]; then
+            VIOLATIONS="${VIOLATIONS}tolerance.maxLatencyIncreaseMs loosened: ${OLD_LAT} → ${NEW_LAT}\n"
+          fi
+
+          # ── Rule 5: maxCostIncreaseUsd cannot increase ──
+          OLD_COST=$(echo "$OLD" | jq -r '.tolerance.maxCostIncreaseUsd // 0.05' | awk '{printf "%d", $1*100}')
+          NEW_COST=$(echo "$NEW" | jq -r '.tolerance.maxCostIncreaseUsd // 0.05' | awk '{printf "%d", $1*100}')
+          if [ "$NEW_COST" -gt "$OLD_COST" ]; then
+            OLD_COST_STR=$(echo "$OLD" | jq -r '.tolerance.maxCostIncreaseUsd // 0.05')
+            NEW_COST_STR=$(echo "$NEW" | jq -r '.tolerance.maxCostIncreaseUsd // 0.05')
+            VIOLATIONS="${VIOLATIONS}tolerance.maxCostIncreaseUsd loosened: ${OLD_COST_STR} → ${NEW_COST_STR}\n"
+          fi
+
+          if [ -n "$VIOLATIONS" ]; then
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "### Delta Limit Violations" >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo -e "$VIOLATIONS" | while IFS= read -r line; do
+              [ -n "$line" ] && echo "- ❌ $line" >> "$GITHUB_STEP_SUMMARY"
+            done
+
+            if [ "$HAS_EXCEPTION" = "true" ]; then
+              echo "" >> "$GITHUB_STEP_SUMMARY"
+              echo "⚠️ **Override:** \`baseline-exception\` label present — violations allowed." >> "$GITHUB_STEP_SUMMARY"
+            else
+              echo "" >> "$GITHUB_STEP_SUMMARY"
+              echo "Add the \`baseline-exception\` label to override these limits." >> "$GITHUB_STEP_SUMMARY"
+              echo "::error::Baseline delta limits exceeded. Add baseline-exception label to override."
+              exit 1
+            fi
+          else
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "✅ **Delta limits:** all within bounds" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Baseline diff summary
+        if: always()
+        run: |
+          OLD=$(git show origin/${{ github.base_ref }}:evals/baseline.json 2>/dev/null || echo '{}')
+          NEW=$(cat evals/baseline.json)
+
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "### Baseline Changes" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+
+          echo "| Metric | Before | After | Delta |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|--------|--------|-------|-------|" >> "$GITHUB_STEP_SUMMARY"
+
+          # Golden score
+          OLD_SCORE=$(echo "$OLD" | jq -r '.goldenEval.score // "n/a"')
+          NEW_SCORE=$(echo "$NEW" | jq -r '.goldenEval.score // "n/a"')
+          if [ "$OLD_SCORE" != "n/a" ] && [ "$NEW_SCORE" != "n/a" ]; then
+            DELTA=$((NEW_SCORE - OLD_SCORE))
+            echo "| Golden score | $OLD_SCORE | $NEW_SCORE | ${DELTA:+$DELTA} |" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+          # Golden pass rate
+          OLD_PR=$(echo "$OLD" | jq -r '.goldenEval.passRate // "n/a"')
+          NEW_PR=$(echo "$NEW" | jq -r '.goldenEval.passRate // "n/a"')
+          if [ "$OLD_PR" != "n/a" ] && [ "$NEW_PR" != "n/a" ]; then
+            DELTA=$((NEW_PR - OLD_PR))
+            echo "| Golden pass rate | ${OLD_PR}% | ${NEW_PR}% | ${DELTA}% |" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+          # Unit tests
+          OLD_UT=$(echo "$OLD" | jq -r '.confidenceTests.unitTotal // "n/a"')
+          NEW_UT=$(echo "$NEW" | jq -r '.confidenceTests.unitTotal // "n/a"')
+          if [ "$OLD_UT" != "n/a" ] && [ "$NEW_UT" != "n/a" ]; then
+            DELTA=$((NEW_UT - OLD_UT))
+            echo "| Unit tests | $OLD_UT | $NEW_UT | ${DELTA:+$DELTA} |" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+          # DB tests
+          OLD_DB=$(echo "$OLD" | jq -r '.confidenceTests.dbTotal // "n/a"')
+          NEW_DB=$(echo "$NEW" | jq -r '.confidenceTests.dbTotal // "n/a"')
+          if [ "$OLD_DB" != "n/a" ] && [ "$NEW_DB" != "n/a" ]; then
+            DELTA=$((NEW_DB - OLD_DB))
+            echo "| DB tests | $OLD_DB | $NEW_DB | ${DELTA:+$DELTA} |" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+          # p95 API latency
+          OLD_LAT=$(echo "$OLD" | jq -r '.productMetrics.p95ApiLatencyMs // "n/a"')
+          NEW_LAT=$(echo "$NEW" | jq -r '.productMetrics.p95ApiLatencyMs // "n/a"')
+          if [ "$OLD_LAT" != "n/a" ] && [ "$NEW_LAT" != "n/a" ]; then
+            DELTA=$((NEW_LAT - OLD_LAT))
+            echo "| p95 API latency (ms) | $OLD_LAT | $NEW_LAT | ${DELTA}ms |" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+          # DB lane duration
+          OLD_DB_DUR=$(echo "$OLD" | jq -r '.qualityMetrics.dbLaneDurationMs // "n/a"')
+          NEW_DB_DUR=$(echo "$NEW" | jq -r '.qualityMetrics.dbLaneDurationMs // "n/a"')
+          if [ "$OLD_DB_DUR" != "n/a" ] && [ "$NEW_DB_DUR" != "n/a" ]; then
+            DELTA=$((NEW_DB_DUR - OLD_DB_DUR))
+            echo "| DB lane duration (ms) | $OLD_DB_DUR | $NEW_DB_DUR | ${DELTA}ms |" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+          # Provenance
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "### Provenance" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Field | Value |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|-------|-------|" >> "$GITHUB_STEP_SUMMARY"
+          echo "| schemaVersion | $(echo "$NEW" | jq -r '.schemaVersion // "n/a"') |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| generatedAt | $(echo "$NEW" | jq -r '.generatedAt // "n/a"') |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| generatedBy | $(echo "$NEW" | jq -r '.generatedBy // "n/a"') |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| commitSha | \`$(echo "$NEW" | jq -r '.commitSha // "n/a"')\` |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| updatedBy | $(echo "$NEW" | jq -r '.updatedBy // "n/a"') |" >> "$GITHUB_STEP_SUMMARY"

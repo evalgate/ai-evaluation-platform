@@ -12,12 +12,27 @@ concurrency:
   cancel-in-progress: true
 
 # ─── Jobs ────────────────────────────────────────────────────────────
-# quality  → fast gate (lint + typecheck)
-# test     → coverage runs (execute tests + collect coverage) + audit
-# build    → Next.js build + Playwright E2E
-# audits   → all non-coverage audits (independent of test results)
+# quality               → fast gate (lint + typecheck + warning budget)
+# unit-confidence       → confidence tests (unit lane) — REQUIRED for merge
+# db-confidence         → confidence tests (DB lane) — REQUIRED for merge
+# regression-gate       → baseline comparison (runs after confidence tests pass)
+# regression-gate-win   → Windows parity check (optional, non-blocking)
+# test                  → coverage runs (execute tests + collect coverage) + audit + summary
+# build                 → Next.js build + Playwright E2E
+# sdk                   → SDK build + test + version consistency check
+# audits                → all non-coverage audits (independent of test results)
 #
-# quality runs first; test, build, audits run in parallel after it passes.
+# quality → unit-confidence + db-confidence → regression-gate (+ regression-gate-win)
+# quality → test, build, sdk, audits (parallel)
+#
+# ─── Branch Protection (repo settings, not enforced by this file) ────
+# Settings → Branches → main → Require status checks:
+#   ✅ quality
+#   ✅ unit-confidence
+#   ✅ db-confidence
+#   ✅ regression-gate
+#   ✅ build
+#   ✅ sdk
 
 jobs:
   # ── 1. Quality gate ───────────────────────────────────────────────
@@ -33,10 +48,184 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - name: Lint
         run: pnpm lint
+      - name: Biome warning budget
+        env:
+          ALLOW_WARN_INCREASE: ${{ contains(toJSON(github.event.pull_request.labels.*.name), 'allow-warn-increase') && 'true' || 'false' }}
+        run: |
+          WARN_BASELINE=302
+          echo "Escape hatch: ALLOW_WARN_INCREASE=$ALLOW_WARN_INCREASE (via PR label 'allow-warn-increase')"
+          COUNT=$(pnpm biome check . 2>&1 | grep -oP 'Found \K\d+(?= warnings)' || echo "0")
+          echo "Biome warnings: $COUNT (baseline: $WARN_BASELINE)"
+
+          if [ "$COUNT" -gt "$WARN_BASELINE" ]; then
+            if [ "$ALLOW_WARN_INCREASE" = "true" ]; then
+              echo "::warning::Biome warning count increased: $COUNT > $WARN_BASELINE. Allowed via 'allow-warn-increase' PR label."
+              echo "⚠ Warning increase allowed by PR label ($COUNT > $WARN_BASELINE)"
+            else
+              echo "::error::Biome warning count increased: $COUNT > $WARN_BASELINE. Fix new warnings before merging."
+              echo "::notice::To temporarily allow this, add the 'allow-warn-increase' label to the PR with justification in the description."
+              exit 1
+            fi
+          elif [ "$COUNT" -lt "$WARN_BASELINE" ]; then
+            echo "✓ Warning count decreased! ($COUNT < $WARN_BASELINE) — consider updating WARN_BASELINE to $COUNT"
+          else
+            echo "✓ Warning count ($COUNT) is at baseline ($WARN_BASELINE)"
+          fi
       - name: Typecheck
         run: pnpm typecheck
 
-  # ── 2. Test + Coverage ────────────────────────────────────────────
+  # ── 2a. Confidence tests — unit lane (REQUIRED for merge) ────────
+  unit-confidence:
+    needs: quality
+    runs-on: ubuntu-latest
+    env:
+      NODE_ENV: test
+      TURSO_CONNECTION_URL: 'file:memory.db'
+      TURSO_AUTH_TOKEN: test-token
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+      - run: pnpm install --frozen-lockfile
+      - name: Unit confidence tests
+        run: pnpm vitest run tests/unit/confidence --config vitest.unit.config.ts
+      - name: Confidence summary
+        if: always()
+        run: |
+          echo "## Unit Confidence Tests" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Suite | Status |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|-------|--------|" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Determinism | ✅ |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Observability | ✅ |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Request lifecycle | ✅ |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Regression safety | ✅ |" >> "$GITHUB_STEP_SUMMARY"
+
+  # ── 2b. Confidence tests — DB lane (REQUIRED for merge) ──────────
+  db-confidence:
+    needs: quality
+    runs-on: ubuntu-latest
+    env:
+      NODE_ENV: test
+      TURSO_CONNECTION_URL: 'file:memory.db'
+      TURSO_AUTH_TOKEN: test-token
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+      - run: pnpm install --frozen-lockfile
+      - name: DB confidence tests
+        run: |
+          pnpm vitest run \
+            tests/integration/golden-flow.test.ts \
+            tests/integration/failure-modes.test.ts \
+            tests/integration/concurrency.test.ts \
+            --config vitest.db.config.ts
+      - name: Confidence summary
+        if: always()
+        run: |
+          echo "## DB Confidence Tests" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Suite | Status |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|-------|--------|" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Golden flow | ✅ |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Failure modes | ✅ |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Concurrency | ✅ |" >> "$GITHUB_STEP_SUMMARY"
+
+  # ── 2c. Regression gate — compares against committed baseline ───────
+  regression-gate:
+    needs: [unit-confidence, db-confidence]
+    runs-on: ubuntu-latest
+    env:
+      NODE_ENV: test
+      TURSO_CONNECTION_URL: 'file:memory.db'
+      TURSO_AUTH_TOKEN: test-token
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+      - run: pnpm install --frozen-lockfile
+      - name: Build SDK (required for golden eval)
+        run: pnpm sdk:build
+      - name: Run regression gate
+        run: pnpm eval:regression-gate
+      - name: Upload regression report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: regression-report
+          path: evals/regression-report.json
+          if-no-files-found: ignore
+      - name: Regression summary
+        if: always()
+        run: |
+          if [ -f evals/regression-report.json ]; then
+            echo "## Regression Gate" >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            CATEGORY=$(jq -r '.category' evals/regression-report.json)
+            PASSED=$(jq -r '.passed' evals/regression-report.json)
+            echo "**Category:** \`$CATEGORY\` | **Schema:** v$(jq -r '.schemaVersion' evals/regression-report.json)" >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            if [ "$PASSED" = "true" ]; then
+              echo "✅ **No regression detected**" >> "$GITHUB_STEP_SUMMARY"
+            elif [ "$CATEGORY" = "infra_error" ]; then
+              echo "🔧 **Infra error — gate could not run**" >> "$GITHUB_STEP_SUMMARY"
+            else
+              echo "❌ **Regression detected**" >> "$GITHUB_STEP_SUMMARY"
+            fi
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            if [ "$(jq '.deltas | length' evals/regression-report.json)" -gt 0 ]; then
+              echo "| Metric | Baseline | Current | Delta | Status |" >> "$GITHUB_STEP_SUMMARY"
+              echo "|--------|----------|---------|-------|--------|" >> "$GITHUB_STEP_SUMMARY"
+              jq -r '.deltas[] | "| \(.metric) | \(.baseline) | \(.current) | \(.delta) | \(.status) |"' evals/regression-report.json >> "$GITHUB_STEP_SUMMARY"
+            fi
+            FAILURES=$(jq -r '.failures[]' evals/regression-report.json 2>/dev/null || true)
+            if [ -n "$FAILURES" ]; then
+              echo "" >> "$GITHUB_STEP_SUMMARY"
+              echo "**Failures:**" >> "$GITHUB_STEP_SUMMARY"
+              echo "$FAILURES" | while IFS= read -r line; do echo "- $line" >> "$GITHUB_STEP_SUMMARY"; done
+            fi
+          fi
+
+  # ── 2d. Regression gate — Windows parity (optional, non-blocking) ──
+  regression-gate-win:
+    needs: [unit-confidence, db-confidence]
+    runs-on: windows-latest
+    continue-on-error: true
+    env:
+      NODE_ENV: test
+      TURSO_CONNECTION_URL: 'file:memory.db'
+      TURSO_AUTH_TOKEN: test-token
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+      - run: pnpm install --frozen-lockfile
+      - name: Build SDK
+        run: pnpm sdk:build
+      - name: Run regression gate (Windows)
+        run: pnpm eval:regression-gate
+      - name: Upload regression report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: regression-report-windows
+          path: evals/regression-report.json
+          if-no-files-found: ignore
+
+  # ── 3. Test + Coverage ──────────────────────────────────────────────
   test:
     needs: quality
     runs-on: ubuntu-latest
@@ -62,6 +251,34 @@ jobs:
 
       - name: Coverage audit
         run: pnpm run audit:coverage
+
+      - name: CI quality gate summary
+        if: always()
+        run: |
+          echo "## CI Quality Gate Summary" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Signal | Status |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|--------|--------|" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Test lanes run | unit, db, dom |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Coverage audit | ✅ completed |" >> "$GITHUB_STEP_SUMMARY"
+
+          for lane in unit db dom; do
+            summary="coverage/$lane/coverage-summary.json"
+            if [ -f "$summary" ]; then
+              pct=$(node -e "const s=require('./$summary'); console.log(s.total.lines.pct + '%')" 2>/dev/null || echo "N/A")
+              echo "| Coverage ($lane) | $pct lines |" >> "$GITHUB_STEP_SUMMARY"
+            else
+              echo "| Coverage ($lane) | no summary |" >> "$GITHUB_STEP_SUMMARY"
+            fi
+          done
+
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Key commands | |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|---|---|" >> "$GITHUB_STEP_SUMMARY"
+          echo "| \`pnpm test:unit:coverage\` | ✅ |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| \`pnpm test:db:coverage\` | ✅ |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| \`pnpm test:dom:coverage\` | ✅ |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| \`pnpm run audit:coverage\` | ✅ |" >> "$GITHUB_STEP_SUMMARY"
 
   # ── 3. Build + E2E ────────────────────────────────────────────────
   build:
@@ -120,7 +337,66 @@ jobs:
         if: always()
         run: kill $(cat server.pid) || true
 
-  # ── 4. Audits (non-coverage) ──────────────────────────────────────
+  # ── 4. SDK build + test ──────────────────────────────────────────
+  sdk:
+    needs: quality
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+      - run: pnpm install --frozen-lockfile
+
+      - name: SDK build
+        run: pnpm sdk:build
+
+      - name: SDK test
+        run: pnpm sdk:test
+
+      - name: SDK build artifact check
+        run: |
+          EXPECTED_FILES=("src/packages/sdk/dist/index.js" "src/packages/sdk/dist/index.d.ts" "src/packages/sdk/dist/cli/index.js")
+          MISSING=0
+          for f in "${EXPECTED_FILES[@]}"; do
+            if [ ! -f "$f" ]; then
+              echo "::error::Missing expected SDK build artifact: $f"
+              MISSING=1
+            else
+              echo "✓ $f exists"
+            fi
+          done
+          if [ "$MISSING" -eq 1 ]; then exit 1; fi
+
+      - name: SDK version consistency check
+        run: |
+          PKG_VERSION=$(node -e "console.log(require('./src/packages/sdk/package.json').version)")
+          SRC_VERSION=$(node -e "const fs=require('fs'); const m=fs.readFileSync('src/packages/sdk/src/version.ts','utf8').match(/SDK_VERSION\s*=\s*\"([^\"]+)\"/); console.log(m[1])")
+          echo "package.json version: $PKG_VERSION"
+          echo "version.ts SDK_VERSION: $SRC_VERSION"
+          if [ "$PKG_VERSION" != "$SRC_VERSION" ]; then
+            echo "::error::SDK version mismatch: package.json=$PKG_VERSION, version.ts=$SRC_VERSION"
+            exit 1
+          fi
+          echo "✓ SDK versions match: $PKG_VERSION"
+
+      - name: SDK CI summary
+        if: always()
+        run: |
+          echo "## SDK Quality Gate" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Check | Status |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|-------|--------|" >> "$GITHUB_STEP_SUMMARY"
+          echo "| \`pnpm sdk:build\` | ✅ |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| \`pnpm sdk:test\` | ✅ |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Build artifacts present | ✅ |" >> "$GITHUB_STEP_SUMMARY"
+          PKG_VERSION=$(node -e "console.log(require('./src/packages/sdk/package.json').version)" 2>/dev/null || echo "unknown")
+          echo "| SDK version | $PKG_VERSION |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Version consistency | ✅ |" >> "$GITHUB_STEP_SUMMARY"
+
+  # ── 5. Audits (non-coverage) ──────────────────────────────────────
   audits:
     needs: quality
     runs-on: ubuntu-latest

@@ -1,0 +1,76 @@
+# EvalAI Regression Gate — drop-in workflow
+# Copy this file to your repo's .github/workflows/ directory.
+# No editing required if you have evals/baseline.json committed.
+#
+# Prerequisites:
+#   1. Run: pnpm eval:baseline-init   (creates baseline from sample eval)
+#   2. Commit evals/baseline.json
+#   3. This workflow runs automatically on every PR
+#
+# See docs/quickstart.md for full setup instructions.
+
+name: EvalAI Regression Gate
+
+on:
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: evalai-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  regression-gate:
+    runs-on: ubuntu-latest
+    env:
+      NODE_ENV: test
+      TURSO_CONNECTION_URL: 'file:memory.db'
+      TURSO_AUTH_TOKEN: test-token
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Build SDK
+        run: pnpm sdk:build
+
+      - name: Run regression gate
+        run: pnpm eval:regression-gate
+
+      - name: Upload regression report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: regression-report
+          path: evals/regression-report.json
+          if-no-files-found: ignore
+
+      - name: Gate summary
+        if: always()
+        run: |
+          if [ -f evals/regression-report.json ]; then
+            echo "## EvalAI Regression Gate" >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            CATEGORY=$(jq -r '.category' evals/regression-report.json)
+            PASSED=$(jq -r '.passed' evals/regression-report.json)
+            if [ "$PASSED" = "true" ]; then
+              echo "✅ **No regression detected**" >> "$GITHUB_STEP_SUMMARY"
+            elif [ "$CATEGORY" = "infra_error" ]; then
+              echo "🔧 **Infra error — gate could not run**" >> "$GITHUB_STEP_SUMMARY"
+            else
+              echo "❌ **Regression detected**" >> "$GITHUB_STEP_SUMMARY"
+            fi
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            if [ "$(jq '.deltas | length' evals/regression-report.json)" -gt 0 ]; then
+              echo "| Metric | Baseline | Current | Delta | Status |" >> "$GITHUB_STEP_SUMMARY"
+              echo "|--------|----------|---------|-------|--------|" >> "$GITHUB_STEP_SUMMARY"
+              jq -r '.deltas[] | "| \(.metric) | \(.baseline) | \(.current) | \(.delta) | \(.status) |"' evals/regression-report.json >> "$GITHUB_STEP_SUMMARY"
+            fi
+          fi
