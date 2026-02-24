@@ -103,9 +103,6 @@ jobs:
         run: |
           pnpm start > server.log 2>&1 &
           echo $! > server.pid
-          sleep 5
-          echo '--- server.log (first 50 lines) ---'
-          head -50 server.log || true
 
       - name: Wait for server
         run: npx wait-on http://localhost:3000 --timeout 60000
