@@ -1,41 +1,292 @@
 #!/usr/bin/env node
 
 /**
- * evalai init — Create evalai.config.json
+ * evalai init — Full project scaffolder
  *
- * Creates the smallest possible config file. Defaults belong in code.
+ * Zero-to-gate in under 5 minutes:
+ *   npx evalai init
+ *   git push
+ *   …CI starts blocking regressions.
+ *
+ * What it does:
+ *   1. Detects Node repo + package manager
+ *   2. Creates evals/ directory + baseline.json
+ *   3. Installs .github/workflows/evalai-gate.yml
+ *   4. Prints next steps (no docs required)
  */
 
+import { spawnSync } from "node:child_process";
 import * as fs from "node:fs";
 import * as path from "node:path";
 
-const CONFIG_CONTENT = `{
-  "evaluationId": ""
+// ── Detect environment ──
+
+interface ProjectInfo {
+  cwd: string;
+  pm: "pnpm" | "yarn" | "npm";
+  hasTestScript: boolean;
+  testScript: string;
+  name: string;
 }
+
+function detectProject(cwd: string): ProjectInfo | null {
+  const pkgPath = path.join(cwd, "package.json");
+  if (!fs.existsSync(pkgPath)) return null;
+
+  let pkg: { name?: string; scripts?: Record<string, string> };
+  try {
+    pkg = JSON.parse(fs.readFileSync(pkgPath, "utf-8"));
+  } catch {
+    return null;
+  }
+
+  let pm: "pnpm" | "yarn" | "npm" = "npm";
+  if (fs.existsSync(path.join(cwd, "pnpm-lock.yaml"))) pm = "pnpm";
+  else if (fs.existsSync(path.join(cwd, "yarn.lock"))) pm = "yarn";
+
+  const testScript = pkg.scripts?.test ?? "";
+  const hasTestScript = !!testScript && testScript !== 'echo "Error: no test specified" && exit 1';
+
+  return {
+    cwd,
+    pm,
+    hasTestScript,
+    testScript,
+    name: pkg.name ?? path.basename(cwd),
+  };
+}
+
+// ── Step helpers ──
+
+function ok(msg: string): void {
+  console.log(`  ✔ ${msg}`);
+}
+
+function skip(msg: string): void {
+  console.log(`  – ${msg}`);
+}
+
+// ── 1. Create evals/ + baseline.json ──
+
+function createBaseline(cwd: string, project: ProjectInfo): boolean {
+  const evalsDir = path.join(cwd, "evals");
+  const baselinePath = path.join(evalsDir, "baseline.json");
+
+  if (fs.existsSync(baselinePath)) {
+    skip("evals/baseline.json already exists");
+    return true;
+  }
+
+  if (!fs.existsSync(evalsDir)) {
+    fs.mkdirSync(evalsDir, { recursive: true });
+  }
+
+  const user = process.env.USER || process.env.USERNAME || "unknown";
+  const now = new Date().toISOString();
+
+  // Run tests to capture real count if possible
+  let testTotal = 0;
+  let testsPassed = true;
+  if (project.hasTestScript) {
+    const isWin = process.platform === "win32";
+    const result = spawnSync(project.pm, ["test"], {
+      cwd,
+      stdio: "pipe",
+      shell: isWin,
+      timeout: 120_000,
+    });
+    testsPassed = result.status === 0;
+    // Try to extract test count from output
+    const output = (result.stdout?.toString() ?? "") + (result.stderr?.toString() ?? "");
+    const countMatch =
+      output.match(/(\d+)\s+(?:tests?|specs?)\s+(?:passed|completed)/i) ??
+      output.match(/Tests:\s+(\d+)\s+passed/i) ??
+      output.match(/(\d+)\s+passing/i);
+    if (countMatch) testTotal = parseInt(countMatch[1], 10);
+  }
+
+  const baseline = {
+    schemaVersion: 1,
+    description: `Regression gate baseline for ${project.name}`,
+    generatedAt: now,
+    generatedBy: user,
+    commitSha: getHeadSha(cwd),
+    updatedAt: now,
+    updatedBy: user,
+    tolerance: {
+      scoreDrop: 5,
+      passRateDrop: 5,
+      maxLatencyIncreaseMs: 200,
+      maxCostIncreaseUsd: 0.05,
+    },
+    goldenEval: {
+      score: 100,
+      passRate: 100,
+      totalCases: 3,
+      passedCases: 3,
+    },
+    confidenceTests: {
+      passed: testsPassed,
+      total: testTotal,
+    },
+    productMetrics: {},
+  };
+
+  fs.writeFileSync(baselinePath, `${JSON.stringify(baseline, null, 2)}\n`);
+  ok("Created evals/baseline.json");
+  return true;
+}
+
+function getHeadSha(cwd: string): string {
+  try {
+    const result = spawnSync("git", ["rev-parse", "--short", "HEAD"], {
+      cwd,
+      stdio: "pipe",
+    });
+    return result.stdout?.toString().trim() || "0000000";
+  } catch {
+    return "0000000";
+  }
+}
+
+// ── 2. Install GitHub Actions workflow ──
+
+function installWorkflow(cwd: string, project: ProjectInfo): boolean {
+  const workflowDir = path.join(cwd, ".github", "workflows");
+  const workflowPath = path.join(workflowDir, "evalai-gate.yml");
+
+  if (fs.existsSync(workflowPath)) {
+    skip(".github/workflows/evalai-gate.yml already exists");
+    return true;
+  }
+
+  if (!fs.existsSync(workflowDir)) {
+    fs.mkdirSync(workflowDir, { recursive: true });
+  }
+
+  const installCmd =
+    project.pm === "pnpm"
+      ? "pnpm install --frozen-lockfile"
+      : project.pm === "yarn"
+        ? "yarn install --frozen-lockfile"
+        : "npm ci";
+
+  const setupSteps =
+    project.pm === "pnpm"
+      ? `      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: pnpm
+      - run: ${installCmd}`
+      : `      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: ${project.pm}
+      - run: ${installCmd}`;
+
+  const workflow = `# EvalAI Regression Gate
+# Auto-generated by: npx evalai init
+# Blocks PRs that regress test health.
+name: EvalAI Gate
+
+on:
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: evalai-\${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  regression-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+${setupSteps}
+      - name: EvalAI Regression Gate
+        run: npx -y @pauly4010/evalai-sdk@^1 gate --format github
+
+      - name: Upload report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: regression-report
+          path: evals/regression-report.json
+          if-no-files-found: ignore
 `;
 
-export function runInit(cwd: string = process.cwd()): boolean {
+  fs.writeFileSync(workflowPath, workflow);
+  ok("Created .github/workflows/evalai-gate.yml");
+  return true;
+}
+
+// ── 3. Create evalai.config.json ──
+
+function createConfig(cwd: string): boolean {
   const configPath = path.join(cwd, "evalai.config.json");
 
   if (fs.existsSync(configPath)) {
-    console.log(`evalai.config.json already exists at ${path.resolve(configPath)}`);
-    return false;
+    skip("evalai.config.json already exists");
+    return true;
   }
 
-  fs.writeFileSync(configPath, CONFIG_CONTENT, "utf-8");
-  const resolvedPath = path.resolve(configPath);
-  console.log(`Wrote evalai.config.json at ${resolvedPath}`);
+  const config = {
+    evaluationId: "",
+    gate: {
+      baseline: "evals/baseline.json",
+      report: "evals/regression-report.json",
+    },
+  };
+
+  fs.writeFileSync(configPath, `${JSON.stringify(config, null, 2)}\n`);
+  ok("Created evalai.config.json");
+  return true;
+}
+
+// ── Main ──
+
+export function runInit(cwd: string = process.cwd()): boolean {
+  console.log("");
+  console.log("  evalai init — setting up regression gate\n");
+
+  // Detect
+  const project = detectProject(cwd);
+  if (!project) {
+    console.error("  ✖ No package.json found. Run this from a Node.js project root.");
+    return false;
+  }
+  ok(`Detected ${project.pm} project: ${project.name}`);
+
+  if (!project.hasTestScript) {
+    console.log(`  ⚠ No test script found in package.json`);
+    console.log(`    The gate will still work — add a "test" script later for full coverage.\n`);
+  }
+
+  // Scaffold
+  createBaseline(cwd, project);
+  installWorkflow(cwd, project);
+  createConfig(cwd);
+
+  // Next steps
+  console.log("");
+  console.log("  Done! Next:");
+  console.log("");
+  console.log("    git add evals/ .github/workflows/evalai-gate.yml evalai.config.json");
+  console.log("    git commit -m 'chore: add EvalAI regression gate'");
+  console.log("    git push");
+  console.log("");
+  console.log("  That's it. Open a PR and the gate runs automatically.");
+  console.log("");
+  console.log("  Commands:");
+  console.log("    npx evalai gate              Run gate locally");
+  console.log("    npx evalai gate --format json Machine-readable output");
+  console.log("    npx evalai baseline update    Update baseline after intentional changes");
   console.log("");
   console.log(
-    "Next: paste evaluationId into evalai.config.json, then run npx -y @pauly4010/evalai-sdk@^1 check --format github --onFail import",
+    "  To remove: delete evals/, evalai.config.json, and .github/workflows/evalai-gate.yml",
   );
   console.log("");
-  console.log("GitHub Actions snippet (add to your workflow):");
-  console.log("  - name: EvalAI gate");
-  console.log("    env:");
-  console.log("      EVALAI_API_KEY: ${{ secrets.EVALAI_API_KEY }}");
-  console.log("    run: npx -y @pauly4010/evalai-sdk@^1 check --format github --onFail import");
-  console.log("");
-  console.log("To uninstall: delete evalai.config.json.");
+
   return true;
 }

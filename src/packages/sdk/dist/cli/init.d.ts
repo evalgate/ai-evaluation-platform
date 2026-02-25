@@ -1,7 +1,16 @@
 #!/usr/bin/env node
 /**
- * evalai init — Create evalai.config.json
+ * evalai init — Full project scaffolder
  *
- * Creates the smallest possible config file. Defaults belong in code.
+ * Zero-to-gate in under 5 minutes:
+ *   npx evalai init
+ *   git push
+ *   …CI starts blocking regressions.
+ *
+ * What it does:
+ *   1. Detects Node repo + package manager
+ *   2. Creates evals/ directory + baseline.json
+ *   3. Installs .github/workflows/evalai-gate.yml
+ *   4. Prints next steps (no docs required)
  */
 export declare function runInit(cwd?: string): boolean;

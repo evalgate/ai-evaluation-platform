@@ -142,7 +142,7 @@ function runBaselineUpdate(cwd) {
     }
     if (!pkg.scripts?.["eval:baseline-update"]) {
         console.error("❌ Missing 'eval:baseline-update' script in package.json.");
-        console.error("   Add it:  \"eval:baseline-update\": \"npx tsx scripts/regression-gate.ts --update-baseline\"");
+        console.error('   Add it:  "eval:baseline-update": "npx tsx scripts/regression-gate.ts --update-baseline"');
         return 1;
     }
     console.log("📊 Running baseline update...\n");
