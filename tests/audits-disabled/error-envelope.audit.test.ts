@@ -69,7 +69,7 @@ describe.skip("API Error Envelope Audit - DISABLED: Fix glob pattern", () => {
     for (const routeFile of routeFiles) {
       const fullPath = path.join(API_DIR, routeFile);
       const sourceFile = project.addSourceFileAtPath(fullPath);
-      const content = sourceFile.getFullText();
+      const _content = sourceFile.getFullText();
 
       // Check for ad-hoc patterns using AST for precision
       const callExpressions = sourceFile.getDescendantsOfKind(SyntaxKind.CallExpression);

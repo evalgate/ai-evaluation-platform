@@ -67,9 +67,14 @@ export default function SharePage({ params }: PageProps) {
   const handleCopyResults = () => {
     if (!demo) return;
 
+    const qs = demo.qualityScore as Record<string, unknown> | undefined;
+    const metrics = (qs?.metrics ?? {}) as Record<string, unknown>;
+    const insights = (qs?.insights ?? []) as string[];
+    const recommendations = (qs?.recommendations ?? []) as string[];
+
     const summary = `
 Evaluation Results: ${demo.name}
-Grade: ${(demo.qualityScore as any)?.grade} (${(demo.qualityScore as any)?.overall}/100)
+Grade: ${qs?.grade ?? "N/A"} (${qs?.overall ?? "N/A"}/100)
 
 Summary:
 - Total Tests: ${demo.summary.totalTests}
@@ -78,17 +83,17 @@ Summary:
 - Pass Rate: ${demo.summary.passRate}
 
 Quality Metrics:
-- Accuracy: ${(demo.qualityScore as any)?.metrics?.accuracy}/100
-- Safety: ${(demo.qualityScore as any)?.metrics?.safety}/100
-- Latency: ${(demo.qualityScore as any)?.metrics?.latency}/100
-- Cost: ${(demo.qualityScore as any)?.metrics?.cost}/100
-- Consistency: ${(demo.qualityScore as any)?.metrics?.consistency}/100
+- Accuracy: ${metrics.accuracy ?? "N/A"}/100
+- Safety: ${metrics.safety ?? "N/A"}/100
+- Latency: ${metrics.latency ?? "N/A"}/100
+- Cost: ${metrics.cost ?? "N/A"}/100
+- Consistency: ${metrics.consistency ?? "N/A"}/100
 
 Key Insights:
-${(demo.qualityScore as any)?.insights?.map((i: string) => `- ${i}`).join("\n")}
+${insights.map((i: string) => `- ${i}`).join("\n")}
 
 Recommendations:
-${(demo.qualityScore as any)?.recommendations?.map((r: string) => `- ${r}`).join("\n")}
+${recommendations.map((r: string) => `- ${r}`).join("\n")}
 
 View full results: ${window.location.href}
     `.trim();
@@ -303,7 +308,7 @@ View full results: ${window.location.href}
                             Input:{" "}
                             {typeof test.input === "string"
                               ? test.input
-                              : JSON.stringify(test.input as any).slice(0, 100)}
+                              : JSON.stringify(test.input).slice(0, 100)}
                           </p>
                         )}
                       </div>

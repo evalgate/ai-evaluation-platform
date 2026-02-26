@@ -24,11 +24,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  calculateQualityScore,
-  type EvaluationStats,
-  type QualityScore,
-} from "@/lib/ai-quality-score";
+import type { QualityScore } from "@/lib/ai-quality-score";
 import { AIQualityScoreCard } from "./ai-quality-score-card";
 import { EmailCaptureWidget } from "./email-capture-widget";
 

@@ -31,7 +31,7 @@ export const GET = secureRoute(async (request: NextRequest, ctx: AuthContext) =>
         );
 
         // Add client to SSE server
-        sseServer.addClient(clientId, response as any, organizationId, userId, channels);
+        sseServer.addClient(clientId, response as unknown as Response, organizationId, userId, channels);
 
         logger.info("SSE connection established", { clientId, organizationId, channels });
       },

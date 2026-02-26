@@ -214,12 +214,12 @@ export class EvaluationService {
         evaluationId: id,
         organizationId,
         status: "running",
-        startedAt: new Date().toISOString(),
+        startedAt: new Date(),
         totalCases: cases.length,
         passedCases: 0,
         failedCases: 0,
         environment: env,
-        createdAt: new Date().toISOString(),
+        createdAt: new Date(),
       })
       .returning();
 
@@ -233,7 +233,7 @@ export class EvaluationService {
       // No test cases — mark as completed with zero counts
       await db
         .update(evaluationRuns)
-        .set({ status: "completed", completedAt: new Date().toISOString() })
+        .set({ status: "completed", completedAt: new Date() })
         .where(eq(evaluationRuns.id, run.id));
       return run;
     }
@@ -401,7 +401,7 @@ export class EvaluationService {
         ...(hasProvenance != null && { hasProvenance }),
         assertionsJson: assertionsJson ?? undefined,
         durationMs,
-        createdAt: new Date().toISOString(),
+        createdAt: new Date(),
       });
     }
 
@@ -413,7 +413,7 @@ export class EvaluationService {
         totalCases: cases.length,
         passedCases: passedCount,
         failedCases: failedCount,
-        completedAt: new Date().toISOString(),
+        completedAt: new Date(),
       })
       .where(eq(evaluationRuns.id, run.id));
 

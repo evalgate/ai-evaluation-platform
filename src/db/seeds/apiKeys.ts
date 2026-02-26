@@ -15,13 +15,13 @@ async function main() {
   const getDateDaysAgo = (days: number) => {
     const date = new Date(now);
     date.setDate(date.getDate() - days);
-    return date.toISOString();
+    return date;
   };
 
   const getDateDaysFromNow = (days: number) => {
     const date = new Date(now);
     date.setDate(date.getDate() + days);
-    return date.toISOString();
+    return date;
   };
 
   const sampleApiKeys = [
@@ -79,7 +79,7 @@ async function main() {
         name: "Staging Environment",
         scopes: JSON.stringify(["traces:read", "traces:write", "evaluations:read"]),
         lastUsedAt: getDateDaysAgo(4),
-        expiresAt: "",
+        expiresAt: null,
         revokedAt: null,
         createdAt: getDateDaysAgo(30),
       },
@@ -90,8 +90,8 @@ async function main() {
         keyPrefix: "sk_test_",
         name: "Testing Key",
         scopes: JSON.stringify(["traces:read"]),
-        lastUsedAt: "",
-        expiresAt: "",
+        lastUsedAt: null,
+        expiresAt: null,
         revokedAt: null,
         createdAt: getDateDaysAgo(18),
       },
@@ -107,8 +107,8 @@ async function main() {
           "evaluations:read",
           "evaluations:write",
         ]),
-        lastUsedAt: "",
-        expiresAt: "",
+        lastUsedAt: null,
+        expiresAt: null,
         revokedAt: null,
         createdAt: getDateDaysAgo(10),
       },

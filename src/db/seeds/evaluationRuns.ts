@@ -15,9 +15,9 @@ async function main() {
       totalCases: 10,
       passedCases: 8,
       failedCases: 2,
-      startedAt: new Date(yesterday.getTime() - 15 * 60 * 1000).toISOString(),
-      completedAt: yesterday.toISOString(),
-      createdAt: new Date(yesterday.getTime() - 20 * 60 * 1000).toISOString(),
+      startedAt: new Date(yesterday.getTime() - 15 * 60 * 1000),
+      completedAt: yesterday,
+      createdAt: new Date(yesterday.getTime() - 20 * 60 * 1000),
     },
     {
       evaluationId: 2,
@@ -26,9 +26,9 @@ async function main() {
       totalCases: 5,
       passedCases: 3,
       failedCases: 0,
-      startedAt: twoHoursAgo.toISOString(),
+      startedAt: twoHoursAgo,
       completedAt: null,
-      createdAt: new Date(twoHoursAgo.getTime() - 5 * 60 * 1000).toISOString(),
+      createdAt: new Date(twoHoursAgo.getTime() - 5 * 60 * 1000),
     },
     {
       evaluationId: 3,
@@ -37,9 +37,9 @@ async function main() {
       totalCases: 8,
       passedCases: 8,
       failedCases: 0,
-      startedAt: new Date(lastWeek.getTime() - 10 * 60 * 1000).toISOString(),
-      completedAt: lastWeek.toISOString(),
-      createdAt: new Date(lastWeek.getTime() - 15 * 60 * 1000).toISOString(),
+      startedAt: new Date(lastWeek.getTime() - 10 * 60 * 1000),
+      completedAt: lastWeek,
+      createdAt: new Date(lastWeek.getTime() - 15 * 60 * 1000),
     },
   ];
 

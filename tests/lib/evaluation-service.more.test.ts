@@ -115,9 +115,9 @@ describe("EvaluationService additional coverage", () => {
 
   describe("update", () => {
     it("returns null when evaluation not found", async () => {
-      let callCount = 0;
+      let _callCount = 0;
       vi.mocked((await import("@/db")).db.select).mockImplementation(() => {
-        callCount++;
+        _callCount++;
         return makeBuilder([]);
       });
 
@@ -204,9 +204,9 @@ describe("EvaluationService additional coverage", () => {
 
   describe("run", () => {
     it("returns null when evaluation not found", async () => {
-      let callCount = 0;
+      let _callCount = 0;
       vi.mocked((await import("@/db")).db.select).mockImplementation(() => {
-        callCount++;
+        _callCount++;
         return makeBuilder([]);
       });
 

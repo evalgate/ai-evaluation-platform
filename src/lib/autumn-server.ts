@@ -108,7 +108,7 @@ export async function validateSession(
 
     // Update lastUsedAt (fire-and-forget, don't block the response)
     db.update(apiKeys)
-      .set({ lastUsedAt: new Date().toISOString() })
+      .set({ lastUsedAt: new Date() })
       .where(eq(apiKeys.id, apiKey.id))
       .run();
 

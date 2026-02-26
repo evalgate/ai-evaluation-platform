@@ -37,7 +37,7 @@ interface EvaluationRun {
   completedAt?: string;
   startedAt?: string;
   started_at?: string;
-  traceLog?: any;
+  traceLog?: unknown;
 }
 
 interface Evaluation {
@@ -349,25 +349,30 @@ ${qualityScore.recommendations.map((r: string) => `- ${r}`).join("\n")}
             execution_time_ms: tc.executionTimeMs,
             error_message: tc.errorMessage,
           })),
-          codeValidation: (latestRun as any)?.code_validation,
+          codeValidation: (latestRun as Record<string, unknown> | undefined)?.code_validation,
         };
 
-      case "human_eval":
+      case "human_eval": {
+        const lr = latestRun as Record<string, unknown> | undefined;
         return {
-          evaluations: (latestRun as any)?.human_evaluations || [],
+          evaluations: (lr?.human_evaluations as unknown[]) || [],
           criteria: evaluation?.human_eval_criteria || [],
-          interRaterReliability: (latestRun as any)?.inter_rater_reliability,
+          interRaterReliability: lr?.inter_rater_reliability,
         };
+      }
 
-      case "model_eval":
+      case "model_eval": {
+        const lr = latestRun as Record<string, unknown> | undefined;
         return {
-          judgeEvaluations: (latestRun as any)?.judge_evaluations || [],
+          judgeEvaluations: (lr?.judge_evaluations as unknown[]) || [],
           judgePrompt: evaluation?.judge_prompt || "",
           judgeModel: evaluation?.judge_model || "gpt-4",
-          aggregateMetrics: (latestRun as any)?.aggregate_metrics,
+          aggregateMetrics: lr?.aggregate_metrics,
         };
+      }
 
-      case "ab_test":
+      case "ab_test": {
+        const lr = latestRun as Record<string, unknown> | undefined;
         return {
           variants: evaluation?.variants || [],
           results: runs.map((run: EvaluationRun) => ({
@@ -379,9 +384,10 @@ ${qualityScore.recommendations.map((r: string) => `- ${r}`).join("\n")}
             average_cost: run.average_cost,
             quality_score: run.quality_score,
           })),
-          statisticalSignificance: (latestRun as any)?.statistical_significance,
-          comparison: (latestRun as any)?.comparison,
+          statisticalSignificance: lr?.statistical_significance,
+          comparison: lr?.comparison,
         };
+      }
 
       default:
         return {

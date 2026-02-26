@@ -24,7 +24,7 @@ export const POST = secureRoute(async (req: NextRequest, ctx: AuthContext) => {
     const secret = crypto.randomBytes(32).toString("hex");
     const encryptedSecret = encryptWebhookSecret(ctx.organizationId, secret);
 
-    const now = new Date().toISOString();
+    const now = new Date();
     const newWebhook = await db
       .insert(webhooks)
       .values({

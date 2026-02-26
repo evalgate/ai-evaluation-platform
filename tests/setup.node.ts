@@ -1,7 +1,8 @@
 // Node.js environment setup for unit tests
 // Lightweight setup - no DB, no heavy imports
 
-import { vi } from "vitest";
+export {}; // Node.js environment setup for unit tests
+// Lightweight setup - no DB, no heavy imports
 
 // Set default environment variables (allow overrides)
 process.env.TURSO_CONNECTION_URL ??= "file:memory.db";

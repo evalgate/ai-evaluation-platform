@@ -119,7 +119,7 @@ export class ShadowEvalService {
     }
 
     // Create shadow evaluation run
-    const now = new Date().toISOString();
+    const now = new Date();
     const [shadowRun] = await db
       .insert(evaluationRuns)
       .values({
@@ -363,7 +363,7 @@ export class ShadowEvalService {
           durationMs: result.duration,
           messages: JSON.stringify(result.messages || []),
           toolCalls: JSON.stringify(result.toolCalls || []),
-          createdAt: new Date().toISOString(),
+          createdAt: new Date(),
         });
 
         if (result.passed) {
@@ -394,7 +394,7 @@ export class ShadowEvalService {
           processedCount,
           passedCases: passedCount,
           failedCases: failedCount,
-          completedAt: new Date().toISOString(),
+          completedAt: new Date(),
         })
         .where(eq(evaluationRuns.id, shadowRunId));
 
@@ -412,7 +412,7 @@ export class ShadowEvalService {
         .update(evaluationRuns)
         .set({
           status: "failed",
-          completedAt: new Date().toISOString(),
+          completedAt: new Date(),
         })
         .where(eq(evaluationRuns.id, shadowRunId));
     }

@@ -52,7 +52,7 @@ jobs:
         env:
           ALLOW_WARN_INCREASE: ${{ contains(toJSON(github.event.pull_request.labels.*.name), 'allow-warn-increase') && 'true' || 'false' }}
         run: |
-          WARN_BASELINE=302
+          WARN_BASELINE=215
           echo "Escape hatch: ALLOW_WARN_INCREASE=$ALLOW_WARN_INCREASE (via PR label 'allow-warn-increase')"
           COUNT=$(pnpm biome check . 2>&1 | grep -oP 'Found \K\d+(?= warnings)' || echo "0")
           echo "Biome warnings: $COUNT (baseline: $WARN_BASELINE)"

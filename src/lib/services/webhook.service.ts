@@ -88,8 +88,8 @@ export class WebhookService {
         secretIv: encryptedSecret.secretIv,
         secretTag: encryptedSecret.secretTag,
         status: "active",
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+        createdAt: new Date(),
+        updatedAt: new Date(),
       })
       .returning();
 
@@ -111,7 +111,7 @@ export class WebhookService {
     }
 
     const updateData: {
-      updatedAt: string;
+      updatedAt: Date;
       url?: string;
       events?: string[];
       secret?: string;
@@ -119,7 +119,7 @@ export class WebhookService {
       secretIv?: string;
       secretTag?: string;
     } = {
-      updatedAt: new Date().toISOString(),
+      updatedAt: new Date(),
     };
     if (data.url) updateData.url = data.url;
     if (data.events) updateData.events = data.events;

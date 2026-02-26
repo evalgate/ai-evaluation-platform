@@ -4,7 +4,6 @@ import {
   calculateQualityScore,
   type EvaluationStats,
   generateShareableLink,
-  type QualityMetrics,
 } from "@/lib/ai-quality-score";
 
 describe("calculateQualityScore", () => {

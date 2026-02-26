@@ -152,8 +152,8 @@ describe("ReportCardsService", () => {
       expect(report.performance.scoreDistribution["21-40"]).toBe(1); // the 40
 
       // Status distribution
-      expect(report.performance.statusDistribution["passed"]).toBe(2);
-      expect(report.performance.statusDistribution["failed"]).toBe(1);
+      expect(report.performance.statusDistribution.passed).toBe(2);
+      expect(report.performance.statusDistribution.failed).toBe(1);
 
       // Quality stats
       expect(report.quality.judgeResults.totalJudged).toBe(2);

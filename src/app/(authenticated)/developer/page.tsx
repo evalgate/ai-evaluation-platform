@@ -13,6 +13,7 @@ import {
   TrendingUp,
   Zap,
 } from "lucide-react";
+import type { ComponentType } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
@@ -53,37 +54,39 @@ import { useOrganizationId } from "@/hooks/use-organization";
 import { useSession } from "@/lib/auth-client";
 
 // Lazy load Recharts components
+// eslint-disable-next-line -- dynamic() returns a generic component; typed via ComponentType<Record<string, unknown>>
+type DynComp = ComponentType<Record<string, unknown>>;
 const LineChart = dynamic(() => import("recharts").then((mod) => ({ default: mod.LineChart })), {
   ssr: false,
-}) as any;
+}) as DynComp;
 const Line = dynamic(() => import("recharts").then((mod) => ({ default: mod.Line })), {
   ssr: false,
-}) as any;
+}) as DynComp;
 const BarChart = dynamic(() => import("recharts").then((mod) => ({ default: mod.BarChart })), {
   ssr: false,
-}) as any;
+}) as DynComp;
 const Bar = dynamic(() => import("recharts").then((mod) => ({ default: mod.Bar })), {
   ssr: false,
-}) as any;
+}) as DynComp;
 const XAxis = dynamic(() => import("recharts").then((mod) => ({ default: mod.XAxis })), {
   ssr: false,
-}) as any;
+}) as DynComp;
 const YAxis = dynamic(() => import("recharts").then((mod) => ({ default: mod.YAxis })), {
   ssr: false,
-}) as any;
+}) as DynComp;
 const CartesianGrid = dynamic(
   () => import("recharts").then((mod) => ({ default: mod.CartesianGrid })),
   {
     ssr: false,
   },
-) as any;
+) as DynComp;
 const Tooltip = dynamic(() => import("recharts").then((mod) => ({ default: mod.Tooltip })), {
   ssr: false,
-}) as any;
+}) as DynComp;
 const ResponsiveContainer = dynamic(
   () => import("recharts").then((mod) => ({ default: mod.ResponsiveContainer })),
   { ssr: false },
-) as any;
+) as DynComp;
 
 interface UsageSummary {
   totalRequests: number;

@@ -116,7 +116,8 @@ export const POST = secureRoute(
       }
     }
 
-    const now = new Date().toISOString();
+    const nowDate = new Date();
+    const nowISO = nowDate.toISOString();
     const requestId = getRequestId();
 
     // Create run (tagged as import for audit/debug; metadata in traceLog.import)
@@ -125,11 +126,11 @@ export const POST = secureRoute(
     const traceLog = JSON.stringify({
       import: {
         source: "import",
-        importedAt: now,
+        importedAt: nowISO,
         clientReportedVersion: importClientVersion ?? null,
         ci: ci ?? undefined,
         checkReport: checkReport ?? undefined,
-        serverReceivedAt: now,
+        serverReceivedAt: nowISO,
         requestId,
       },
     });
@@ -144,11 +145,11 @@ export const POST = secureRoute(
         totalCases: results.length,
         passedCases: passedCount,
         failedCases: failedCount,
-        startedAt: now,
-        completedAt: now,
+        startedAt: nowDate,
+        completedAt: nowDate,
         environment,
         traceLog,
-        createdAt: now,
+        createdAt: nowDate,
       })
       .returning();
 
@@ -166,7 +167,7 @@ export const POST = secureRoute(
         output: r.output,
         durationMs: r.latencyMs ?? null,
         assertionsJson: r.assertionsJson ?? undefined,
-        createdAt: now,
+        createdAt: nowDate,
       });
     }
 

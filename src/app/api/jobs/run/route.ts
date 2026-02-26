@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const result = await runDueJobs();
-    logger.info("Job runner completed", result as any);
+    logger.info("Job runner completed", result as Record<string, unknown>);
     return NextResponse.json({ ok: true, ...result });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Job runner failed";

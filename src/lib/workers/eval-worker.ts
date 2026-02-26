@@ -134,7 +134,7 @@ class EvalWorker {
             durationMs: turnData.duration,
             messages: JSON.stringify(result.messages || []),
             toolCalls: JSON.stringify(result.toolCalls || []),
-            createdAt: new Date().toISOString(),
+            createdAt: new Date(),
           });
 
           if (result.status === "passed") {
@@ -183,7 +183,7 @@ class EvalWorker {
             durationMs: Date.now() - turnStart,
             messages: JSON.stringify([]),
             toolCalls: JSON.stringify([]),
-            createdAt: new Date().toISOString(),
+            createdAt: new Date(),
           });
 
           // Update heartbeat after failure
@@ -284,7 +284,7 @@ class EvalWorker {
         .update(evaluationRuns)
         .set({
           status: "failed",
-          completedAt: new Date().toISOString(),
+          completedAt: new Date(),
           traceLog: JSON.stringify({
             error: errorMessage,
             failedAt: new Date().toISOString(),

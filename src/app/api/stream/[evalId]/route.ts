@@ -1,4 +1,4 @@
-import { type NextRequest, NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 import { type AuthContext, secureRoute } from "@/lib/api/secure-route";
 import { createSSEMessage, SSE_MESSAGE_TYPES, sseServer } from "@/lib/streaming/sse-server";
 

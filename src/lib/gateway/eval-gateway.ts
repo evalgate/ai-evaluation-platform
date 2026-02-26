@@ -103,7 +103,7 @@ class EvalGateway {
     }
 
     // 3. Create evaluation run with PENDING status
-    const now = new Date().toISOString();
+    const now = new Date();
     const [run] = await db
       .insert(evaluationRuns)
       .values({
@@ -143,7 +143,7 @@ class EvalGateway {
         db.update(evaluationRuns)
           .set({
             status: "failed",
-            completedAt: new Date().toISOString(),
+            completedAt: new Date(),
             traceLog: JSON.stringify({
               ...(run.traceLog ? JSON.parse(run.traceLog as string) : {}),
               error: "Failed to start background worker",
@@ -217,7 +217,7 @@ class EvalGateway {
       .update(evaluationRuns)
       .set({
         status: "cancelled",
-        completedAt: new Date().toISOString(),
+        completedAt: new Date(),
         traceLog: JSON.stringify({
           ...(run.evaluation_runs.traceLog
             ? JSON.parse(run.evaluation_runs.traceLog as string)

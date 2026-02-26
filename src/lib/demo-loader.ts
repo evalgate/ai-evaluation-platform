@@ -169,14 +169,15 @@ export function getShareUrl(id: string): string {
  * Validate demo data structure
  */
 export function validateDemoData(data: unknown): data is DemoEvaluation {
+  if (!data || typeof data !== "object") return false;
+  const d = data as Record<string, unknown>;
   return !!(
-    data &&
-    typeof data === "object" &&
-    typeof (data as any).id === "string" &&
-    typeof (data as any).name === "string" &&
-    typeof (data as any).type === "string" &&
-    (data as any).summary &&
-    typeof (data as any).summary.totalTests === "number" &&
-    (data as any).qualityScore
+    typeof d.id === "string" &&
+    typeof d.name === "string" &&
+    typeof d.type === "string" &&
+    d.summary &&
+    typeof d.summary === "object" &&
+    typeof (d.summary as Record<string, unknown>).totalTests === "number" &&
+    d.qualityScore
   );
 }

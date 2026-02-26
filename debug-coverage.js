@@ -1,4 +1,4 @@
-const fs = require("fs");
+const fs = require("node:fs");
 const data = JSON.parse(fs.readFileSync("coverage/coverage-summary.json", "utf-8"));
 const THRESHOLDS = {
   "src/lib/scoring": 60,
@@ -31,5 +31,5 @@ for (const [filePath, fileData] of Object.entries(data)) {
 console.log("Coverage by directory:");
 for (const [folder, { covered, total }] of byDir) {
   const pct = total > 0 ? (covered / total) * 100 : 100;
-  console.log(folder + ": " + pct.toFixed(1) + "% (threshold " + THRESHOLDS[folder] + "%)");
+  console.log(`${folder}: ${pct.toFixed(1)}% (threshold ${THRESHOLDS[folder]}%)`);
 }

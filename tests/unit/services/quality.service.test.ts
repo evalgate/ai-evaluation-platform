@@ -1,5 +1,4 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { BaselineMode } from "@/lib/services/quality.service";
 import { qualityService } from "@/lib/services/quality.service";
 
 // Mock the database

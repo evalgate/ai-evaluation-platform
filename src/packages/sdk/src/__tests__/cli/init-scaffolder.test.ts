@@ -5,7 +5,6 @@
  * and verifies the scaffolded files are correct.
  */
 import * as fs from "node:fs";
-import * as yaml from "node:module";
 import * as path from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { runInit } from "../../cli/init";

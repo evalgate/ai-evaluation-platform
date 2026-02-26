@@ -28,16 +28,16 @@ Integer timestamps provide several advantages over string timestamps:
 | `organizationMembers` | `createdAt` | ✅ Complete |
 | `evaluations` | `createdAt`, `updatedAt` | ✅ Complete |
 | `traces` | `createdAt` | ✅ Complete |
+| `evaluationRuns` | `startedAt`, `completedAt`, `createdAt` | ✅ Complete (migration 0039) |
+| `testResults` | `createdAt` | ✅ Complete (migration 0039) |
+| `spans` | `startTime`, `endTime`, `createdAt` | ✅ Complete (migration 0039) |
+| `apiKeys` | `lastUsedAt`, `expiresAt`, `revokedAt`, `createdAt` | ✅ Complete (migration 0039) |
+| `webhooks` | `lastDeliveredAt`, `createdAt`, `updatedAt` | ✅ Complete (migration 0039) |
 
 ### ⚠️ Pending Migration (String Timestamps)
 
 | Table | Timestamp Columns | Priority |
 |-------|-------------------|----------|
-| `evaluationRuns` | `startedAt`, `completedAt`, `createdAt` | **High** |
-| `testResults` | `createdAt` | **High** |
-| `spans` | `startTime`, `endTime`, `createdAt` | **High** |
-| `apiKeys` | `lastUsedAt`, `expiresAt`, `revokedAt`, `createdAt` | **High** |
-| `webhooks` | `lastDeliveredAt`, `createdAt`, `updatedAt` | **High** |
 | `testCases` | `createdAt` | **Medium** |
 | `annotationTasks` | `createdAt`, `updatedAt` | **Medium** |
 | `annotationItems` | `annotatedAt`, `createdAt` | **Medium** |
@@ -51,17 +51,17 @@ Integer timestamps provide several advantages over string timestamps:
 | `humanAnnotations` | `annotatedAt`, `createdAt` | **Low** |
 | `emailSubscribers` | `subscribedAt`, `unsubscribedAt`, `lastEmailSentAt`, `createdAt`, `updatedAt` | **Low** |
 
-## Hot-Path Tables (Next Migration Batch)
+## Hot-Path Tables (Batch 1 — Completed)
 
-The following tables are considered "hot-path" and should be migrated next:
+The following hot-path tables were migrated in **migration 0039** (recreate-table pattern with backfill):
 
-1. **`evaluationRuns`** - Core evaluation execution data
-2. **`testResults`** - Individual test case results  
-3. **`spans`** - Performance tracing data
-4. **`apiKeys`** - Authentication and rate limiting
-5. **`webhooks`** - Integration and notifications
+1. **`evaluationRuns`** — `startedAt`, `completedAt`, `createdAt`
+2. **`testResults`** — `createdAt`
+3. **`spans`** — `startTime`, `endTime`, `createdAt`
+4. **`apiKeys`** — `lastUsedAt`, `expiresAt`, `revokedAt`, `createdAt`
+5. **`webhooks`** — `lastDeliveredAt`, `createdAt`, `updatedAt`
 
-These tables are frequently queried and would benefit most from the performance improvements.
+All app code (services, routes, gateway, worker, seeds) updated to write `Date` objects.
 
 ## Implementation Guidelines
 

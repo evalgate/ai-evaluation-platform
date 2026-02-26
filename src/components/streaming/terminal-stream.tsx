@@ -31,6 +31,18 @@ interface TerminalMessage {
   metadata?: Record<string, unknown>;
 }
 
+interface EvalStartedData { evaluationName?: string }
+interface EvalProgressData { progress?: number; currentTest?: string }
+interface TestCaseData { testCaseName?: string; score?: number }
+interface ArenaMatchData { models?: string[] }
+interface ModelResponseData { modelId?: string; score?: number }
+interface NotificationData { title?: string; message?: string }
+interface ErrorData { error?: string }
+
+function str(val: unknown): string {
+  return val != null ? String(val) : "";
+}
+
 interface TerminalStreamProps {
   organizationId: number;
   userId?: string;
@@ -80,29 +92,30 @@ export function TerminalStream({
   );
 
   const formatMessageContent = useCallback((type: string, data: unknown): string => {
+    const d = (data ?? {}) as Record<string, unknown>;
     switch (type) {
       case "evaluation_started":
-        return `🚀 Evaluation started: ${(data as any).evaluationName}`;
+        return `🚀 Evaluation started: ${str((d as EvalStartedData).evaluationName)}`;
       case "evaluation_progress":
-        return `⏳ Progress: ${(data as any).progress}% - ${(data as any).currentTest}`;
+        return `⏳ Progress: ${str((d as EvalProgressData).progress)}% - ${str((d as EvalProgressData).currentTest)}`;
       case "evaluation_completed":
         return `✅ Evaluation completed successfully`;
       case "test_case_started":
-        return `🧪 Test case: ${(data as any).testCaseName}`;
+        return `🧪 Test case: ${str((d as TestCaseData).testCaseName)}`;
       case "test_case_completed":
-        return `✓ Test case completed (Score: ${(data as any).score})`;
+        return `✓ Test case completed (Score: ${str((d as TestCaseData).score)})`;
       case "test_case_failed":
-        return `✗ Test case failed (Score: ${(data as any).score})`;
+        return `✗ Test case failed (Score: ${str((d as TestCaseData).score)})`;
       case "arena_match_started":
-        return `⚔️ Arena match started: ${(data as any).models?.join(" vs ")}`;
+        return `⚔️ Arena match started: ${(d as ArenaMatchData).models?.join(" vs ") ?? ""}`;
       case "model_response":
-        return `🤖 ${(data as any).modelId}: Score ${(data as any).score}`;
+        return `🤖 ${str((d as ModelResponseData).modelId)}: Score ${str((d as ModelResponseData).score)}`;
       case "arena_match_completed":
         return `🏆 Arena match completed`;
       case "notification":
-        return `📢 ${(data as any).title}: ${(data as any).message}`;
+        return `📢 ${str((d as NotificationData).title)}: ${str((d as NotificationData).message)}`;
       case "error":
-        return `❌ Error: ${(data as any).error}`;
+        return `❌ Error: ${str((d as ErrorData).error)}`;
       case "ping":
         return "💓 Ping";
       default:

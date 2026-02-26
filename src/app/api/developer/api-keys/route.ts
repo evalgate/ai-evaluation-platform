@@ -63,7 +63,7 @@ export const POST = secureRoute(
           expiresAt: expiresAt || null,
           lastUsedAt: null,
           revokedAt: null,
-          createdAt: new Date().toISOString(),
+          createdAt: new Date(),
         })
         .returning();
 

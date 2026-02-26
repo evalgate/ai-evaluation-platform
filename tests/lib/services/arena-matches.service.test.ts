@@ -114,7 +114,7 @@ describe("ArenaMatchesService", () => {
     });
 
     it("uses provided judge config ID", async () => {
-      const result = await arenaMatchesService.createArenaMatch(
+      const _result = await arenaMatchesService.createArenaMatch(
         1,
         { ...validInput, judgeConfigId: 5 },
         "user1",

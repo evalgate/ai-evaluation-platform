@@ -156,7 +156,7 @@ export async function handleWebhookDelivery(payload: Record<string, unknown>): P
   if (deliveryStatus === "success") {
     await db
       .update(webhooks)
-      .set({ lastDeliveredAt: new Date().toISOString(), updatedAt: new Date().toISOString() })
+      .set({ lastDeliveredAt: new Date(), updatedAt: new Date() })
       .where(eq(webhooks.id, webhookId));
 
     logger.info("Webhook delivered successfully", { webhookId, durationMs, responseCode });

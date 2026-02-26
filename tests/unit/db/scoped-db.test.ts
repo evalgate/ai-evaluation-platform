@@ -56,7 +56,7 @@ describe("Scoped DB", () => {
       };
 
       // Call selectFrom
-      const query = sdb.selectFrom(mockTable as any);
+      const _query = sdb.selectFrom(mockTable as any);
 
       // Verify the query chain was called correctly
       expect(db.select).toHaveBeenCalled();
@@ -77,7 +77,7 @@ describe("Scoped DB", () => {
       };
 
       // Call deleteFrom
-      const query = sdb.deleteFrom(mockTable as any);
+      const _query = sdb.deleteFrom(mockTable as any);
 
       // Verify the query chain was called correctly
       expect(db.delete).toHaveBeenCalled();

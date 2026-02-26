@@ -131,16 +131,20 @@ export default function NewEvaluationPage() {
 
       // Build combined config from all selected templates
       const combinedConfig = {
-        templates: data.templates.map((t) => ({
-          id: (t.template as any).id,
-          name: (t.config as any).name || (t.template as any).name,
-          description: (t.config as any).description || (t.template as any).description,
-          type: (t.template as any).type,
-          judgePrompt: (t.config as any).customPrompt || (t.template as any).judgePrompt,
-          testCases: (t.template as any).testCases,
-          code: (t.template as any).code,
-          humanEvalCriteria: (t.template as any).humanEvalCriteria,
-        })),
+        templates: data.templates.map((t) => {
+          const tpl = t.template as Record<string, unknown>;
+          const cfg = t.config as Record<string, unknown>;
+          return {
+            id: tpl.id,
+            name: cfg.name || tpl.name,
+            description: cfg.description || tpl.description,
+            type: tpl.type,
+            judgePrompt: cfg.customPrompt || tpl.judgePrompt,
+            testCases: tpl.testCases,
+            code: tpl.code,
+            humanEvalCriteria: tpl.humanEvalCriteria,
+          };
+        }),
       };
 
       const response = await fetch("/api/evaluations", {

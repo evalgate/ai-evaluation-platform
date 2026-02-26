@@ -1,10 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  extractVariables,
-  renderTemplate,
-  type TemplateContext,
-  validateContext,
-} from "@/lib/prompts/template-engine";
+import { extractVariables, renderTemplate, validateContext } from "@/lib/prompts/template-engine";
 
 describe("renderTemplate", () => {
   describe("simple interpolation", () => {

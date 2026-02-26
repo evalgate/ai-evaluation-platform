@@ -155,10 +155,12 @@ export const evaluationRuns = sqliteTable("evaluation_runs", {
   failedCases: integer("failed_cases").default(0),
   processedCount: integer("processed_count").default(0), // Heartbeat counter for progress tracking
   traceLog: text("trace_log", { mode: "json" }), // Full journey JSON with messages array
-  startedAt: text("started_at"),
-  completedAt: text("completed_at"),
+  startedAt: integer("started_at", { mode: "timestamp" }),
+  completedAt: integer("completed_at", { mode: "timestamp" }),
   environment: text("environment").default("dev"), // dev | staging | prod (for baseline=production)
-  createdAt: text("created_at").notNull(),
+  createdAt: integer("created_at", { mode: "timestamp" })
+    .$defaultFn(() => new Date())
+    .notNull(),
 });
 
 // Traces
@@ -259,10 +261,12 @@ export const apiKeys = sqliteTable("api_keys", {
   keyPrefix: text("key_prefix").notNull().unique(),
   name: text("name").notNull(),
   scopes: text("scopes", { mode: "json" }).notNull(),
-  lastUsedAt: text("last_used_at"),
-  expiresAt: text("expires_at"),
-  revokedAt: text("revoked_at"),
-  createdAt: text("created_at").notNull(),
+  lastUsedAt: integer("last_used_at", { mode: "timestamp" }),
+  expiresAt: integer("expires_at", { mode: "timestamp" }),
+  revokedAt: integer("revoked_at", { mode: "timestamp" }),
+  createdAt: integer("created_at", { mode: "timestamp" })
+    .$defaultFn(() => new Date())
+    .notNull(),
 });
 
 export const webhooks = sqliteTable("webhooks", {
@@ -277,9 +281,13 @@ export const webhooks = sqliteTable("webhooks", {
   secretIv: text("secret_iv"),
   secretTag: text("secret_tag"),
   status: text("status").notNull().default("active"),
-  lastDeliveredAt: text("last_delivered_at"),
-  createdAt: text("created_at").notNull(),
-  updatedAt: text("updated_at").notNull(),
+  lastDeliveredAt: integer("last_delivered_at", { mode: "timestamp" }),
+  createdAt: integer("created_at", { mode: "timestamp" })
+    .$defaultFn(() => new Date())
+    .notNull(),
+  updatedAt: integer("updated_at", { mode: "timestamp" })
+    .$defaultFn(() => new Date())
+    .notNull(),
 });
 
 // Provider Keys for per-org encrypted third-party API keys
@@ -397,7 +405,9 @@ export const testResults = sqliteTable("test_results", {
   durationMs: integer("duration_ms"),
   messages: text("messages", { mode: "json" }), // Raw LLM messages array for each turn
   toolCalls: text("tool_calls", { mode: "json" }), // Tool arguments and outputs per turn
-  createdAt: text("created_at").notNull(),
+  createdAt: integer("created_at", { mode: "timestamp" })
+    .$defaultFn(() => new Date())
+    .notNull(),
 });
 
 export const spans = sqliteTable("spans", {
@@ -409,15 +419,17 @@ export const spans = sqliteTable("spans", {
   parentSpanId: text("parent_span_id"),
   name: text("name").notNull(),
   type: text("type").notNull(),
-  startTime: text("start_time"),
-  endTime: text("end_time"),
+  startTime: integer("start_time", { mode: "timestamp" }),
+  endTime: integer("end_time", { mode: "timestamp" }),
   durationMs: integer("duration_ms"),
   input: text("input"),
   inputHash: text("input_hash"), // SHA-256 of normalized input for deterministic matching
   output: text("output"),
   evaluationRunId: integer("evaluation_run_id").references(() => evaluationRuns.id), // when consumed by trace-linked run
   metadata: text("metadata", { mode: "json" }),
-  createdAt: text("created_at").notNull(),
+  createdAt: integer("created_at", { mode: "timestamp" })
+    .$defaultFn(() => new Date())
+    .notNull(),
 });
 
 // Email Subscribers (for lead capture)
