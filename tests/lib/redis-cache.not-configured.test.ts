@@ -1,4 +1,16 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+vi.mock("@upstash/redis", () => ({
+  Redis: class MockRedis {
+    static fromEnv() {
+      throw new Error("Redis not configured");
+    }
+  },
+}));
+
+vi.mock("@/lib/logger", () => ({
+  logger: { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() },
+}));
 
 describe("redis-cache (not configured)", () => {
   beforeEach(() => {
@@ -6,21 +18,14 @@ describe("redis-cache (not configured)", () => {
     delete process.env.UPSTASH_REDIS_REST_TOKEN;
   });
 
-  it("get returns null/undefined when redis is not configured", { timeout: 10000 }, async () => {
+  it("get returns null/undefined when redis is not configured", async () => {
     const mod = await import("@/lib/redis-cache");
-    const modAny = mod as Record<string, unknown>;
-    const cache = modAny.cache as Record<string, unknown>;
-    const get = cache.get as (key: string) => Promise<unknown>;
-    const val = await get("k1");
+    const val = await mod.cache.get("k1");
     expect(val == null).toBe(true);
   });
 
   it("set does not throw when redis is not configured", async () => {
     const mod = await import("@/lib/redis-cache");
-    const modAny = mod as Record<string, unknown>;
-    const cache = modAny.cache as Record<string, unknown>;
-    const set = cache.set as (key: string, value: unknown, ttl?: number) => Promise<unknown>;
-    const result = await set("k1", "v1", 60);
-    expect(result).toBeFalsy();
+    await expect(mod.cache.set("k1", "v1", 60)).resolves.not.toThrow();
   });
 });

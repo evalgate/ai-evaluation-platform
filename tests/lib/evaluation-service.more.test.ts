@@ -67,6 +67,10 @@ vi.mock("@/lib/eval/assertions", () => ({
   validateAssertionsEnvelope: vi.fn((envelope: unknown) => envelope),
 }));
 
+vi.mock("@/lib/services/eval-executor", () => ({
+  createExecutor: vi.fn(() => ({ run: vi.fn().mockResolvedValue({ output: "mock" }) })),
+}));
+
 describe("EvaluationService additional coverage", () => {
   let evaluationService: any;
 

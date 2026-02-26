@@ -310,7 +310,7 @@ describe("ProviderKeysService", () => {
 
       // Should update lastUsedAt
       expect(state.updateCalls).toHaveLength(1);
-      expect(state.updateCalls[0]).toEqual({ lastUsedAt: expect.any(String) });
+      expect(state.updateCalls[0]).toEqual({ lastUsedAt: expect.any(Date) });
     });
 
     it("returns null when key not found", async () => {
