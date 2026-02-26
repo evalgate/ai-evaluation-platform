@@ -21,6 +21,55 @@ export default function QuickStartPage() {
             </p>
           </div>
 
+          {/* Zero-Config Fast Path */}
+          <Card className="mb-8 bg-gradient-to-br from-green-500/10 to-green-500/5 border-green-500/20">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Rocket className="h-5 w-5 text-green-500" />
+                Fastest Path (2 minutes)
+              </CardTitle>
+              <CardDescription>
+                No manual config needed. Works with any Node.js project that has a test script.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="bg-muted p-4 rounded-lg font-mono text-sm mb-4">
+                <pre>{`npx @pauly4010/evalai-sdk init    # detects repo, creates baseline, installs CI workflow
+git add evals/ .github/workflows/evalai-gate.yml evalai.config.json
+git commit -m "chore: add EvalAI regression gate"
+git push                           # open a PR → CI blocks regressions`}</pre>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                That&apos;s it. <code className="bg-muted px-1.5 py-0.5 rounded">evalai init</code> detects your package manager, runs your tests to capture a baseline, and scaffolds everything. No account required for local gating.
+              </p>
+              <div className="mt-4 grid sm:grid-cols-3 gap-3 text-sm">
+                <div className="p-3 bg-background rounded-lg border">
+                  <p className="font-medium">Run gate locally</p>
+                  <code className="text-xs text-muted-foreground">npx evalai gate</code>
+                </div>
+                <div className="p-3 bg-background rounded-lg border">
+                  <p className="font-medium">Update baseline</p>
+                  <code className="text-xs text-muted-foreground">npx evalai baseline update</code>
+                </div>
+                <div className="p-3 bg-background rounded-lg border">
+                  <p className="font-medium">Upgrade to full gate</p>
+                  <code className="text-xs text-muted-foreground">npx evalai upgrade --full</code>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <div className="relative mb-8">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-background px-2 text-muted-foreground">
+                Or set up manually with the platform
+              </span>
+            </div>
+          </div>
+
           {/* Prerequisites */}
           <Card className="mb-8">
             <CardHeader>
@@ -30,7 +79,7 @@ export default function QuickStartPage() {
               <ul className="space-y-2 text-muted-foreground">
                 <li className="flex items-center gap-2">
                   <CheckCircle2 className="h-4 w-4 text-green-500" />
-                  Node.js 16.0.0 or higher
+                  Node.js 18.0.0 or higher
                 </li>
                 <li className="flex items-center gap-2">
                   <CheckCircle2 className="h-4 w-4 text-green-500" />

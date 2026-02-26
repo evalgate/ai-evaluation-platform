@@ -15,9 +15,9 @@ const docSections = [
     description: "Quick start guide and basic concepts",
     links: [
       { label: "Quick Start", href: "/guides/quick-start" },
+      { label: "SDK & CLI", href: "/sdk" },
       { label: "Local Development", href: "/guides/local-development" },
       { label: "Architecture Overview", href: "/guides/architecture" },
-      { label: "Demo Guide", href: "/docs/demo" },
     ],
   },
   {
@@ -47,11 +47,10 @@ const docSections = [
     title: "Operations & Security",
     description: "System management and enterprise features",
     links: [
+      { label: "CI/CD Integration", href: "/guides/cicd-integration" },
+      { label: "Changelog", href: "/changelog" },
       { label: "Background Jobs", href: "/docs/jobs" },
       { label: "Exporting & Sharing", href: "/docs/exporting-sharing" },
-      { label: "Share Links Privacy", href: "/docs/share-links" },
-      { label: "API Versioning", href: "/docs/api-versioning" },
-      { label: "Test Result Semantics", href: "/docs/test-result-semantics" },
     ],
   },
 ];

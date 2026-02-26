@@ -77,38 +77,39 @@ export default function CICDIntegrationGuidePage() {
             <p className="mb-4 text-sm sm:text-base text-muted-foreground">
               Add evaluation to your GitHub Actions workflow:
             </p>
+            <p className="mb-2 text-sm sm:text-base text-muted-foreground">
+              <strong>Option A: Zero-config (recommended)</strong> — run <code className="bg-muted px-1 rounded">npx @pauly4010/evalai-sdk init</code> to auto-generate this workflow.
+            </p>
             <div className="rounded-md bg-muted p-3 sm:p-4 overflow-x-auto">
               <code className="text-xs sm:text-sm">
-                {`name: LLM Evaluation
+                {`name: EvalAI CI Gate
 
 on:
   pull_request:
     branches: [main]
-  push:
-    branches: [main]
 
 jobs:
-  evaluate:
+  eval-gate:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
     steps:
-      - uses: actions/checkout@v3
-      
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: '18'
-      
-      - name: Install dependencies
-        run: npm install
-      
-      - name: Run evaluations
-        env:
-          OPENAI_API_KEY: \${{ secrets.OPENAI_API_KEY }}
-          EVAL_PLATFORM_KEY: \${{ secrets.EVAL_PLATFORM_KEY }}
-        run: npm run evaluate
-      
-      - name: Check pass threshold
-        run: npm run check-threshold -- --min-score 0.8`}
+          node-version: '20'
+      - run: npm ci
+
+      # Option A: Local gate (no API key needed)
+      - name: EvalAI regression gate
+        run: npx evalai gate --format github
+
+      # Option B: Platform gate (requires API key)
+      # - name: EvalAI quality gate
+      #   env:
+      #     EVALAI_API_KEY: \${{ secrets.EVALAI_API_KEY }}
+      #   run: npx evalai check --format github --onFail import`}
               </code>
             </div>
           </section>
@@ -122,16 +123,12 @@ jobs:
             </p>
             <div className="rounded-md bg-muted p-3 sm:p-4 overflow-x-auto">
               <code className="text-xs sm:text-sm">
-                {`evaluate:
+                {`eval-gate:
   stage: test
-  image: node:18
+  image: node:20
   script:
-    - npm install
-    - npm run evaluate
-    - npm run check-threshold -- --min-score 0.8
-  variables:
-    OPENAI_API_KEY: $OPENAI_API_KEY
-    EVAL_PLATFORM_KEY: $EVAL_PLATFORM_KEY
+    - npm ci
+    - npx evalai gate --format json
   only:
     - merge_requests
     - main`}
@@ -209,35 +206,26 @@ jobs:
 
           <section className="mb-8 sm:mb-12">
             <h2 className="mb-3 sm:mb-4 text-xl sm:text-2xl font-semibold">
-              Example Evaluation Script
+              CLI Commands Reference
             </h2>
             <div className="rounded-md bg-muted p-3 sm:p-4 overflow-x-auto">
               <code className="text-xs sm:text-sm">
-                {`// evaluate.js
-import { Platform } from '@eval-platform/sdk'
+                {`# Setup (run once)
+npx @pauly4010/evalai-sdk init     # scaffolds everything: baseline, CI workflow, config
 
-const platform = new Platform({
-  apiKey: process.env.EVAL_PLATFORM_KEY
-})
+# Gate commands
+npx evalai gate                     # run regression gate locally
+npx evalai gate --format github     # CI step summary + PR annotations
+npx evalai gate --format json       # machine-readable output
 
-async function runEvaluation() {
-  const results = await platform.evaluate({
-    model: 'my-llm-app',
-    testCases: './tests/test-cases.json',
-    judges: ['accuracy', 'relevance', 'safety']
-  })
-  
-  console.log(\`Accuracy: \${results.metrics.accuracy}\`)
-  console.log(\`Relevance: \${results.metrics.relevance}\`)
-  console.log(\`Safety: \${results.metrics.safety}\`)
-  
-  // Exit with error if below threshold
-  if (results.metrics.accuracy < 0.85) {
-    process.exit(1)
-  }
-}
+# Baseline management
+npx evalai baseline update           # re-run tests and update baseline
 
-runEvaluation()`}
+# Platform gate (requires API key)
+npx evalai check --format github --onFail import
+
+# Diagnostics
+npx evalai doctor                    # verify CI/CD setup`}
               </code>
             </div>
           </section>

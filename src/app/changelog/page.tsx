@@ -10,6 +10,53 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const versions = [
   {
+    version: "1.7.0",
+    date: "2026-02-20",
+    highlights: [
+      "evalai upgrade --full — one command to upgrade from Tier 1 (built-in gate) to Tier 2 (full metric gate)",
+      "detectRunner() — auto-detect CI environment (GitHub Actions, GitLab CI, etc.)",
+      "Machine-readable gate output with --format json|github|human",
+      "Init test matrix — scaffolder now validates across npm/yarn/pnpm",
+      "SDK dist files updated for full CJS/ESM compatibility",
+    ],
+    type: "feature" as const,
+  },
+  {
+    version: "1.6.0",
+    date: "2026-02-10",
+    highlights: [
+      "evalai init — full project scaffolder: detects repo, creates baseline, installs CI workflow",
+      "evalai gate — built-in regression gate mode (no project scripts required)",
+      "evalai baseline init|update — manage regression baselines from CLI",
+      "Regression gate exports via @pauly4010/evalai-sdk/regression",
+      "Two-mode gate: built-in (Tier 1) and project mode (Tier 2)",
+    ],
+    type: "feature" as const,
+  },
+  {
+    version: "1.5.0",
+    date: "2026-01-25",
+    highlights: [
+      "Shared exports with ETag caching, retention policies, and revocation",
+      "Background job system with retry logic, exponential backoff, and dead letter queue",
+      "Webhook delivery deduplication and secret encryption",
+      "CSP hardening and cookie-first auth flow",
+    ],
+    type: "feature" as const,
+  },
+  {
+    version: "1.4.0",
+    date: "2026-01-10",
+    highlights: [
+      "Integer timestamp migration — all DB columns now use integer timestamps for consistency",
+      "Quality scoring with provenance coverage tracking",
+      "Shadow evaluation system for A/B testing",
+      "SLO metrics and drift detection alerts",
+      "88 noExplicitAny warnings fixed across source",
+    ],
+    type: "feature" as const,
+  },
+  {
     version: "1.3.0",
     date: "2025-10-21",
     highlights: [

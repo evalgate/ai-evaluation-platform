@@ -122,13 +122,13 @@ await client.traces.createSpan(trace.id, {
   metadata: { tokens: 150, latency_ms: 1200 }
 });`;
 
-  const ciCode = `const { passed, failed, total } = await suite.run();
+  const ciCode = `# In your CI workflow (or run locally):
+npx evalai gate                    # compare against baseline
+npx evalai gate --format github    # CI step summary + PR annotations
+npx evalai gate --format json      # machine-readable output
 
-if (failed > 0) {
-  console.error(\`Quality gate failed: \${failed}/\${total} tests failed\`);
-  process.exit(1);
-}
-console.log(\`All \${total} tests passed\`);`;
+# Or with the platform (requires API key):
+npx evalai check --format github --onFail import`;
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">
@@ -158,6 +158,7 @@ console.log(\`All \${total} tests passed\`);`;
             <div className="flex items-center gap-2">
               <Badge variant="secondary">TypeScript SDK</Badge>
               <Badge variant="outline">20+ Assertions</Badge>
+              <Badge variant="outline">CLI Tools</Badge>
             </div>
             <h1 className="text-4xl font-bold tracking-tight">SDK Quick Start</h1>
             <p className="text-xl text-muted-foreground">
@@ -166,9 +167,50 @@ console.log(\`All \${total} tests passed\`);`;
             </p>
           </div>
 
+          {/* Zero-Config Init */}
+          <section className="space-y-3">
+            <h2 className="text-2xl font-semibold">Zero-Config Quick Start</h2>
+            <p className="text-muted-foreground">
+              Fastest path — no manual setup needed. Works with any Node.js project.
+            </p>
+            <div className="bg-muted p-4 rounded-lg font-mono text-sm overflow-x-auto relative group">
+              <pre>
+                <code>{`npx @pauly4010/evalai-sdk init\ngit push`}</code>
+              </pre>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Detects your repo, runs your tests to create a baseline, installs a CI workflow, and
+              prints what to commit. Open a PR and CI blocks regressions automatically.
+            </p>
+            <div className="grid sm:grid-cols-4 gap-2 text-sm">
+              <Card className="p-3">
+                <code className="text-xs font-mono font-medium text-primary">npx evalai gate</code>
+                <p className="text-xs text-muted-foreground mt-0.5">Run gate locally</p>
+              </Card>
+              <Card className="p-3">
+                <code className="text-xs font-mono font-medium text-primary">
+                  npx evalai baseline update
+                </code>
+                <p className="text-xs text-muted-foreground mt-0.5">Update baseline</p>
+              </Card>
+              <Card className="p-3">
+                <code className="text-xs font-mono font-medium text-primary">
+                  npx evalai upgrade --full
+                </code>
+                <p className="text-xs text-muted-foreground mt-0.5">Full metric gate</p>
+              </Card>
+              <Card className="p-3">
+                <code className="text-xs font-mono font-medium text-primary">
+                  npx evalai doctor
+                </code>
+                <p className="text-xs text-muted-foreground mt-0.5">Verify CI setup</p>
+              </Card>
+            </div>
+          </section>
+
           {/* Install */}
           <section className="space-y-3">
-            <h2 className="text-2xl font-semibold">1. Install</h2>
+            <h2 className="text-2xl font-semibold">1. Install (SDK only)</h2>
             <div className="bg-muted p-4 rounded-lg font-mono text-sm overflow-x-auto relative group">
               <pre>
                 <code>{installCode}</code>
