@@ -13,9 +13,9 @@ import {
   TrendingUp,
   Zap,
 } from "lucide-react";
-import type { ComponentType } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
+import type { ComponentType } from "react";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import {

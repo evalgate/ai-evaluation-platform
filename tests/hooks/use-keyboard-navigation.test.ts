@@ -14,9 +14,7 @@ describe("useKeyboardNavigation", () => {
   });
 
   it("should use initialIndex when provided", () => {
-    const { result } = renderHook(() =>
-      useKeyboardNavigation({ itemCount: 5, initialIndex: 3 }),
-    );
+    const { result } = renderHook(() => useKeyboardNavigation({ itemCount: 5, initialIndex: 3 }));
     expect(result.current.currentIndex).toBe(3);
   });
 

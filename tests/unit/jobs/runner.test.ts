@@ -201,7 +201,7 @@ describe("jobs/runner", () => {
     });
 
     it("uses custom retry-after from WebhookDeliveryError when available", async () => {
-      const { runDueJobs, WebhookDeliveryError } = await import("@/lib/jobs/runner");
+      const { runDueJobs } = await import("@/lib/jobs/runner");
 
       // Import WebhookDeliveryError from the mocked module
       const { WebhookDeliveryError: MockWebhookDeliveryError } = await import(

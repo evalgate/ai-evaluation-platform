@@ -122,7 +122,10 @@ export const POST = secureRoute(async (req: NextRequest, ctx: AuthContext) => {
 
     if (newEvaluation) {
       try {
-        const allTemplates = (body.config as Record<string, unknown> | undefined)?.templates || (body as Record<string, unknown>).templates || [];
+        const allTemplates =
+          (body.config as Record<string, unknown> | undefined)?.templates ||
+          (body as Record<string, unknown>).templates ||
+          [];
         const allTestCases: Array<{
           name: string;
           input: string;

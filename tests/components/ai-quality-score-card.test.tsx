@@ -7,8 +7,8 @@ import { describe, expect, it, vi } from "vitest";
 // Mock the QualityScore type import
 vi.mock("@/lib/ai-quality-score", () => ({}));
 
-import type { QualityScore } from "@/lib/ai-quality-score";
 import { AIQualityScoreCard } from "@/components/ai-quality-score-card";
+import type { QualityScore } from "@/lib/ai-quality-score";
 
 const baseScore: QualityScore = {
   overall: 85,

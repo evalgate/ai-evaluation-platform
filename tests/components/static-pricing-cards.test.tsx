@@ -3,7 +3,11 @@
  */
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { PricingOverageInfo, PricingRateLimits, StaticPricingCards } from "@/components/static-pricing-cards";
+import {
+  PricingOverageInfo,
+  PricingRateLimits,
+  StaticPricingCards,
+} from "@/components/static-pricing-cards";
 
 describe("StaticPricingCards", () => {
   it("should render all three plan names", () => {

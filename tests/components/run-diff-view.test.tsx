@@ -16,10 +16,7 @@ describe("RunDiffView", () => {
   });
 
   it("should show error on fetch failure", async () => {
-    vi.stubGlobal(
-      "fetch",
-      vi.fn().mockRejectedValue(new Error("Network error")),
-    );
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("Network error")));
     render(<RunDiffView evaluationId="1" runId={2} compareRunId={1} />);
     await waitFor(() => {
       expect(screen.getByText(/Diff error/)).toBeDefined();

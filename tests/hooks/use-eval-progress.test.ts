@@ -11,7 +11,10 @@ describe("useEvalProgress", () => {
   });
 
   it("should start in loading state", () => {
-    vi.stubGlobal("fetch", vi.fn(() => new Promise(() => {})));
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(() => new Promise(() => {})),
+    );
     const { result } = renderHook(() => useEvalProgress(1, 1));
     expect(result.current.isLoading).toBe(true);
     expect(result.current.data).toBe(null);
@@ -107,15 +110,10 @@ describe("useEvalProgress", () => {
   });
 
   it("should handle fetch errors", async () => {
-    vi.stubGlobal(
-      "fetch",
-      vi.fn().mockRejectedValue(new Error("Network error")),
-    );
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("Network error")));
 
     const onError = vi.fn();
-    const { result } = renderHook(() =>
-      useEvalProgress(1, 1, { refreshInterval: 10000, onError }),
-    );
+    const { result } = renderHook(() => useEvalProgress(1, 1, { refreshInterval: 10000, onError }));
     await waitFor(() => {
       expect(result.current.error).not.toBe(null);
     });

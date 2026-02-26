@@ -44,7 +44,11 @@ export const POST = secureRoute(
 
     // Set an HttpOnly cookie so subsequent requests carry the active org.
     // Max-age 1 year; SameSite=Lax is fine for same-origin API calls.
-    (response as unknown as { cookies: { set: (name: string, value: string, opts: Record<string, unknown>) => void } }).cookies.set("active_org", String(organizationId), {
+    (
+      response as unknown as {
+        cookies: { set: (name: string, value: string, opts: Record<string, unknown>) => void };
+      }
+    ).cookies.set("active_org", String(organizationId), {
       httpOnly: true,
       sameSite: "lax",
       path: "/",

@@ -45,16 +45,17 @@ describe("useEvalStream", () => {
   });
 
   it("should connect and set connected=true on open", async () => {
-    vi.stubGlobal("EventSource", class extends MockEventSource {
-      constructor(url: string) {
-        super(url);
-        mockEs = this;
-      }
-    });
-
-    const { result } = renderHook(() =>
-      useEvalStream({ evaluationId: 1, enabled: true }),
+    vi.stubGlobal(
+      "EventSource",
+      class extends MockEventSource {
+        constructor(url: string) {
+          super(url);
+          mockEs = this;
+        }
+      },
     );
+
+    const { result } = renderHook(() => useEvalStream({ evaluationId: 1, enabled: true }));
 
     await waitFor(() => {
       expect(result.current.connected).toBe(true);
@@ -63,28 +64,32 @@ describe("useEvalStream", () => {
 
   it("should not connect when disabled", () => {
     let constructed = false;
-    vi.stubGlobal("EventSource", class extends MockEventSource {
-      constructor(url: string) {
-        super(url);
-        constructed = true;
-      }
-    });
+    vi.stubGlobal(
+      "EventSource",
+      class extends MockEventSource {
+        constructor(url: string) {
+          super(url);
+          constructed = true;
+        }
+      },
+    );
 
     renderHook(() => useEvalStream({ evaluationId: 1, enabled: false }));
     expect(constructed).toBe(false);
   });
 
   it("should accumulate events from onmessage", async () => {
-    vi.stubGlobal("EventSource", class extends MockEventSource {
-      constructor(url: string) {
-        super(url);
-        mockEs = this;
-      }
-    });
-
-    const { result } = renderHook(() =>
-      useEvalStream({ evaluationId: 1, enabled: true }),
+    vi.stubGlobal(
+      "EventSource",
+      class extends MockEventSource {
+        constructor(url: string) {
+          super(url);
+          mockEs = this;
+        }
+      },
     );
+
+    const { result } = renderHook(() => useEvalStream({ evaluationId: 1, enabled: true }));
 
     await waitFor(() => expect(result.current.connected).toBe(true));
 
@@ -97,21 +102,22 @@ describe("useEvalStream", () => {
   });
 
   it("should set error on connection failure", async () => {
-    vi.stubGlobal("EventSource", class extends MockEventSource {
-      constructor(url: string) {
-        super(url);
-        mockEs = this;
-        // Simulate open then error
-        setTimeout(() => {
-          this.onopen?.();
-          setTimeout(() => this.onerror?.(), 5);
-        }, 0);
-      }
-    });
-
-    const { result } = renderHook(() =>
-      useEvalStream({ evaluationId: 1, enabled: true }),
+    vi.stubGlobal(
+      "EventSource",
+      class extends MockEventSource {
+        constructor(url: string) {
+          super(url);
+          mockEs = this;
+          // Simulate open then error
+          setTimeout(() => {
+            this.onopen?.();
+            setTimeout(() => this.onerror?.(), 5);
+          }, 0);
+        }
+      },
     );
+
+    const { result } = renderHook(() => useEvalStream({ evaluationId: 1, enabled: true }));
 
     await waitFor(() => {
       expect(result.current.error).not.toBe(null);

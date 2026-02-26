@@ -50,10 +50,7 @@ describe("RegressionBadge", () => {
   });
 
   it("should show failed state on fetch error", async () => {
-    vi.stubGlobal(
-      "fetch",
-      vi.fn().mockRejectedValue(new Error("Network error")),
-    );
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("Network error")));
     render(<RegressionBadge evaluationId={42} />);
     fireEvent.click(screen.getByText("Run Regression Check"));
     await waitFor(() => {

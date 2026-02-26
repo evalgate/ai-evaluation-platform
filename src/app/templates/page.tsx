@@ -152,7 +152,10 @@ export default function TemplatesPage() {
           <TabsContent value="catalog-all" className="mt-8">
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {COMPREHENSIVE_TEMPLATES.map((template) => (
-                <CatalogTemplateCard key={template.id} template={toSerializable(template as Record<string, unknown>)} />
+                <CatalogTemplateCard
+                  key={template.id}
+                  template={toSerializable(template as Record<string, unknown>)}
+                />
               ))}
             </div>
           </TabsContent>

@@ -188,7 +188,7 @@ const fetchTasks = async (_session: unknown) => {
 
 export default function AnnotationsPage() {
   const { data: session, isPending } = useSession();
-  const { customer, check, track, refetch, isLoading: customerLoading } = useCustomer();
+  const { customer, check, refetch, isLoading: customerLoading } = useCustomer();
   const router = useRouter();
   const [tasks, setTasks] = useState<AnnotationTask[]>([]);
   const [loading, setLoading] = useState(true);

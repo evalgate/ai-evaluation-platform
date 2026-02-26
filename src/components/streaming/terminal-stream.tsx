@@ -31,13 +31,31 @@ interface TerminalMessage {
   metadata?: Record<string, unknown>;
 }
 
-interface EvalStartedData { evaluationName?: string }
-interface EvalProgressData { progress?: number; currentTest?: string }
-interface TestCaseData { testCaseName?: string; score?: number }
-interface ArenaMatchData { models?: string[] }
-interface ModelResponseData { modelId?: string; score?: number }
-interface NotificationData { title?: string; message?: string }
-interface ErrorData { error?: string }
+interface EvalStartedData {
+  evaluationName?: string;
+}
+interface EvalProgressData {
+  progress?: number;
+  currentTest?: string;
+}
+interface TestCaseData {
+  testCaseName?: string;
+  score?: number;
+}
+interface ArenaMatchData {
+  models?: string[];
+}
+interface ModelResponseData {
+  modelId?: string;
+  score?: number;
+}
+interface NotificationData {
+  title?: string;
+  message?: string;
+}
+interface ErrorData {
+  error?: string;
+}
 
 function str(val: unknown): string {
   return val != null ? String(val) : "";
