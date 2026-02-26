@@ -2,6 +2,29 @@
 
 Platform and SDK releases. For detailed SDK changes, see [src/packages/sdk/CHANGELOG.md](src/packages/sdk/CHANGELOG.md).
 
+## [1.7.0] - 2026-02-26
+
+### Added
+
+- **`evalai upgrade --full`** — One command to upgrade from Tier 1 (built-in gate) to Tier 2 (full metric gate with golden eval, confidence tests, latency, cost).
+- **`detectRunner()`** — Auto-detect CI environment (GitHub Actions, GitLab CI, CircleCI, etc.) for smarter gate defaults.
+- **Machine-readable gate output** — `--format json|github|human` for all gate commands.
+- **Init test matrix** — Scaffolder now validates across npm/yarn/pnpm before generating workflows.
+- **SDK dist files** updated for full CJS/ESM dual-package compatibility.
+
+### Fixed
+
+- **DB test failures** — Fixed 3 test failures: `provider-keys` Date vs String assertion (timestamp migration), `evaluation-service` beforeAll timeout (missing eval-executor mock), `redis-cache` not-configured test (unmocked @upstash/redis).
+- **E2E smoke tests** — Switched `toBeVisible()` → `toBeAttached()` for headless Chromium CI compatibility.
+- **Rollup CVE** — Added `>=4.59.0` override to fix GHSA-mw96-cpmx-2vgc (path traversal).
+
+### Changed
+
+- **Timestamp migration complete** — All 24 tables now use integer timestamps (`integer({ mode: "timestamp" })`). Batch 1 (5 hot-path tables) and Batch 2 (19 remaining tables) fully migrated.
+- **Lint baseline** — Reduced from 302 → 215 warnings (88 `noExplicitAny` fixes).
+- **Website docs updated** — Changelog, quick-start, SDK page, CI/CD guide, and documentation hub all reflect v1.7.0 CLI features.
+- **llms.txt / llms-full.txt** — Fixed stale version (1.3→1.7), added CLI commands section, corrected wording.
+
 ## [1.6.0] - 2026-02-19
 
 ### Security
