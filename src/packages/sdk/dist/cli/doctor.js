@@ -96,8 +96,10 @@ function parseFlags(argv) {
     const baseUrl = raw.baseUrl || process.env.EVALAI_BASE_URL || "http://localhost:3000";
     const apiKey = raw.apiKey || process.env.EVALAI_API_KEY || "";
     let evaluationId = raw.evaluationId || "";
-    const baseline = (raw.baseline === "previous" ? "previous"
-        : raw.baseline === "production" ? "production"
+    const baseline = (raw.baseline === "previous"
+        ? "previous"
+        : raw.baseline === "production"
+            ? "production"
             : "published");
     // Try to fill evaluationId from config
     if (!evaluationId) {
@@ -269,9 +271,7 @@ function checkAuth(apiKey) {
         };
     }
     // Redact key for display
-    const redacted = apiKey.length > 8
-        ? `${apiKey.slice(0, 4)}...${apiKey.slice(-4)}`
-        : "****";
+    const redacted = apiKey.length > 8 ? `${apiKey.slice(0, 4)}...${apiKey.slice(-4)}` : "****";
     return {
         id: "auth",
         label: "Authentication",
@@ -480,10 +480,14 @@ function checkProviderEnv() {
 // ── Output formatting ──
 function icon(status) {
     switch (status) {
-        case "pass": return "\u2705"; // ✅
-        case "fail": return "\u274C"; // ❌
-        case "warn": return "\u26A0\uFE0F"; // ⚠️
-        case "skip": return "\u23ED\uFE0F"; // ⏭️
+        case "pass":
+            return "\u2705"; // ✅
+        case "fail":
+            return "\u274C"; // ❌
+        case "warn":
+            return "\u26A0\uFE0F"; // ⚠️
+        case "skip":
+            return "\u23ED\uFE0F"; // ⏭️
     }
 }
 function printHuman(checks, overall) {
@@ -539,7 +543,12 @@ async function runDoctor(argv) {
             message: "Infrastructure error during connectivity check",
         });
         infraError = true;
-        connectivityResult = { id: "connectivity", label: "API connectivity", status: "fail", message: "" };
+        connectivityResult = {
+            id: "connectivity",
+            label: "API connectivity",
+            status: "fail",
+            message: "",
+        };
     }
     // 7. Eval access (async, depends on auth + connectivity)
     if (flags.apiKey && flags.evaluationId && connectivityResult.status !== "fail") {

@@ -62,7 +62,6 @@ describe("Access boundary — cross-tenant isolation", () => {
     ORG_A_ID = orgA!.id;
     ORG_B_ID = orgB!.id;
 
-    const nowStr = now.toISOString();
     const [evalA] = await db
       .insert(evaluations)
       .values({
@@ -84,7 +83,7 @@ describe("Access boundary — cross-tenant isolation", () => {
         evaluationId: EVAL_A_ID,
         organizationId: ORG_A_ID,
         status: "completed",
-        createdAt: nowStr,
+        createdAt: now,
       })
       .returning({ id: evaluationRuns.id });
     RUN_A_ID = runA!.id;

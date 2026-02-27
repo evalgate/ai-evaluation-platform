@@ -124,9 +124,7 @@ function classifyRootCauses(report) {
     }
     // Analyze failed cases for drift patterns
     if (failedCases.length > 0) {
-        const outputs = failedCases
-            .map((fc) => (fc.output ?? "").toLowerCase())
-            .filter(Boolean);
+        const outputs = failedCases.map((fc) => (fc.output ?? "").toLowerCase()).filter(Boolean);
         const expectedOutputs = failedCases
             .map((fc) => (fc.expectedOutput ?? "").toLowerCase())
             .filter(Boolean);
@@ -138,9 +136,7 @@ function classifyRootCauses(report) {
             causes.push("formatting_drift");
         }
         // Tool use drift: output mentions tool calls or function calls
-        const hasToolIssue = outputs.some((o) => o.includes("tool_call") ||
-            o.includes("function_call") ||
-            o.includes("tool_use"));
+        const hasToolIssue = outputs.some((o) => o.includes("tool_call") || o.includes("function_call") || o.includes("tool_use"));
         if (hasToolIssue) {
             causes.push("tool_use_drift");
         }
@@ -173,52 +169,164 @@ function classifyRootCauses(report) {
 // ── Suggested fixes ──
 const ROOT_CAUSE_FIXES = {
     prompt_drift: [
-        { action: "Review prompt changes", detail: "Compare current prompt with the version used in baseline run. Diff system/user messages.", priority: "high" },
-        { action: "Pin model version", detail: "Use a specific model snapshot (e.g. gpt-4-0613) instead of a rolling alias.", priority: "medium" },
-        { action: "Update baseline", detail: "If changes are intentional, run: npx evalai baseline update", priority: "low" },
+        {
+            action: "Review prompt changes",
+            detail: "Compare current prompt with the version used in baseline run. Diff system/user messages.",
+            priority: "high",
+        },
+        {
+            action: "Pin model version",
+            detail: "Use a specific model snapshot (e.g. gpt-4-0613) instead of a rolling alias.",
+            priority: "medium",
+        },
+        {
+            action: "Update baseline",
+            detail: "If changes are intentional, run: npx evalai baseline update",
+            priority: "low",
+        },
     ],
     retrieval_drift: [
-        { action: "Check retrieval pipeline", detail: "Verify embeddings, index, and chunk strategy haven't changed.", priority: "high" },
-        { action: "Update test case context", detail: "If knowledge base changed, update expected outputs in test cases.", priority: "medium" },
-        { action: "Add retrieval-specific tests", detail: "Add test cases that verify document retrieval before generation.", priority: "low" },
+        {
+            action: "Check retrieval pipeline",
+            detail: "Verify embeddings, index, and chunk strategy haven't changed.",
+            priority: "high",
+        },
+        {
+            action: "Update test case context",
+            detail: "If knowledge base changed, update expected outputs in test cases.",
+            priority: "medium",
+        },
+        {
+            action: "Add retrieval-specific tests",
+            detail: "Add test cases that verify document retrieval before generation.",
+            priority: "low",
+        },
     ],
     formatting_drift: [
-        { action: "Update output format instructions", detail: "Check if system prompt format instructions match expected output structure.", priority: "high" },
-        { action: "Add format validators", detail: "Use schema assertions to validate output structure (JSON schema, regex).", priority: "medium" },
-        { action: "Refresh baseline", detail: "If new format is intentional, run: npx evalai baseline update", priority: "low" },
+        {
+            action: "Update output format instructions",
+            detail: "Check if system prompt format instructions match expected output structure.",
+            priority: "high",
+        },
+        {
+            action: "Add format validators",
+            detail: "Use schema assertions to validate output structure (JSON schema, regex).",
+            priority: "medium",
+        },
+        {
+            action: "Refresh baseline",
+            detail: "If new format is intentional, run: npx evalai baseline update",
+            priority: "low",
+        },
     ],
     tool_use_drift: [
-        { action: "Verify tool definitions", detail: "Check that tool/function schemas match what the model expects.", priority: "high" },
-        { action: "Review tool call patterns", detail: "Compare tool call sequences in failing vs passing cases.", priority: "medium" },
-        { action: "Add tool-use assertions", detail: "Assert specific tool calls are made (or not made) per test case.", priority: "low" },
+        {
+            action: "Verify tool definitions",
+            detail: "Check that tool/function schemas match what the model expects.",
+            priority: "high",
+        },
+        {
+            action: "Review tool call patterns",
+            detail: "Compare tool call sequences in failing vs passing cases.",
+            priority: "medium",
+        },
+        {
+            action: "Add tool-use assertions",
+            detail: "Assert specific tool calls are made (or not made) per test case.",
+            priority: "low",
+        },
     ],
     safety_regression: [
-        { action: "Review safety assertions", detail: "Check which safety test cases are failing and why.", priority: "high" },
-        { action: "Strengthen guardrails", detail: "Add or update content filters, system prompt safety instructions.", priority: "high" },
-        { action: "Update rubric", detail: "If safety criteria changed, update the LLM judge rubric.", priority: "medium" },
+        {
+            action: "Review safety assertions",
+            detail: "Check which safety test cases are failing and why.",
+            priority: "high",
+        },
+        {
+            action: "Strengthen guardrails",
+            detail: "Add or update content filters, system prompt safety instructions.",
+            priority: "high",
+        },
+        {
+            action: "Update rubric",
+            detail: "If safety criteria changed, update the LLM judge rubric.",
+            priority: "medium",
+        },
     ],
     cost_regression: [
-        { action: "Check token usage", detail: "Compare input/output token counts between baseline and current run.", priority: "high" },
-        { action: "Optimize prompts", detail: "Reduce prompt length or use a smaller model for non-critical paths.", priority: "medium" },
-        { action: "Update cost budget", detail: "If higher cost is expected, adjust --max-cost-usd threshold.", priority: "low" },
+        {
+            action: "Check token usage",
+            detail: "Compare input/output token counts between baseline and current run.",
+            priority: "high",
+        },
+        {
+            action: "Optimize prompts",
+            detail: "Reduce prompt length or use a smaller model for non-critical paths.",
+            priority: "medium",
+        },
+        {
+            action: "Update cost budget",
+            detail: "If higher cost is expected, adjust --max-cost-usd threshold.",
+            priority: "low",
+        },
     ],
     latency_regression: [
-        { action: "Check response times", detail: "Compare per-test-case latency between baseline and current run.", priority: "high" },
-        { action: "Reduce prompt complexity", detail: "Simplify prompts or use streaming to reduce perceived latency.", priority: "medium" },
-        { action: "Update latency budget", detail: "If higher latency is expected, adjust --max-latency-ms threshold.", priority: "low" },
+        {
+            action: "Check response times",
+            detail: "Compare per-test-case latency between baseline and current run.",
+            priority: "high",
+        },
+        {
+            action: "Reduce prompt complexity",
+            detail: "Simplify prompts or use streaming to reduce perceived latency.",
+            priority: "medium",
+        },
+        {
+            action: "Update latency budget",
+            detail: "If higher latency is expected, adjust --max-latency-ms threshold.",
+            priority: "low",
+        },
     ],
     coverage_drop: [
-        { action: "Add test cases", detail: "Current test count is below minimum. Add more test cases to the evaluation.", priority: "high" },
-        { action: "Check test case filtering", detail: "Verify no test cases were accidentally deleted or filtered out.", priority: "medium" },
+        {
+            action: "Add test cases",
+            detail: "Current test count is below minimum. Add more test cases to the evaluation.",
+            priority: "high",
+        },
+        {
+            action: "Check test case filtering",
+            detail: "Verify no test cases were accidentally deleted or filtered out.",
+            priority: "medium",
+        },
     ],
     baseline_stale: [
-        { action: "Create baseline", detail: "Run: npx evalai baseline init  (or publish a run from the dashboard)", priority: "high" },
-        { action: "Use --baseline previous", detail: "Compare against the previous run instead of a published baseline.", priority: "medium" },
+        {
+            action: "Create baseline",
+            detail: "Run: npx evalai baseline init  (or publish a run from the dashboard)",
+            priority: "high",
+        },
+        {
+            action: "Use --baseline previous",
+            detail: "Compare against the previous run instead of a published baseline.",
+            priority: "medium",
+        },
     ],
     unknown: [
-        { action: "Run evalai doctor", detail: "Run: npx evalai doctor  to check your full CI/CD setup.", priority: "high" },
-        { action: "Check logs", detail: "Review CI logs for errors or unexpected behavior.", priority: "medium" },
-        { action: "Update baseline", detail: "If changes are intentional, run: npx evalai baseline update", priority: "low" },
+        {
+            action: "Run evalai doctor",
+            detail: "Run: npx evalai doctor  to check your full CI/CD setup.",
+            priority: "high",
+        },
+        {
+            action: "Check logs",
+            detail: "Review CI logs for errors or unexpected behavior.",
+            priority: "medium",
+        },
+        {
+            action: "Update baseline",
+            detail: "If changes are intentional, run: npx evalai baseline update",
+            priority: "low",
+        },
     ],
 };
 function suggestFixes(causes) {
@@ -395,9 +503,7 @@ async function runExplain(argv) {
     const cwd = process.cwd();
     const reportPath = findReport(cwd, flags.reportPath);
     if (!reportPath) {
-        const searched = flags.reportPath
-            ? flags.reportPath
-            : REPORT_SEARCH_PATHS.join(", ");
+        const searched = flags.reportPath ? flags.reportPath : REPORT_SEARCH_PATHS.join(", ");
         console.error(`\n  \u274C No report found. Searched: ${searched}`);
         console.error("  Run a gate first:");
         console.error("    npx evalai gate --format json");

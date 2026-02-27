@@ -231,11 +231,12 @@ export class EvaluationService {
 
     if (cases.length === 0) {
       // No test cases — mark as completed with zero counts
+      const completedAt = new Date();
       await db
         .update(evaluationRuns)
-        .set({ status: "completed", completedAt: new Date() })
+        .set({ status: "completed", completedAt })
         .where(eq(evaluationRuns.id, run.id));
-      return run;
+      return { ...run, status: "completed" as const, completedAt };
     }
 
     // For human_eval type, create annotation tasks and wait — don't auto-complete
@@ -433,7 +434,13 @@ export class EvaluationService {
       });
     });
 
-    return { ...run, totalCases: cases.length, passedCases: passedCount, failedCases: failedCount };
+    return {
+      ...run,
+      status: "completed" as const,
+      totalCases: cases.length,
+      passedCases: passedCount,
+      failedCases: failedCount,
+    };
   }
 
   /**

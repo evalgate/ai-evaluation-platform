@@ -114,8 +114,10 @@ function buildResolvedConfig(cwd, flags) {
     // Determine source of each field
     const fields = [];
     // evaluationId
-    const evalIdSource = flags.evaluationId ? "arg"
-        : fileConfig?.evaluationId ? "file"
+    const evalIdSource = flags.evaluationId
+        ? "arg"
+        : fileConfig?.evaluationId
+            ? "file"
             : "default";
     fields.push({
         key: "evaluationId",
@@ -124,9 +126,12 @@ function buildResolvedConfig(cwd, flags) {
     });
     // baseUrl
     const envBaseUrl = process.env.EVALAI_BASE_URL;
-    const baseUrlSource = flags.baseUrl ? "arg"
-        : envBaseUrl ? "env"
-            : fileConfig?.baseUrl ? "file"
+    const baseUrlSource = flags.baseUrl
+        ? "arg"
+        : envBaseUrl
+            ? "env"
+            : fileConfig?.baseUrl
+                ? "file"
                 : "default";
     fields.push({
         key: "baseUrl",
@@ -136,9 +141,7 @@ function buildResolvedConfig(cwd, flags) {
     // apiKey (always redacted)
     const envApiKey = process.env.EVALAI_API_KEY;
     const rawApiKey = flags.apiKey || envApiKey || "";
-    const apiKeySource = flags.apiKey ? "arg"
-        : envApiKey ? "env"
-            : "default";
+    const apiKeySource = flags.apiKey ? "arg" : envApiKey ? "env" : "default";
     fields.push({
         key: "apiKey",
         value: redact(rawApiKey) ?? "(not set)",
@@ -167,9 +170,12 @@ function buildResolvedConfig(cwd, flags) {
         const profileVal = profileName && profileName in profiles_1.PROFILES
             ? profiles_1.PROFILES[profileName][key]
             : undefined;
-        const source = argVal !== undefined ? "arg"
-            : fileVal !== undefined ? "file"
-                : profileVal !== undefined ? "profile"
+        const source = argVal !== undefined
+            ? "arg"
+            : fileVal !== undefined
+                ? "file"
+                : profileVal !== undefined
+                    ? "profile"
                     : "default";
         fields.push({
             key,
@@ -178,9 +184,7 @@ function buildResolvedConfig(cwd, flags) {
         });
     }
     // baseline
-    const baselineSource = flags.baseline ? "arg"
-        : fileConfig?.baseline ? "file"
-            : "default";
+    const baselineSource = flags.baseline ? "arg" : fileConfig?.baseline ? "file" : "default";
     fields.push({
         key: "baseline",
         value: merged.baseline ?? "published",

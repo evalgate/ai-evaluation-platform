@@ -31,8 +31,8 @@ vi.mock("@/lib/jobs/handlers/webhook-delivery", () => ({
 describe("jobs runner - no jobs", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    process.env.TURSO_CONNECTION_URL = process.env.TURSO_CONNECTION_URL ?? "libsql://test";
-    process.env.TURSO_AUTH_TOKEN = process.env.TURSO_AUTH_TOKEN ?? "test-token";
+    process.env.DATABASE_URL =
+      process.env.DATABASE_URL ?? "postgresql://test:test@localhost:5432/test";
   });
 
   it("returns without error when no jobs are pending", async () => {

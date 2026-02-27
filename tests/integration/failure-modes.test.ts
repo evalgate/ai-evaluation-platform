@@ -194,11 +194,11 @@ describe("Share revocation handling", () => {
       exportData: { evaluation: { id: String(eval1.id), name: "Test" } },
       exportHash: "abc123",
       isPublic: true,
-      createdAt: new Date().toISOString(),
+      createdAt: new Date(),
     });
 
     // Revoke it
-    const now = new Date().toISOString();
+    const now = new Date();
     await db
       .update(sharedExports)
       .set({ revokedAt: now, revokedBy: "test-user" })

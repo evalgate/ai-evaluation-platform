@@ -464,6 +464,5 @@ export function setupJobsTestHarness() {
   }));
 
   // optional: silence “env var not set” stderr if unknown import path reads env
-  process.env.TURSO_CONNECTION_URL ??= "test://local";
-  process.env.TURSO_AUTH_TOKEN ??= "test";
+  process.env.DATABASE_URL ??= "postgresql://test:test@localhost:5432/test";
 }

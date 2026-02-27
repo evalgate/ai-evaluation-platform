@@ -54,7 +54,7 @@ describe("Full eval flow integration", () => {
       input: "hello",
       expectedOutput: "hello",
       metadata: null,
-      createdAt: new Date().toISOString(),
+      createdAt: new Date(),
     });
     const cases = await db.select().from(testCases).where(eq(testCases.evaluationId, evaluationId));
     expect(cases.length).toBe(1);
@@ -80,15 +80,24 @@ describe("Full eval flow integration", () => {
 
   it("4. has quality score", async () => {
     if (!dbReady) return;
-    const [qs] = await db
-      .select()
-      .from(qualityScores)
-      .where(
-        and(eq(qualityScores.evaluationRunId, runId), eq(qualityScores.organizationId, ORG_ID)),
-      );
+    // Quality score is computed fire-and-forget — retry briefly
+    let qs: typeof qualityScores.$inferSelect | undefined;
+    for (let i = 0; i < 10; i++) {
+      const [row] = await db
+        .select()
+        .from(qualityScores)
+        .where(
+          and(eq(qualityScores.evaluationRunId, runId), eq(qualityScores.organizationId, ORG_ID)),
+        );
+      if (row) {
+        qs = row;
+        break;
+      }
+      await new Promise((r) => setTimeout(r, 100));
+    }
     expect(qs).toBeDefined();
-    expect(qs.score).toBeGreaterThanOrEqual(0);
-    expect(qs.scoringVersion).toBe("v1");
+    expect(qs!.score).toBeGreaterThanOrEqual(0);
+    expect(qs!.scoringVersion).toBe("v1");
   });
 
   it("5. fetches quality via service", async () => {

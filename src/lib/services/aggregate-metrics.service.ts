@@ -182,7 +182,7 @@ export async function computeRunAggregates(
   const traceLinkedCount = await db
     .select({
       total: sql<number>`count(*)`,
-      matched: sql<number>`sum(case when ${testResults.traceLinkedMatched} = 1 then 1 else 0 end)`,
+      matched: sql<number>`sum(case when ${testResults.traceLinkedMatched} = true then 1 else 0 end)`,
     })
     .from(testResults)
     .where(
@@ -200,7 +200,7 @@ export async function computeRunAggregates(
   // Provenance coverage: per-test-case fraction with model/provider from cost
   const provenanceCount = await db
     .select({
-      withProvenance: sql<number>`sum(case when ${testResults.hasProvenance} = 1 then 1 else 0 end)`,
+      withProvenance: sql<number>`sum(case when ${testResults.hasProvenance} = true then 1 else 0 end)`,
       nullProvenance: sql<number>`sum(case when ${testResults.hasProvenance} is null then 1 else 0 end)`,
     })
     .from(testResults)

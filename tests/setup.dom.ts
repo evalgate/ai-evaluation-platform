@@ -6,8 +6,7 @@ import "@testing-library/jest-dom";
 
 // Set default environment variables (allow overrides)
 process.env.NODE_ENV = "test";
-process.env.TURSO_CONNECTION_URL ??= "file:memory.db";
-process.env.TURSO_AUTH_TOKEN ??= "test-token";
+process.env.DATABASE_URL ??= "postgresql://test:test@localhost:5432/test";
 
 // Mock IntersectionObserver
 global.IntersectionObserver = vi.fn().mockImplementation(() => ({

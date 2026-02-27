@@ -30,6 +30,11 @@ function shareError(
 
 type ShareExportDTO = Record<string, unknown>;
 
+function toISOStringOrNull(val: Date | string | null | undefined): string | undefined {
+  if (!val) return undefined;
+  return val instanceof Date ? val.toISOString() : val;
+}
+
 function normalizeToShareExportDTO(
   exportData: Record<string, unknown>,
   shareId: string,
@@ -37,11 +42,12 @@ function normalizeToShareExportDTO(
   evaluationId: number | null,
   evaluationRunId: number | null,
   exportHash: string,
-  createdAt: string,
-  updatedAt: string | null,
-  expiresAt: string | null,
+  createdAt: Date | string,
+  updatedAt: Date | string | null,
+  expiresAt: Date | string | null,
 ): ShareExportDTO {
   const ev = (exportData.evaluation as Record<string, unknown>) ?? {};
+  const createdAtStr = createdAt instanceof Date ? createdAt.toISOString() : createdAt;
   return {
     ...exportData,
     id: (ev.id as string) ?? shareId,
@@ -56,9 +62,9 @@ function normalizeToShareExportDTO(
     exportHash,
     hashVersion: HASH_VERSION,
     privacyScrubbed: true,
-    createdAt,
-    updatedAt: updatedAt ?? createdAt,
-    expiresAt: expiresAt ?? undefined,
+    createdAt: createdAtStr,
+    updatedAt: toISOStringOrNull(updatedAt) ?? createdAtStr,
+    expiresAt: toISOStringOrNull(expiresAt),
   };
 }
 
@@ -85,7 +91,13 @@ export const GET = secureRoute(
       return shareError("SHARE_UNAVAILABLE", "This share link is no longer available", 410);
     }
 
-    if (row.expiresAt && new Date(row.expiresAt) < new Date()) {
+    const expiresAtDate =
+      row.expiresAt instanceof Date
+        ? row.expiresAt
+        : row.expiresAt
+          ? new Date(row.expiresAt)
+          : null;
+    if (expiresAtDate && expiresAtDate < new Date()) {
       return shareError("SHARE_EXPIRED", "This share link has expired", 410);
     }
 
@@ -126,10 +138,16 @@ export const GET = secureRoute(
       // Ignore - never affect 200 latency
     }
 
-    const expiresAtDate = row.expiresAt ? new Date(row.expiresAt) : null;
+    const expiresAtForCache =
+      row.expiresAt instanceof Date
+        ? row.expiresAt
+        : row.expiresAt
+          ? new Date(row.expiresAt)
+          : null;
     const now = new Date();
     const tenMinutes = 10 * 60 * 1000;
-    const maxAge = expiresAtDate && expiresAtDate.getTime() - now.getTime() < tenMinutes ? 15 : 60;
+    const maxAge =
+      expiresAtForCache && expiresAtForCache.getTime() - now.getTime() < tenMinutes ? 15 : 60;
 
     const res = NextResponse.json({ ...dto, requestId: getRequestId() });
     res.headers.set("Cache-Control", `public, max-age=${maxAge}, stale-while-revalidate=86400`);

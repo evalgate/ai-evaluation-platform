@@ -21,7 +21,7 @@ vi.mock("@/lib/api/request-id", () => ({
   getRequestContext: () => ({}),
 }));
 
-import { eq, inArray, sql } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import { GET } from "@/app/api/exports/[shareId]/route";
 import { db } from "@/db";
 import { evaluations, organizations, sharedExports } from "@/db/schema";
@@ -85,10 +85,17 @@ describe("GET /api/exports/[shareId] contract", () => {
       .where(eq(evaluations.organizationId, ORG_ID))
       .limit(1);
     if (evals.length === 0) {
-      const now = new Date().toISOString();
-      await db.run(
-        sql`INSERT INTO evaluations (name, description, type, status, organization_id, created_by, created_at, updated_at) VALUES ('Test Eval', 'Test', 'unit_test', 'draft', ${ORG_ID}, 'test-user', ${now}, ${now})`,
-      );
+      const now = new Date();
+      await db.insert(evaluations).values({
+        name: "Test Eval",
+        description: "Test",
+        type: "unit_test",
+        status: "draft",
+        organizationId: ORG_ID,
+        createdBy: "test-user",
+        createdAt: now,
+        updatedAt: now,
+      });
       evals = await db
         .select({ id: evaluations.id })
         .from(evaluations)
@@ -132,7 +139,7 @@ describe("GET /api/exports/[shareId] contract", () => {
       isPublic: true,
       revokedAt: null,
       viewCount: 0,
-      createdAt: new Date().toISOString(),
+      createdAt: new Date(),
       expiresAt: null,
     });
 
@@ -170,7 +177,7 @@ describe("GET /api/exports/[shareId] contract", () => {
       exportHash,
       isPublic: true,
       revokedAt: null,
-      createdAt: new Date().toISOString(),
+      createdAt: new Date(),
       expiresAt: null,
     });
 
@@ -202,7 +209,7 @@ describe("GET /api/exports/[shareId] contract", () => {
       exportHash,
       isPublic: true,
       revokedAt: null,
-      createdAt: new Date().toISOString(),
+      createdAt: new Date(),
       expiresAt: null,
     });
 
@@ -242,7 +249,7 @@ describe("GET /api/exports/[shareId] contract", () => {
       exportHash: exportHash1,
       isPublic: true,
       revokedAt: null,
-      createdAt: new Date().toISOString(),
+      createdAt: new Date(),
       expiresAt: null,
     });
 
@@ -292,7 +299,7 @@ describe("GET /api/exports/[shareId] contract", () => {
       exportHash,
       isPublic: true,
       revokedAt: null,
-      createdAt: new Date().toISOString(),
+      createdAt: new Date(),
       expiresAt: null,
     });
 
@@ -320,7 +327,7 @@ describe("GET /api/exports/[shareId] contract", () => {
 
     const shareId = "expires-at-visibility-share";
     const exportHash = computeExportHash(validExportData);
-    const futureExpiry = new Date(Date.now() + 86400000 * 7).toISOString(); // 7 days
+    const futureExpiry = new Date(Date.now() + 86400000 * 7); // 7 days
 
     await db.insert(sharedExports).values({
       shareId,
@@ -332,7 +339,7 @@ describe("GET /api/exports/[shareId] contract", () => {
       exportHash,
       isPublic: true,
       revokedAt: null,
-      createdAt: new Date().toISOString(),
+      createdAt: new Date(),
       expiresAt: futureExpiry,
     });
 
@@ -341,7 +348,7 @@ describe("GET /api/exports/[shareId] contract", () => {
 
     expect(res.status).toBe(200);
     const data = await res.json();
-    expect(data.expiresAt).toBe(futureExpiry);
+    expect(data.expiresAt).toBe(futureExpiry.toISOString());
 
     await db.delete(sharedExports).where(eq(sharedExports.shareId, shareId));
   });
@@ -361,8 +368,8 @@ describe("GET /api/exports/[shareId] contract", () => {
       exportData: validExportData,
       exportHash,
       isPublic: true,
-      revokedAt: new Date().toISOString(),
-      createdAt: new Date().toISOString(),
+      revokedAt: new Date(),
+      createdAt: new Date(),
       expiresAt: null,
     });
 
@@ -392,7 +399,7 @@ describe("GET /api/exports/[shareId] contract", () => {
       exportHash,
       isPublic: false,
       revokedAt: null,
-      createdAt: new Date().toISOString(),
+      createdAt: new Date(),
       expiresAt: null,
     });
 
@@ -410,7 +417,7 @@ describe("GET /api/exports/[shareId] contract", () => {
 
     const shareId = "expired-share";
     const exportHash = computeExportHash(validExportData);
-    const pastDate = new Date(Date.now() - 86400000).toISOString(); // 1 day ago
+    const pastDate = new Date(Date.now() - 86400000); // 1 day ago
 
     await db.insert(sharedExports).values({
       shareId,
@@ -422,7 +429,7 @@ describe("GET /api/exports/[shareId] contract", () => {
       exportHash,
       isPublic: true,
       revokedAt: null,
-      createdAt: new Date().toISOString(),
+      createdAt: new Date(),
       expiresAt: pastDate,
     });
 

@@ -17,8 +17,8 @@ describe("/api/health redis skip", () => {
     vi.clearAllMocks();
 
     // ✅ Ensure no db module complains at import time
-    process.env.TURSO_CONNECTION_URL = process.env.TURSO_CONNECTION_URL ?? "libsql://test";
-    process.env.TURSO_AUTH_TOKEN = process.env.TURSO_AUTH_TOKEN ?? "test-token";
+    process.env.DATABASE_URL =
+      process.env.DATABASE_URL ?? "postgresql://test:test@localhost:5432/test";
 
     delete process.env.UPSTASH_REDIS_REST_URL;
     delete process.env.UPSTASH_REDIS_REST_TOKEN;

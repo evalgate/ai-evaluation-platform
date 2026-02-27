@@ -24,8 +24,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       NODE_ENV: test
-      TURSO_CONNECTION_URL: 'file:memory.db'
-      TURSO_AUTH_TOKEN: test-token
+      DATABASE_URL: 'postgresql://test:test@localhost:5432/test'
     steps:
       - uses: actions/checkout@v4
 
