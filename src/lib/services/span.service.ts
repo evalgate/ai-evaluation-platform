@@ -81,7 +81,7 @@ export const spanService = {
       if (!run) return { ok: false, reason: "run_not_in_org" };
     }
 
-    const now = new Date().toISOString();
+    const now = new Date();
 
     const inputStr =
       typeof data.input === "string"

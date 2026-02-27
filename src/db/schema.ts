@@ -1,29 +1,34 @@
 import { sql } from "drizzle-orm";
-import { integer, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
+import {
+  boolean,
+  integer,
+  jsonb,
+  pgTable,
+  serial,
+  text,
+  timestamp,
+  uniqueIndex,
+} from "drizzle-orm/pg-core";
 
 // Auth tables for better-auth
-export const user = sqliteTable("user", {
+export const user = pgTable("user", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
   email: text("email").notNull().unique(),
-  emailVerified: integer("email_verified", { mode: "boolean" })
+  emailVerified: boolean("email_verified")
     .$defaultFn(() => false)
     .notNull(),
   image: text("image"),
-  createdAt: integer("created_at", { mode: "timestamp" })
-    .$defaultFn(() => new Date())
-    .notNull(),
-  updatedAt: integer("updated_at", { mode: "timestamp" })
-    .$defaultFn(() => new Date())
-    .notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
-export const session = sqliteTable("session", {
+export const session = pgTable("session", {
   id: text("id").primaryKey(),
-  expiresAt: integer("expires_at", { mode: "timestamp" }).notNull(),
+  expiresAt: timestamp("expires_at").notNull(),
   token: text("token").notNull().unique(),
-  createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
-  updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
+  createdAt: timestamp("created_at").notNull(),
+  updatedAt: timestamp("updated_at").notNull(),
   ipAddress: text("ip_address"),
   userAgent: text("user_agent"),
   userId: text("user_id")
@@ -31,7 +36,7 @@ export const session = sqliteTable("session", {
     .references(() => user.id, { onDelete: "cascade" }),
 });
 
-export const account = sqliteTable("account", {
+export const account = pgTable("account", {
   id: text("id").primaryKey(),
   accountId: text("account_id").notNull(),
   providerId: text("provider_id").notNull(),
@@ -41,43 +46,35 @@ export const account = sqliteTable("account", {
   accessToken: text("access_token"),
   refreshToken: text("refresh_token"),
   idToken: text("id_token"),
-  accessTokenExpiresAt: integer("access_token_expires_at", {
-    mode: "timestamp",
-  }),
-  refreshTokenExpiresAt: integer("refresh_token_expires_at", {
-    mode: "timestamp",
-  }),
+  accessTokenExpiresAt: timestamp("access_token_expires_at"),
+  refreshTokenExpiresAt: timestamp("refresh_token_expires_at"),
   scope: text("scope"),
   password: text("password"),
-  createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
-  updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
+  createdAt: timestamp("created_at").notNull(),
+  updatedAt: timestamp("updated_at").notNull(),
 });
 
-export const verification = sqliteTable("verification", {
+export const verification = pgTable("verification", {
   id: text("id").primaryKey(),
   identifier: text("identifier").notNull(),
   value: text("value").notNull(),
-  expiresAt: integer("expires_at", { mode: "timestamp" }).notNull(),
-  createdAt: integer("created_at", { mode: "timestamp" }).$defaultFn(() => new Date()),
-  updatedAt: integer("updated_at", { mode: "timestamp" }).$defaultFn(() => new Date()),
+  expiresAt: timestamp("expires_at").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 // Organizations
-export const organizations = sqliteTable("organizations", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+export const organizations = pgTable("organizations", {
+  id: serial("id").primaryKey(),
   name: text("name").notNull(),
-  createdAt: integer("created_at", { mode: "timestamp" })
-    .$defaultFn(() => new Date())
-    .notNull(),
-  updatedAt: integer("updated_at", { mode: "timestamp" })
-    .$defaultFn(() => new Date())
-    .notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
-export const organizationMembers = sqliteTable(
+export const organizationMembers = pgTable(
   "organization_members",
   {
-    id: integer("id").primaryKey({ autoIncrement: true }),
+    id: serial("id").primaryKey(),
     organizationId: integer("organization_id")
       .references(() => organizations.id)
       .notNull(),
@@ -85,9 +82,7 @@ export const organizationMembers = sqliteTable(
       .references(() => user.id)
       .notNull(),
     role: text("role").notNull(),
-    createdAt: integer("created_at", { mode: "timestamp" })
-      .$defaultFn(() => new Date())
-      .notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
   },
   (table) => ({
     uniqueOrgUser: uniqueIndex("org_members_org_user_unique").on(
@@ -98,8 +93,8 @@ export const organizationMembers = sqliteTable(
 );
 
 // Evaluations
-export const evaluations = sqliteTable("evaluations", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+export const evaluations = pgTable("evaluations", {
+  id: serial("id").primaryKey(),
   name: text("name").notNull(),
   description: text("description"),
   type: text("type").notNull(),
@@ -110,40 +105,34 @@ export const evaluations = sqliteTable("evaluations", {
   createdBy: text("created_by")
     .references(() => user.id)
     .notNull(),
-  executionSettings: text("execution_settings", { mode: "json" }),
-  modelSettings: text("model_settings", { mode: "json" }),
-  customMetrics: text("custom_metrics", { mode: "json" }),
+  executionSettings: jsonb("execution_settings"),
+  modelSettings: jsonb("model_settings"),
+  customMetrics: jsonb("custom_metrics"),
   executorType: text("executor_type"),
-  executorConfig: text("executor_config", { mode: "json" }),
+  executorConfig: jsonb("executor_config"),
   publishedRunId: integer("published_run_id"),
   publishedVersion: integer("published_version"),
-  createdAt: integer("created_at", { mode: "timestamp" })
-    .$defaultFn(() => new Date())
-    .notNull(),
-  updatedAt: integer("updated_at", { mode: "timestamp" })
-    .$defaultFn(() => new Date())
-    .notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
 /**
  * @deprecated Use `testCases` table instead. This table is retained only for
  * backwards-compatible migrations. All new code must use `testCases`.
  */
-export const evaluationTestCases = sqliteTable("evaluation_test_cases", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+export const evaluationTestCases = pgTable("evaluation_test_cases", {
+  id: serial("id").primaryKey(),
   evaluationId: integer("evaluation_id")
     .references(() => evaluations.id)
     .notNull(),
   input: text("input").notNull(),
   expectedOutput: text("expected_output"),
-  metadata: text("metadata", { mode: "json" }),
-  createdAt: integer("created_at", { mode: "timestamp" })
-    .$defaultFn(() => new Date())
-    .notNull(),
+  metadata: jsonb("metadata"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-export const evaluationRuns = sqliteTable("evaluation_runs", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+export const evaluationRuns = pgTable("evaluation_runs", {
+  id: serial("id").primaryKey(),
   evaluationId: integer("evaluation_id")
     .references(() => evaluations.id)
     .notNull(),
@@ -156,18 +145,16 @@ export const evaluationRuns = sqliteTable("evaluation_runs", {
   passedCases: integer("passed_cases").default(0),
   failedCases: integer("failed_cases").default(0),
   processedCount: integer("processed_count").default(0), // Heartbeat counter for progress tracking
-  traceLog: text("trace_log", { mode: "json" }), // Full journey JSON with messages array
-  startedAt: integer("started_at", { mode: "timestamp" }),
-  completedAt: integer("completed_at", { mode: "timestamp" }),
+  traceLog: jsonb("trace_log"), // Full journey JSON with messages array
+  startedAt: timestamp("started_at"),
+  completedAt: timestamp("completed_at"),
   environment: text("environment").default("dev"), // dev | staging | prod (for baseline=production)
-  createdAt: integer("created_at", { mode: "timestamp" })
-    .$defaultFn(() => new Date())
-    .notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
 // Traces
-export const traces = sqliteTable("traces", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+export const traces = pgTable("traces", {
+  id: serial("id").primaryKey(),
   name: text("name").notNull(),
   traceId: text("trace_id").notNull().unique(),
   organizationId: integer("organization_id")
@@ -175,10 +162,8 @@ export const traces = sqliteTable("traces", {
     .notNull(),
   status: text("status").notNull().default("pending"),
   durationMs: integer("duration_ms"),
-  metadata: text("metadata", { mode: "json" }),
-  createdAt: integer("created_at", { mode: "timestamp" })
-    .$defaultFn(() => new Date())
-    .notNull(),
+  metadata: jsonb("metadata"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
 // DEPRECATED: traceSpans table removed in span unification (Phase 2).
@@ -186,8 +171,8 @@ export const traces = sqliteTable("traces", {
 // and a UNIQUE constraint on spanId. See spans definition below.
 
 // Annotations
-export const annotationTasks = sqliteTable("annotation_tasks", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+export const annotationTasks = pgTable("annotation_tasks", {
+  id: serial("id").primaryKey(),
   name: text("name").notNull(),
   description: text("description"),
   organizationId: integer("organization_id")
@@ -200,53 +185,43 @@ export const annotationTasks = sqliteTable("annotation_tasks", {
   createdBy: text("created_by")
     .references(() => user.id)
     .notNull(),
-  annotationSettings: text("annotation_settings", { mode: "json" }),
-  createdAt: integer("created_at", { mode: "timestamp" })
-    .$defaultFn(() => new Date())
-    .notNull(),
-  updatedAt: integer("updated_at", { mode: "timestamp" })
-    .$defaultFn(() => new Date())
-    .notNull(),
+  annotationSettings: jsonb("annotation_settings"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
-export const annotationItems = sqliteTable("annotation_items", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+export const annotationItems = pgTable("annotation_items", {
+  id: serial("id").primaryKey(),
   taskId: integer("task_id")
     .references(() => annotationTasks.id)
     .notNull(),
   content: text("content").notNull(),
-  annotation: text("annotation", { mode: "json" }),
+  annotation: jsonb("annotation"),
   annotatedBy: text("annotated_by").references(() => user.id),
-  annotatedAt: integer("annotated_at", { mode: "timestamp" }),
-  createdAt: integer("created_at", { mode: "timestamp" })
-    .$defaultFn(() => new Date())
-    .notNull(),
+  annotatedAt: timestamp("annotated_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
 // LLM Judge
-export const llmJudgeConfigs = sqliteTable("llm_judge_configs", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+export const llmJudgeConfigs = pgTable("llm_judge_configs", {
+  id: serial("id").primaryKey(),
   name: text("name").notNull(),
   organizationId: integer("organization_id")
     .references(() => organizations.id)
     .notNull(),
   model: text("model").notNull(),
   promptTemplate: text("prompt_template").notNull(),
-  criteria: text("criteria", { mode: "json" }),
-  settings: text("settings", { mode: "json" }),
+  criteria: jsonb("criteria"),
+  settings: jsonb("settings"),
   createdBy: text("created_by")
     .references(() => user.id)
     .notNull(),
-  createdAt: integer("created_at", { mode: "timestamp" })
-    .$defaultFn(() => new Date())
-    .notNull(),
-  updatedAt: integer("updated_at", { mode: "timestamp" })
-    .$defaultFn(() => new Date())
-    .notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
-export const llmJudgeResults = sqliteTable("llm_judge_results", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+export const llmJudgeResults = pgTable("llm_judge_results", {
+  id: serial("id").primaryKey(),
   configId: integer("config_id")
     .references(() => llmJudgeConfigs.id)
     .notNull(),
@@ -256,15 +231,13 @@ export const llmJudgeResults = sqliteTable("llm_judge_results", {
   output: text("output").notNull(),
   score: integer("score"),
   reasoning: text("reasoning"),
-  metadata: text("metadata", { mode: "json" }),
-  createdAt: integer("created_at", { mode: "timestamp" })
-    .$defaultFn(() => new Date())
-    .notNull(),
+  metadata: jsonb("metadata"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
 // Developer Experience Tables
-export const apiKeys = sqliteTable("api_keys", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+export const apiKeys = pgTable("api_keys", {
+  id: serial("id").primaryKey(),
   userId: text("user_id")
     .references(() => user.id)
     .notNull(),
@@ -274,39 +247,33 @@ export const apiKeys = sqliteTable("api_keys", {
   keyHash: text("key_hash").notNull(),
   keyPrefix: text("key_prefix").notNull().unique(),
   name: text("name").notNull(),
-  scopes: text("scopes", { mode: "json" }).notNull(),
-  lastUsedAt: integer("last_used_at", { mode: "timestamp" }),
-  expiresAt: integer("expires_at", { mode: "timestamp" }),
-  revokedAt: integer("revoked_at", { mode: "timestamp" }),
-  createdAt: integer("created_at", { mode: "timestamp" })
-    .$defaultFn(() => new Date())
-    .notNull(),
+  scopes: jsonb("scopes").notNull(),
+  lastUsedAt: timestamp("last_used_at"),
+  expiresAt: timestamp("expires_at"),
+  revokedAt: timestamp("revoked_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-export const webhooks = sqliteTable("webhooks", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+export const webhooks = pgTable("webhooks", {
+  id: serial("id").primaryKey(),
   organizationId: integer("organization_id")
     .references(() => organizations.id)
     .notNull(),
   url: text("url").notNull(),
-  events: text("events", { mode: "json" }).notNull(),
+  events: jsonb("events").notNull(),
   secret: text("secret").notNull(), // legacy placeholder column (kept for migration compatibility)
   encryptedSecret: text("encrypted_secret"),
   secretIv: text("secret_iv"),
   secretTag: text("secret_tag"),
   status: text("status").notNull().default("active"),
-  lastDeliveredAt: integer("last_delivered_at", { mode: "timestamp" }),
-  createdAt: integer("created_at", { mode: "timestamp" })
-    .$defaultFn(() => new Date())
-    .notNull(),
-  updatedAt: integer("updated_at", { mode: "timestamp" })
-    .$defaultFn(() => new Date())
-    .notNull(),
+  lastDeliveredAt: timestamp("last_delivered_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
 // Provider Keys for per-org encrypted third-party API keys
-export const providerKeys = sqliteTable("provider_keys", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+export const providerKeys = pgTable("provider_keys", {
+  id: serial("id").primaryKey(),
   organizationId: integer("organization_id")
     .references(() => organizations.id)
     .notNull(),
@@ -317,38 +284,32 @@ export const providerKeys = sqliteTable("provider_keys", {
   keyPrefix: text("key_prefix").notNull(), // First few characters for identification
   iv: text("iv").notNull(), // Initialization vector for decryption
   tag: text("tag").notNull(), // Authentication tag for integrity
-  metadata: text("metadata", { mode: "json" }), // Additional key information
-  isActive: integer("is_active", { mode: "boolean" }).default(true),
-  lastUsedAt: integer("last_used_at", { mode: "timestamp" }),
-  expiresAt: integer("expires_at", { mode: "timestamp" }),
+  metadata: jsonb("metadata"), // Additional key information
+  isActive: boolean("is_active").default(true),
+  lastUsedAt: timestamp("last_used_at"),
+  expiresAt: timestamp("expires_at"),
   createdBy: text("created_by")
     .references(() => user.id)
     .notNull(),
-  createdAt: integer("created_at", { mode: "timestamp" })
-    .$defaultFn(() => new Date())
-    .notNull(),
-  updatedAt: integer("updated_at", { mode: "timestamp" })
-    .$defaultFn(() => new Date())
-    .notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
-export const webhookDeliveries = sqliteTable(
+export const webhookDeliveries = pgTable(
   "webhook_deliveries",
   {
-    id: integer("id").primaryKey({ autoIncrement: true }),
+    id: serial("id").primaryKey(),
     webhookId: integer("webhook_id")
       .references(() => webhooks.id)
       .notNull(),
     eventType: text("event_type").notNull(),
-    payload: text("payload", { mode: "json" }).notNull(),
+    payload: jsonb("payload").notNull(),
     payloadHash: text("payload_hash"), // SHA-256 for deduplication
     status: text("status").notNull().default("pending"),
     responseStatus: integer("response_status"),
     responseBody: text("response_body"),
     attemptCount: integer("attempt_count").default(0),
-    createdAt: integer("created_at", { mode: "timestamp" })
-      .$defaultFn(() => new Date())
-      .notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
   },
   (table) => ({
     dedupIndex: uniqueIndex("idx_webhook_deliveries_dedup").on(
@@ -359,8 +320,8 @@ export const webhookDeliveries = sqliteTable(
   }),
 );
 
-export const apiUsageLogs = sqliteTable("api_usage_logs", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+export const apiUsageLogs = pgTable("api_usage_logs", {
+  id: serial("id").primaryKey(),
   apiKeyId: integer("api_key_id").references(() => apiKeys.id),
   userId: text("user_id").references(() => user.id),
   organizationId: integer("organization_id")
@@ -370,13 +331,11 @@ export const apiUsageLogs = sqliteTable("api_usage_logs", {
   method: text("method").notNull(),
   statusCode: integer("status_code").notNull(),
   responseTimeMs: integer("response_time_ms").notNull(),
-  createdAt: integer("created_at", { mode: "timestamp" })
-    .$defaultFn(() => new Date())
-    .notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-export const humanAnnotations = sqliteTable("human_annotations", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+export const humanAnnotations = pgTable("human_annotations", {
+  id: serial("id").primaryKey(),
   evaluationRunId: integer("evaluation_run_id")
     .references(() => evaluationRuns.id)
     .notNull(),
@@ -388,15 +347,13 @@ export const humanAnnotations = sqliteTable("human_annotations", {
     .notNull(),
   rating: integer("rating"),
   feedback: text("feedback"),
-  labels: text("labels", { mode: "json" }),
-  metadata: text("metadata", { mode: "json" }),
-  createdAt: integer("created_at", { mode: "timestamp" })
-    .$defaultFn(() => new Date())
-    .notNull(),
+  labels: jsonb("labels"),
+  metadata: jsonb("metadata"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-export const testCases = sqliteTable("test_cases", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+export const testCases = pgTable("test_cases", {
+  id: serial("id").primaryKey(),
   evaluationId: integer("evaluation_id")
     .references(() => evaluations.id)
     .notNull(),
@@ -404,14 +361,12 @@ export const testCases = sqliteTable("test_cases", {
   input: text("input").notNull(),
   inputHash: text("input_hash"), // SHA-256 of normalized input for trace-linked matching
   expectedOutput: text("expected_output"),
-  metadata: text("metadata", { mode: "json" }),
-  createdAt: integer("created_at", { mode: "timestamp" })
-    .$defaultFn(() => new Date())
-    .notNull(),
+  metadata: jsonb("metadata"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-export const testResults = sqliteTable("test_results", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+export const testResults = pgTable("test_results", {
+  id: serial("id").primaryKey(),
   evaluationRunId: integer("evaluation_run_id")
     .references(() => evaluationRuns.id)
     .notNull(),
@@ -425,19 +380,17 @@ export const testResults = sqliteTable("test_results", {
   output: text("output"),
   score: integer("score"),
   error: text("error"),
-  assertionsJson: text("assertions_json", { mode: "json" }), // Structured assertion outcomes: { pii: false, toxicity: false, ... }
-  traceLinkedMatched: integer("trace_linked_matched", { mode: "boolean" }), // true=matched, false=no span, null=not trace-linked
-  hasProvenance: integer("has_provenance", { mode: "boolean" }), // true=model/provider from cost; null=unknown
+  assertionsJson: jsonb("assertions_json"), // Structured assertion outcomes: { pii: false, toxicity: false, ... }
+  traceLinkedMatched: boolean("trace_linked_matched"), // true=matched, false=no span, null=not trace-linked
+  hasProvenance: boolean("has_provenance"), // true=model/provider from cost; null=unknown
   durationMs: integer("duration_ms"),
-  messages: text("messages", { mode: "json" }), // Raw LLM messages array for each turn
-  toolCalls: text("tool_calls", { mode: "json" }), // Tool arguments and outputs per turn
-  createdAt: integer("created_at", { mode: "timestamp" })
-    .$defaultFn(() => new Date())
-    .notNull(),
+  messages: jsonb("messages"), // Raw LLM messages array for each turn
+  toolCalls: jsonb("tool_calls"), // Tool arguments and outputs per turn
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-export const spans = sqliteTable("spans", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+export const spans = pgTable("spans", {
+  id: serial("id").primaryKey(),
   traceId: integer("trace_id")
     .references(() => traces.id)
     .notNull(),
@@ -445,39 +398,31 @@ export const spans = sqliteTable("spans", {
   parentSpanId: text("parent_span_id"),
   name: text("name").notNull(),
   type: text("type").notNull(),
-  startTime: integer("start_time", { mode: "timestamp" }),
-  endTime: integer("end_time", { mode: "timestamp" }),
+  startTime: timestamp("start_time"),
+  endTime: timestamp("end_time"),
   durationMs: integer("duration_ms"),
   input: text("input"),
   inputHash: text("input_hash"), // SHA-256 of normalized input for deterministic matching
   output: text("output"),
   evaluationRunId: integer("evaluation_run_id").references(() => evaluationRuns.id), // when consumed by trace-linked run
-  metadata: text("metadata", { mode: "json" }),
-  createdAt: integer("created_at", { mode: "timestamp" })
-    .$defaultFn(() => new Date())
-    .notNull(),
+  metadata: jsonb("metadata"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
 // Email Subscribers (for lead capture)
-export const emailSubscribers = sqliteTable("email_subscribers", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+export const emailSubscribers = pgTable("email_subscribers", {
+  id: serial("id").primaryKey(),
   email: text("email").notNull().unique(),
   source: text("source").notNull(), // 'playground', 'homepage', 'blog', etc.
-  context: text("context", { mode: "json" }), // Additional context like scenario, score, etc.
+  context: jsonb("context"), // Additional context like scenario, score, etc.
   status: text("status").notNull().default("active"), // 'active', 'unsubscribed', 'bounced'
-  tags: text("tags", { mode: "json" }), // ['playground-lead', 'high-intent', etc.]
-  subscribedAt: integer("subscribed_at", { mode: "timestamp" })
-    .$defaultFn(() => new Date())
-    .notNull(),
-  unsubscribedAt: integer("unsubscribed_at", { mode: "timestamp" }),
-  lastEmailSentAt: integer("last_email_sent_at", { mode: "timestamp" }),
+  tags: jsonb("tags"), // ['playground-lead', 'high-intent', etc.]
+  subscribedAt: timestamp("subscribed_at").defaultNow().notNull(),
+  unsubscribedAt: timestamp("unsubscribed_at"),
+  lastEmailSentAt: timestamp("last_email_sent_at"),
   emailCount: integer("email_count").notNull().default(0),
-  createdAt: integer("created_at", { mode: "timestamp" })
-    .$defaultFn(() => new Date())
-    .notNull(),
-  updatedAt: integer("updated_at", { mode: "timestamp" })
-    .$defaultFn(() => new Date())
-    .notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
 // ============================================
@@ -485,14 +430,14 @@ export const emailSubscribers = sqliteTable("email_subscribers", {
 // ============================================
 
 // Workflow definitions for multi-agent evaluation
-export const workflows = sqliteTable("workflows", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+export const workflows = pgTable("workflows", {
+  id: serial("id").primaryKey(),
   name: text("name").notNull(),
   description: text("description"),
   organizationId: integer("organization_id")
     .references(() => organizations.id)
     .notNull(),
-  definition: text("definition", { mode: "json" }).notNull(), // DAG structure with nodes and edges
+  definition: jsonb("definition").notNull(), // DAG structure with nodes and edges
   version: integer("version").default(1),
   status: text("status").notNull().default("draft"), // 'draft', 'active', 'archived'
   // SLA Configuration
@@ -502,17 +447,13 @@ export const workflows = sqliteTable("workflows", {
   createdBy: text("created_by")
     .references(() => user.id)
     .notNull(),
-  createdAt: integer("created_at", { mode: "timestamp" })
-    .$defaultFn(() => new Date())
-    .notNull(),
-  updatedAt: integer("updated_at", { mode: "timestamp" })
-    .$defaultFn(() => new Date())
-    .notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
 // Individual workflow executions
-export const workflowRuns = sqliteTable("workflow_runs", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+export const workflowRuns = pgTable("workflow_runs", {
+  id: serial("id").primaryKey(),
   workflowId: integer("workflow_id").references(() => workflows.id),
   traceId: integer("trace_id")
     .references(() => traces.id)
@@ -521,22 +462,22 @@ export const workflowRuns = sqliteTable("workflow_runs", {
     .references(() => organizations.id)
     .notNull(),
   status: text("status").notNull().default("running"), // 'running', 'completed', 'failed', 'cancelled'
-  input: text("input", { mode: "json" }),
-  output: text("output", { mode: "json" }),
+  input: jsonb("input"),
+  output: jsonb("output"),
   totalCost: text("total_cost"), // decimal as string for precision
   totalDurationMs: integer("total_duration_ms"),
   agentCount: integer("agent_count"),
   handoffCount: integer("handoff_count"),
   retryCount: integer("retry_count").default(0),
   errorMessage: text("error_message"),
-  metadata: text("metadata", { mode: "json" }),
-  startedAt: integer("started_at", { mode: "timestamp" }).notNull(),
-  completedAt: integer("completed_at", { mode: "timestamp" }),
+  metadata: jsonb("metadata"),
+  startedAt: timestamp("started_at").notNull(),
+  completedAt: timestamp("completed_at"),
 });
 
 // Agent handoff events between agents in a workflow
-export const agentHandoffs = sqliteTable("agent_handoffs", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+export const agentHandoffs = pgTable("agent_handoffs", {
+  id: serial("id").primaryKey(),
   workflowRunId: integer("workflow_run_id")
     .references(() => workflowRuns.id)
     .notNull(),
@@ -548,8 +489,8 @@ export const agentHandoffs = sqliteTable("agent_handoffs", {
   fromAgent: text("from_agent"),
   toAgent: text("to_agent").notNull(),
   handoffType: text("handoff_type").notNull(), // 'delegation', 'escalation', 'parallel', 'fallback'
-  context: text("context", { mode: "json" }), // data passed between agents
-  timestamp: integer("timestamp", { mode: "timestamp" }).notNull(),
+  context: jsonb("context"), // data passed between agents
+  timestamp: timestamp("timestamp").notNull(),
 });
 
 // ============================================
@@ -557,8 +498,8 @@ export const agentHandoffs = sqliteTable("agent_handoffs", {
 // ============================================
 
 // Agent decision tracking for audit trails
-export const agentDecisions = sqliteTable("agent_decisions", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+export const agentDecisions = pgTable("agent_decisions", {
+  id: serial("id").primaryKey(),
   spanId: integer("span_id")
     .references(() => spans.id)
     .notNull(),
@@ -569,13 +510,11 @@ export const agentDecisions = sqliteTable("agent_decisions", {
   agentName: text("agent_name").notNull(),
   decisionType: text("decision_type").notNull(), // 'action', 'tool', 'delegate', 'respond'
   chosen: text("chosen").notNull(), // the action/tool that was chosen
-  alternatives: text("alternatives", { mode: "json" }).notNull(), // array of alternative options considered
+  alternatives: jsonb("alternatives").notNull(), // array of alternative options considered
   reasoning: text("reasoning"), // why this choice was made
   confidence: integer("confidence"), // 0-100 confidence score
-  inputContext: text("input_context", { mode: "json" }), // context that influenced the decision
-  createdAt: integer("created_at", { mode: "timestamp" })
-    .$defaultFn(() => new Date())
-    .notNull(),
+  inputContext: jsonb("input_context"), // context that influenced the decision
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
 // ============================================
@@ -583,8 +522,8 @@ export const agentDecisions = sqliteTable("agent_decisions", {
 // ============================================
 
 // Cost records for individual LLM calls and operations
-export const costRecords = sqliteTable("cost_records", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+export const costRecords = pgTable("cost_records", {
+  id: serial("id").primaryKey(),
   spanId: integer("span_id")
     .references(() => spans.id)
     .notNull(),
@@ -601,26 +540,22 @@ export const costRecords = sqliteTable("cost_records", {
   inputCost: text("input_cost").notNull(), // decimal as string
   outputCost: text("output_cost").notNull(),
   totalCost: text("total_cost").notNull(),
-  isRetry: integer("is_retry", { mode: "boolean" }).default(false),
+  isRetry: boolean("is_retry").default(false),
   retryNumber: integer("retry_number").default(0),
   costCategory: text("cost_category").notNull(), // 'llm', 'tool', 'embedding', 'other'
-  createdAt: integer("created_at", { mode: "timestamp" })
-    .$defaultFn(() => new Date())
-    .notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
 // Provider pricing table (admin-managed)
-export const providerPricing = sqliteTable("provider_pricing", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+export const providerPricing = pgTable("provider_pricing", {
+  id: serial("id").primaryKey(),
   provider: text("provider").notNull(),
   model: text("model").notNull(),
   inputPricePerMillion: text("input_price_per_million").notNull(), // price per 1M input tokens
   outputPricePerMillion: text("output_price_per_million").notNull(), // price per 1M output tokens
   effectiveDate: text("effective_date").notNull(),
-  isActive: integer("is_active", { mode: "boolean" }).default(true),
-  createdAt: integer("created_at", { mode: "timestamp" })
-    .$defaultFn(() => new Date())
-    .notNull(),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
 // ============================================
@@ -628,53 +563,45 @@ export const providerPricing = sqliteTable("provider_pricing", {
 // ============================================
 
 // Benchmark definitions
-export const benchmarks = sqliteTable("benchmarks", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+export const benchmarks = pgTable("benchmarks", {
+  id: serial("id").primaryKey(),
   name: text("name").notNull(),
   description: text("description"),
   organizationId: integer("organization_id")
     .references(() => organizations.id)
     .notNull(),
   taskType: text("task_type").notNull(), // 'qa', 'coding', 'reasoning', 'tool_use', 'multi_step'
-  dataset: text("dataset", { mode: "json" }), // test cases for the benchmark
-  metrics: text("metrics", { mode: "json" }).notNull(), // which metrics to track
-  isPublic: integer("is_public", { mode: "boolean" }).default(false),
+  dataset: jsonb("dataset"), // test cases for the benchmark
+  metrics: jsonb("metrics").notNull(), // which metrics to track
+  isPublic: boolean("is_public").default(false),
   createdBy: text("created_by")
     .references(() => user.id)
     .notNull(),
-  createdAt: integer("created_at", { mode: "timestamp" })
-    .$defaultFn(() => new Date())
-    .notNull(),
-  updatedAt: integer("updated_at", { mode: "timestamp" })
-    .$defaultFn(() => new Date())
-    .notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
 // Agent configurations being benchmarked
-export const agentConfigs = sqliteTable("agent_configs", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+export const agentConfigs = pgTable("agent_configs", {
+  id: serial("id").primaryKey(),
   name: text("name").notNull(),
   organizationId: integer("organization_id")
     .references(() => organizations.id)
     .notNull(),
   architecture: text("architecture").notNull(), // 'react', 'cot', 'tot', 'custom'
   model: text("model").notNull(),
-  config: text("config", { mode: "json" }), // full agent configuration
+  config: jsonb("config"), // full agent configuration
   description: text("description"),
   createdBy: text("created_by")
     .references(() => user.id)
     .notNull(),
-  createdAt: integer("created_at", { mode: "timestamp" })
-    .$defaultFn(() => new Date())
-    .notNull(),
-  updatedAt: integer("updated_at", { mode: "timestamp" })
-    .$defaultFn(() => new Date())
-    .notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
 // Benchmark results
-export const benchmarkResults = sqliteTable("benchmark_results", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+export const benchmarkResults = pgTable("benchmark_results", {
+  id: serial("id").primaryKey(),
   benchmarkId: integer("benchmark_id")
     .references(() => benchmarks.id)
     .notNull(),
@@ -688,11 +615,9 @@ export const benchmarkResults = sqliteTable("benchmark_results", {
   totalCost: text("total_cost"), // total cost in dollars
   successRate: integer("success_rate"), // 0-100
   toolUseEfficiency: integer("tool_use_efficiency"), // 0-100
-  customMetrics: text("custom_metrics", { mode: "json" }),
+  customMetrics: jsonb("custom_metrics"),
   runCount: integer("run_count").default(1),
-  createdAt: integer("created_at", { mode: "timestamp" })
-    .$defaultFn(() => new Date())
-    .notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
 // ============================================
@@ -700,8 +625,8 @@ export const benchmarkResults = sqliteTable("benchmark_results", {
 // ============================================
 
 // Golden Sets for One-Click Regression (CI/CD for Prompts)
-export const goldenSets = sqliteTable("golden_sets", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+export const goldenSets = pgTable("golden_sets", {
+  id: serial("id").primaryKey(),
   evaluationId: integer("evaluation_id")
     .references(() => evaluations.id)
     .notNull(),
@@ -709,21 +634,17 @@ export const goldenSets = sqliteTable("golden_sets", {
     .references(() => organizations.id)
     .notNull(),
   name: text("name").notNull().default("Default Golden Set"),
-  testCaseIds: text("test_case_ids", { mode: "json" }).notNull(), // number[] — the 5 most important
+  testCaseIds: jsonb("test_case_ids").notNull(), // number[] — the 5 most important
   lastStatus: text("last_status").default("unknown"), // 'passed', 'failed', 'unknown'
-  lastRunAt: integer("last_run_at", { mode: "timestamp" }),
+  lastRunAt: timestamp("last_run_at"),
   passThreshold: integer("pass_threshold").default(70), // Minimum score to pass (0-100)
-  createdAt: integer("created_at", { mode: "timestamp" })
-    .$defaultFn(() => new Date())
-    .notNull(),
-  updatedAt: integer("updated_at", { mode: "timestamp" })
-    .$defaultFn(() => new Date())
-    .notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
 // Arena Matches for LLM Battle Arena (Social Proof)
-export const arenaMatches = sqliteTable("arena_matches", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+export const arenaMatches = pgTable("arena_matches", {
+  id: serial("id").primaryKey(),
   organizationId: integer("organization_id")
     .references(() => organizations.id)
     .notNull(),
@@ -731,19 +652,17 @@ export const arenaMatches = sqliteTable("arena_matches", {
   winnerId: text("winner_id").notNull(),
   winnerLabel: text("winner_label").notNull(),
   judgeReasoning: text("judge_reasoning"),
-  results: text("results", { mode: "json" }).notNull(), // ArenaResult[]
-  scores: text("scores", { mode: "json" }), // { "GPT-4o": 87, "Claude": 92 }
+  results: jsonb("results").notNull(), // ArenaResult[]
+  scores: jsonb("scores"), // { "GPT-4o": 87, "Claude": 92 }
   createdBy: text("created_by")
     .references(() => user.id)
     .notNull(),
-  createdAt: integer("created_at", { mode: "timestamp" })
-    .$defaultFn(() => new Date())
-    .notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
 // Report Cards for Shareable Evaluation Certificates (Marketing Asset)
-export const reportCards = sqliteTable("report_cards", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+export const reportCards = pgTable("report_cards", {
+  id: serial("id").primaryKey(),
   evaluationId: integer("evaluation_id")
     .references(() => evaluations.id)
     .notNull(),
@@ -756,16 +675,14 @@ export const reportCards = sqliteTable("report_cards", {
   slug: text("slug").notNull().unique(), // Public URL: /report/abc123
   title: text("title").notNull(),
   description: text("description"),
-  isPublic: integer("is_public", { mode: "boolean" }).default(true),
-  reportData: text("report_data", { mode: "json" }).notNull(), // Snapshot of scores/results
-  expiresAt: integer("expires_at", { mode: "timestamp" }),
+  isPublic: boolean("is_public").default(true),
+  reportData: jsonb("report_data").notNull(), // Snapshot of scores/results
+  expiresAt: timestamp("expires_at"),
   viewCount: integer("view_count").default(0),
   createdBy: text("created_by")
     .references(() => user.id)
     .notNull(),
-  createdAt: integer("created_at", { mode: "timestamp" })
-    .$defaultFn(() => new Date())
-    .notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
 // ============================================
@@ -773,8 +690,8 @@ export const reportCards = sqliteTable("report_cards", {
 // ============================================
 
 // Immutable audit log for security events and data mutations
-export const auditLogs = sqliteTable("audit_logs", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+export const auditLogs = pgTable("audit_logs", {
+  id: serial("id").primaryKey(),
   organizationId: integer("organization_id")
     .references(() => organizations.id)
     .notNull(),
@@ -782,12 +699,10 @@ export const auditLogs = sqliteTable("audit_logs", {
   action: text("action").notNull(),
   resourceType: text("resource_type"),
   resourceId: text("resource_id"),
-  metadata: text("metadata", { mode: "json" }),
+  metadata: jsonb("metadata"),
   ipAddress: text("ip_address"),
   userAgent: text("user_agent"),
-  createdAt: integer("created_at", { mode: "timestamp" })
-    .$defaultFn(() => new Date())
-    .notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
 // ============================================
@@ -795,8 +710,8 @@ export const auditLogs = sqliteTable("audit_logs", {
 // ============================================
 
 // Quality scores computed per evaluation run
-export const qualityScores = sqliteTable("quality_scores", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+export const qualityScores = pgTable("quality_scores", {
+  id: serial("id").primaryKey(),
   evaluationRunId: integer("evaluation_run_id")
     .references(() => evaluationRuns.id)
     .notNull(),
@@ -810,20 +725,18 @@ export const qualityScores = sqliteTable("quality_scores", {
   total: integer("total"), // test case count for minN gating
   traceCoverageRate: text("trace_coverage_rate"), // nullable, for trace-linked runs: matched/total
   provenanceCoverageRate: text("provenance_coverage_rate"), // 0..1, per-test-case fraction with model/provider
-  breakdown: text("breakdown", { mode: "json" }).notNull(),
-  flags: text("flags", { mode: "json" }).notNull(),
+  breakdown: jsonb("breakdown").notNull(),
+  flags: jsonb("flags").notNull(),
   evidenceLevel: text("evidence_level"), // 'strong' | 'medium' | 'weak'
   scoringVersion: text("scoring_version").notNull().default("v1"),
   model: text("model"),
-  isBaseline: integer("is_baseline", { mode: "boolean" }).default(false),
-  inputsJson: text("inputs_json", { mode: "json" }),
-  scoringSpecJson: text("scoring_spec_json", { mode: "json" }),
+  isBaseline: boolean("is_baseline").default(false),
+  inputsJson: jsonb("inputs_json"),
+  scoringSpecJson: jsonb("scoring_spec_json"),
   inputsHash: text("inputs_hash"),
   scoringSpecHash: text("scoring_spec_hash"),
   scoringCommit: text("scoring_commit"),
-  createdAt: integer("created_at", { mode: "timestamp" })
-    .$defaultFn(() => new Date())
-    .notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
 // ============================================
@@ -831,20 +744,18 @@ export const qualityScores = sqliteTable("quality_scores", {
 // ============================================
 
 // Snapshots of evaluation configs at publish time
-export const evaluationVersions = sqliteTable("evaluation_versions", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+export const evaluationVersions = pgTable("evaluation_versions", {
+  id: serial("id").primaryKey(),
   evaluationId: integer("evaluation_id")
     .references(() => evaluations.id)
     .notNull(),
   version: integer("version").notNull(),
-  snapshotJson: text("snapshot_json", { mode: "json" }).notNull(),
+  snapshotJson: jsonb("snapshot_json").notNull(),
   diffSummary: text("diff_summary"),
   createdBy: text("created_by")
     .references(() => user.id)
     .notNull(),
-  createdAt: integer("created_at", { mode: "timestamp" })
-    .$defaultFn(() => new Date())
-    .notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
 // ============================================
@@ -852,8 +763,8 @@ export const evaluationVersions = sqliteTable("evaluation_versions", {
 // ============================================
 
 // Alerts generated by drift detection
-export const driftAlerts = sqliteTable("drift_alerts", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+export const driftAlerts = pgTable("drift_alerts", {
+  id: serial("id").primaryKey(),
   organizationId: integer("organization_id")
     .references(() => organizations.id)
     .notNull(),
@@ -865,11 +776,9 @@ export const driftAlerts = sqliteTable("drift_alerts", {
   currentValue: text("current_value"),
   baselineValue: text("baseline_value"),
   zScoreValue: text("z_score_value"),
-  metadata: text("metadata", { mode: "json" }),
-  acknowledgedAt: integer("acknowledged_at", { mode: "timestamp" }),
-  createdAt: integer("created_at", { mode: "timestamp" })
-    .$defaultFn(() => new Date())
-    .notNull(),
+  metadata: jsonb("metadata"),
+  acknowledgedAt: timestamp("acknowledged_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
 // ============================================
@@ -877,8 +786,8 @@ export const driftAlerts = sqliteTable("drift_alerts", {
 // ============================================
 
 // Shared reports with HMAC signatures
-export const sharedReports = sqliteTable("shared_reports", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+export const sharedReports = pgTable("shared_reports", {
+  id: serial("id").primaryKey(),
   organizationId: integer("organization_id")
     .references(() => organizations.id)
     .notNull(),
@@ -891,24 +800,22 @@ export const sharedReports = sqliteTable("shared_reports", {
   shareToken: text("share_token").notNull().unique(),
   reportBody: text("report_body").notNull(),
   signature: text("signature").notNull(),
-  expiresAt: integer("expires_at", { mode: "timestamp" }),
+  expiresAt: timestamp("expires_at"),
   viewCount: integer("view_count").default(0),
   createdBy: text("created_by")
     .references(() => user.id)
     .notNull(),
-  createdAt: integer("created_at", { mode: "timestamp" })
-    .$defaultFn(() => new Date())
-    .notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
 // ============================================
 // SHARED EXPORTS (Public share links)
 // ============================================
 
-export const sharedExports = sqliteTable(
+export const sharedExports = pgTable(
   "shared_exports",
   {
-    id: integer("id").primaryKey({ autoIncrement: true }),
+    id: serial("id").primaryKey(),
     shareId: text("share_id").notNull().unique(),
     organizationId: integer("organization_id")
       .references(() => organizations.id)
@@ -916,17 +823,15 @@ export const sharedExports = sqliteTable(
     evaluationId: integer("evaluation_id").references(() => evaluations.id),
     evaluationRunId: integer("evaluation_run_id").references(() => evaluationRuns.id),
     shareScope: text("share_scope").notNull().default("evaluation"), // "evaluation" | "run"
-    exportData: text("export_data", { mode: "json" }).notNull(),
+    exportData: jsonb("export_data").notNull(),
     exportHash: text("export_hash").notNull(),
-    isPublic: integer("is_public", { mode: "boolean" }).default(true),
-    revokedAt: integer("revoked_at", { mode: "timestamp" }),
+    isPublic: boolean("is_public").default(true),
+    revokedAt: timestamp("revoked_at"),
     revokedBy: text("revoked_by"),
     revokedReason: text("revoked_reason"), // Admin only; never exposed in public 410 response
-    createdAt: integer("created_at", { mode: "timestamp" })
-      .$defaultFn(() => new Date())
-      .notNull(),
-    updatedAt: integer("updated_at", { mode: "timestamp" }),
-    expiresAt: integer("expires_at", { mode: "timestamp" }),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at"),
+    expiresAt: timestamp("expires_at"),
     viewCount: integer("view_count").default(0),
   },
   (table) => ({
@@ -944,35 +849,31 @@ export const sharedExports = sqliteTable(
 // BACKGROUND JOBS
 // ============================================
 
-export const jobs = sqliteTable("jobs", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+export const jobs = pgTable("jobs", {
+  id: serial("id").primaryKey(),
   type: text("type").notNull(), // 'webhook_delivery'
-  payload: text("payload", { mode: "json" }).notNull(),
+  payload: jsonb("payload").notNull(),
   status: text("status").notNull().default("pending"), // pending | running | success | dead_letter
   attempt: integer("attempt").notNull().default(0),
   maxAttempts: integer("max_attempts").notNull().default(5),
-  nextRunAt: integer("next_run_at", { mode: "timestamp" }).notNull(),
+  nextRunAt: timestamp("next_run_at").notNull(),
   lastError: text("last_error"),
   lastErrorCode: text("last_error_code"),
   idempotencyKey: text("idempotency_key").unique(),
   organizationId: integer("organization_id").references(() => organizations.id),
   // Lock / TTL fields (set on claim, cleared on finish)
-  lockedAt: integer("locked_at", { mode: "timestamp" }),
-  lockedUntil: integer("locked_until", { mode: "timestamp" }),
+  lockedAt: timestamp("locked_at"),
+  lockedUntil: timestamp("locked_until"),
   lockedBy: text("locked_by"),
   // Attempt timing
-  lastStartedAt: integer("last_started_at", { mode: "timestamp" }),
-  lastFinishedAt: integer("last_finished_at", { mode: "timestamp" }),
+  lastStartedAt: timestamp("last_started_at"),
+  lastFinishedAt: timestamp("last_finished_at"),
   lastDurationMs: integer("last_duration_ms"),
-  createdAt: integer("created_at", { mode: "timestamp" })
-    .$defaultFn(() => new Date())
-    .notNull(),
-  updatedAt: integer("updated_at", { mode: "timestamp" })
-    .$defaultFn(() => new Date())
-    .notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
-export const jobRunnerLocks = sqliteTable("job_runner_locks", {
+export const jobRunnerLocks = pgTable("job_runner_locks", {
   lockName: text("lock_name").primaryKey(),
   lockedUntil: integer("locked_until").notNull().default(0),
   lockedBy: text("locked_by"),

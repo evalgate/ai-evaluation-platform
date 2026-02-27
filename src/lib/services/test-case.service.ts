@@ -56,7 +56,7 @@ export const testCaseService = {
 
     if (!evaluation) return null;
 
-    const now = new Date().toISOString();
+    const now = new Date();
     const [newTestCase] = await db
       .insert(testCases)
       .values({

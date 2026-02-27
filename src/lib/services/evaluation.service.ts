@@ -124,7 +124,7 @@ export class EvaluationService {
                 ? JSON.stringify(tc.expectedOutput)
                 : "",
           metadata: JSON.stringify(tc.metadata || {}),
-          createdAt: new Date().toISOString(),
+          createdAt: new Date(),
         })),
       );
     }

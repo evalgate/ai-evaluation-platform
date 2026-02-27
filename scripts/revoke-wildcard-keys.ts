@@ -5,7 +5,7 @@
  * Run after deploying validateSession wildcard rejection.
  * Usage: pnpm tsx scripts/revoke-wildcard-keys.ts
  *
- * Requires TURSO_CONNECTION_URL and TURSO_AUTH_TOKEN in .env.local or .env.
+ * Requires DATABASE_URL in .env.local or .env.
  */
 
 import { readFile } from "node:fs/promises";
@@ -47,10 +47,7 @@ async function main() {
   console.log(`Found ${badKeys.length} API key(s) with wildcard scope. Revoking...`);
 
   for (const k of badKeys) {
-    await db
-      .update(apiKeys)
-      .set({ revokedAt: new Date().toISOString() })
-      .where(eq(apiKeys.id, k.id));
+    await db.update(apiKeys).set({ revokedAt: new Date() }).where(eq(apiKeys.id, k.id));
     console.log(`  Revoked: ${k.keyPrefix} (id=${k.id})`);
   }
 

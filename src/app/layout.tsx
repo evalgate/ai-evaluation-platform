@@ -45,6 +45,10 @@ export const metadata: Metadata = {
   alternates: {
     canonical: "https://v0-ai-evaluation-platform-nu.vercel.app",
   },
+  icons: {
+    icon: [{ url: "/icon.svg", type: "image/svg+xml" }],
+    apple: "/apple-icon",
+  },
   other: {
     "llms.txt": "/llms.txt",
   },

@@ -9,7 +9,7 @@
  *
  * --dry-run  Preview what would be migrated without writing to DB.
  * --org-id=N Use organization N (default: first org).
- * Requires TURSO_CONNECTION_URL and TURSO_AUTH_TOKEN in .env.local or .env.
+ * Requires DATABASE_URL in .env.local or .env.
  */
 
 import { createHash } from "node:crypto";
@@ -78,7 +78,7 @@ async function main() {
   }
   if (orgId == null) orgId = 1; // placeholder for dry-run
 
-  const now = new Date().toISOString();
+  const now = new Date();
   let migrated = 0;
   let skipped = 0;
   const mapping: Array<{ shareId: string; exportHash: string }> = [];

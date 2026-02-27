@@ -7,13 +7,13 @@
  *   pnpm tsx scripts/run-migrations.ts              # run all
  *   pnpm tsx scripts/run-migrations.ts 0016 0017    # run only 0016 and 0017
  *
- * Requires TURSO_CONNECTION_URL and TURSO_AUTH_TOKEN in .env.local or .env.
+ * Requires DATABASE_URL in .env.local or .env.
  */
 
 import { readdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { createClient } from "@libsql/client";
+import postgres from "postgres";
 
 async function loadEnv() {
   for (const f of [".env.local", ".env"]) {
@@ -30,10 +30,10 @@ async function loadEnv() {
   }
 }
 
-function parseStatements(sql: string): string[] {
-  const parts = sql.includes("--> statement-breakpoint")
-    ? sql.split(/--> statement-breakpoint/)
-    : sql.split(/;\s*\n/);
+function parseStatements(sqlContent: string): string[] {
+  const parts = sqlContent.includes("--> statement-breakpoint")
+    ? sqlContent.split(/--> statement-breakpoint/)
+    : sqlContent.split(/;\s*\n/);
   return parts
     .map((s) => {
       const trimmed = s.trim().replace(/\s*;\s*$/, "");
@@ -45,37 +45,31 @@ function parseStatements(sql: string): string[] {
 
 export type RunMigrationsOptions = {
   url?: string;
-  authToken?: string;
   only?: string[];
   silent?: boolean;
 };
 
 /**
  * Run migrations against a database. Used by CLI and test setup.
- * When url/authToken omitted, loads from .env.
+ * When url omitted, loads from .env.
  */
 export async function runMigrations(options: RunMigrationsOptions = {}): Promise<void> {
-  const { url: optUrl, authToken: optAuthToken, only = [], silent = false } = options;
+  const { url: optUrl, only = [], silent = false } = options;
 
   let url = optUrl;
-  let authToken = optAuthToken;
 
-  if (!url || authToken === undefined) {
+  if (!url) {
     await loadEnv();
-    url = url ?? process.env.TURSO_CONNECTION_URL;
-    authToken = authToken ?? process.env.TURSO_AUTH_TOKEN;
+    url = process.env.DATABASE_URL;
   }
 
   if (!url) {
     throw new Error(
-      "TURSO_CONNECTION_URL is required. Set it in .env.local, .env, or pass to runMigrations.",
+      "DATABASE_URL is required. Set it in .env.local, .env, or pass to runMigrations.",
     );
   }
 
-  const client = createClient({
-    url,
-    authToken: authToken || undefined,
-  });
+  const sql = postgres(url, { max: 1 });
 
   const files = await readdir(join(process.cwd(), "drizzle"));
   const sqlFiles = files
@@ -93,7 +87,7 @@ export async function runMigrations(options: RunMigrationsOptions = {}): Promise
         only.length ? `No migrations match: ${only.join(", ")}` : "No migration files found.",
       );
     }
-    client.close();
+    await sql.end();
     return;
   }
 
@@ -116,20 +110,18 @@ export async function runMigrations(options: RunMigrationsOptions = {}): Promise
     for (const stmt of statements) {
       const s = stmt.trim();
       if (!s || s.startsWith("--")) continue;
-      const sql = s.endsWith(";") ? s : `${s};`;
       try {
-        await client.execute(sql);
+        await sql.unsafe(s);
         applied++;
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
         const isSkip =
           msg.includes("duplicate column") ||
           msg.includes("already exists") ||
-          msg.includes("no such table") ||
-          msg.includes("no such column") ||
-          msg.includes("UNIQUE constraint failed");
+          msg.includes("does not exist") ||
+          msg.includes("unique_violation");
         if (isSkip) {
-          if (msg.includes("UNIQUE constraint failed") && !silent) {
+          if (msg.includes("unique_violation") && !silent) {
             console.warn(
               `  [skip] ${file}: ${msg} (fix duplicate data and re-run to apply constraint)`,
             );
@@ -137,7 +129,7 @@ export async function runMigrations(options: RunMigrationsOptions = {}): Promise
           skipped++;
         } else {
           if (!silent) console.error(`  [fail] ${file}: ${msg}`);
-          client.close();
+          await sql.end();
           throw err;
         }
       }
@@ -152,7 +144,7 @@ export async function runMigrations(options: RunMigrationsOptions = {}): Promise
   if (!silent) {
     console.log("\nDone.");
   }
-  client.close();
+  await sql.end();
 }
 
 async function main() {

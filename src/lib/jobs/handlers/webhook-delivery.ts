@@ -141,11 +141,15 @@ export async function handleWebhookDelivery(payload: Record<string, unknown>): P
       responseStatus: responseCode,
       responseBody: errorMsg ? `Error: ${errorMsg}` : responseBody,
       attemptCount: 1,
-      createdAt: new Date().toISOString(),
+      createdAt: new Date(),
     });
   } catch (insertErr: unknown) {
     // Unique constraint violation on dedup index — already recorded
-    if (insertErr instanceof Error && insertErr.message?.includes("UNIQUE constraint")) {
+    if (
+      insertErr instanceof Error &&
+      (insertErr.message?.includes("unique_violation") ||
+        insertErr.message?.includes("duplicate key"))
+    ) {
       logger.info("Webhook delivery record dedup — already exists", { webhookId, event });
     } else {
       throw insertErr;
