@@ -1,36 +1,94 @@
 # EvalAI — AI Evaluation Platform
 
-> Observability, evaluation, and governance platform for AI agents and LLM applications. Published SDK on npm. REST API for any language.
+> One-command CI for AI evaluation. Complete pipeline: discover → manifest → impact → run → diff → PR summary. Published SDK on npm. REST API for any language.
 
 ## What is EvalAI?
 
-EvalAI (AI Evaluation Platform) is a production-grade platform that helps developers build, test, and monitor AI systems. Think of it as a combination of:
+EvalAI (AI Evaluation Platform) is a production-grade platform that helps developers build, test, and monitor AI systems with **one-command CI**. Think of it as a combination of:
 - **Testing framework** for LLMs and agents (unit tests, LLM-as-judge, human eval, A/B tests)
 - **Observability layer** for multi-agent workflows (traces, spans, DAG visualization)
 - **Cost dashboard** for tracking LLM spend across providers
 - **Governance engine** for compliance (SOC2, GDPR, HIPAA, etc.)
+- **CI/CD integration** with GitHub Actions and smart regression detection
 
 You sign up, create an organization, add API keys or use the web UI, then instrument your code with the SDK or call the REST API. Evaluations run test cases against your model outputs; workflows trace agent pipelines; costs are tracked per token.
 
 ## How it works
 
-1. **Evaluations**: Create an evaluation (unit_test, human_eval, model_eval, ab_test), add test cases (input + expected output or rubric), then run it. The platform executes tests, scores outputs, and stores results. Use the visual builder or SDK.
-2. **Workflows**: Instrument multi-agent pipelines with WorkflowTracer. Start a workflow, record agent spans, handoffs, decisions, and costs. View DAGs and run history in the dashboard.
-3. **Traces**: Create traces and spans for any AI call. Attach metadata, record decisions, and track costs. Useful for debugging and auditing.
-4. **Auth**: Use API keys (Settings → Developer) or OAuth (Google/GitHub). All API calls use `Authorization: Bearer <key>`.
+1. **One-Command CI**: `evalai ci` automatically discovers specs, runs impact analysis, executes evaluations, diffs results, and posts rich PR summaries
+2. **Evaluations**: Create an evaluation (unit_test, human_eval, model_eval, ab_test), add test cases (input + expected output or rubric), then run it. The platform executes tests, scores outputs, and stores results. Use the visual builder or SDK.
+3. **Workflows**: Instrument multi-agent pipelines with WorkflowTracer. Start a workflow, record agent spans, handoffs, decisions, and costs. View DAGs and run history in the dashboard.
+4. **Traces**: Create traces and spans for any AI call. Attach metadata, record decisions, and track costs. Useful for debugging and auditing.
+5. **Auth**: Use API keys (Settings → Developer) or OAuth (Google/GitHub). All API calls use `Authorization: Bearer <key>`.
 
-## Quick Start (2 minutes)
+## Quick Start (60 seconds)
+
+Add this to your `.github/workflows/evalai.yml`:
+
+```yaml
+name: EvalAI CI
+on: [push, pull_request]
+jobs:
+  evalai:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+      - run: npm ci
+      - run: npx @pauly4010/evalai-sdk ci --format github --write-results --base main
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: evalai-results
+          path: .evalai/
+```
+
+Create `eval/your-spec.spec.ts`:
+
+```typescript
+import { defineEval } from "@pauly4010/evalai-sdk";
+
+defineEval({
+  name: "Basic Math Operations",
+  description: "Test fundamental arithmetic",
+  prompt: "Test: 1+1=2, string concatenation, array includes",
+  expected: "All tests should pass",
+  tags: ["basic", "math"],
+  category: "unit-test"
+});
+```
 
 ```bash
-npx @pauly4010/evalai-sdk init    # scaffold everything — baseline, CI workflow, config
-git push                           # open a PR → CI blocks regressions automatically
+git add .github/workflows/evalai.yml eval/
+git commit -m "feat: add EvalAI CI pipeline"
+git push
 ```
+
+That's it! Your CI now discovers specs, runs only impacted code, diffs results, and posts rich summaries automatically.
 
 ## Install (SDK only)
 
 npm install @pauly4010/evalai-sdk
 
 ## CLI Commands
+
+### 🚀 One-Command CI (v1.9.0)
+
+```bash
+npx evalai ci --format github --write-results --base main    # Complete CI pipeline
+npx evalai ci --impacted-only                               # Run only impacted specs
+npx evalai ci --format json                                  # JSON output for automation
+```
+
+### Discovery & Analysis
+
+```bash
+npx evalai discover --manifest                               # Generate evaluation manifest
+npx evalai impact-analysis --base main                       # Analyze impact of changes
+npx evalai diff --base main --head last                       # Compare results
+```
+
+### Legacy Commands
 
 ```bash
 npx evalai init              # Full scaffolder — detects repo, creates baseline, installs CI workflow
@@ -45,6 +103,7 @@ npx evalai doctor            # Verify CI/CD setup
 ## What EvalAI Provides
 
 EvalAI provides:
+- **One-Command CI**: Complete evaluation pipeline with smart caching and GitHub integration
 - **Workflow Tracing**: Instrument multi-agent workflows with DAG visualization, agent handoffs, and decision auditing
 - **Evaluation Engine**: 50+ evaluation templates, createTestSuite runner, 20 Expectation methods + 21 standalone assertion functions
 - **Cost Analytics**: Track LLM spending per model/provider with built-in pricing for OpenAI, Anthropic, Google (12+ models)
