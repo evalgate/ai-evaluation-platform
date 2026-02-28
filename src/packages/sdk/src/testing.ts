@@ -101,6 +101,49 @@ export interface TestSuiteResult {
 }
 
 /**
+ * Test definition for introspection
+ * COMPAT-201: Public TestSuite introspection (minimal getters)
+ */
+export interface TestDefinition {
+  /** Test case ID */
+  id: string;
+  /** Test input */
+  input: string;
+  /** Expected output */
+  expected?: string;
+  /** Test metadata */
+  metadata?: Record<string, unknown>;
+  /** Whether test has assertions */
+  hasAssertions: boolean;
+  /** Number of assertions */
+  assertionCount: number;
+}
+
+/**
+ * Portable suite representation
+ * COMPAT-201: Public TestSuite introspection (minimal getters)
+ */
+export interface PortableSuite {
+  /** Suite name */
+  name: string;
+  /** Suite configuration */
+  config: TestSuiteConfig;
+  /** Test definitions */
+  tests: TestDefinition[];
+  /** Suite metadata */
+  metadata: {
+    suiteName?: string;
+    tags?: string[];
+    defaults?: {
+      timeout?: number;
+      parallel?: boolean;
+      stopOnFailure?: boolean;
+      retries?: number;
+    };
+  };
+}
+
+/**
  * Test Suite for declarative evaluation testing
  */
 export class TestSuite {
@@ -252,6 +295,60 @@ export class TestSuite {
    */
   getConfig(): TestSuiteConfig {
     return { ...this.config };
+  }
+
+  /**
+   * Get test definitions for introspection
+   * COMPAT-201: Public TestSuite introspection (minimal getters)
+   */
+  getTests(): TestDefinition[] {
+    return this.config.cases.map((testCase, index) => ({
+      id: testCase.id || `case-${index}`,
+      input: testCase.input,
+      expected: testCase.expected,
+      metadata: testCase.metadata,
+      hasAssertions: !!testCase.assertions && testCase.assertions.length > 0,
+      assertionCount: testCase.assertions?.length || 0,
+    }));
+  }
+
+  /**
+   * Get suite metadata for introspection
+   * COMPAT-201: Public TestSuite introspection (minimal getters)
+   */
+  getMetadata(): {
+    suiteName?: string;
+    tags?: string[];
+    defaults?: {
+      timeout?: number;
+      parallel?: boolean;
+      stopOnFailure?: boolean;
+      retries?: number;
+    };
+  } {
+    return {
+      suiteName: this.name,
+      tags: [], // TestSuite doesn't have tags, but include for future compatibility
+      defaults: {
+        timeout: this.config.timeout,
+        parallel: this.config.parallel,
+        stopOnFailure: this.config.stopOnFailure,
+        retries: this.config.retries,
+      },
+    };
+  }
+
+  /**
+   * Convert to portable suite representation
+   * COMPAT-201: Public TestSuite introspection (minimal getters)
+   */
+  toJSON(): PortableSuite {
+    return {
+      name: this.name,
+      config: this.getConfig(),
+      tests: this.getTests(),
+      metadata: this.getMetadata(),
+    };
   }
 }
 

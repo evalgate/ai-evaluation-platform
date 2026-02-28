@@ -56,7 +56,7 @@ export {
   EvalContext as ContextManager,
 };
 
-// Test suite builder (Tier 2.7)
+// Test suite builder (Tier 2.7) - BACKWARD COMPATIBILITY LAYER
 export {
   createTestSuite,
   // Note: TestCase and TestCaseResult are not exported here to avoid collision
@@ -69,6 +69,59 @@ export {
   TestSuiteConfig,
   TestSuiteResult,
 } from "./testing";
+
+// LAYER 1: Runtime Foundation - NEW PROGRAMMING MODEL
+export {
+  defineEval,
+  evalai,
+  defineSuite,
+  createContext as createEvalContext,
+  createResult,
+} from "./runtime/eval";
+
+export {
+  createEvalRuntime,
+  getActiveRuntime,
+  setActiveRuntime,
+  disposeActiveRuntime,
+} from "./runtime/registry";
+
+export {
+  createLocalExecutor,
+  defaultLocalExecutor,
+} from "./runtime/executor";
+
+export {
+  mergeContexts,
+  cloneContext,
+  validateContext,
+} from "./runtime/context";
+
+// Runtime types for advanced usage
+export type {
+  EvalSpec,
+  EvalContext,
+  EvalResult,
+  EvalOptions,
+  EvalRuntime,
+  EvalExecutor,
+  EvalExecutorInterface,
+  LocalExecutor,
+  CloudExecutor,
+  WorkerExecutor,
+  SpecConfig,
+  SpecOptions,
+  DefineEvalFunction,
+  ExecutorCapabilities,
+} from "./runtime/types";
+
+// Runtime errors
+export {
+  EvalRuntimeError,
+  SpecRegistrationError,
+  SpecExecutionError,
+  RuntimeError,
+} from "./runtime/types";
 
 // Snapshot testing (Tier 2.8)
 import { compareWithSnapshot, snapshot } from "./snapshot";
