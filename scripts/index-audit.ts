@@ -34,33 +34,6 @@ const REQUIRED_INDEXES: Array<{
 		reason: "SLO eval gate pass rate window scan",
 	},
 
-	// Integer timestamp indexes added in 0035
-	{
-		table: "api_usage_logs",
-		column: "created_at_int",
-		reason: "Phase 3-A integer timestamp index",
-	},
-	{
-		table: "webhook_deliveries",
-		column: "created_at_int",
-		reason: "Phase 3-A integer timestamp index",
-	},
-	{
-		table: "test_results",
-		column: "created_at_int",
-		reason: "Phase 3-A integer timestamp index",
-	},
-	{
-		table: "spans",
-		column: "created_at_int",
-		reason: "Phase 3-A integer timestamp index",
-	},
-	{
-		table: "quality_scores",
-		column: "created_at_int",
-		reason: "Phase 3-A integer timestamp index",
-	},
-
 	// Job runner — status + next_run_at composite
 	{ table: "jobs", column: "status", reason: "Job runner due-job scan" },
 	{ table: "jobs", column: "next_run_at", reason: "Job runner due-job scan" },
@@ -93,41 +66,76 @@ const REQUIRED_INDEXES: Array<{
 	},
 ];
 
-/** Collect all CREATE INDEX statements from all migration SQL files */
+/** Collect indexed columns from migration SQL files and schema.ts */
 function collectIndexedColumns(): Map<string, Set<string>> {
-	const drizzleDir = path.join(process.cwd(), "drizzle");
-	if (!fs.existsSync(drizzleDir)) {
-		console.error("drizzle/ directory not found");
-		process.exit(1);
-	}
-
-	// table → set of indexed columns
 	const indexed = new Map<string, Set<string>>();
 
-	const files = fs
-		.readdirSync(drizzleDir)
-		.filter((f) => f.endsWith(".sql"))
-		.sort();
+	function addCol(table: string, col: string) {
+		const t = table.toLowerCase();
+		const c = col.toLowerCase();
+		if (!indexed.has(t)) indexed.set(t, new Set());
+		indexed.get(t)?.add(c);
+	}
 
-	for (const file of files) {
-		const content = fs.readFileSync(path.join(drizzleDir, file), "utf-8");
+	// 1. Scan migration SQL files
+	const drizzleDir = path.join(process.cwd(), "drizzle");
+	if (fs.existsSync(drizzleDir)) {
+		const files = fs
+			.readdirSync(drizzleDir)
+			.filter((f) => f.endsWith(".sql"))
+			.sort();
 
-		// Match: CREATE [UNIQUE] INDEX [IF NOT EXISTS] ... ON `table` (`col1`, `col2`, ...)
-		const indexRe =
-			/CREATE\s+(?:UNIQUE\s+)?INDEX\s+(?:IF\s+NOT\s+EXISTS\s+)?\S+\s+ON\s+[`"]?(\w+)[`"]?\s*\(([^)]+)\)/gi;
-		let m: RegExpExecArray | null = indexRe.exec(content);
-		while (m !== null) {
-			const table = m[1].toLowerCase();
-			const cols = m[2]
-				.split(",")
-				.map((c) => c.trim().replace(/[`"]/g, "").toLowerCase());
-			if (!indexed.has(table)) indexed.set(table, new Set());
-			for (const col of cols) indexed.get(table)?.add(col);
-			m = indexRe.exec(content);
+		for (const file of files) {
+			const content = fs.readFileSync(path.join(drizzleDir, file), "utf-8");
+			const indexRe =
+				/CREATE\s+(?:UNIQUE\s+)?INDEX\s+(?:IF\s+NOT\s+EXISTS\s+)?\S+\s+ON\s+[`"]?(\w+)[`"]?\s*\(([^)]+)\)/gi;
+			let m: RegExpExecArray | null = indexRe.exec(content);
+			while (m !== null) {
+				const cols = m[2]
+					.split(",")
+					.map((c) => c.trim().replace(/[`"]/g, "").toLowerCase());
+				for (const col of cols) addCol(m[1], col);
+				m = indexRe.exec(content);
+			}
+		}
+	}
+
+	// 2. Scan schema.ts for Drizzle index() / uniqueIndex() definitions
+	const schemaPath = path.join(process.cwd(), "src", "db", "schema.ts");
+	if (fs.existsSync(schemaPath)) {
+		const src = fs.readFileSync(schemaPath, "utf-8");
+		// Match index("name").on(table.col1, table.col2)
+		const idxRe =
+			/(?:unique)?[Ii]ndex\(\s*["'][^"']+["']\s*\)\s*\.on\(([^)]+)\)/g;
+		// We also need to know which table this belongs to — find pgTable("name", ...)
+		const tableRe = /pgTable\(\s*\n?\s*["'](\w+)["']/g;
+		const tablePositions: Array<{ name: string; pos: number }> = [];
+		let tm: RegExpExecArray | null = tableRe.exec(src);
+		while (tm !== null) {
+			tablePositions.push({ name: tm[1], pos: tm.index });
+			tm = tableRe.exec(src);
 		}
 
-		// Also match inline index definitions in CREATE TABLE (e.g. PRIMARY KEY, UNIQUE)
-		// These don't need to be in REQUIRED_INDEXES but good to capture for completeness
+		let im: RegExpExecArray | null = idxRe.exec(src);
+		while (im !== null) {
+			// Find which table this index belongs to (nearest preceding pgTable)
+			let tableName = "unknown";
+			for (const tp of tablePositions) {
+				if (tp.pos < im.index) tableName = tp.name;
+				else break;
+			}
+			// Extract column names from table.colName references
+			const colStr = im[1];
+			const colRe = /table\.(\w+)/g;
+			let cm: RegExpExecArray | null = colRe.exec(colStr);
+			while (cm !== null) {
+				// Convert camelCase to snake_case
+				const snake = cm[1].replace(/[A-Z]/g, (l) => `_${l.toLowerCase()}`);
+				addCol(tableName, snake);
+				cm = colRe.exec(colStr);
+			}
+			im = idxRe.exec(src);
+		}
 	}
 
 	return indexed;

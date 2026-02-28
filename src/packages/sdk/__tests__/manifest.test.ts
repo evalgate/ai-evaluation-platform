@@ -13,6 +13,7 @@ import {
 	writeManifest,
 } from "../src/cli/manifest";
 import type { ExecutionModeConfig } from "../src/runtime/execution-mode";
+import { SDK_VERSION } from "../src/version";
 
 describe("Manifest Generation", () => {
 	const testDir = path.join(process.cwd(), ".test-manifest");
@@ -86,7 +87,7 @@ defineEval({
 			},
 			runtime: {
 				mode: "spec",
-				sdkVersion: "1.8.0",
+				sdkVersion: SDK_VERSION,
 			},
 			specFiles: [
 				{

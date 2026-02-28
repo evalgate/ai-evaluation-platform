@@ -257,22 +257,26 @@ export const llmJudgeConfigs = pgTable(
 	(table) => [index("idx_llm_judge_configs_org").on(table.organizationId)],
 );
 
-export const llmJudgeResults = pgTable("llm_judge_results", {
-	id: serial("id").primaryKey(),
-	configId: integer("config_id")
-		.references(() => llmJudgeConfigs.id)
-		.notNull(),
-	evaluationRunId: integer("evaluation_run_id").references(
-		() => evaluationRuns.id,
-	),
-	testCaseId: integer("test_case_id").references(() => testCases.id),
-	input: text("input").notNull(),
-	output: text("output").notNull(),
-	score: integer("score"),
-	reasoning: text("reasoning"),
-	metadata: jsonb("metadata"),
-	createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+export const llmJudgeResults = pgTable(
+	"llm_judge_results",
+	{
+		id: serial("id").primaryKey(),
+		configId: integer("config_id")
+			.references(() => llmJudgeConfigs.id)
+			.notNull(),
+		evaluationRunId: integer("evaluation_run_id").references(
+			() => evaluationRuns.id,
+		),
+		testCaseId: integer("test_case_id").references(() => testCases.id),
+		input: text("input").notNull(),
+		output: text("output").notNull(),
+		score: integer("score"),
+		reasoning: text("reasoning"),
+		metadata: jsonb("metadata"),
+		createdAt: timestamp("created_at").defaultNow().notNull(),
+	},
+	(table) => [index("idx_llm_judge_results_run").on(table.evaluationRunId)],
+);
 
 // Developer Experience Tables
 export const apiKeys = pgTable("api_keys", {
@@ -356,6 +360,8 @@ export const webhookDeliveries = pgTable(
 			table.eventType,
 			table.payloadHash,
 		),
+		webhookIdx: index("idx_webhook_deliveries_webhook").on(table.webhookId),
+		createdIdx: index("idx_webhook_deliveries_created").on(table.createdAt),
 	}),
 );
 
@@ -808,34 +814,41 @@ export const auditLogs = pgTable(
 // ============================================
 
 // Quality scores computed per evaluation run
-export const qualityScores = pgTable("quality_scores", {
-	id: serial("id").primaryKey(),
-	evaluationRunId: integer("evaluation_run_id")
-		.references(() => evaluationRuns.id)
-		.notNull(),
-	evaluationId: integer("evaluation_id")
-		.references(() => evaluations.id)
-		.notNull(),
-	organizationId: integer("organization_id")
-		.references(() => organizations.id)
-		.notNull(),
-	score: integer("score").notNull(),
-	total: integer("total"), // test case count for minN gating
-	traceCoverageRate: text("trace_coverage_rate"), // nullable, for trace-linked runs: matched/total
-	provenanceCoverageRate: text("provenance_coverage_rate"), // 0..1, per-test-case fraction with model/provider
-	breakdown: jsonb("breakdown").notNull(),
-	flags: jsonb("flags").notNull(),
-	evidenceLevel: text("evidence_level"), // 'strong' | 'medium' | 'weak'
-	scoringVersion: text("scoring_version").notNull().default("v1"),
-	model: text("model"),
-	isBaseline: boolean("is_baseline").default(false),
-	inputsJson: jsonb("inputs_json"),
-	scoringSpecJson: jsonb("scoring_spec_json"),
-	inputsHash: text("inputs_hash"),
-	scoringSpecHash: text("scoring_spec_hash"),
-	scoringCommit: text("scoring_commit"),
-	createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+export const qualityScores = pgTable(
+	"quality_scores",
+	{
+		id: serial("id").primaryKey(),
+		evaluationRunId: integer("evaluation_run_id")
+			.references(() => evaluationRuns.id)
+			.notNull(),
+		evaluationId: integer("evaluation_id")
+			.references(() => evaluations.id)
+			.notNull(),
+		organizationId: integer("organization_id")
+			.references(() => organizations.id)
+			.notNull(),
+		score: integer("score").notNull(),
+		total: integer("total"), // test case count for minN gating
+		traceCoverageRate: text("trace_coverage_rate"), // nullable, for trace-linked runs: matched/total
+		provenanceCoverageRate: text("provenance_coverage_rate"), // 0..1, per-test-case fraction with model/provider
+		breakdown: jsonb("breakdown").notNull(),
+		flags: jsonb("flags").notNull(),
+		evidenceLevel: text("evidence_level"), // 'strong' | 'medium' | 'weak'
+		scoringVersion: text("scoring_version").notNull().default("v1"),
+		model: text("model"),
+		isBaseline: boolean("is_baseline").default(false),
+		inputsJson: jsonb("inputs_json"),
+		scoringSpecJson: jsonb("scoring_spec_json"),
+		inputsHash: text("inputs_hash"),
+		scoringSpecHash: text("scoring_spec_hash"),
+		scoringCommit: text("scoring_commit"),
+		createdAt: timestamp("created_at").defaultNow().notNull(),
+	},
+	(table) => [
+		index("idx_quality_scores_run").on(table.evaluationRunId),
+		index("idx_quality_scores_created").on(table.createdAt),
+	],
+);
 
 // ============================================
 // EVALUATION VERSIONING
