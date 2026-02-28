@@ -5,21 +5,21 @@
  * without forcing migration. Enables lossless where possible.
  */
 
-import type { TestSuite, TestDefinition, PortableSuite } from "../../testing";
-import type { EvalSpec, EvalExecutor, SpecConfig } from "../types";
+import type { PortableSuite, TestDefinition, TestSuite } from "../../testing";
 import { createResult } from "../eval";
 import { createEvalRuntime, disposeActiveRuntime } from "../registry";
+import type { EvalExecutor, EvalSpec, SpecConfig } from "../types";
 
 /**
  * Adapter configuration options
  */
 export interface TestSuiteAdapterOptions {
-  /** Include provenance metadata in generated specs */
-  includeProvenance?: boolean;
-  /** Preserve original test IDs */
-  preserveIds?: boolean;
-  /** Generate helper functions for assertions */
-  generateHelpers?: boolean;
+	/** Include provenance metadata in generated specs */
+	includeProvenance?: boolean;
+	/** Preserve original test IDs */
+	preserveIds?: boolean;
+	/** Generate helper functions for assertions */
+	generateHelpers?: boolean;
 }
 
 /**
@@ -30,175 +30,187 @@ export interface TestSuiteAdapterOptions {
  * @returns Array of EvalSpec definitions
  */
 export function adaptTestSuite(
-  suite: TestSuite,
-  options: Partial<TestSuiteOptions> = {},
+	suite: TestSuite,
+	options: Partial<TestSuiteOptions> = {},
 ): EvalSpec[] {
-  const { includeProvenance = true, preserveIds = true, generateHelpers = true } = options;
+	const {
+		includeProvenance = true,
+		preserveIds = true,
+		generateHelpers = true,
+	} = options;
 
-  // Get test suite data using the new getters
-  const tests = suite.getTests();
-  const metadata = suite.getMetadata();
-  const config = suite.getConfig();
+	// Get test suite data using the new getters
+	const tests = suite.getTests();
+	const metadata = suite.getMetadata();
+	const config = suite.getConfig();
 
-  // Create a temporary runtime for spec generation
-  const runtime = createEvalRuntime();
-  const specs: EvalSpec[] = [];
+	// Create a temporary runtime for spec generation
+	const runtime = createEvalRuntime();
+	const specs: EvalSpec[] = [];
 
-  try {
-    // Convert each test case to an EvalSpec
-    for (const test of tests) {
-      const spec: EvalSpec = {
-        id: generateSpecId(test, metadata.suiteName || "legacy-suite", preserveIds),
-        name: test.id,
-        filePath: "legacy://testsuite", // Placeholder for legacy source
-        position: { line: 1, column: 1 }, // Placeholder position
-        description: `Legacy test: ${test.id}`,
-        tags: ["legacy", "migrated"],
-        executor: createExecutorFromTestCase(test, config, generateHelpers),
-        metadata: {
-          ...test.metadata,
-          ...(includeProvenance && {
-            source: "legacy",
-            legacySuiteName: metadata.suiteName,
-            legacyTestId: test.id,
-            originalInput: test.input,
-            originalExpected: test.expected,
-          }),
-        },
-        config: {
-          timeout: config.timeout,
-          retries: config.retries,
-          // Note: budget, model not available in TestSuite
-        },
-      };
+	try {
+		// Convert each test case to an EvalSpec
+		for (const test of tests) {
+			const spec: EvalSpec = {
+				id: generateSpecId(
+					test,
+					metadata.suiteName || "legacy-suite",
+					preserveIds,
+				),
+				name: test.id,
+				filePath: "legacy://testsuite", // Placeholder for legacy source
+				position: { line: 1, column: 1 }, // Placeholder position
+				description: `Legacy test: ${test.id}`,
+				tags: ["legacy", "migrated"],
+				executor: createExecutorFromTestCase(test, config, generateHelpers),
+				metadata: {
+					...test.metadata,
+					...(includeProvenance && {
+						source: "legacy",
+						legacySuiteName: metadata.suiteName,
+						legacyTestId: test.id,
+						originalInput: test.input,
+						originalExpected: test.expected,
+					}),
+				},
+				config: {
+					timeout: config.timeout,
+					retries: config.retries,
+					// Note: budget, model not available in TestSuite
+				},
+			};
 
-      specs.push(spec);
-    }
-  } finally {
-    // Clean up temporary runtime
-    disposeActiveRuntime();
-  }
+			specs.push(spec);
+		}
+	} finally {
+		// Clean up temporary runtime
+		disposeActiveRuntime();
+	}
 
-  return specs;
+	return specs;
 }
 
 /**
  * Generate specification ID for legacy test
  */
-function generateSpecId(test: TestDefinition, suiteName: string, preserveIds: boolean): string {
-  if (preserveIds && test.id && test.id !== `case-${test.id}`) {
-    // Use original ID if available and not auto-generated
-    return test.id.replace(/[^a-zA-Z0-9_-]/g, "_").slice(0, 20);
-  }
+function generateSpecId(
+	test: TestDefinition,
+	suiteName: string,
+	preserveIds: boolean,
+): string {
+	if (preserveIds && test.id && test.id !== `case-${test.id}`) {
+		// Use original ID if available and not auto-generated
+		return test.id.replace(/[^a-zA-Z0-9_-]/g, "_").slice(0, 20);
+	}
 
-  // Generate deterministic ID from test content
-  const content = `${suiteName}|${test.id}|${test.input}|${test.expected || ""}`;
-  const hash = Buffer.from(content)
-    .toString("base64")
-    .replace(/[+/=]/g, "")
-    .slice(0, 20)
-    .toLowerCase();
+	// Generate deterministic ID from test content
+	const content = `${suiteName}|${test.id}|${test.input}|${test.expected || ""}`;
+	const hash = Buffer.from(content)
+		.toString("base64")
+		.replace(/[+/=]/g, "")
+		.slice(0, 20)
+		.toLowerCase();
 
-  return hash;
+	return hash;
 }
 
 /**
  * Create executor function from test case
  */
 function createExecutorFromTestCase(
-  test: TestDefinition,
-  config: TestSuiteConfig,
-  generateHelpers: boolean,
+	test: TestDefinition,
+	config: TestSuiteConfig,
+	generateHelpers: boolean,
 ): EvalExecutor {
-  return async (context) => {
-    const input = context.input;
+	return async (context) => {
+		const input = context.input;
 
-    // If there's an executor in the config, use it
-    if (config.executor) {
-      try {
-        const output = await config.executor(input);
-        return evaluateTestCase(test, output, generateHelpers);
-      } catch (error) {
-        return createResult({
-          pass: false,
-          score: 0,
-          error: error instanceof Error ? error.message : String(error),
-        });
-      }
-    }
+		// If there's an executor in the config, use it
+		if (config.executor) {
+			try {
+				const output = await config.executor(input);
+				return evaluateTestCase(test, output, generateHelpers);
+			} catch (error) {
+				return createResult({
+					pass: false,
+					score: 0,
+					error: error instanceof Error ? error.message : String(error),
+				});
+			}
+		}
 
-    // If there's an expected value, use it as output
-    if (test.expected !== undefined) {
-      return evaluateTestCase(test, test.expected, generateHelpers);
-    }
+		// If there's an expected value, use it as output
+		if (test.expected !== undefined) {
+			return evaluateTestCase(test, test.expected, generateHelpers);
+		}
 
-    // No executor or expected value - this is an error case
-    return createResult({
-      pass: false,
-      score: 0,
-      error: "No executor or expected output available for legacy test",
-    });
-  };
+		// No executor or expected value - this is an error case
+		return createResult({
+			pass: false,
+			score: 0,
+			error: "No executor or expected output available for legacy test",
+		});
+	};
 }
 
 /**
  * Evaluate test case against output
  */
 function evaluateTestCase(
-  test: TestDefinition,
-  output: string,
-  generateHelpers: boolean,
+	test: TestDefinition,
+	output: string,
+	generateHelpers: boolean,
 ): ReturnType<typeof createResult> {
-  try {
-    let passed = true;
-    let score = 100;
-    const assertions: any[] = [];
+	try {
+		let passed = true;
+		let score = 100;
+		const assertions: any[] = [];
 
-    // If there are assertions, run them
-    if (test.hasAssertions && test.assertionCount > 0) {
-      // Note: We can't actually run the assertions since they're functions
-      // In a real implementation, we'd need to serialize and execute them
-      // For now, we'll do basic validation
+		// If there are assertions, run them
+		if (test.hasAssertions && test.assertionCount > 0) {
+			// Note: We can't actually run the assertions since they're functions
+			// In a real implementation, we'd need to serialize and execute them
+			// For now, we'll do basic validation
 
-      // Basic string comparison if expected is provided
-      if (test.expected !== undefined) {
-        const exactMatch = output === test.expected;
-        passed = exactMatch;
-        score = exactMatch ? 100 : 0;
+			// Basic string comparison if expected is provided
+			if (test.expected !== undefined) {
+				const exactMatch = output === test.expected;
+				passed = exactMatch;
+				score = exactMatch ? 100 : 0;
 
-        assertions.push({
-          name: "legacy-equals",
-          passed: exactMatch,
-          expected: test.expected,
-          actual: output,
-          message: exactMatch
-            ? "Output matches expected"
-            : `Expected "${test.expected}", got "${output}"`,
-        });
-      }
-    } else {
-      // No assertions, assume pass if output exists
-      passed = output.length > 0;
-      score = passed ? 100 : 0;
-    }
+				assertions.push({
+					name: "legacy-equals",
+					passed: exactMatch,
+					expected: test.expected,
+					actual: output,
+					message: exactMatch
+						? "Output matches expected"
+						: `Expected "${test.expected}", got "${output}"`,
+				});
+			}
+		} else {
+			// No assertions, assume pass if output exists
+			passed = output.length > 0;
+			score = passed ? 100 : 0;
+		}
 
-    return createResult({
-      pass: passed,
-      score: score,
-      assertions: generateHelpers ? assertions : undefined,
-      metadata: {
-        testCaseId: test.id,
-        originalInput: test.input,
-        originalExpected: test.expected,
-      },
-    });
-  } catch (error) {
-    return createResult({
-      pass: false,
-      score: 0,
-      error: error instanceof Error ? error.message : String(error),
-    });
-  }
+		return createResult({
+			pass: passed,
+			score: score,
+			assertions: generateHelpers ? assertions : undefined,
+			metadata: {
+				testCaseId: test.id,
+				originalInput: test.input,
+				originalExpected: test.expected,
+			},
+		});
+	} catch (error) {
+		return createResult({
+			pass: false,
+			score: 0,
+			error: error instanceof Error ? error.message : String(error),
+		});
+	}
 }
 
 /**
@@ -209,183 +221,191 @@ function evaluateTestCase(
  * @returns Generated TypeScript code
  */
 export function generateDefineEvalCode(
-  suite: TestSuite,
-  options: Partial<TestSuiteOptions> = {},
+	suite: TestSuite,
+	options: Partial<TestSuiteOptions> = {},
 ): string {
-  const specs = adaptTestSuite(suite, options);
-  const metadata = suite.getMetadata();
+	const specs = adaptTestSuite(suite, options);
+	const metadata = suite.getMetadata();
 
-  const imports = [
-    `// Auto-generated from TestSuite: ${metadata.suiteName || "legacy-suite"}`,
-    `// Generated at: ${new Date().toISOString()}`,
-    `// This file replaces the legacy TestSuite with defineEval() specifications`,
-    "",
-    `import { defineEval, createResult } from '@pauly4010/evalai-sdk';`,
-    "",
-  ];
+	const imports = [
+		`// Auto-generated from TestSuite: ${metadata.suiteName || "legacy-suite"}`,
+		`// Generated at: ${new Date().toISOString()}`,
+		`// This file replaces the legacy TestSuite with defineEval() specifications`,
+		"",
+		`import { defineEval, createResult } from '@pauly4010/evalai-sdk';`,
+		"",
+	];
 
-  const specCode = specs.map((spec, index) => {
-    const helperCode = generateHelperFunctions(spec, options);
+	const specCode = specs.map((spec, index) => {
+		const helperCode = generateHelperFunctions(spec, options);
 
-    return [
-      `defineEval("${spec.name}", async (context) => {`,
-      `  // Legacy test input: ${JSON.stringify(spec.metadata?.originalInput)}`,
-      `  const input = context.input;`,
-      `  `,
-      `  // Legacy test execution`,
-      helperCode,
-      `  `,
-      `  // Legacy evaluation logic`,
-      `  const result = await evaluateLegacyTest(input, ${JSON.stringify(spec.metadata?.originalExpected)});`,
-      `  `,
-      `  return result;`,
-      `}, {`,
-      `  description: "${spec.description}",`,
-      `  tags: ${JSON.stringify(spec.tags)},`,
-      `  metadata: ${JSON.stringify(spec.metadata)},`,
-      `  timeout: ${spec.config?.timeout || 30000},`,
-      `  retries: ${spec.config?.retries || 0},`,
-      `});`,
-      "",
-    ].join("\n");
-  });
+		return [
+			`defineEval("${spec.name}", async (context) => {`,
+			`  // Legacy test input: ${JSON.stringify(spec.metadata?.originalInput)}`,
+			`  const input = context.input;`,
+			`  `,
+			`  // Legacy test execution`,
+			helperCode,
+			`  `,
+			`  // Legacy evaluation logic`,
+			`  const result = await evaluateLegacyTest(input, ${JSON.stringify(spec.metadata?.originalExpected)});`,
+			`  `,
+			`  return result;`,
+			`}, {`,
+			`  description: "${spec.description}",`,
+			`  tags: ${JSON.stringify(spec.tags)},`,
+			`  metadata: ${JSON.stringify(spec.metadata)},`,
+			`  timeout: ${spec.config?.timeout || 30000},`,
+			`  retries: ${spec.config?.retries || 0},`,
+			`});`,
+			"",
+		].join("\n");
+	});
 
-  const helperFunctions = generateHelperFunctionsForSuite(specs, options);
-  const evaluationFunction = generateEvaluationFunction();
+	const helperFunctions = generateHelperFunctionsForSuite(specs, options);
+	const evaluationFunction = generateEvaluationFunction();
 
-  return [...imports, ...helperFunctions, ...evaluationFunction, ...specCode].join("\n");
+	return [
+		...imports,
+		...helperFunctions,
+		...evaluationFunction,
+		...specCode,
+	].join("\n");
 }
 
 /**
  * Generate helper functions for a specific spec
  */
-function generateHelperFunctions(spec: EvalSpec, options: Partial<TestSuiteOptions>): string {
-  if (!options.generateHelpers) return "";
+function generateHelperFunctions(
+	spec: EvalSpec,
+	options: Partial<TestSuiteOptions>,
+): string {
+	if (!options.generateHelpers) return "";
 
-  // Generate helper functions based on test metadata
-  const helpers: string[] = [];
+	// Generate helper functions based on test metadata
+	const helpers: string[] = [];
 
-  // Add helper for assertion evaluation if needed
-  if (spec.metadata?.originalExpected) {
-    helpers.push(
-      `function evaluateLegacyAssertion(output: string, expected: string): boolean {`,
-      `  return output === expected;`,
-      `}`,
-    );
-  }
+	// Add helper for assertion evaluation if needed
+	if (spec.metadata?.originalExpected) {
+		helpers.push(
+			`function evaluateLegacyAssertion(output: string, expected: string): boolean {`,
+			`  return output === expected;`,
+			`}`,
+		);
+	}
 
-  // Add helper for test evaluation
-  helpers.push(
-    `async function evaluateLegacyTest(input: string, expected?: string): Promise<any> {`,
-    `  // This function simulates the legacy test evaluation`,
-    `  const output = await simulateLegacyExecutor(input);`,
-    `  `,
-    `  if (expected !== undefined) {`,
-    `    const passed = evaluateLegacyAssertion(output, expected);`,
-    `    return createResult({`,
-    `      pass: passed,`,
-    `      score: passed ? 100 : 0,`,
-    `      metadata: {`,
-    `        input,`,
-    `        expected,`,
-    `      },`,
-    `    });`,
-    `  }`,
-    `  `,
-    `  return createResult({`,
-    `    pass: output.length > 0,`,
-    `    score: output.length > 0 ? 100 : 0,`,
-    `    metadata: { input },`,
-    `  });`,
-    `}`,
-  );
+	// Add helper for test evaluation
+	helpers.push(
+		`async function evaluateLegacyTest(input: string, expected?: string): Promise<any> {`,
+		`  // This function simulates the legacy test evaluation`,
+		`  const output = await simulateLegacyExecutor(input);`,
+		`  `,
+		`  if (expected !== undefined) {`,
+		`    const passed = evaluateLegacyAssertion(output, expected);`,
+		`    return createResult({`,
+		`      pass: passed,`,
+		`      score: passed ? 100 : 0,`,
+		`      metadata: {`,
+		`        input,`,
+		`        expected,`,
+		`      },`,
+		`    });`,
+		`  }`,
+		`  `,
+		`  return createResult({`,
+		`    pass: output.length > 0,`,
+		`    score: output.length > 0 ? 100 : 0,`,
+		`    metadata: { input },`,
+		`  });`,
+		`}`,
+	);
 
-  // Add executor simulation
-  helpers.push(
-    `async function simulateLegacyExecutor(input: string): Promise<string> {`,
-    `  // This function simulates the legacy executor`,
-    `  // In a real migration, this would be replaced with the actual executor`,
-    `  return input; // Echo for demonstration`,
-    `}`,
-  );
+	// Add executor simulation
+	helpers.push(
+		`async function simulateLegacyExecutor(input: string): Promise<string> {`,
+		`  // This function simulates the legacy executor`,
+		`  // In a real migration, this would be replaced with the actual executor`,
+		`  return input; // Echo for demonstration`,
+		`}`,
+	);
 
-  return helpers.join("\n\n");
+	return helpers.join("\n\n");
 }
 
 /**
  * Generate helper functions for the entire suite
  */
 function generateHelperFunctionsForSuite(
-  specs: EvalSpec[],
-  options: Partial<TestSuiteOptions>,
+	specs: EvalSpec[],
+	options: Partial<TestSuiteOptions>,
 ): string {
-  const helpers = new Set<string>();
+	const helpers = new Set<string>();
 
-  // Collect all unique helper functions needed
-  for (const spec of specs) {
-    const specHelpers = generateHelperFunctions(spec, options);
-    if (specHelpers) {
-      helpers.add(specHelpers);
-    }
-  }
+	// Collect all unique helper functions needed
+	for (const spec of specs) {
+		const specHelpers = generateHelperFunctions(spec, options);
+		if (specHelpers) {
+			helpers.add(specHelpers);
+		}
+	}
 
-  return Array.from(helpers).join("\n\n");
+	return Array.from(helpers).join("\n\n");
 }
 
 /**
  * Generate evaluation function
  */
 function generateEvaluationFunction(): string {
-  return [
-    `// Legacy test evaluation function`,
-    `function evaluateLegacyTest(input: string, expected?: string): any {`,
-    `  // This function evaluates legacy test logic`,
-    `  // In a real migration, this would contain the actual test logic`,
-    `  `,
-    `  if (expected !== undefined) {`,
-    `    const passed = input === expected;`,
-    `    return createResult({`,
-    `      pass: passed,`,
-    `      score: passed ? 100 : 0,`,
-    `      metadata: { input, expected },`,
-    `    });`,
-    `  }`,
-    `  `,
-    `  return createResult({`,
-    `    pass: input.length > 0,`,
-    `    score: input.length > 0 ? 100 : 0,`,
-    `    metadata: { input },`,
-    `  });`,
-    `}`,
-  ].join("\n");
+	return [
+		`// Legacy test evaluation function`,
+		`function evaluateLegacyTest(input: string, expected?: string): any {`,
+		`  // This function evaluates legacy test logic`,
+		`  // In a real migration, this would contain the actual test logic`,
+		`  `,
+		`  if (expected !== undefined) {`,
+		`    const passed = input === expected;`,
+		`    return createResult({`,
+		`      pass: passed,`,
+		`      score: passed ? 100 : 0,`,
+		`      metadata: { input, expected },`,
+		`    });`,
+		`  }`,
+		`  `,
+		`  return createResult({`,
+		`    pass: input.length > 0,`,
+		`    score: input.length > 0 ? 100 : 0,`,
+		`    metadata: { input },`,
+		`  });`,
+		`}`,
+	].join("\n");
 }
 
 /**
  * Create adapter configuration for TestSuite
  */
 export interface TestSuiteConfig {
-  /** Test cases to run */
-  cases: any[];
-  /** Function that generates output from input */
-  executor?: (input: string) => Promise<string>;
-  /** Run tests in parallel (default: true) */
-  parallel?: boolean;
-  /** Stop on first failure (default: false) */
-  stopOnFailure?: boolean;
-  /** Timeout per test case in ms (default: 30000) */
-  timeout?: number;
-  /** Retry failing cases N times (default: 0) */
-  retries?: number;
+	/** Test cases to run */
+	cases: any[];
+	/** Function that generates output from input */
+	executor?: (input: string) => Promise<string>;
+	/** Run tests in parallel (default: true) */
+	parallel?: boolean;
+	/** Stop on first failure (default: false) */
+	stopOnFailure?: boolean;
+	/** Timeout per test case in ms (default: 30000) */
+	timeout?: number;
+	/** Retry failing cases N times (default: 0) */
+	retries?: number;
 }
 
 /**
  * TestSuite options (alias for compatibility)
  */
 export interface TestSuiteOptions extends TestSuiteConfig {
-  /** Include provenance metadata in generated specs */
-  includeProvenance?: boolean;
-  /** Preserve original test IDs */
-  preserveIds?: boolean;
-  /** Generate helper functions for assertions */
-  generateHelpers?: boolean;
+	/** Include provenance metadata in generated specs */
+	includeProvenance?: boolean;
+	/** Preserve original test IDs */
+	preserveIds?: boolean;
+	/** Generate helper functions for assertions */
+	generateHelpers?: boolean;
 }

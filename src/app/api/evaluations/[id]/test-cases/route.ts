@@ -4,85 +4,95 @@ import { parseBody } from "@/lib/api/parse";
 import { type AuthContext, secureRoute } from "@/lib/api/secure-route";
 import { SCOPES } from "@/lib/auth/scopes";
 import { testCaseService } from "@/lib/services/test-case.service";
-import { createTestCaseBodySchema, parsePaginationParams } from "@/lib/validation";
+import {
+	createTestCaseBodySchema,
+	parsePaginationParams,
+} from "@/lib/validation";
 
 export const GET = secureRoute(
-  async (req: NextRequest, ctx: AuthContext, params) => {
-    const evaluationId = parseInt(params.id, 10);
+	async (req: NextRequest, ctx: AuthContext, params) => {
+		const evaluationId = parseInt(params.id, 10);
 
-    if (Number.isNaN(evaluationId)) {
-      return validationError("Valid evaluation ID is required");
-    }
+		if (Number.isNaN(evaluationId)) {
+			return validationError("Valid evaluation ID is required");
+		}
 
-    const { searchParams } = new URL(req.url);
-    const { limit, offset } = parsePaginationParams(searchParams);
+		const { searchParams } = new URL(req.url);
+		const { limit, offset } = parsePaginationParams(searchParams);
 
-    const cases = await testCaseService.list(ctx.organizationId, evaluationId, { limit, offset });
+		const cases = await testCaseService.list(ctx.organizationId, evaluationId, {
+			limit,
+			offset,
+		});
 
-    if (cases === null) {
-      return notFound("Evaluation not found");
-    }
+		if (cases === null) {
+			return notFound("Evaluation not found");
+		}
 
-    return NextResponse.json(cases);
-  },
-  { requiredScopes: [SCOPES.EVAL_READ] },
+		return NextResponse.json(cases);
+	},
+	{ requiredScopes: [SCOPES.EVAL_READ] },
 );
 
 export const POST = secureRoute(
-  async (req: NextRequest, ctx: AuthContext, params) => {
-    const evaluationId = parseInt(params.id, 10);
+	async (req: NextRequest, ctx: AuthContext, params) => {
+		const evaluationId = parseInt(params.id, 10);
 
-    if (Number.isNaN(evaluationId)) {
-      return validationError("Valid evaluation ID is required");
-    }
+		if (Number.isNaN(evaluationId)) {
+			return validationError("Valid evaluation ID is required");
+		}
 
-    const parsed = await parseBody(req, createTestCaseBodySchema);
-    if (!parsed.ok) return parsed.response;
+		const parsed = await parseBody(req, createTestCaseBodySchema);
+		if (!parsed.ok) return parsed.response;
 
-    const { name, input, expectedOutput, metadata } = parsed.data;
+		const { name, input, expectedOutput, metadata } = parsed.data;
 
-    const newTestCase = await testCaseService.create(ctx.organizationId, evaluationId, {
-      name,
-      input: input as string,
-      expectedOutput: expectedOutput as string | null | undefined,
-      metadata,
-    });
+		const newTestCase = await testCaseService.create(
+			ctx.organizationId,
+			evaluationId,
+			{
+				name,
+				input: input as string,
+				expectedOutput: expectedOutput as string | null | undefined,
+				metadata,
+			},
+		);
 
-    if (newTestCase === null) {
-      return notFound("Evaluation not found");
-    }
+		if (newTestCase === null) {
+			return notFound("Evaluation not found");
+		}
 
-    return NextResponse.json(newTestCase, { status: 201 });
-  },
-  { requiredScopes: [SCOPES.EVAL_WRITE] },
+		return NextResponse.json(newTestCase, { status: 201 });
+	},
+	{ requiredScopes: [SCOPES.EVAL_WRITE] },
 );
 
 export const DELETE = secureRoute(
-  async (req: NextRequest, ctx: AuthContext, params) => {
-    const evaluationId = parseInt(params.id, 10);
+	async (req: NextRequest, ctx: AuthContext, params) => {
+		const evaluationId = parseInt(params.id, 10);
 
-    if (Number.isNaN(evaluationId)) {
-      return validationError("Valid evaluation ID is required");
-    }
+		if (Number.isNaN(evaluationId)) {
+			return validationError("Valid evaluation ID is required");
+		}
 
-    const { searchParams } = new URL(req.url);
-    const testCaseId = searchParams.get("testCaseId");
+		const { searchParams } = new URL(req.url);
+		const testCaseId = searchParams.get("testCaseId");
 
-    if (!testCaseId || Number.isNaN(parseInt(testCaseId, 10))) {
-      return validationError("Valid test case ID is required");
-    }
+		if (!testCaseId || Number.isNaN(parseInt(testCaseId, 10))) {
+			return validationError("Valid test case ID is required");
+		}
 
-    const removed = await testCaseService.remove(
-      ctx.organizationId,
-      evaluationId,
-      parseInt(testCaseId, 10),
-    );
+		const removed = await testCaseService.remove(
+			ctx.organizationId,
+			evaluationId,
+			parseInt(testCaseId, 10),
+		);
 
-    if (!removed) {
-      return notFound("Test case not found");
-    }
+		if (!removed) {
+			return notFound("Test case not found");
+		}
 
-    return NextResponse.json({ message: "Test case deleted successfully" });
-  },
-  { requiredScopes: [SCOPES.EVAL_WRITE] },
+		return NextResponse.json({ message: "Test case deleted successfully" });
+	},
+	{ requiredScopes: [SCOPES.EVAL_WRITE] },
 );

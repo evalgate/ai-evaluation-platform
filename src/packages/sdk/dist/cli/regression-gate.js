@@ -137,7 +137,10 @@ function runBuiltinGate(cwd) {
         };
     }
     const baselineMeta = baselineData.updatedAt
-        ? { updatedAt: baselineData.updatedAt, updatedBy: baselineData.updatedBy ?? "unknown" }
+        ? {
+            updatedAt: baselineData.updatedAt,
+            updatedBy: baselineData.updatedBy ?? "unknown",
+        }
         : null;
     // Run tests
     const isWin = process.platform === "win32";
@@ -302,7 +305,10 @@ function runGate(argv) {
                 process.stdout.write(fs.readFileSync(reportPath, "utf-8"));
             }
             else {
-                console.error(JSON.stringify({ error: "regression-report.json not found", exitCode }));
+                console.error(JSON.stringify({
+                    error: "regression-report.json not found",
+                    exitCode,
+                }));
             }
         }
         else if (args.format === "github") {

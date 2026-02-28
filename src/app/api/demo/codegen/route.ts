@@ -12,5 +12,5 @@ import codegenData from "../../../../../public/demo/codegen.json";
  * Returns code generation quality demo data
  */
 export async function GET() {
-  return NextResponse.json(codegenData);
+	return NextResponse.json(codegenData);
 }

@@ -1,113 +1,113 @@
 {
-  "name": "@pauly4010/evalai-sdk",
-  "version": "1.9.0",
-  "description": "AI Evaluation Platform SDK - Complete API Coverage with Performance Optimizations",
-  "main": "dist/index.js",
-  "module": "dist/index.js",
-  "types": "dist/index.d.ts",
-  "sideEffects": false,
-  "files": [
-    "dist",
-    "README.md",
-    "CHANGELOG.md"
-  ],
-  "bin": {
-    "evalai": "./dist/cli/index.js"
-  },
-  "engines": {
-    "node": ">=16.0.0"
-  },
-  "scripts": {
-    "build": "tsc",
-    "dev": "tsc --watch",
-    "test": "vitest"
-  },
-  "keywords": [
-    "ai",
-    "evaluation",
-    "llm",
-    "testing",
-    "observability",
-    "tracing",
-    "monitoring",
-    "annotations",
-    "webhooks",
-    "developer-tools",
-    "openai",
-    "anthropic"
-  ],
-  "author": "EvalAI Team",
-  "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/pauly7610/ai-evaluation-platform.git",
-    "directory": "src/packages/sdk"
-  },
-  "homepage": "https://v0-ai-evaluation-platform-nu.vercel.app",
-  "bugs": {
-    "url": "https://github.com/pauly7610/ai-evaluation-platform/issues"
-  },
-  "dependencies": {
-    "commander": "^14.0.0"
-  },
-  "peerDependencies": {
-    "@anthropic-ai/sdk": "^0.20.0",
-    "openai": "^4.0.0"
-  },
-  "peerDependenciesMeta": {
-    "openai": {
-      "optional": true
-    },
-    "@anthropic-ai/sdk": {
-      "optional": true
-    }
-  },
-  "devDependencies": {
-    "@types/node": "^20.0.0",
-    "ts-node": "^10.9.2",
-    "typescript": "^5.0.0",
-    "vitest": "^1.0.0"
-  },
-  "exports": {
-    ".": {
-      "import": "./dist/index.js",
-      "require": "./dist/index.js",
-      "types": "./dist/index.d.ts"
-    },
-    "./assertions": {
-      "import": "./dist/assertions.js",
-      "require": "./dist/assertions.js",
-      "types": "./dist/assertions.d.ts"
-    },
-    "./testing": {
-      "import": "./dist/testing.js",
-      "require": "./dist/testing.js",
-      "types": "./dist/testing.d.ts"
-    },
-    "./integrations/openai": {
-      "import": "./dist/integrations/openai.js",
-      "require": "./dist/integrations/openai.js",
-      "types": "./dist/integrations/openai.d.ts"
-    },
-    "./integrations/anthropic": {
-      "import": "./dist/integrations/anthropic.js",
-      "require": "./dist/integrations/anthropic.js",
-      "types": "./dist/integrations/anthropic.d.ts"
-    },
-    "./integrations/openai-eval": {
-      "import": "./dist/integrations/openai-eval.js",
-      "require": "./dist/integrations/openai-eval.js",
-      "types": "./dist/integrations/openai-eval.d.ts"
-    },
-    "./matchers": {
-      "import": "./dist/matchers/index.js",
-      "require": "./dist/matchers/index.js",
-      "types": "./dist/matchers/index.d.ts"
-    },
-    "./regression": {
-      "import": "./dist/regression.js",
-      "require": "./dist/regression.js",
-      "types": "./dist/regression.d.ts"
-    }
-  }
+	"name": "@pauly4010/evalai-sdk",
+	"version": "1.9.0",
+	"description": "AI Evaluation Platform SDK - Complete API Coverage with Performance Optimizations",
+	"main": "dist/index.js",
+	"module": "dist/index.js",
+	"types": "dist/index.d.ts",
+	"sideEffects": false,
+	"files": [
+		"dist",
+		"README.md",
+		"CHANGELOG.md"
+	],
+	"bin": {
+		"evalai": "./dist/cli/index.js"
+	},
+	"engines": {
+		"node": ">=16.0.0"
+	},
+	"scripts": {
+		"build": "tsc",
+		"dev": "tsc --watch",
+		"test": "vitest"
+	},
+	"keywords": [
+		"ai",
+		"evaluation",
+		"llm",
+		"testing",
+		"observability",
+		"tracing",
+		"monitoring",
+		"annotations",
+		"webhooks",
+		"developer-tools",
+		"openai",
+		"anthropic"
+	],
+	"author": "EvalAI Team",
+	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/pauly7610/ai-evaluation-platform.git",
+		"directory": "src/packages/sdk"
+	},
+	"homepage": "https://v0-ai-evaluation-platform-nu.vercel.app",
+	"bugs": {
+		"url": "https://github.com/pauly7610/ai-evaluation-platform/issues"
+	},
+	"dependencies": {
+		"commander": "^14.0.0"
+	},
+	"peerDependencies": {
+		"@anthropic-ai/sdk": "^0.20.0",
+		"openai": "^4.0.0"
+	},
+	"peerDependenciesMeta": {
+		"openai": {
+			"optional": true
+		},
+		"@anthropic-ai/sdk": {
+			"optional": true
+		}
+	},
+	"devDependencies": {
+		"@types/node": "^20.0.0",
+		"ts-node": "^10.9.2",
+		"typescript": "^5.0.0",
+		"vitest": "^1.0.0"
+	},
+	"exports": {
+		".": {
+			"import": "./dist/index.js",
+			"require": "./dist/index.js",
+			"types": "./dist/index.d.ts"
+		},
+		"./assertions": {
+			"import": "./dist/assertions.js",
+			"require": "./dist/assertions.js",
+			"types": "./dist/assertions.d.ts"
+		},
+		"./testing": {
+			"import": "./dist/testing.js",
+			"require": "./dist/testing.js",
+			"types": "./dist/testing.d.ts"
+		},
+		"./integrations/openai": {
+			"import": "./dist/integrations/openai.js",
+			"require": "./dist/integrations/openai.js",
+			"types": "./dist/integrations/openai.d.ts"
+		},
+		"./integrations/anthropic": {
+			"import": "./dist/integrations/anthropic.js",
+			"require": "./dist/integrations/anthropic.js",
+			"types": "./dist/integrations/anthropic.d.ts"
+		},
+		"./integrations/openai-eval": {
+			"import": "./dist/integrations/openai-eval.js",
+			"require": "./dist/integrations/openai-eval.js",
+			"types": "./dist/integrations/openai-eval.d.ts"
+		},
+		"./matchers": {
+			"import": "./dist/matchers/index.js",
+			"require": "./dist/matchers/index.js",
+			"types": "./dist/matchers/index.d.ts"
+		},
+		"./regression": {
+			"import": "./dist/regression.js",
+			"require": "./dist/regression.js",
+			"types": "./dist/regression.d.ts"
+		}
+	}
 }

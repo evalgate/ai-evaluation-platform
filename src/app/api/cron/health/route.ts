@@ -18,24 +18,24 @@ import { logger } from "@/lib/logger";
  *   500 { ok: false, error: "..." }
  */
 export async function GET(req: NextRequest) {
-  const secret = process.env.CRON_SECRET;
-  const auth = req.headers.get("authorization");
+	const secret = process.env.CRON_SECRET;
+	const auth = req.headers.get("authorization");
 
-  if (!secret || auth !== `Bearer ${secret}`) {
-    return unauthorized();
-  }
+	if (!secret || auth !== `Bearer ${secret}`) {
+		return unauthorized();
+	}
 
-  const ts = new Date().toISOString();
+	const ts = new Date().toISOString();
 
-  try {
-    // Minimal DB ping — single scalar query
-    await db.run(sql`SELECT 1`);
+	try {
+		// Minimal DB ping — single scalar query
+		await db.run(sql`SELECT 1`);
 
-    logger.info("Cron health check passed", { ts });
-    return NextResponse.json({ ok: true, db: "ok", ts });
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : "Health check failed";
-    logger.error("Cron health check failed", { error: message, ts });
-    return internalError(message);
-  }
+		logger.info("Cron health check passed", { ts });
+		return NextResponse.json({ ok: true, db: "ok", ts });
+	} catch (err: unknown) {
+		const message = err instanceof Error ? err.message : "Health check failed";
+		logger.error("Cron health check failed", { error: message, ts });
+		return internalError(message);
+	}
 }

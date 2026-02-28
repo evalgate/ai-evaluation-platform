@@ -29,16 +29,16 @@ import { type AssertionResult, expect } from "./assertions";
  * Use this for defining test cases in test suites with assertions
  */
 export interface TestSuiteCase {
-  /** Unique identifier for the test case */
-  id?: string;
-  /** Input to the LLM */
-  input: string;
-  /** Expected output (optional) */
-  expected?: string;
-  /** Metadata for the test case */
-  metadata?: Record<string, unknown>;
-  /** Assertion functions to run */
-  assertions?: ((output: string) => AssertionResult)[];
+	/** Unique identifier for the test case */
+	id?: string;
+	/** Input to the LLM */
+	input: string;
+	/** Expected output (optional) */
+	expected?: string;
+	/** Metadata for the test case */
+	metadata?: Record<string, unknown>;
+	/** Assertion functions to run */
+	assertions?: ((output: string) => AssertionResult)[];
 }
 
 // Legacy export for backward compatibility
@@ -46,37 +46,37 @@ export interface TestSuiteCase {
 export type TestCase = TestSuiteCase;
 
 export interface TestSuiteConfig {
-  /** Test cases to run */
-  cases: TestSuiteCase[];
-  /** Function that generates output from input */
-  executor?: (input: string) => Promise<string>;
-  /** Run tests in parallel (default: true) */
-  parallel?: boolean;
-  /** Stop on first failure (default: false) */
-  stopOnFailure?: boolean;
-  /** Timeout per test case in ms (default: 30000) */
-  timeout?: number;
-  /** Retry failing cases N times (default: 0). Only failing cases are retried. */
-  retries?: number;
+	/** Test cases to run */
+	cases: TestSuiteCase[];
+	/** Function that generates output from input */
+	executor?: (input: string) => Promise<string>;
+	/** Run tests in parallel (default: true) */
+	parallel?: boolean;
+	/** Stop on first failure (default: false) */
+	stopOnFailure?: boolean;
+	/** Timeout per test case in ms (default: 30000) */
+	timeout?: number;
+	/** Retry failing cases N times (default: 0). Only failing cases are retried. */
+	retries?: number;
 }
 
 export interface TestSuiteCaseResult {
-  /** Test case ID */
-  id: string;
-  /** Input that was tested */
-  input: string;
-  /** Expected output */
-  expected?: string;
-  /** Actual output */
-  actual: string;
-  /** Whether test passed */
-  passed: boolean;
-  /** Assertion results */
-  assertions: AssertionResult[];
-  /** Duration in milliseconds */
-  durationMs: number;
-  /** Error if test failed to execute */
-  error?: string;
+	/** Test case ID */
+	id: string;
+	/** Input that was tested */
+	input: string;
+	/** Expected output */
+	expected?: string;
+	/** Actual output */
+	actual: string;
+	/** Whether test passed */
+	passed: boolean;
+	/** Assertion results */
+	assertions: AssertionResult[];
+	/** Duration in milliseconds */
+	durationMs: number;
+	/** Error if test failed to execute */
+	error?: string;
 }
 
 // Legacy export for backward compatibility
@@ -84,20 +84,20 @@ export interface TestSuiteCaseResult {
 export type TestCaseResult = TestSuiteCaseResult;
 
 export interface TestSuiteResult {
-  /** Suite name */
-  name: string;
-  /** Total number of test cases */
-  total: number;
-  /** Number of passed tests */
-  passed: number;
-  /** Number of failed tests */
-  failed: number;
-  /** Total duration in milliseconds */
-  durationMs: number;
-  /** Individual test results */
-  results: TestSuiteCaseResult[];
-  /** Case IDs that were retried (flaky recovery) */
-  retriedCases?: string[];
+	/** Suite name */
+	name: string;
+	/** Total number of test cases */
+	total: number;
+	/** Number of passed tests */
+	passed: number;
+	/** Number of failed tests */
+	failed: number;
+	/** Total duration in milliseconds */
+	durationMs: number;
+	/** Individual test results */
+	results: TestSuiteCaseResult[];
+	/** Case IDs that were retried (flaky recovery) */
+	retriedCases?: string[];
 }
 
 /**
@@ -105,18 +105,18 @@ export interface TestSuiteResult {
  * COMPAT-201: Public TestSuite introspection (minimal getters)
  */
 export interface TestDefinition {
-  /** Test case ID */
-  id: string;
-  /** Test input */
-  input: string;
-  /** Expected output */
-  expected?: string;
-  /** Test metadata */
-  metadata?: Record<string, unknown>;
-  /** Whether test has assertions */
-  hasAssertions: boolean;
-  /** Number of assertions */
-  assertionCount: number;
+	/** Test case ID */
+	id: string;
+	/** Test input */
+	input: string;
+	/** Expected output */
+	expected?: string;
+	/** Test metadata */
+	metadata?: Record<string, unknown>;
+	/** Whether test has assertions */
+	hasAssertions: boolean;
+	/** Number of assertions */
+	assertionCount: number;
 }
 
 /**
@@ -124,232 +124,248 @@ export interface TestDefinition {
  * COMPAT-201: Public TestSuite introspection (minimal getters)
  */
 export interface PortableSuite {
-  /** Suite name */
-  name: string;
-  /** Suite configuration */
-  config: TestSuiteConfig;
-  /** Test definitions */
-  tests: TestDefinition[];
-  /** Suite metadata */
-  metadata: {
-    suiteName?: string;
-    tags?: string[];
-    defaults?: {
-      timeout?: number;
-      parallel?: boolean;
-      stopOnFailure?: boolean;
-      retries?: number;
-    };
-  };
+	/** Suite name */
+	name: string;
+	/** Suite configuration */
+	config: TestSuiteConfig;
+	/** Test definitions */
+	tests: TestDefinition[];
+	/** Suite metadata */
+	metadata: {
+		suiteName?: string;
+		tags?: string[];
+		defaults?: {
+			timeout?: number;
+			parallel?: boolean;
+			stopOnFailure?: boolean;
+			retries?: number;
+		};
+	};
 }
 
 /**
  * Test Suite for declarative evaluation testing
  */
 export class TestSuite {
-  constructor(
-    private name: string,
-    private config: TestSuiteConfig,
-  ) {}
+	constructor(
+		private name: string,
+		private config: TestSuiteConfig,
+	) {}
 
-  /**
-   * Run all test cases
-   *
-   * @example
-   * ```typescript
-   * const results = await suite.run();
-   * console.log(`${results.passed}/${results.total} tests passed`);
-   * ```
-   */
-  async run(): Promise<TestSuiteResult> {
-    const startTime = Date.now();
-    const results: TestSuiteCaseResult[] = [];
+	/**
+	 * Run all test cases
+	 *
+	 * @example
+	 * ```typescript
+	 * const results = await suite.run();
+	 * console.log(`${results.passed}/${results.total} tests passed`);
+	 * ```
+	 */
+	async run(): Promise<TestSuiteResult> {
+		const startTime = Date.now();
+		const results: TestSuiteCaseResult[] = [];
 
-    const runTestCase = async (
-      testCase: TestSuiteCase,
-      index: number,
-    ): Promise<TestSuiteCaseResult> => {
-      const caseStartTime = Date.now();
-      const id = testCase.id || `case-${index}`;
+		const runTestCase = async (
+			testCase: TestSuiteCase,
+			index: number,
+		): Promise<TestSuiteCaseResult> => {
+			const caseStartTime = Date.now();
+			const id = testCase.id || `case-${index}`;
 
-      try {
-        // Execute to get output
-        let actual: string;
-        if (this.config.executor) {
-          const timeout = this.config.timeout || 30000;
-          const timeoutPromise = new Promise<never>((_, reject) =>
-            setTimeout(() => reject(new Error(`Test timeout after ${timeout}ms`)), timeout),
-          );
+			try {
+				// Execute to get output
+				let actual: string;
+				if (this.config.executor) {
+					const timeout = this.config.timeout || 30000;
+					const timeoutPromise = new Promise<never>((_, reject) =>
+						setTimeout(
+							() => reject(new Error(`Test timeout after ${timeout}ms`)),
+							timeout,
+						),
+					);
 
-          actual = await Promise.race([this.config.executor(testCase.input), timeoutPromise]);
-        } else if (testCase.expected) {
-          actual = testCase.expected; // Use expected as actual if no executor
-        } else {
-          throw new Error("No executor provided and no expected output");
-        }
+					actual = await Promise.race([
+						this.config.executor(testCase.input),
+						timeoutPromise,
+					]);
+				} else if (testCase.expected) {
+					actual = testCase.expected; // Use expected as actual if no executor
+				} else {
+					throw new Error("No executor provided and no expected output");
+				}
 
-        // Run assertions
-        const assertions: AssertionResult[] = [];
-        let allPassed = true;
+				// Run assertions
+				const assertions: AssertionResult[] = [];
+				let allPassed = true;
 
-        // Run custom assertions
-        if (testCase.assertions) {
-          for (const assertion of testCase.assertions) {
-            const result = assertion(actual);
-            assertions.push(result);
-            if (!result.passed) allPassed = false;
-          }
-        }
+				// Run custom assertions
+				if (testCase.assertions) {
+					for (const assertion of testCase.assertions) {
+						const result = assertion(actual);
+						assertions.push(result);
+						if (!result.passed) allPassed = false;
+					}
+				}
 
-        // Default equality check if expected provided
-        if (testCase.expected && !testCase.assertions) {
-          const result = expect(actual).toEqual(testCase.expected);
-          assertions.push(result);
-          if (!result.passed) allPassed = false;
-        }
+				// Default equality check if expected provided
+				if (testCase.expected && !testCase.assertions) {
+					const result = expect(actual).toEqual(testCase.expected);
+					assertions.push(result);
+					if (!result.passed) allPassed = false;
+				}
 
-        const durationMs = Date.now() - caseStartTime;
+				const durationMs = Date.now() - caseStartTime;
 
-        return {
-          id,
-          input: testCase.input,
-          expected: testCase.expected,
-          actual,
-          passed: allPassed,
-          assertions,
-          durationMs,
-        };
-      } catch (error) {
-        const durationMs = Date.now() - caseStartTime;
-        return {
-          id,
-          input: testCase.input,
-          expected: testCase.expected,
-          actual: "",
-          passed: false,
-          assertions: [],
-          durationMs,
-          error: error instanceof Error ? error.message : String(error),
-        };
-      }
-    };
+				return {
+					id,
+					input: testCase.input,
+					expected: testCase.expected,
+					actual,
+					passed: allPassed,
+					assertions,
+					durationMs,
+				};
+			} catch (error) {
+				const durationMs = Date.now() - caseStartTime;
+				return {
+					id,
+					input: testCase.input,
+					expected: testCase.expected,
+					actual: "",
+					passed: false,
+					assertions: [],
+					durationMs,
+					error: error instanceof Error ? error.message : String(error),
+				};
+			}
+		};
 
-    // Run tests
-    if (this.config.parallel) {
-      results.push(...(await Promise.all(this.config.cases.map((tc, i) => runTestCase(tc, i)))));
-    } else {
-      for (let i = 0; i < this.config.cases.length; i++) {
-        const result = await runTestCase(this.config.cases[i], i);
-        results.push(result);
+		// Run tests
+		if (this.config.parallel) {
+			results.push(
+				...(await Promise.all(
+					this.config.cases.map((tc, i) => runTestCase(tc, i)),
+				)),
+			);
+		} else {
+			for (let i = 0; i < this.config.cases.length; i++) {
+				const result = await runTestCase(this.config.cases[i], i);
+				results.push(result);
 
-        if (this.config.stopOnFailure && !result.passed) {
-          break;
-        }
-      }
-    }
+				if (this.config.stopOnFailure && !result.passed) {
+					break;
+				}
+			}
+		}
 
-    const retriedCases: string[] = [];
-    const retries = this.config.retries ?? 0;
-    if (retries > 0 && results.length > 0) {
-      const failingIndices = results.map((r, i) => (r.passed ? -1 : i)).filter((i) => i >= 0);
-      for (let attempt = 0; attempt < retries && failingIndices.length > 0; attempt++) {
-        const toRetry = [...failingIndices];
-        failingIndices.length = 0;
-        for (const i of toRetry) {
-          const tc = this.config.cases[i];
-          const retryResult = await runTestCase(tc, i);
-          if (retryResult.passed) {
-            results[i] = retryResult;
-            retriedCases.push(retryResult.id);
-          } else {
-            failingIndices.push(i);
-          }
-        }
-      }
-    }
+		const retriedCases: string[] = [];
+		const retries = this.config.retries ?? 0;
+		if (retries > 0 && results.length > 0) {
+			const failingIndices = results
+				.map((r, i) => (r.passed ? -1 : i))
+				.filter((i) => i >= 0);
+			for (
+				let attempt = 0;
+				attempt < retries && failingIndices.length > 0;
+				attempt++
+			) {
+				const toRetry = [...failingIndices];
+				failingIndices.length = 0;
+				for (const i of toRetry) {
+					const tc = this.config.cases[i];
+					const retryResult = await runTestCase(tc, i);
+					if (retryResult.passed) {
+						results[i] = retryResult;
+						retriedCases.push(retryResult.id);
+					} else {
+						failingIndices.push(i);
+					}
+				}
+			}
+		}
 
-    const durationMs = Date.now() - startTime;
-    const passed = results.filter((r) => r.passed).length;
-    const failed = results.filter((r) => !r.passed).length;
+		const durationMs = Date.now() - startTime;
+		const passed = results.filter((r) => r.passed).length;
+		const failed = results.filter((r) => !r.passed).length;
 
-    return {
-      name: this.name,
-      total: results.length,
-      passed,
-      failed,
-      durationMs,
-      results,
-      ...(retriedCases.length > 0 && { retriedCases }),
-    };
-  }
+		return {
+			name: this.name,
+			total: results.length,
+			passed,
+			failed,
+			durationMs,
+			results,
+			...(retriedCases.length > 0 && { retriedCases }),
+		};
+	}
 
-  /**
-   * Add a test case to the suite
-   */
-  addCase(testCase: TestSuiteCase): void {
-    this.config.cases.push(testCase);
-  }
+	/**
+	 * Add a test case to the suite
+	 */
+	addCase(testCase: TestSuiteCase): void {
+		this.config.cases.push(testCase);
+	}
 
-  /**
-   * Get suite configuration
-   */
-  getConfig(): TestSuiteConfig {
-    return { ...this.config };
-  }
+	/**
+	 * Get suite configuration
+	 */
+	getConfig(): TestSuiteConfig {
+		return { ...this.config };
+	}
 
-  /**
-   * Get test definitions for introspection
-   * COMPAT-201: Public TestSuite introspection (minimal getters)
-   */
-  getTests(): TestDefinition[] {
-    return this.config.cases.map((testCase, index) => ({
-      id: testCase.id || `case-${index}`,
-      input: testCase.input,
-      expected: testCase.expected,
-      metadata: testCase.metadata,
-      hasAssertions: !!testCase.assertions && testCase.assertions.length > 0,
-      assertionCount: testCase.assertions?.length || 0,
-    }));
-  }
+	/**
+	 * Get test definitions for introspection
+	 * COMPAT-201: Public TestSuite introspection (minimal getters)
+	 */
+	getTests(): TestDefinition[] {
+		return this.config.cases.map((testCase, index) => ({
+			id: testCase.id || `case-${index}`,
+			input: testCase.input,
+			expected: testCase.expected,
+			metadata: testCase.metadata,
+			hasAssertions: !!testCase.assertions && testCase.assertions.length > 0,
+			assertionCount: testCase.assertions?.length || 0,
+		}));
+	}
 
-  /**
-   * Get suite metadata for introspection
-   * COMPAT-201: Public TestSuite introspection (minimal getters)
-   */
-  getMetadata(): {
-    suiteName?: string;
-    tags?: string[];
-    defaults?: {
-      timeout?: number;
-      parallel?: boolean;
-      stopOnFailure?: boolean;
-      retries?: number;
-    };
-  } {
-    return {
-      suiteName: this.name,
-      tags: [], // TestSuite doesn't have tags, but include for future compatibility
-      defaults: {
-        timeout: this.config.timeout,
-        parallel: this.config.parallel,
-        stopOnFailure: this.config.stopOnFailure,
-        retries: this.config.retries,
-      },
-    };
-  }
+	/**
+	 * Get suite metadata for introspection
+	 * COMPAT-201: Public TestSuite introspection (minimal getters)
+	 */
+	getMetadata(): {
+		suiteName?: string;
+		tags?: string[];
+		defaults?: {
+			timeout?: number;
+			parallel?: boolean;
+			stopOnFailure?: boolean;
+			retries?: number;
+		};
+	} {
+		return {
+			suiteName: this.name,
+			tags: [], // TestSuite doesn't have tags, but include for future compatibility
+			defaults: {
+				timeout: this.config.timeout,
+				parallel: this.config.parallel,
+				stopOnFailure: this.config.stopOnFailure,
+				retries: this.config.retries,
+			},
+		};
+	}
 
-  /**
-   * Convert to portable suite representation
-   * COMPAT-201: Public TestSuite introspection (minimal getters)
-   */
-  toJSON(): PortableSuite {
-    return {
-      name: this.name,
-      config: this.getConfig(),
-      tests: this.getTests(),
-      metadata: this.getMetadata(),
-    };
-  }
+	/**
+	 * Convert to portable suite representation
+	 * COMPAT-201: Public TestSuite introspection (minimal getters)
+	 */
+	toJSON(): PortableSuite {
+		return {
+			name: this.name,
+			config: this.getConfig(),
+			tests: this.getTests(),
+			metadata: this.getMetadata(),
+		};
+	}
 }
 
 /**
@@ -374,8 +390,11 @@ export class TestSuite {
  * });
  * ```
  */
-export function createTestSuite(name: string, config: TestSuiteConfig): TestSuite {
-  return new TestSuite(name, config);
+export function createTestSuite(
+	name: string,
+	config: TestSuiteConfig,
+): TestSuite {
+	return new TestSuite(name, config);
 }
 
 /**
@@ -393,8 +412,10 @@ export function createTestSuite(name: string, config: TestSuiteConfig): TestSuit
  * });
  * ```
  */
-export function containsKeywords(keywords: string[]): (output: string) => AssertionResult {
-  return (output) => expect(output).toContainKeywords(keywords);
+export function containsKeywords(
+	keywords: string[],
+): (output: string) => AssertionResult {
+	return (output) => expect(output).toContainKeywords(keywords);
 }
 
 /**
@@ -412,8 +433,10 @@ export function containsKeywords(keywords: string[]): (output: string) => Assert
  * });
  * ```
  */
-export function matchesPattern(pattern: RegExp): (output: string) => AssertionResult {
-  return (output) => expect(output).toMatchPattern(pattern);
+export function matchesPattern(
+	pattern: RegExp,
+): (output: string) => AssertionResult {
+	return (output) => expect(output).toMatchPattern(pattern);
 }
 
 /**
@@ -432,9 +455,9 @@ export function matchesPattern(pattern: RegExp): (output: string) => AssertionRe
  * ```
  */
 export function hasSentiment(
-  sentiment: "positive" | "negative" | "neutral",
+	sentiment: "positive" | "negative" | "neutral",
 ): (output: string) => AssertionResult {
-  return (output) => expect(output).toHaveSentiment(sentiment);
+	return (output) => expect(output).toHaveSentiment(sentiment);
 }
 
 /**
@@ -453,8 +476,8 @@ export function hasSentiment(
  * ```
  */
 export function hasLength(range: {
-  min?: number;
-  max?: number;
+	min?: number;
+	max?: number;
 }): (output: string) => AssertionResult {
-  return (output) => expect(output).toHaveLength(range);
+	return (output) => expect(output).toHaveLength(range);
 }

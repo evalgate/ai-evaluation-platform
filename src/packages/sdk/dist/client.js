@@ -44,14 +44,19 @@ class AIEvalClient {
     constructor(config = {}) {
         // Tier 1.1: Zero-config with env variable detection (works in Node.js and browsers)
         this.apiKey =
-            config.apiKey || getEnvVar("EVALAI_API_KEY") || getEnvVar("AI_EVAL_API_KEY") || "";
+            config.apiKey ||
+                getEnvVar("EVALAI_API_KEY") ||
+                getEnvVar("AI_EVAL_API_KEY") ||
+                "";
         if (!this.apiKey) {
             throw new errors_1.EvalAIError("API key is required. Provide via config.apiKey or EVALAI_API_KEY environment variable.", "MISSING_API_KEY", 0);
         }
         // Auto-detect organization ID from env
-        const orgIdFromEnv = getEnvVar("EVALAI_ORGANIZATION_ID") || getEnvVar("AI_EVAL_ORGANIZATION_ID");
+        const orgIdFromEnv = getEnvVar("EVALAI_ORGANIZATION_ID") ||
+            getEnvVar("AI_EVAL_ORGANIZATION_ID");
         this.organizationId =
-            config.organizationId || (orgIdFromEnv ? parseInt(orgIdFromEnv, 10) : undefined);
+            config.organizationId ||
+                (orgIdFromEnv ? parseInt(orgIdFromEnv, 10) : undefined);
         // Default to relative URLs for browser, or allow custom baseUrl
         const isBrowser = typeof globalThis.window !== "undefined";
         this.baseUrl = config.baseUrl || (isBrowser ? "" : "http://localhost:3000");
@@ -547,7 +552,9 @@ class LLMJudgeAPI {
         if (params.offset)
             searchParams.set("offset", params.offset.toString());
         const query = searchParams.toString();
-        const endpoint = query ? `/api/llm-judge/configs?${query}` : "/api/llm-judge/configs";
+        const endpoint = query
+            ? `/api/llm-judge/configs?${query}`
+            : "/api/llm-judge/configs";
         return this.client.request(endpoint);
     }
     /**
@@ -564,7 +571,9 @@ class LLMJudgeAPI {
         if (params.offset)
             searchParams.set("offset", params.offset.toString());
         const query = searchParams.toString();
-        const endpoint = query ? `/api/llm-judge/results?${query}` : "/api/llm-judge/results";
+        const endpoint = query
+            ? `/api/llm-judge/results?${query}`
+            : "/api/llm-judge/results";
         return this.client.request(endpoint);
     }
     /**
@@ -651,7 +660,9 @@ class AnnotationTasksAPI {
         if (params.offset)
             searchParams.set("offset", params.offset.toString());
         const query = searchParams.toString();
-        const endpoint = query ? `/api/annotations/tasks?${query}` : "/api/annotations/tasks";
+        const endpoint = query
+            ? `/api/annotations/tasks?${query}`
+            : "/api/annotations/tasks";
         return this.client.request(endpoint);
     }
     /**
@@ -750,7 +761,9 @@ class APIKeysAPI {
         if (params.offset)
             searchParams.set("offset", params.offset.toString());
         const query = searchParams.toString();
-        const endpoint = query ? `/api/developer/api-keys?${query}` : "/api/developer/api-keys";
+        const endpoint = query
+            ? `/api/developer/api-keys?${query}`
+            : "/api/developer/api-keys";
         return this.client.request(endpoint);
     }
     /**

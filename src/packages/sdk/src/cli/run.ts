@@ -11,480 +11,502 @@
  * - Legacy mode compatibility
  */
 
+import { spawn } from "node:child_process";
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
-import { spawn } from "node:child_process";
-import type { EvaluationManifest, Spec } from "./manifest";
-import { runImpactAnalysis } from "./impact-analysis";
 import type { ImpactAnalysisResult } from "./impact-analysis";
+import { runImpactAnalysis } from "./impact-analysis";
+import type { EvaluationManifest, Spec } from "./manifest";
 
 /**
  * Run execution options
  */
 export interface RunOptions {
-  /** Filter to specific spec IDs */
-  specIds?: string[];
-  /** Run only impacted specs (requires base branch) */
-  impactedOnly?: boolean;
-  /** Base branch for impact analysis */
-  baseBranch?: string;
-  /** Output format */
-  format?: "human" | "json";
-  /** Write run results to file */
-  writeResults?: boolean;
+	/** Filter to specific spec IDs */
+	specIds?: string[];
+	/** Run only impacted specs (requires base branch) */
+	impactedOnly?: boolean;
+	/** Base branch for impact analysis */
+	baseBranch?: string;
+	/** Output format */
+	format?: "human" | "json";
+	/** Write run results to file */
+	writeResults?: boolean;
 }
 
 /**
  * Run execution result
  */
 export interface RunResult {
-  /** Schema version for compatibility checking */
-  schemaVersion: number;
-  /** Unique run identifier */
-  runId: string;
-  /** Execution metadata */
-  metadata: {
-    startedAt: number;
-    completedAt: number;
-    duration: number;
-    totalSpecs: number;
-    executedSpecs: number;
-    mode: "spec" | "legacy";
-  };
-  /** Individual spec results */
-  results: SpecResult[];
-  /** Summary statistics */
-  summary: {
-    passed: number;
-    failed: number;
-    skipped: number;
-    passRate: number;
-  };
+	/** Schema version for compatibility checking */
+	schemaVersion: number;
+	/** Unique run identifier */
+	runId: string;
+	/** Execution metadata */
+	metadata: {
+		startedAt: number;
+		completedAt: number;
+		duration: number;
+		totalSpecs: number;
+		executedSpecs: number;
+		mode: "spec" | "legacy";
+	};
+	/** Individual spec results */
+	results: SpecResult[];
+	/** Summary statistics */
+	summary: {
+		passed: number;
+		failed: number;
+		skipped: number;
+		passRate: number;
+	};
 }
 
 /**
  * Individual spec result
  */
 export interface SpecResult {
-  /** Spec identifier */
-  specId: string;
-  /** Spec name */
-  name: string;
-  /** File path */
-  filePath: string;
-  /** Execution result */
-  result: {
-    status: "passed" | "failed" | "skipped";
-    score?: number;
-    error?: string;
-    duration: number;
-  };
+	/** Spec identifier */
+	specId: string;
+	/** Spec name */
+	name: string;
+	/** File path */
+	filePath: string;
+	/** Execution result */
+	result: {
+		status: "passed" | "failed" | "skipped";
+		score?: number;
+		error?: string;
+		duration: number;
+	};
 }
 
 /**
  * Generate deterministic run ID
  */
 function generateRunId(): string {
-  const timestamp = Date.now().toString(36);
-  const random = Math.random().toString(36).substring(2, 8);
-  return `run-${timestamp}-${random}`;
+	const timestamp = Date.now().toString(36);
+	const random = Math.random().toString(36).substring(2, 8);
+	return `run-${timestamp}-${random}`;
 }
 
 /**
  * Run evaluation specifications
  */
 export async function runEvaluations(
-  options: RunOptions,
-  projectRoot: string = process.cwd(),
+	options: RunOptions,
+	projectRoot: string = process.cwd(),
 ): Promise<RunResult> {
-  const startTime = Date.now();
+	const startTime = Date.now();
 
-  // Load manifest
-  const manifest = await loadManifest(projectRoot);
-  if (!manifest) {
-    throw new Error("No evaluation manifest found. Run 'evalai discover --manifest' first.");
-  }
+	// Load manifest
+	const manifest = await loadManifest(projectRoot);
+	if (!manifest) {
+		throw new Error(
+			"No evaluation manifest found. Run 'evalai discover --manifest' first.",
+		);
+	}
 
-  // Determine which specs to run
-  let specsToRun = manifest.specs;
+	// Determine which specs to run
+	let specsToRun = manifest.specs;
 
-  if (options.impactedOnly && options.baseBranch) {
-    // Run impact analysis first
-    const impactResult = await runImpactAnalysis(
-      {
-        baseBranch: options.baseBranch,
-      },
-      projectRoot,
-    );
+	if (options.impactedOnly && options.baseBranch) {
+		// Run impact analysis first
+		const impactResult = await runImpactAnalysis(
+			{
+				baseBranch: options.baseBranch,
+			},
+			projectRoot,
+		);
 
-    // Filter to impacted specs only
-    const impactedSpecIds = new Set(impactResult.impactedSpecIds);
-    specsToRun = manifest.specs.filter((spec) => impactedSpecIds.has(spec.id));
+		// Filter to impacted specs only
+		const impactedSpecIds = new Set(impactResult.impactedSpecIds);
+		specsToRun = manifest.specs.filter((spec) => impactedSpecIds.has(spec.id));
 
-    console.log(
-      `🎯 Running ${specsToRun.length} impacted specs (out of ${manifest.specs.length} total)`,
-    );
-  } else if (options.specIds && options.specIds.length > 0) {
-    // Filter to specific spec IDs
-    const specIdSet = new Set(options.specIds);
-    specsToRun = manifest.specs.filter((spec) => specIdSet.has(spec.id));
+		console.log(
+			`🎯 Running ${specsToRun.length} impacted specs (out of ${manifest.specs.length} total)`,
+		);
+	} else if (options.specIds && options.specIds.length > 0) {
+		// Filter to specific spec IDs
+		const specIdSet = new Set(options.specIds);
+		specsToRun = manifest.specs.filter((spec) => specIdSet.has(spec.id));
 
-    console.log(`🎯 Running ${specsToRun.length} specific specs`);
-  } else if (options.specIds && options.specIds.length === 0) {
-    // Explicit empty list means run nothing
-    specsToRun = [];
+		console.log(`🎯 Running ${specsToRun.length} specific specs`);
+	} else if (options.specIds && options.specIds.length === 0) {
+		// Explicit empty list means run nothing
+		specsToRun = [];
 
-    console.log(`🎯 Running 0 specs (explicit empty list)`);
-  } else {
-    console.log(`🎯 Running all ${specsToRun.length} specs`);
-  }
+		console.log(`🎯 Running 0 specs (explicit empty list)`);
+	} else {
+		console.log(`🎯 Running all ${specsToRun.length} specs`);
+	}
 
-  // Execute specs
-  const results = await executeSpecs(specsToRun);
+	// Execute specs
+	const results = await executeSpecs(specsToRun);
 
-  const completedAt = Date.now();
-  const duration = completedAt - startTime;
+	const completedAt = Date.now();
+	const duration = completedAt - startTime;
 
-  // Calculate summary
-  const summary = calculateSummary(results);
+	// Calculate summary
+	const summary = calculateSummary(results);
 
-  const runResult: RunResult = {
-    schemaVersion: 1,
-    runId: generateRunId(),
-    metadata: {
-      startedAt: startTime,
-      completedAt,
-      duration,
-      totalSpecs: manifest.specs.length,
-      executedSpecs: specsToRun.length,
-      mode: manifest.runtime.mode,
-    },
-    results,
-    summary,
-  };
+	const runResult: RunResult = {
+		schemaVersion: 1,
+		runId: generateRunId(),
+		metadata: {
+			startedAt: startTime,
+			completedAt,
+			duration,
+			totalSpecs: manifest.specs.length,
+			executedSpecs: specsToRun.length,
+			mode: manifest.runtime.mode,
+		},
+		results,
+		summary,
+	};
 
-  // Write results if requested
-  if (options.writeResults) {
-    await writeRunResults(runResult, projectRoot);
-    await updateRunIndex(runResult, projectRoot);
-  }
+	// Write results if requested
+	if (options.writeResults) {
+		await writeRunResults(runResult, projectRoot);
+		await updateRunIndex(runResult, projectRoot);
+	}
 
-  return runResult;
+	return runResult;
 }
 
 /**
  * Load evaluation manifest
  */
 async function loadManifest(
-  projectRoot: string = process.cwd(),
+	projectRoot: string = process.cwd(),
 ): Promise<EvaluationManifest | null> {
-  const manifestPath = path.join(projectRoot, ".evalai", "manifest.json");
+	const manifestPath = path.join(projectRoot, ".evalai", "manifest.json");
 
-  try {
-    const content = await fs.readFile(manifestPath, "utf-8");
-    return JSON.parse(content) as EvaluationManifest;
-  } catch (error) {
-    return null;
-  }
+	try {
+		const content = await fs.readFile(manifestPath, "utf-8");
+		return JSON.parse(content) as EvaluationManifest;
+	} catch (error) {
+		return null;
+	}
 }
 
 /**
  * Execute specifications
  */
 async function executeSpecs(specs: Spec[]): Promise<SpecResult[]> {
-  const results: SpecResult[] = [];
+	const results: SpecResult[] = [];
 
-  for (const spec of specs) {
-    const result = await executeSpec(spec);
-    results.push(result);
-  }
+	for (const spec of specs) {
+		const result = await executeSpec(spec);
+		results.push(result);
+	}
 
-  return results;
+	return results;
 }
 
 /**
  * Execute individual specification
  */
 async function executeSpec(spec: Spec): Promise<SpecResult> {
-  const startTime = Date.now();
+	const startTime = Date.now();
 
-  try {
-    // For now, simulate execution
-    // In a real implementation, this would:
-    // 1. Load the spec file
-    // 2. Execute the defineEval function
-    // 3. Capture the result
+	try {
+		// For now, simulate execution
+		// In a real implementation, this would:
+		// 1. Load the spec file
+		// 2. Execute the defineEval function
+		// 3. Capture the result
 
-    // Simulate some work
-    await new Promise((resolve) => setTimeout(resolve, Math.random() * 100 + 50));
+		// Simulate some work
+		await new Promise((resolve) =>
+			setTimeout(resolve, Math.random() * 100 + 50),
+		);
 
-    // Simulate success/failure (90% success rate for demo)
-    const success = Math.random() > 0.1;
-    const duration = Date.now() - startTime;
+		// Simulate success/failure (90% success rate for demo)
+		const success = Math.random() > 0.1;
+		const duration = Date.now() - startTime;
 
-    if (success) {
-      return {
-        specId: spec.id,
-        name: spec.name,
-        filePath: spec.filePath,
-        result: {
-          status: "passed",
-          score: Math.random() * 0.3 + 0.7, // 0.7-1.0
-          duration,
-        },
-      };
-    } else {
-      return {
-        specId: spec.id,
-        name: spec.name,
-        filePath: spec.filePath,
-        result: {
-          status: "failed",
-          error: "Simulated execution failure",
-          duration,
-        },
-      };
-    }
-  } catch (error) {
-    return {
-      specId: spec.id,
-      name: spec.name,
-      filePath: spec.filePath,
-      result: {
-        status: "failed",
-        error: error instanceof Error ? error.message : String(error),
-        duration: Date.now() - startTime,
-      },
-    };
-  }
+		if (success) {
+			return {
+				specId: spec.id,
+				name: spec.name,
+				filePath: spec.filePath,
+				result: {
+					status: "passed",
+					score: Math.random() * 0.3 + 0.7, // 0.7-1.0
+					duration,
+				},
+			};
+		} else {
+			return {
+				specId: spec.id,
+				name: spec.name,
+				filePath: spec.filePath,
+				result: {
+					status: "failed",
+					error: "Simulated execution failure",
+					duration,
+				},
+			};
+		}
+	} catch (error) {
+		return {
+			specId: spec.id,
+			name: spec.name,
+			filePath: spec.filePath,
+			result: {
+				status: "failed",
+				error: error instanceof Error ? error.message : String(error),
+				duration: Date.now() - startTime,
+			},
+		};
+	}
 }
 
 /**
  * Calculate summary statistics
  */
 function calculateSummary(results: SpecResult[]): RunResult["summary"] {
-  const passed = results.filter((r) => r.result.status === "passed").length;
-  const failed = results.filter((r) => r.result.status === "failed").length;
-  const skipped = results.filter((r) => r.result.status === "skipped").length;
-  const passRate = results.length > 0 ? passed / results.length : 0;
+	const passed = results.filter((r) => r.result.status === "passed").length;
+	const failed = results.filter((r) => r.result.status === "failed").length;
+	const skipped = results.filter((r) => r.result.status === "skipped").length;
+	const passRate = results.length > 0 ? passed / results.length : 0;
 
-  return {
-    passed,
-    failed,
-    skipped,
-    passRate,
-  };
+	return {
+		passed,
+		failed,
+		skipped,
+		passRate,
+	};
 }
 
 /**
  * Write run results to file
  */
 async function writeRunResults(
-  result: RunResult,
-  projectRoot: string = process.cwd(),
+	result: RunResult,
+	projectRoot: string = process.cwd(),
 ): Promise<void> {
-  const evalaiDir = path.join(projectRoot, ".evalai");
-  await fs.mkdir(evalaiDir, { recursive: true });
+	const evalaiDir = path.join(projectRoot, ".evalai");
+	await fs.mkdir(evalaiDir, { recursive: true });
 
-  // Write last-run.json (existing behavior)
-  const lastRunPath = path.join(evalaiDir, "last-run.json");
-  await fs.writeFile(lastRunPath, JSON.stringify(result, null, 2), "utf-8");
+	// Write last-run.json (existing behavior)
+	const lastRunPath = path.join(evalaiDir, "last-run.json");
+	await fs.writeFile(lastRunPath, JSON.stringify(result, null, 2), "utf-8");
 
-  // Create runs directory and write timestamped artifact
-  if (result.runId) {
-    const runsDir = path.join(evalaiDir, "runs");
-    await fs.mkdir(runsDir, { recursive: true });
+	// Create runs directory and write timestamped artifact
+	if (result.runId) {
+		const runsDir = path.join(evalaiDir, "runs");
+		await fs.mkdir(runsDir, { recursive: true });
 
-    const timestampedPath = path.join(runsDir, `${result.runId}.json`);
-    await fs.writeFile(timestampedPath, JSON.stringify(result, null, 2), "utf-8");
+		const timestampedPath = path.join(runsDir, `${result.runId}.json`);
+		await fs.writeFile(
+			timestampedPath,
+			JSON.stringify(result, null, 2),
+			"utf-8",
+		);
 
-    // Optional: Create latest.json mirror
-    const latestPath = path.join(runsDir, "latest.json");
-    await fs.writeFile(latestPath, JSON.stringify(result, null, 2), "utf-8");
-  }
+		// Optional: Create latest.json mirror
+		const latestPath = path.join(runsDir, "latest.json");
+		await fs.writeFile(latestPath, JSON.stringify(result, null, 2), "utf-8");
+	}
 
-  console.log(`✅ Run results written to .evalai/last-run.json`);
-  if (result.runId) {
-    console.log(`📁 Run artifact: .evalai/runs/${result.runId}.json`);
-  }
+	console.log(`✅ Run results written to .evalai/last-run.json`);
+	if (result.runId) {
+		console.log(`📁 Run artifact: .evalai/runs/${result.runId}.json`);
+	}
 }
 
 /**
  * Run index entry
  */
 export interface RunIndexEntry {
-  runId: string;
-  createdAt: number;
-  gitSha?: string;
-  branch?: string;
-  mode: "spec" | "legacy";
-  specCount: number;
-  passRate: number;
-  avgScore: number;
+	runId: string;
+	createdAt: number;
+	gitSha?: string;
+	branch?: string;
+	mode: "spec" | "legacy";
+	specCount: number;
+	passRate: number;
+	avgScore: number;
 }
 
 /**
  * Update run index with new run entry
  */
 async function updateRunIndex(
-  result: RunResult,
-  projectRoot: string = process.cwd(),
+	result: RunResult,
+	projectRoot: string = process.cwd(),
 ): Promise<void> {
-  const runsDir = path.join(projectRoot, ".evalai", "runs");
-  const indexPath = path.join(runsDir, "index.json");
+	const runsDir = path.join(projectRoot, ".evalai", "runs");
+	const indexPath = path.join(runsDir, "index.json");
 
-  await fs.mkdir(runsDir, { recursive: true });
+	await fs.mkdir(runsDir, { recursive: true });
 
-  // Calculate average score
-  const scores = result.results
-    .filter((r) => r.result.score !== undefined)
-    .map((r) => r.result.score!);
-  const avgScore = scores.length > 0 ? scores.reduce((a, b) => a + b, 0) / scores.length : 0;
+	// Calculate average score
+	const scores = result.results
+		.filter((r) => r.result.score !== undefined)
+		.map((r) => r.result.score!);
+	const avgScore =
+		scores.length > 0 ? scores.reduce((a, b) => a + b, 0) / scores.length : 0;
 
-  // Get git info if available
-  let gitSha: string | undefined;
-  let branch: string | undefined;
-  try {
-    gitSha = await getGitSha();
-    branch = await getGitBranch();
-  } catch {
-    // Git commands not available, continue without git info
-  }
+	// Get git info if available
+	let gitSha: string | undefined;
+	let branch: string | undefined;
+	try {
+		gitSha = await getGitSha();
+		branch = await getGitBranch();
+	} catch {
+		// Git commands not available, continue without git info
+	}
 
-  const indexEntry: RunIndexEntry = {
-    runId: result.runId,
-    createdAt: result.metadata.startedAt,
-    gitSha,
-    branch,
-    mode: result.metadata.mode,
-    specCount: result.results.length,
-    passRate: result.summary.passRate,
-    avgScore,
-  };
+	const indexEntry: RunIndexEntry = {
+		runId: result.runId,
+		createdAt: result.metadata.startedAt,
+		gitSha,
+		branch,
+		mode: result.metadata.mode,
+		specCount: result.results.length,
+		passRate: result.summary.passRate,
+		avgScore,
+	};
 
-  // Read existing index or create new one
-  let index: RunIndexEntry[] = [];
-  try {
-    const existingContent = await fs.readFile(indexPath, "utf-8");
-    index = JSON.parse(existingContent);
-  } catch (error) {
-    // Index doesn't exist yet, start with empty array
-  }
+	// Read existing index or create new one
+	let index: RunIndexEntry[] = [];
+	try {
+		const existingContent = await fs.readFile(indexPath, "utf-8");
+		index = JSON.parse(existingContent);
+	} catch (error) {
+		// Index doesn't exist yet, start with empty array
+	}
 
-  // Add new entry
-  index.push(indexEntry);
+	// Add new entry
+	index.push(indexEntry);
 
-  // Sort by creation time (newest first)
-  index.sort((a, b) => b.createdAt - a.createdAt);
+	// Sort by creation time (newest first)
+	index.sort((a, b) => b.createdAt - a.createdAt);
 
-  // Write to temp file first, then rename for atomicity
-  const tempPath = `${indexPath}.tmp`;
-  await fs.writeFile(tempPath, JSON.stringify(index, null, 2), "utf-8");
-  await fs.rename(tempPath, indexPath);
+	// Write to temp file first, then rename for atomicity
+	const tempPath = `${indexPath}.tmp`;
+	await fs.writeFile(tempPath, JSON.stringify(index, null, 2), "utf-8");
+	await fs.rename(tempPath, indexPath);
 }
 
 /**
  * Get current git SHA
  */
 async function getGitSha(): Promise<string | undefined> {
-  return new Promise((resolve) => {
-    const git = spawn("git", ["rev-parse", "HEAD"], {
-      stdio: ["pipe", "pipe", "pipe"],
-    });
+	return new Promise((resolve) => {
+		const git = spawn("git", ["rev-parse", "HEAD"], {
+			stdio: ["pipe", "pipe", "pipe"],
+		});
 
-    let output = "";
-    git.stdout.on("data", (data) => {
-      output += data.toString();
-    });
+		let output = "";
+		git.stdout.on("data", (data) => {
+			output += data.toString();
+		});
 
-    git.on("close", (code) => {
-      if (code === 0 && output.trim()) {
-        resolve(output.trim());
-      } else {
-        resolve(undefined);
-      }
-    });
-  });
+		git.on("close", (code) => {
+			if (code === 0 && output.trim()) {
+				resolve(output.trim());
+			} else {
+				resolve(undefined);
+			}
+		});
+	});
 }
 
 /**
  * Get current git branch
  */
 async function getGitBranch(): Promise<string | undefined> {
-  return new Promise((resolve) => {
-    const git = spawn("git", ["rev-parse", "--abbrev-ref", "HEAD"], {
-      stdio: ["pipe", "pipe", "pipe"],
-    });
+	return new Promise((resolve) => {
+		const git = spawn("git", ["rev-parse", "--abbrev-ref", "HEAD"], {
+			stdio: ["pipe", "pipe", "pipe"],
+		});
 
-    let output = "";
-    git.stdout.on("data", (data) => {
-      output += data.toString();
-    });
+		let output = "";
+		git.stdout.on("data", (data) => {
+			output += data.toString();
+		});
 
-    git.on("close", (code) => {
-      if (code === 0 && output.trim()) {
-        resolve(output.trim());
-      } else {
-        resolve(undefined);
-      }
-    });
-  });
+		git.on("close", (code) => {
+			if (code === 0 && output.trim()) {
+				resolve(output.trim());
+			} else {
+				resolve(undefined);
+			}
+		});
+	});
 }
 
 /**
  * Print human-readable results
  */
 export function printHumanResults(result: RunResult): void {
-  console.log("\n🏃 Evaluation Run Results");
-  console.log(`⏱️  Duration: ${result.metadata.duration}ms`);
-  console.log(`📊 Specs: ${result.metadata.executedSpecs}/${result.metadata.totalSpecs} executed`);
-  console.log(`🎯 Mode: ${result.metadata.mode}`);
+	console.log("\n🏃 Evaluation Run Results");
+	console.log(`⏱️  Duration: ${result.metadata.duration}ms`);
+	console.log(
+		`📊 Specs: ${result.metadata.executedSpecs}/${result.metadata.totalSpecs} executed`,
+	);
+	console.log(`🎯 Mode: ${result.metadata.mode}`);
 
-  console.log("\n📈 Summary:");
-  console.log(`   ✅ Passed: ${result.summary.passed}`);
-  console.log(`   ❌ Failed: ${result.summary.failed}`);
-  console.log(`   ⏭️  Skipped: ${result.summary.skipped}`);
-  console.log(`   📊 Pass Rate: ${(result.summary.passRate * 100).toFixed(1)}%`);
+	console.log("\n📈 Summary:");
+	console.log(`   ✅ Passed: ${result.summary.passed}`);
+	console.log(`   ❌ Failed: ${result.summary.failed}`);
+	console.log(`   ⏭️  Skipped: ${result.summary.skipped}`);
+	console.log(
+		`   📊 Pass Rate: ${(result.summary.passRate * 100).toFixed(1)}%`,
+	);
 
-  console.log("\n📋 Individual Results:");
-  for (const spec of result.results) {
-    const status =
-      spec.result.status === "passed" ? "✅" : spec.result.status === "failed" ? "❌" : "⏭️";
-    const score = spec.result.score ? ` (${(spec.result.score * 100).toFixed(1)}%)` : "";
-    const error = spec.result.error ? ` - ${spec.result.error}` : "";
+	console.log("\n📋 Individual Results:");
+	for (const spec of result.results) {
+		const status =
+			spec.result.status === "passed"
+				? "✅"
+				: spec.result.status === "failed"
+					? "❌"
+					: "⏭️";
+		const score = spec.result.score
+			? ` (${(spec.result.score * 100).toFixed(1)}%)`
+			: "";
+		const error = spec.result.error ? ` - ${spec.result.error}` : "";
 
-    console.log(`   ${status} ${spec.name}${score}${error}`);
-  }
+		console.log(`   ${status} ${spec.name}${score}${error}`);
+	}
 }
 
 /**
  * Print JSON results
  */
 export function printJsonResults(result: RunResult): void {
-  console.log(JSON.stringify(result, null, 2));
+	console.log(JSON.stringify(result, null, 2));
 }
 
 /**
  * CLI entry point
  */
 export async function runEvaluationsCLI(options: RunOptions): Promise<void> {
-  try {
-    const result = await runEvaluations(options);
+	try {
+		const result = await runEvaluations(options);
 
-    if (options.format === "json") {
-      printJsonResults(result);
-    } else {
-      printHumanResults(result);
-    }
+		if (options.format === "json") {
+			printJsonResults(result);
+		} else {
+			printHumanResults(result);
+		}
 
-    // Exit with appropriate code
-    if (result.summary.failed > 0) {
-      process.exit(1);
-    } else {
-      process.exit(0);
-    }
-  } catch (error) {
-    console.error("❌ Run failed:", error instanceof Error ? error.message : String(error));
-    process.exit(2);
-  }
+		// Exit with appropriate code
+		if (result.summary.failed > 0) {
+			process.exit(1);
+		} else {
+			process.exit(0);
+		}
+	} catch (error) {
+		console.error(
+			"❌ Run failed:",
+			error instanceof Error ? error.message : String(error),
+		);
+		process.exit(2);
+	}
 }

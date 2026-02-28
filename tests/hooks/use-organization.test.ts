@@ -9,30 +9,32 @@ import { useOrganizationId } from "@/hooks/use-organization";
 global.fetch = vi.fn();
 
 describe("useOrganizationId", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
+	beforeEach(() => {
+		vi.clearAllMocks();
+	});
 
-  it("should return organization ID when fetched", async () => {
-    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ organization: { id: 123 } }),
-    });
+	it("should return organization ID when fetched", async () => {
+		(global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(
+			{
+				ok: true,
+				json: async () => ({ organization: { id: 123 } }),
+			},
+		);
 
-    const { result } = renderHook(() => useOrganizationId());
+		const { result } = renderHook(() => useOrganizationId());
 
-    await waitFor(() => {
-      expect(result.current).toBe(123);
-    });
-  });
+		await waitFor(() => {
+			expect(result.current).toBe(123);
+		});
+	});
 
-  it("should return null while loading", () => {
-    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockImplementation(
-      () => new Promise(() => {}),
-    );
+	it("should return null while loading", () => {
+		(global.fetch as unknown as ReturnType<typeof vi.fn>).mockImplementation(
+			() => new Promise(() => {}),
+		);
 
-    const { result } = renderHook(() => useOrganizationId());
+		const { result } = renderHook(() => useOrganizationId());
 
-    expect(result.current).toBe(null);
-  });
+		expect(result.current).toBe(null);
+	});
 });

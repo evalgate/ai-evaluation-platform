@@ -18,7 +18,7 @@ const registry_1 = require("../registry");
  * @returns Array of EvalSpec definitions
  */
 function adaptTestSuite(suite, options = {}) {
-    const { includeProvenance = true, preserveIds = true, generateHelpers = true } = options;
+    const { includeProvenance = true, preserveIds = true, generateHelpers = true, } = options;
     // Get test suite data using the new getters
     const tests = suite.getTests();
     const metadata = suite.getMetadata();
@@ -208,7 +208,12 @@ function generateDefineEvalCode(suite, options = {}) {
     });
     const helperFunctions = generateHelperFunctionsForSuite(specs, options);
     const evaluationFunction = generateEvaluationFunction();
-    return [...imports, ...helperFunctions, ...evaluationFunction, ...specCode].join("\n");
+    return [
+        ...imports,
+        ...helperFunctions,
+        ...evaluationFunction,
+        ...specCode,
+    ].join("\n");
 }
 /**
  * Generate helper functions for a specific spec

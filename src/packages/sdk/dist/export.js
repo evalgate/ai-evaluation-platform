@@ -300,7 +300,9 @@ async function importFromLangSmith(client, langsmithData, options) {
             traceId: run.id || `langsmith-${Date.now()}-${Math.random()}`,
             organizationId: options.organizationId,
             status: run.error ? "error" : "success",
-            durationMs: run.execution_time ? Math.round(run.execution_time * 1000) : null,
+            durationMs: run.execution_time
+                ? Math.round(run.execution_time * 1000)
+                : null,
             metadata: {
                 source: "langsmith",
                 original_id: run.id,

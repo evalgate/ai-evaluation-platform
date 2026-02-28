@@ -1,13 +1,13 @@
 {
-  "name": "evalai-quickstart-ci",
-  "version": "1.0.0",
-  "description": "Minimal EvalAI CI example - evalai check gate",
-  "type": "module",
-  "scripts": {
-    "ci": "evalai check",
-    "ci:full": "node ci-eval.js"
-  },
-  "dependencies": {
-    "@pauly4010/evalai-sdk": "^1.5.0"
-  }
+	"name": "evalai-quickstart-ci",
+	"version": "1.0.0",
+	"description": "Minimal EvalAI CI example - evalai check gate",
+	"type": "module",
+	"scripts": {
+		"ci": "evalai check",
+		"ci:full": "node ci-eval.js"
+	},
+	"dependencies": {
+		"@pauly4010/evalai-sdk": "^1.5.0"
+	}
 }

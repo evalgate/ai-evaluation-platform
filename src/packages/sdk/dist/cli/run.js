@@ -49,9 +49,9 @@ exports.runEvaluations = runEvaluations;
 exports.printHumanResults = printHumanResults;
 exports.printJsonResults = printJsonResults;
 exports.runEvaluationsCLI = runEvaluationsCLI;
+const node_child_process_1 = require("node:child_process");
 const fs = __importStar(require("node:fs/promises"));
 const path = __importStar(require("node:path"));
-const node_child_process_1 = require("node:child_process");
 const impact_analysis_1 = require("./impact-analysis");
 /**
  * Generate deterministic run ID
@@ -350,8 +350,14 @@ function printHumanResults(result) {
     console.log(`   📊 Pass Rate: ${(result.summary.passRate * 100).toFixed(1)}%`);
     console.log("\n📋 Individual Results:");
     for (const spec of result.results) {
-        const status = spec.result.status === "passed" ? "✅" : spec.result.status === "failed" ? "❌" : "⏭️";
-        const score = spec.result.score ? ` (${(spec.result.score * 100).toFixed(1)}%)` : "";
+        const status = spec.result.status === "passed"
+            ? "✅"
+            : spec.result.status === "failed"
+                ? "❌"
+                : "⏭️";
+        const score = spec.result.score
+            ? ` (${(spec.result.score * 100).toFixed(1)}%)`
+            : "";
         const error = spec.result.error ? ` - ${spec.result.error}` : "";
         console.log(`   ${status} ${spec.name}${score}${error}`);
     }

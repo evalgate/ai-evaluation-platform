@@ -89,7 +89,9 @@ function captureCiContext() {
         provider,
         repo,
         sha,
-        branch: ref?.startsWith("refs/heads/") ? ref.slice("refs/heads/".length) : ref,
+        branch: ref?.startsWith("refs/heads/")
+            ? ref.slice("refs/heads/".length)
+            : ref,
         runUrl,
         actor,
         pr,

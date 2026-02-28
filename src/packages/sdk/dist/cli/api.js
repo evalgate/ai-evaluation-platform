@@ -73,7 +73,9 @@ async function publishShare(baseUrl, apiKey, evaluationId, exportData, evaluatio
         exportData,
         shareScope: "run",
         evaluationRunId,
-        ...(options?.expiresInDays != null && { expiresInDays: options.expiresInDays }),
+        ...(options?.expiresInDays != null && {
+            expiresInDays: options.expiresInDays,
+        }),
     };
     const url = `${baseUrl.replace(/\/$/, "")}/api/evaluations/${evaluationId}/publish`;
     try {

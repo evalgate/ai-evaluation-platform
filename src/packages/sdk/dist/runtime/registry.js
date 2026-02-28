@@ -64,7 +64,11 @@ class EvalRuntimeImpl {
      * Content-addressable to prevent collisions
      */
     generateNamespace(projectRoot) {
-        return crypto.createHash("sha256").update(path.resolve(projectRoot)).digest("hex").slice(0, 12);
+        return crypto
+            .createHash("sha256")
+            .update(path.resolve(projectRoot))
+            .digest("hex")
+            .slice(0, 12);
     }
     /**
      * Generate content-addressable specification ID
@@ -83,7 +87,11 @@ class EvalRuntimeImpl {
             `${identity.position.line}:${identity.position.column}`,
         ];
         const content = components.join("|");
-        return crypto.createHash("sha256").update(content).digest("hex").slice(0, 20);
+        return crypto
+            .createHash("sha256")
+            .update(content)
+            .digest("hex")
+            .slice(0, 20);
     }
     /**
      * Register a new specification
@@ -274,7 +282,9 @@ class EvalRuntimeImpl {
         }
         let status = "healthy";
         if (issues.length > 0) {
-            status = issues.some((issue) => issue.includes("error")) ? "error" : "warning";
+            status = issues.some((issue) => issue.includes("error"))
+                ? "error"
+                : "warning";
         }
         return {
             status,

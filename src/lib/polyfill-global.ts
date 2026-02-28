@@ -3,7 +3,9 @@
  * Must be imported first (before unknown other imports) in Edge entry points.
  */
 if (
-  typeof (globalThis as typeof globalThis & { global?: typeof globalThis }).global === "undefined"
+	typeof (globalThis as typeof globalThis & { global?: typeof globalThis })
+		.global === "undefined"
 ) {
-  (globalThis as typeof globalThis & { global: typeof globalThis }).global = globalThis;
+	(globalThis as typeof globalThis & { global: typeof globalThis }).global =
+		globalThis;
 }

@@ -50,7 +50,9 @@ function parseShareArgs(argv) {
     if (!evaluationId)
         return { error: "Error: --evaluationId is required" };
     if (Number.isNaN(runId) || runId < 1)
-        return { error: "Error: --runId is required and must be a positive number" };
+        return {
+            error: "Error: --runId is required and must be a positive number",
+        };
     const expiresInDays = parseExpires(expires);
     if (expiresInDays == null || expiresInDays <= 0)
         return { error: "Error: --expires must be e.g. 7d, 24h, 60m, 1s" };

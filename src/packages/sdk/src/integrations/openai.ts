@@ -22,16 +22,16 @@ import type { AIEvalClient } from "../client";
 import { mergeWithContext } from "../context";
 
 export interface OpenAITraceOptions {
-  /** Whether to capture input (default: true) */
-  captureInput?: boolean;
-  /** Whether to capture output (default: true) */
-  captureOutput?: boolean;
-  /** Whether to capture metadata (default: true) */
-  captureMetadata?: boolean;
-  /** Organization ID for traces */
-  organizationId?: number;
-  /** Custom trace name prefix */
-  tracePrefix?: string;
+	/** Whether to capture input (default: true) */
+	captureInput?: boolean;
+	/** Whether to capture output (default: true) */
+	captureOutput?: boolean;
+	/** Whether to capture metadata (default: true) */
+	captureMetadata?: boolean;
+	/** Organization ID for traces */
+	organizationId?: number;
+	/** Custom trace name prefix */
+	tracePrefix?: string;
 }
 
 /**
@@ -53,86 +53,91 @@ export interface OpenAITraceOptions {
  * ```
  */
 export function traceOpenAI(
-  openai: any,
-  evalClient: AIEvalClient,
-  options: OpenAITraceOptions = {},
+	openai: any,
+	evalClient: AIEvalClient,
+	options: OpenAITraceOptions = {},
 ): any {
-  const {
-    captureInput = true,
-    captureOutput = true,
-    captureMetadata = true,
-    organizationId,
-    tracePrefix = "openai",
-  } = options;
+	const {
+		captureInput = true,
+		captureOutput = true,
+		captureMetadata = true,
+		organizationId,
+		tracePrefix = "openai",
+	} = options;
 
-  // Create proxy for chat.completions.create
-  const originalCreate = openai.chat.completions.create.bind(openai.chat.completions);
+	// Create proxy for chat.completions.create
+	const originalCreate = openai.chat.completions.create.bind(
+		openai.chat.completions,
+	);
 
-  openai.chat.completions.create = async (params: any, requestOptions?: any) => {
-    const startTime = Date.now();
-    const traceId = `${tracePrefix}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+	openai.chat.completions.create = async (
+		params: any,
+		requestOptions?: any,
+	) => {
+		const startTime = Date.now();
+		const traceId = `${tracePrefix}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
-    try {
-      // Call original method
-      const response = await originalCreate(params, requestOptions);
-      const durationMs = Date.now() - startTime;
+		try {
+			// Call original method
+			const response = await originalCreate(params, requestOptions);
+			const durationMs = Date.now() - startTime;
 
-      // Create trace with success status and complete metadata
-      const traceMetadata = mergeWithContext({
-        model: params.model,
-        temperature: params.temperature,
-        max_tokens: params.max_tokens,
-        ...(captureInput ? { input: params.messages } : {}),
-        ...(captureOutput ? { output: response.choices[0]?.message } : {}),
-        ...(captureMetadata
-          ? {
-              usage: response.usage,
-              finish_reason: response.choices[0]?.finish_reason,
-            }
-          : {}),
-      });
+			// Create trace with success status and complete metadata
+			const traceMetadata = mergeWithContext({
+				model: params.model,
+				temperature: params.temperature,
+				max_tokens: params.max_tokens,
+				...(captureInput ? { input: params.messages } : {}),
+				...(captureOutput ? { output: response.choices[0]?.message } : {}),
+				...(captureMetadata
+					? {
+							usage: response.usage,
+							finish_reason: response.choices[0]?.finish_reason,
+						}
+					: {}),
+			});
 
-      await evalClient.traces.create({
-        name: `OpenAI: ${params.model}`,
-        traceId,
-        organizationId: organizationId || evalClient.getOrganizationId(),
-        status: "success",
-        durationMs,
-        metadata: traceMetadata,
-      });
+			await evalClient.traces.create({
+				name: `OpenAI: ${params.model}`,
+				traceId,
+				organizationId: organizationId || evalClient.getOrganizationId(),
+				status: "success",
+				durationMs,
+				metadata: traceMetadata,
+			});
 
-      return response;
-    } catch (error) {
-      const durationMs = Date.now() - startTime;
+			return response;
+		} catch (error) {
+			const durationMs = Date.now() - startTime;
 
-      // Create trace with error status
-      const errorMetadata = mergeWithContext({
-        model: params.model,
-        temperature: params.temperature,
-        max_tokens: params.max_tokens,
-        ...(captureInput ? { input: params.messages } : {}),
-        ...(captureMetadata ? { params } : {}),
-        error: error instanceof Error ? error.message : String(error),
-      });
+			// Create trace with error status
+			const errorMetadata = mergeWithContext({
+				model: params.model,
+				temperature: params.temperature,
+				max_tokens: params.max_tokens,
+				...(captureInput ? { input: params.messages } : {}),
+				...(captureMetadata ? { params } : {}),
+				error: error instanceof Error ? error.message : String(error),
+			});
 
-      await evalClient.traces
-        .create({
-          name: `OpenAI: ${params.model}`,
-          traceId,
-          organizationId: organizationId || evalClient.getOrganizationId(),
-          status: "error",
-          durationMs,
-          metadata: errorMetadata,
-        })
-        .catch(() => {
-          // Ignore errors in trace creation to avoid masking the original error
-        });
+			await evalClient.traces
+				.create({
+					name: `OpenAI: ${params.model}`,
+					traceId,
+					organizationId: organizationId || evalClient.getOrganizationId(),
+					status: "error",
+					durationMs,
+					metadata: errorMetadata,
+				})
+				.catch(() => {
+					// Ignore errors in trace creation to avoid masking the original error
+				});
 
-      throw error;
-    }
-  };
+			throw error;
+		}
+	};
 
-  return openai;
+	return openai;
 }
 
 /**
@@ -153,50 +158,50 @@ export function traceOpenAI(
  * ```
  */
 export async function traceOpenAICall<T>(
-  evalClient: AIEvalClient,
-  name: string,
-  fn: () => Promise<T>,
-  options: OpenAITraceOptions = {},
+	evalClient: AIEvalClient,
+	name: string,
+	fn: () => Promise<T>,
+	options: OpenAITraceOptions = {},
 ): Promise<T> {
-  const startTime = Date.now();
-  const traceId = `openai-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+	const startTime = Date.now();
+	const traceId = `openai-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
-  try {
-    await evalClient.traces.create({
-      name,
-      traceId,
-      organizationId: options.organizationId || evalClient.getOrganizationId(),
-      status: "pending",
-      metadata: mergeWithContext({}),
-    });
+	try {
+		await evalClient.traces.create({
+			name,
+			traceId,
+			organizationId: options.organizationId || evalClient.getOrganizationId(),
+			status: "pending",
+			metadata: mergeWithContext({}),
+		});
 
-    const result = await fn();
-    const durationMs = Date.now() - startTime;
+		const result = await fn();
+		const durationMs = Date.now() - startTime;
 
-    await evalClient.traces.create({
-      name,
-      traceId,
-      organizationId: options.organizationId || evalClient.getOrganizationId(),
-      status: "success",
-      durationMs,
-      metadata: mergeWithContext({}),
-    });
+		await evalClient.traces.create({
+			name,
+			traceId,
+			organizationId: options.organizationId || evalClient.getOrganizationId(),
+			status: "success",
+			durationMs,
+			metadata: mergeWithContext({}),
+		});
 
-    return result;
-  } catch (error) {
-    const durationMs = Date.now() - startTime;
+		return result;
+	} catch (error) {
+		const durationMs = Date.now() - startTime;
 
-    await evalClient.traces.create({
-      name,
-      traceId,
-      organizationId: options.organizationId || evalClient.getOrganizationId(),
-      status: "error",
-      durationMs,
-      metadata: mergeWithContext({
-        error: error instanceof Error ? error.message : String(error),
-      }),
-    });
+		await evalClient.traces.create({
+			name,
+			traceId,
+			organizationId: options.organizationId || evalClient.getOrganizationId(),
+			status: "error",
+			durationMs,
+			metadata: mergeWithContext({
+				error: error instanceof Error ? error.message : String(error),
+			}),
+		});
 
-    throw error;
-  }
+		throw error;
+	}
 }

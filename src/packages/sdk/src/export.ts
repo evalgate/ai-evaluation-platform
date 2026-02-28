@@ -30,73 +30,73 @@ export type ExportFormat = "json" | "csv" | "jsonl";
 export type { ExportFormat as ExportType };
 
 export interface ExportOptions {
-  /** Export format */
-  format: "json" | "csv" | "jsonl";
-  /** Include traces */
-  includeTraces?: boolean;
-  /** Include evaluations */
-  includeEvaluations?: boolean;
-  /** Include test cases */
-  includeTestCases?: boolean;
-  /** Include evaluation runs */
-  includeRuns?: boolean;
-  /** Date range filter */
-  dateRange?: {
-    from: string;
-    to: string;
-  };
-  /** Organization ID filter */
-  organizationId?: number;
-  /** Maximum items to export (default: no limit) */
-  limit?: number;
+	/** Export format */
+	format: "json" | "csv" | "jsonl";
+	/** Include traces */
+	includeTraces?: boolean;
+	/** Include evaluations */
+	includeEvaluations?: boolean;
+	/** Include test cases */
+	includeTestCases?: boolean;
+	/** Include evaluation runs */
+	includeRuns?: boolean;
+	/** Date range filter */
+	dateRange?: {
+		from: string;
+		to: string;
+	};
+	/** Organization ID filter */
+	organizationId?: number;
+	/** Maximum items to export (default: no limit) */
+	limit?: number;
 }
 
 export interface ExportData {
-  /** Export metadata */
-  metadata: {
-    exportedAt: string;
-    version: string;
-    format: string;
-    organizationId?: number;
-  };
-  /** Exported traces */
-  traces?: Trace[];
-  /** Exported evaluations */
-  evaluations?: Evaluation[];
-  /** Exported test cases */
-  testCases?: TestCase[];
-  /** Exported runs */
-  runs?: EvaluationRun[];
+	/** Export metadata */
+	metadata: {
+		exportedAt: string;
+		version: string;
+		format: string;
+		organizationId?: number;
+	};
+	/** Exported traces */
+	traces?: Trace[];
+	/** Exported evaluations */
+	evaluations?: Evaluation[];
+	/** Exported test cases */
+	testCases?: TestCase[];
+	/** Exported runs */
+	runs?: EvaluationRun[];
 }
 
 export interface ImportOptions {
-  /** Organization ID to import into */
-  organizationId?: number;
-  /** User ID for created resources */
-  createdBy?: number;
-  /** Skip duplicates (based on name) */
-  skipDuplicates?: boolean;
-  /** Dry run (don't actually import) */
-  dryRun?: boolean;
+	/** Organization ID to import into */
+	organizationId?: number;
+	/** User ID for created resources */
+	createdBy?: number;
+	/** Skip duplicates (based on name) */
+	skipDuplicates?: boolean;
+	/** Dry run (don't actually import) */
+	dryRun?: boolean;
 }
 
 export interface ImportResult {
-  /** Import summary */
-  summary: {
-    total: number;
-    imported: number;
-    skipped: number;
-    failed: number;
-  };
-  /** Detailed results */
-  details: {
-    traces?: { imported: number; skipped: number; failed: number };
-    evaluations?: { imported: number; skipped: number; failed: number };
-    testCases?: { imported: number; skipped: number; failed: number };
-    runs?: { imported: number; skipped: number; failed: number };
-  };
-  /** Errors encountered */
-  errors?: Array<{ item: string; error: string }>;
+	/** Import summary */
+	summary: {
+		total: number;
+		imported: number;
+		skipped: number;
+		failed: number;
+	};
+	/** Detailed results */
+	details: {
+		traces?: { imported: number; skipped: number; failed: number };
+		evaluations?: { imported: number; skipped: number; failed: number };
+		testCases?: { imported: number; skipped: number; failed: number };
+		runs?: { imported: number; skipped: number; failed: number };
+	};
+	/** Errors encountered */
+	errors?: Array<{ item: string; error: string }>;
 }
 
 /**
@@ -116,57 +116,57 @@ export interface ImportResult {
  * ```
  */
 export async function exportData(
-  client: AIEvalClient,
-  options: ExportOptions,
+	client: AIEvalClient,
+	options: ExportOptions,
 ): Promise<ExportData> {
-  const exportData: ExportData = {
-    metadata: {
-      exportedAt: new Date().toISOString(),
-      version: "1.0.0",
-      format: options.format,
-      organizationId: options.organizationId,
-    },
-  };
+	const exportData: ExportData = {
+		metadata: {
+			exportedAt: new Date().toISOString(),
+			version: "1.0.0",
+			format: options.format,
+			organizationId: options.organizationId,
+		},
+	};
 
-  // Export traces
-  if (options.includeTraces) {
-    const traces = await client.traces.list({
-      organizationId: options.organizationId,
-      limit: options.limit,
-    });
-    exportData.traces = traces;
-  }
+	// Export traces
+	if (options.includeTraces) {
+		const traces = await client.traces.list({
+			organizationId: options.organizationId,
+			limit: options.limit,
+		});
+		exportData.traces = traces;
+	}
 
-  // Export evaluations
-  if (options.includeEvaluations) {
-    const evaluations = await client.evaluations.list({
-      organizationId: options.organizationId,
-      limit: options.limit,
-    });
-    exportData.evaluations = evaluations;
+	// Export evaluations
+	if (options.includeEvaluations) {
+		const evaluations = await client.evaluations.list({
+			organizationId: options.organizationId,
+			limit: options.limit,
+		});
+		exportData.evaluations = evaluations;
 
-    // Export test cases for each evaluation
-    if (options.includeTestCases) {
-      const allTestCases: TestCase[] = [];
-      for (const evaluation of evaluations) {
-        const testCases = await client.evaluations.listTestCases(evaluation.id);
-        allTestCases.push(...testCases);
-      }
-      exportData.testCases = allTestCases;
-    }
+		// Export test cases for each evaluation
+		if (options.includeTestCases) {
+			const allTestCases: TestCase[] = [];
+			for (const evaluation of evaluations) {
+				const testCases = await client.evaluations.listTestCases(evaluation.id);
+				allTestCases.push(...testCases);
+			}
+			exportData.testCases = allTestCases;
+		}
 
-    // Export runs for each evaluation
-    if (options.includeRuns) {
-      const allRuns: EvaluationRun[] = [];
-      for (const evaluation of evaluations) {
-        const runs = await client.evaluations.listRuns(evaluation.id);
-        allRuns.push(...runs);
-      }
-      exportData.runs = allRuns;
-    }
-  }
+		// Export runs for each evaluation
+		if (options.includeRuns) {
+			const allRuns: EvaluationRun[] = [];
+			for (const evaluation of evaluations) {
+				const runs = await client.evaluations.listRuns(evaluation.id);
+				allRuns.push(...runs);
+			}
+			exportData.runs = allRuns;
+		}
+	}
 
-  return exportData;
+	return exportData;
 }
 
 /**
@@ -184,104 +184,104 @@ export async function exportData(
  * ```
  */
 export async function importData(
-  client: AIEvalClient,
-  data: ExportData,
-  options: ImportOptions,
+	client: AIEvalClient,
+	data: ExportData,
+	options: ImportOptions,
 ): Promise<ImportResult> {
-  const result: ImportResult = {
-    summary: { total: 0, imported: 0, skipped: 0, failed: 0 },
-    details: {},
-    errors: [],
-  };
+	const result: ImportResult = {
+		summary: { total: 0, imported: 0, skipped: 0, failed: 0 },
+		details: {},
+		errors: [],
+	};
 
-  if (options.dryRun) {
-    // Count what would be imported
-    if (data.traces) result.summary.total += data.traces.length;
-    if (data.evaluations) result.summary.total += data.evaluations.length;
-    if (data.testCases) result.summary.total += data.testCases.length;
-    if (data.runs) result.summary.total += data.runs.length;
-    return result;
-  }
+	if (options.dryRun) {
+		// Count what would be imported
+		if (data.traces) result.summary.total += data.traces.length;
+		if (data.evaluations) result.summary.total += data.evaluations.length;
+		if (data.testCases) result.summary.total += data.testCases.length;
+		if (data.runs) result.summary.total += data.runs.length;
+		return result;
+	}
 
-  // Import traces
-  if (data.traces) {
-    const traceResults = { imported: 0, skipped: 0, failed: 0 };
-    for (const trace of data.traces) {
-      try {
-        await client.traces.create({
-          name: trace.name,
-          traceId: trace.traceId,
-          organizationId: options.organizationId || trace.organizationId,
-          status: trace.status,
-          durationMs: trace.durationMs || undefined,
-          metadata: trace.metadata || undefined,
-        });
-        traceResults.imported++;
-        result.summary.imported++;
-      } catch (error) {
-        if (
-          options.skipDuplicates &&
-          error instanceof Error &&
-          error.message.includes("already exists")
-        ) {
-          traceResults.skipped++;
-          result.summary.skipped++;
-        } else {
-          traceResults.failed++;
-          result.summary.failed++;
-          result.errors?.push({
-            item: `trace:${trace.traceId}`,
-            error: error instanceof Error ? error.message : String(error),
-          });
-        }
-      }
-    }
-    result.details.traces = traceResults;
-    result.summary.total += data.traces.length;
-  }
+	// Import traces
+	if (data.traces) {
+		const traceResults = { imported: 0, skipped: 0, failed: 0 };
+		for (const trace of data.traces) {
+			try {
+				await client.traces.create({
+					name: trace.name,
+					traceId: trace.traceId,
+					organizationId: options.organizationId || trace.organizationId,
+					status: trace.status,
+					durationMs: trace.durationMs || undefined,
+					metadata: trace.metadata || undefined,
+				});
+				traceResults.imported++;
+				result.summary.imported++;
+			} catch (error) {
+				if (
+					options.skipDuplicates &&
+					error instanceof Error &&
+					error.message.includes("already exists")
+				) {
+					traceResults.skipped++;
+					result.summary.skipped++;
+				} else {
+					traceResults.failed++;
+					result.summary.failed++;
+					result.errors?.push({
+						item: `trace:${trace.traceId}`,
+						error: error instanceof Error ? error.message : String(error),
+					});
+				}
+			}
+		}
+		result.details.traces = traceResults;
+		result.summary.total += data.traces.length;
+	}
 
-  // Import evaluations
-  if (data.evaluations) {
-    const evalResults = { imported: 0, skipped: 0, failed: 0 };
-    for (const evaluation of data.evaluations) {
-      try {
-        if (!options.createdBy) {
-          throw new Error("createdBy is required for importing evaluations");
-        }
+	// Import evaluations
+	if (data.evaluations) {
+		const evalResults = { imported: 0, skipped: 0, failed: 0 };
+		for (const evaluation of data.evaluations) {
+			try {
+				if (!options.createdBy) {
+					throw new Error("createdBy is required for importing evaluations");
+				}
 
-        await client.evaluations.create({
-          name: evaluation.name,
-          description: evaluation.description || undefined,
-          type: evaluation.type,
-          organizationId: options.organizationId || evaluation.organizationId,
-          createdBy: options.createdBy,
-          status: evaluation.status,
-        });
-        evalResults.imported++;
-        result.summary.imported++;
-      } catch (error) {
-        if (
-          options.skipDuplicates &&
-          error instanceof Error &&
-          error.message.includes("already exists")
-        ) {
-          evalResults.skipped++;
-          result.summary.skipped++;
-        } else {
-          evalResults.failed++;
-          result.summary.failed++;
-          result.errors?.push({
-            item: `evaluation:${evaluation.name}`,
-            error: error instanceof Error ? error.message : String(error),
-          });
-        }
-      }
-    }
-    result.details.evaluations = evalResults;
-    result.summary.total += data.evaluations.length;
-  }
+				await client.evaluations.create({
+					name: evaluation.name,
+					description: evaluation.description || undefined,
+					type: evaluation.type,
+					organizationId: options.organizationId || evaluation.organizationId,
+					createdBy: options.createdBy,
+					status: evaluation.status,
+				});
+				evalResults.imported++;
+				result.summary.imported++;
+			} catch (error) {
+				if (
+					options.skipDuplicates &&
+					error instanceof Error &&
+					error.message.includes("already exists")
+				) {
+					evalResults.skipped++;
+					result.summary.skipped++;
+				} else {
+					evalResults.failed++;
+					result.summary.failed++;
+					result.errors?.push({
+						item: `evaluation:${evaluation.name}`,
+						error: error instanceof Error ? error.message : String(error),
+					});
+				}
+			}
+		}
+		result.details.evaluations = evalResults;
+		result.summary.total += data.evaluations.length;
+	}
 
-  return result;
+	return result;
 }
 
 /**
@@ -296,13 +296,13 @@ export async function importData(
  * ```
  */
 export async function exportToFile(
-  client: AIEvalClient,
-  filePath: string,
-  options: Omit<ExportOptions, "format">,
+	client: AIEvalClient,
+	filePath: string,
+	options: Omit<ExportOptions, "format">,
 ): Promise<void> {
-  const data = await exportData(client, { ...options, format: "json" });
-  const fs = await import("node:fs");
-  fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
+	const data = await exportData(client, { ...options, format: "json" });
+	const fs = await import("node:fs");
+	fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
 }
 
 /**
@@ -317,14 +317,14 @@ export async function exportToFile(
  * ```
  */
 export async function importFromFile(
-  client: AIEvalClient,
-  filePath: string,
-  options: ImportOptions,
+	client: AIEvalClient,
+	filePath: string,
+	options: ImportOptions,
 ): Promise<ImportResult> {
-  const fs = await import("node:fs");
-  const content = fs.readFileSync(filePath, "utf-8");
-  const data = JSON.parse(content) as ExportData;
-  return importData(client, data, options);
+	const fs = await import("node:fs");
+	const content = fs.readFileSync(filePath, "utf-8");
+	const data = JSON.parse(content) as ExportData;
+	return importData(client, data, options);
 }
 
 /**
@@ -344,42 +344,44 @@ export async function importFromFile(
  * ```
  */
 export async function importFromLangSmith(
-  client: AIEvalClient,
-  langsmithData: unknown,
-  options: ImportOptions,
+	client: AIEvalClient,
+	langsmithData: unknown,
+	options: ImportOptions,
 ): Promise<ImportResult> {
-  // Transform LangSmith format to our format
-  const transformedData: ExportData = {
-    metadata: {
-      exportedAt: new Date().toISOString(),
-      version: "1.0.0",
-      format: "json",
-      organizationId: options.organizationId,
-    },
-    traces: [],
-  };
+	// Transform LangSmith format to our format
+	const transformedData: ExportData = {
+		metadata: {
+			exportedAt: new Date().toISOString(),
+			version: "1.0.0",
+			format: "json",
+			organizationId: options.organizationId,
+		},
+		traces: [],
+	};
 
-  // Transform runs to traces
-  const lsData = langsmithData as { runs?: unknown[] };
-  if (lsData.runs && Array.isArray(lsData.runs)) {
-    transformedData.traces = lsData.runs.map((run: any) => ({
-      id: run.id || 0,
-      name: run.name || "Imported Trace",
-      traceId: run.id || `langsmith-${Date.now()}-${Math.random()}`,
-      organizationId: options.organizationId!,
-      status: run.error ? "error" : "success",
-      durationMs: run.execution_time ? Math.round(run.execution_time * 1000) : null,
-      metadata: {
-        source: "langsmith",
-        original_id: run.id,
-        inputs: run.inputs,
-        outputs: run.outputs,
-      },
-      createdAt: run.start_time || new Date().toISOString(),
-    }));
-  }
+	// Transform runs to traces
+	const lsData = langsmithData as { runs?: unknown[] };
+	if (lsData.runs && Array.isArray(lsData.runs)) {
+		transformedData.traces = lsData.runs.map((run: any) => ({
+			id: run.id || 0,
+			name: run.name || "Imported Trace",
+			traceId: run.id || `langsmith-${Date.now()}-${Math.random()}`,
+			organizationId: options.organizationId!,
+			status: run.error ? "error" : "success",
+			durationMs: run.execution_time
+				? Math.round(run.execution_time * 1000)
+				: null,
+			metadata: {
+				source: "langsmith",
+				original_id: run.id,
+				inputs: run.inputs,
+				outputs: run.outputs,
+			},
+			createdAt: run.start_time || new Date().toISOString(),
+		}));
+	}
 
-  return importData(client, transformedData, options);
+	return importData(client, transformedData, options);
 }
 
 /**
@@ -392,22 +394,25 @@ export async function importFromLangSmith(
  * fs.writeFileSync('traces.csv', csv);
  * ```
  */
-export function convertToCSV(data: ExportData, type: "traces" | "evaluations"): string {
-  const items = type === "traces" ? data.traces : data.evaluations;
-  if (!items || items.length === 0) return "";
+export function convertToCSV(
+	data: ExportData,
+	type: "traces" | "evaluations",
+): string {
+	const items = type === "traces" ? data.traces : data.evaluations;
+	if (!items || items.length === 0) return "";
 
-  // Get headers from first item
-  const headers = Object.keys(items[0]);
-  const rows = items.map((item) =>
-    headers
-      .map((h) => {
-        const value = (item as any)[h];
-        if (value === null || value === undefined) return "";
-        if (typeof value === "object") return JSON.stringify(value);
-        return String(value);
-      })
-      .join(","),
-  );
+	// Get headers from first item
+	const headers = Object.keys(items[0]);
+	const rows = items.map((item) =>
+		headers
+			.map((h) => {
+				const value = (item as any)[h];
+				if (value === null || value === undefined) return "";
+				if (typeof value === "object") return JSON.stringify(value);
+				return String(value);
+			})
+			.join(","),
+	);
 
-  return [headers.join(","), ...rows].join("\n");
+	return [headers.join(","), ...rows].join("\n");
 }

@@ -43,7 +43,10 @@ function formatHuman(report) {
         lines.push("Next: View full report above, fix failing cases, or adjust gate with --minScore / --maxDrop / --warnDrop");
     }
     if (report.explain &&
-        (report.breakdown01 || report.contribPts || report.flags?.length || report.policyEvidence)) {
+        (report.breakdown01 ||
+            report.contribPts ||
+            report.flags?.length ||
+            report.policyEvidence)) {
         lines.push("");
         lines.push("--- Explain ---");
         if (report.contribPts) {

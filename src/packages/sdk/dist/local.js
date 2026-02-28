@@ -31,7 +31,9 @@ class LocalStorage {
         try {
             await promises_1.default.mkdir(this.directory, { recursive: true });
             await promises_1.default.mkdir(node_path_1.default.join(this.directory, "traces"), { recursive: true });
-            await promises_1.default.mkdir(node_path_1.default.join(this.directory, "evaluations"), { recursive: true });
+            await promises_1.default.mkdir(node_path_1.default.join(this.directory, "evaluations"), {
+                recursive: true,
+            });
             await promises_1.default.mkdir(node_path_1.default.join(this.directory, "spans"), { recursive: true });
             // Load existing data
             await this.loadAllData();

@@ -116,7 +116,9 @@ async function openAIChatEval(options) {
     printSummary(evalResult);
     // v1.5: Optional report to EvalAI platform
     if (options.reportToEvalAI) {
-        const config = typeof process !== "undefined" && process.cwd ? (0, config_1.loadConfig)(process.cwd()) : null;
+        const config = typeof process !== "undefined" && process.cwd
+            ? (0, config_1.loadConfig)(process.cwd())
+            : null;
         const evalId = options.evaluationId || config?.evaluationId;
         if (!evalId || String(evalId).trim() === "") {
             console.log("Run evalai init and set evaluationId to upload results.");

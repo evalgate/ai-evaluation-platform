@@ -34,7 +34,9 @@ function buildPrComment(report) {
         }
     }
     else {
-        lines.push(passed ? "## ✅ EvalAI Regression Gate — PASSED" : "## 🚨 EvalAI Regression Gate — FAILED");
+        lines.push(passed
+            ? "## ✅ EvalAI Regression Gate — PASSED"
+            : "## 🚨 EvalAI Regression Gate — FAILED");
     }
     lines.push("");
     // Score + Delta (skip when gate not applied)

@@ -4,101 +4,104 @@ import { withAxiom } from "next-axiom";
 
 /** @type {import('next').NextConfig} */
 const nextConfig: NextConfig = {
-  // Enable React's new compiler (if using React 19+)
-  experimental: {
-    // Optimize package imports for better tree-shaking
-    optimizePackageImports: [
-      "lucide-react",
-      "date-fns",
-      "@radix-ui/react-dialog",
-      "@radix-ui/react-dropdown-menu",
-      "@radix-ui/react-slot",
-      "@radix-ui/react-toast",
-      "@radix-ui/react-tooltip",
-    ],
-    // Enable experimental optimizations
-    optimizeCss: true,
-    optimizeServerReact: true,
-  },
+	// Enable React's new compiler (if using React 19+)
+	experimental: {
+		// Optimize package imports for better tree-shaking
+		optimizePackageImports: [
+			"lucide-react",
+			"date-fns",
+			"@radix-ui/react-dialog",
+			"@radix-ui/react-dropdown-menu",
+			"@radix-ui/react-slot",
+			"@radix-ui/react-toast",
+			"@radix-ui/react-tooltip",
+		],
+		// Enable experimental optimizations
+		optimizeCss: true,
+		optimizeServerReact: true,
+	},
 
-  // Configure image optimization
-  images: {
-    remotePatterns: [
-      {
-        protocol: "https",
-        hostname: "**",
-      },
-    ],
-    formats: ["image/avif", "image/webp"],
-    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
-    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
-    minimumCacheTTL: 60 * 60 * 24 * 30, // 30 days
-  },
+	// Configure image optimization
+	images: {
+		remotePatterns: [
+			{
+				protocol: "https",
+				hostname: "**",
+			},
+		],
+		formats: ["image/avif", "image/webp"],
+		deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
+		imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+		minimumCacheTTL: 60 * 60 * 24 * 30, // 30 days
+	},
 
-  // Transpile specific packages
-  transpilePackages: ["lucide-react", "recharts"],
+	// Transpile specific packages
+	transpilePackages: ["lucide-react", "recharts"],
 
-  // Compiler configuration
-  compiler: {
-    // Remove console.log in production
-    removeConsole: process.env.NODE_ENV === "production" ? { exclude: ["error", "warn"] } : false,
-  },
+	// Compiler configuration
+	compiler: {
+		// Remove console.log in production
+		removeConsole:
+			process.env.NODE_ENV === "production"
+				? { exclude: ["error", "warn"] }
+				: false,
+	},
 
-  // Webpack configuration
-  webpack: (config, { isServer }) => {
-    if (!isServer) {
-      config.resolve.fallback = {
-        ...config.resolve.fallback,
-        fs: false,
-        net: false,
-        tls: false,
-        dns: false,
-      };
-    }
-    return config;
-  },
+	// Webpack configuration
+	webpack: (config, { isServer }) => {
+		if (!isServer) {
+			config.resolve.fallback = {
+				...config.resolve.fallback,
+				fs: false,
+				net: false,
+				tls: false,
+				dns: false,
+			};
+		}
+		return config;
+	},
 
-  // TypeScript configuration
-  typescript: {
-    // Set to false to enable type checking during build
-    ignoreBuildErrors: false,
-  },
+	// TypeScript configuration
+	typescript: {
+		// Set to false to enable type checking during build
+		ignoreBuildErrors: false,
+	},
 
-  // General Next.js optimizations
-  poweredByHeader: false,
-  reactStrictMode: true,
+	// General Next.js optimizations
+	poweredByHeader: false,
+	reactStrictMode: true,
 
-  // API versioning: /api/v1/* rewrites to /api/* for public API (docs/API_VERSIONING.md)
-  async rewrites() {
-    return [{ source: "/api/v1/:path*", destination: "/api/:path*" }];
-  },
+	// API versioning: /api/v1/* rewrites to /api/* for public API (docs/API_VERSIONING.md)
+	async rewrites() {
+		return [{ source: "/api/v1/:path*", destination: "/api/:path*" }];
+	},
 
-  // Performance optimizations
-  productionBrowserSourceMaps: false,
+	// Performance optimizations
+	productionBrowserSourceMaps: false,
 
-  // Turbopack configuration
-  // Note: component-tagger-loader disabled — causes Turbopack panic on Windows
-  // (tries to read src/app directory as a file). Re-enable when Turbopack fixes this.
-  turbopack: {},
+	// Turbopack configuration
+	// Note: component-tagger-loader disabled — causes Turbopack panic on Windows
+	// (tries to read src/app directory as a file). Re-enable when Turbopack fixes this.
+	turbopack: {},
 };
 
 // Apply Axiom logging, then Sentry wrapping (single pass)
 const configWithAxiom = withAxiom(nextConfig);
 
 export default withSentryConfig(configWithAxiom, {
-  org: "paul-carpenter",
-  project: "eval-ai",
+	org: "paul-carpenter",
+	project: "eval-ai",
 
-  // Only print logs for uploading source maps in CI
-  silent: !process.env.CI,
+	// Only print logs for uploading source maps in CI
+	silent: !process.env.CI,
 
-  // Upload a larger set of source maps for prettier stack traces (increases build time)
-  widenClientFileUpload: true,
+	// Upload a larger set of source maps for prettier stack traces (increases build time)
+	widenClientFileUpload: true,
 
-  // Route browser requests to Sentry through a Next.js rewrite to circumvent ad-blockers.
-  // Note: This route must NOT match unknown Next.js middleware matcher pattern.
-  tunnelRoute: "/monitoring",
+	// Route browser requests to Sentry through a Next.js rewrite to circumvent ad-blockers.
+	// Note: This route must NOT match unknown Next.js middleware matcher pattern.
+	tunnelRoute: "/monitoring",
 
-  // Automatic instrumentation of Vercel Cron Monitors
-  automaticVercelMonitors: true,
+	// Automatic instrumentation of Vercel Cron Monitors
+	automaticVercelMonitors: true,
 });

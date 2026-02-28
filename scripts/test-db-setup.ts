@@ -7,7 +7,7 @@ import { runMigrations } from "./run-migrations.js";
 
 const testDb = resolve(process.cwd(), "test.db").replace(/\\/g, "/");
 await runMigrations({
-  url: `file:${testDb}`,
-  authToken: "test-token",
-  silent: true,
+	url: `file:${testDb}`,
+	authToken: "test-token",
+	silent: true,
 });

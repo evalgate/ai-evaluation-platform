@@ -1,43 +1,40 @@
 import { spawnSync } from "node:child_process";
-import path from "node:path";
 
-const args = process.argv.slice(2);
+const CHUNK_SIZE = 50;
 
-const shouldSkip = (file) => {
-  const normalized = file.split(path.sep).join("/");
-  return (
-    normalized.includes("src/app/guides/") ||
-    normalized.includes("src/app/docs/") ||
-    normalized.includes("/docs/") ||
-    normalized.includes("/examples/")
-  );
-};
-
-const files = args.filter((file) => {
-  if (file.endsWith(".lock")) {
-    return false;
-  }
-  return !shouldSkip(file);
+const files = process.argv.slice(2).filter((file) => {
+	const f = file.split("\\").join("/");
+	return (
+		!f.includes("/dist/") &&
+		!f.includes("/.evalai/") &&
+		!f.includes("/node_modules/") &&
+		!file.endsWith(".lock")
+	);
 });
 
-if (files.length === 0) {
-  process.exit(0);
+if (files.length === 0) process.exit(0);
+
+const chunks = [];
+for (let i = 0; i < files.length; i += CHUNK_SIZE) {
+	chunks.push(files.slice(i, i + CHUNK_SIZE));
 }
 
-const run = (command, commandArgs) => {
-  const result = spawnSync(command, [...commandArgs, ...files], {
-    stdio: "inherit",
-    shell: process.platform === "win32",
-  });
+let status = 0;
 
-  if (result.error) {
-    throw result.error;
-  }
+for (const chunk of chunks) {
+	console.error(`Processing chunk ${chunks.indexOf(chunk) + 1}/${chunks.length} (${chunk.length} files)`);
 
-  if (result.status !== 0) {
-    process.exit(result.status);
-  }
-};
+	const check = spawnSync("pnpm", ["exec", "biome", "check", "--write", "--diagnostic-level=error", ...chunk], {
+		stdio: "inherit",
+		shell: false,
+	});
+	if (check.status !== 0) status = check.status;
 
-run("pnpm", ["exec", "biome", "check", "--write", "--diagnostic-level=error"]);
-run("pnpm", ["exec", "biome", "format", "--write"]);
+	const format = spawnSync("pnpm", ["exec", "biome", "format", "--write", ...chunk], {
+		stdio: "inherit",
+		shell: false,
+	});
+	if (format.status !== 0) status = format.status;
+}
+
+process.exit(status);

@@ -173,9 +173,13 @@ function analyzeSpecFile(filePath, content) {
         content.includes("model=") ||
         content.includes("openai") ||
         content.includes("anthropic");
-    const usesTools = content.includes("tool:") || content.includes("function.") || content.includes("call(");
+    const usesTools = content.includes("tool:") ||
+        content.includes("function.") ||
+        content.includes("call(");
     // Check for assertions
-    const hasAssertions = content.includes("assert") || content.includes("expect") || content.includes("should");
+    const hasAssertions = content.includes("assert") ||
+        content.includes("expect") ||
+        content.includes("should");
     // Generate ID from file path
     const id = generateSpecId(filePath);
     return {
@@ -234,7 +238,9 @@ function analyzeComplexity(content) {
     const hasLoops = content.includes("for") || content.includes("while");
     const hasConditionals = content.includes("if") || content.includes("switch");
     const hasTryCatch = content.includes("try") || content.includes("catch");
-    const hasExternalCalls = content.includes("fetch") || content.includes("http") || content.includes("api");
+    const hasExternalCalls = content.includes("fetch") ||
+        content.includes("http") ||
+        content.includes("api");
     let complexityScore = 0;
     if (lines > 50)
         complexityScore += 2;
@@ -261,7 +267,10 @@ function analyzeComplexity(content) {
  */
 function generateSpecId(filePath) {
     const relativePath = path.relative(process.cwd(), filePath);
-    const hash = Buffer.from(relativePath).toString("base64").replace(/[+/=]/g, "").slice(0, 8);
+    const hash = Buffer.from(relativePath)
+        .toString("base64")
+        .replace(/[+/=]/g, "")
+        .slice(0, 8);
     return hash;
 }
 /**
@@ -381,10 +390,12 @@ function printRecommendations(stats) {
     else {
         console.log(`   🏆 Excellent coverage! Consider running evalai run`);
     }
-    if (!stats.executionMode.hasSpecRuntime && !stats.executionMode.hasLegacyRuntime) {
+    if (!stats.executionMode.hasSpecRuntime &&
+        !stats.executionMode.hasLegacyRuntime) {
         console.log(`   🆕 New project? Try 'evalai init' to get started`);
     }
-    if (stats.executionMode.hasLegacyRuntime && !stats.executionMode.hasSpecRuntime) {
+    if (stats.executionMode.hasLegacyRuntime &&
+        !stats.executionMode.hasSpecRuntime) {
         console.log(`   🔄 Legacy project detected. Try 'evalai migrate config' to upgrade`);
     }
     if (stats.executionMode.hasSpecRuntime) {

@@ -46,9 +46,9 @@ exports.generateManifest = generateManifest;
 exports.writeManifest = writeManifest;
 exports.readManifest = readManifest;
 exports.readLock = readLock;
+const crypto = __importStar(require("node:crypto"));
 const fs = __importStar(require("node:fs/promises"));
 const path = __importStar(require("node:path"));
-const crypto = __importStar(require("node:crypto"));
 /**
  * Manifest schema version
  */
@@ -163,7 +163,8 @@ function extractDependencies(content) {
     const dependsOnMatch = content.match(/dependsOn\s*:\s*({[^}]+})/s);
     if (dependsOnMatch) {
         try {
-            const deps = eval(`(${dependsOnMatch[1]})`);
+            // Use JSON.parse instead of eval for safety
+            const deps = JSON.parse(dependsOnMatch[1]);
             return {
                 prompts: deps.prompts || [],
                 datasets: deps.datasets || [],
@@ -172,7 +173,13 @@ function extractDependencies(content) {
             };
         }
         catch (error) {
-            // Fall back to simple extraction
+            // If parsing fails, return empty dependencies
+            return {
+                prompts: [],
+                datasets: [],
+                tools: [],
+                code: [],
+            };
         }
     }
     // Simple extraction as fallback

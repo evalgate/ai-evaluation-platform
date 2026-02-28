@@ -55,7 +55,9 @@ function evaluateGate(args, quality) {
             reasonMessage: `cost $${costUsd.toFixed(4)} exceeds maxCostUsd $${args.maxCostUsd.toFixed(4)}`,
         };
     }
-    if (args.maxLatencyMs != null && avgLatencyMs != null && avgLatencyMs > args.maxLatencyMs) {
+    if (args.maxLatencyMs != null &&
+        avgLatencyMs != null &&
+        avgLatencyMs > args.maxLatencyMs) {
         return {
             exitCode: constants_1.EXIT.SCORE_BELOW,
             passed: false,
@@ -102,7 +104,9 @@ function evaluateGate(args, quality) {
         };
     }
     // warnDrop: soft warning band; maxDrop: hard fail
-    if (args.maxDrop !== undefined && regressionDelta !== null && regressionDelta < -args.maxDrop) {
+    if (args.maxDrop !== undefined &&
+        regressionDelta !== null &&
+        regressionDelta < -args.maxDrop) {
         return {
             exitCode: constants_1.EXIT.REGRESSION,
             passed: false,

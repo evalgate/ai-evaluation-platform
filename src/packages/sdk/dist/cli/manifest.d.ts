@@ -6,8 +6,8 @@
  *
  * This is the compiler output that everything else consumes.
  */
-import type { SpecAnalysis } from "./discover";
 import type { ExecutionModeConfig } from "../runtime/execution-mode";
+import type { SpecAnalysis } from "./discover";
 /**
  * Manifest schema version
  */

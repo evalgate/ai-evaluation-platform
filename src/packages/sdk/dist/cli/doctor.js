@@ -113,7 +113,15 @@ function parseFlags(argv) {
             evaluationId = String(merged.evaluationId);
     }
     const strict = raw.strict === "true" || raw.strict === "1";
-    return { report, format: report ? "json" : fmt, strict, baseUrl, apiKey, evaluationId, baseline };
+    return {
+        report,
+        format: report ? "json" : fmt,
+        strict,
+        baseUrl,
+        apiKey,
+        evaluationId,
+        baseline,
+    };
 }
 // ── Individual checks ──
 function checkProject(cwd) {
@@ -224,7 +232,10 @@ function checkBaseline(cwd) {
         };
     }
     const schemaVersion = typeof data.schemaVersion === "number" ? data.schemaVersion : undefined;
-    const hash = (0, node_crypto_1.createHash)("sha256").update(JSON.stringify(data)).digest("hex").slice(0, 12);
+    const hash = (0, node_crypto_1.createHash)("sha256")
+        .update(JSON.stringify(data))
+        .digest("hex")
+        .slice(0, 12);
     const updatedAt = typeof data.updatedAt === "string" ? data.updatedAt : undefined;
     // Staleness: warn if baseline older than 30 days
     let stale = false;
@@ -239,7 +250,12 @@ function checkBaseline(cwd) {
             status: "fail",
             message: `Unsupported baseline schemaVersion: ${schemaVersion ?? "missing"}`,
             remediation: "Run: npx evalai baseline init  (creates schemaVersion 1)",
-            baselineInfo: { path: "evals/baseline.json", exists: true, hash, schemaVersion },
+            baselineInfo: {
+                path: "evals/baseline.json",
+                exists: true,
+                hash,
+                schemaVersion,
+            },
         };
     }
     if (stale) {
@@ -249,7 +265,13 @@ function checkBaseline(cwd) {
             status: "warn",
             message: `Baseline is stale (last updated ${updatedAt})`,
             remediation: "Run: npx evalai baseline update",
-            baselineInfo: { path: "evals/baseline.json", exists: true, hash, schemaVersion, stale },
+            baselineInfo: {
+                path: "evals/baseline.json",
+                exists: true,
+                hash,
+                schemaVersion,
+                stale,
+            },
         };
     }
     return {
@@ -257,7 +279,13 @@ function checkBaseline(cwd) {
         label: "Baseline file",
         status: "pass",
         message: `schemaVersion ${schemaVersion}, hash ${hash}`,
-        baselineInfo: { path: "evals/baseline.json", exists: true, hash, schemaVersion, stale },
+        baselineInfo: {
+            path: "evals/baseline.json",
+            exists: true,
+            hash,
+            schemaVersion,
+            stale,
+        },
     };
 }
 function checkAuth(apiKey) {
@@ -437,7 +465,8 @@ function checkCiWiring(cwd) {
             ciInfo: { workflowPath, exists: true },
         };
     }
-    if (!content.includes("evalai") && !content.includes("@pauly4010/evalai-sdk")) {
+    if (!content.includes("evalai") &&
+        !content.includes("@pauly4010/evalai-sdk")) {
         return {
             id: "ci_wiring",
             label: "CI wiring",
@@ -551,7 +580,9 @@ async function runDoctor(argv) {
         };
     }
     // 7. Eval access (async, depends on auth + connectivity)
-    if (flags.apiKey && flags.evaluationId && connectivityResult.status !== "fail") {
+    if (flags.apiKey &&
+        flags.evaluationId &&
+        connectivityResult.status !== "fail") {
         try {
             const accessResult = await checkEvalAccess(flags.baseUrl, flags.apiKey, flags.evaluationId, flags.baseline);
             checks.push(accessResult);
@@ -592,7 +623,9 @@ async function runDoctor(argv) {
     if (flags.report || flags.format === "json") {
         const redactedConfig = {
             ...(configResult.config ?? {}),
-            path: configResult.configPath ? path.relative(cwd, configResult.configPath) : null,
+            path: configResult.configPath
+                ? path.relative(cwd, configResult.configPath)
+                : null,
         };
         const bundle = {
             timestamp: new Date().toISOString(),
@@ -604,7 +637,8 @@ async function runDoctor(argv) {
             config: redactedConfig,
             baseline: baselineResult.baselineInfo,
             api: {
-                reachable: connectivityResult.status === "pass" || connectivityResult.status === "warn",
+                reachable: connectivityResult.status === "pass" ||
+                    connectivityResult.status === "warn",
                 latencyMs: connectivityResult.latencyMs,
             },
             ci: ciResult.ciInfo,

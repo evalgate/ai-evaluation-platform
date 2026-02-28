@@ -14,27 +14,27 @@ import ragData from "../../../../../public/demo/rag.json";
 import tracesData from "../../../../../public/demo/traces.json";
 
 const DEMO_DATA_MAP: Record<string, unknown> = {
-  chatbot: chatbotData,
-  rag: ragData,
-  codegen: codegenData,
-  evaluations: evaluationsData,
-  traces: tracesData,
-  judge: judgeData,
+	chatbot: chatbotData,
+	rag: ragData,
+	codegen: codegenData,
+	evaluations: evaluationsData,
+	traces: tracesData,
+	judge: judgeData,
 };
 
 export async function GET(
-  _request: NextRequest,
-  { params }: { params: Promise<{ type: string }> },
+	_request: NextRequest,
+	{ params }: { params: Promise<{ type: string }> },
 ) {
-  const { type } = await params;
+	const { type } = await params;
 
-  const data = DEMO_DATA_MAP[type];
+	const data = DEMO_DATA_MAP[type];
 
-  if (!data) {
-    return notFound(
-      "Unknown demo type. Available: chatbot, rag, codegen, evaluations, traces, judge",
-    );
-  }
+	if (!data) {
+		return notFound(
+			"Unknown demo type. Available: chatbot, rag, codegen, evaluations, traces, judge",
+		);
+	}
 
-  return NextResponse.json(data);
+	return NextResponse.json(data);
 }

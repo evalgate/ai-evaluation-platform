@@ -1,6 +1,6 @@
 {
-  "evaluationId": null,
-  "baseUrl": "https://v0-ai-evaluation-platform-nu.vercel.app",
-  "minScore": 85,
-  "minTotal": 3
+	"evaluationId": null,
+	"baseUrl": "https://v0-ai-evaluation-platform-nu.vercel.app",
+	"minScore": 85,
+	"minTotal": 3
 }

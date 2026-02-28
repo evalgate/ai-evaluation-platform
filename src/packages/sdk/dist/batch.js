@@ -81,7 +81,8 @@ class RequestBatcher {
                         pendingRequest.resolve(response.data);
                     }
                     else {
-                        pendingRequest.reject(new Error(response.error || `Request failed with status ${response.status}`));
+                        pendingRequest.reject(new Error(response.error ||
+                            `Request failed with status ${response.status}`));
                     }
                 }
             }
@@ -149,7 +150,12 @@ function canBatch(method, endpoint) {
     if (method !== "GET") {
         return false;
     }
-    const batchableEndpoints = ["/traces", "/evaluations", "/annotations", "/results"];
+    const batchableEndpoints = [
+        "/traces",
+        "/evaluations",
+        "/annotations",
+        "/results",
+    ];
     return batchableEndpoints.some((pattern) => endpoint.includes(pattern));
 }
 /**

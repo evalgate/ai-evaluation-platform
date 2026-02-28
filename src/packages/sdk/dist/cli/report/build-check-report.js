@@ -60,7 +60,9 @@ function buildCheckReport(input) {
     }
     const failedCasesShown = Math.min(failedCases.length, TOP_N);
     const failedCasesMore = failedCases.length - failedCasesShown;
-    const breakdown01 = Object.keys(breakdown).length > 0 ? breakdown : undefined;
+    const breakdown01 = Object.keys(breakdown).length > 0
+        ? breakdown
+        : undefined;
     const contribPts = args.explain && breakdown01 ? computeContribPts(breakdown01) : undefined;
     const gateSkipped = gateResult.gateSkipped === true;
     const gateApplied = !gateSkipped;
@@ -68,7 +70,11 @@ function buildCheckReport(input) {
     const actionableMessage = gateSkipped
         ? "Gate not applied: baseline missing. Publish a baseline from the dashboard, or run with --baseline previous once you have runs."
         : (gateResult.reasonMessage ?? undefined);
-    const verdict = gateResult.reasonCode === "WARN_REGRESSION" ? "warn" : gateResult.passed ? "pass" : "fail";
+    const verdict = gateResult.reasonCode === "WARN_REGRESSION"
+        ? "warn"
+        : gateResult.passed
+            ? "pass"
+            : "fail";
     const report = {
         schemaVersion: types_1.CHECK_REPORT_SCHEMA_VERSION,
         evaluationId: args.evaluationId,

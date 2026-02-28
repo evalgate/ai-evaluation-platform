@@ -60,11 +60,11 @@ function migrateTestSuiteToDSL(testSuite, outputPath) {
         // Create isolated runtime for migration
         const runtime = (0, registry_1.createEvalRuntime)();
         // Use the runtime handle to define specs
-        const boundDefineEval = ((nameOrConfig, executor, options) => {
+        const boundDefineEval = (nameOrConfig, executor, options) => {
             // The runtime handle manages the active runtime internally
             const { defineEval } = require("../eval");
             return defineEval(nameOrConfig, executor, options);
-        });
+        };
         // Get test suite data via public methods
         // Note: We need to access the internal data structure for migration
         // This is a limitation of the current TestSuite design
@@ -126,11 +126,11 @@ function migrateConfigToDSL(configPath, outputPath) {
         // Create isolated runtime for migration
         const runtime = (0, registry_1.createEvalRuntime)();
         // Use the runtime handle to define specs
-        const boundDefineEval = ((nameOrConfig, executor, options) => {
+        const boundDefineEval = (nameOrConfig, executor, options) => {
             // The runtime handle manages the active runtime internally
             const { defineEval } = require("../eval");
             return defineEval(nameOrConfig, executor, options);
-        });
+        };
         // Generate basic DSL structure from config
         const dslContent = generateDSLFromConfig(config);
         // Write DSL file
@@ -333,13 +333,16 @@ function findTestSuiteFiles(projectRoot) {
         const entries = fs.readdirSync(dir, { withFileTypes: true });
         for (const entry of entries) {
             const fullPath = path.join(dir, entry.name);
-            if (entry.isDirectory() && !entry.name.startsWith(".") && entry.name !== "node_modules") {
+            if (entry.isDirectory() &&
+                !entry.name.startsWith(".") &&
+                entry.name !== "node_modules") {
                 scanDirectory(fullPath);
             }
             else if (entry.isFile() && /\.(ts|js)$/.test(entry.name)) {
                 try {
                     const content = fs.readFileSync(fullPath, "utf-8");
-                    if (content.includes("createTestSuite") || content.includes("TestSuite")) {
+                    if (content.includes("createTestSuite") ||
+                        content.includes("TestSuite")) {
                         testFiles.push(fullPath);
                     }
                 }

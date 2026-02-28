@@ -1,8 +1,8 @@
-import { describe, it } from "node:test";
 import assert from "node:assert";
+import { describe, it } from "node:test";
 
 describe("yarn-jest-style", () => {
-  it("works", () => {
-    assert.strictEqual(10 - 3, 7);
-  });
+	it("works", () => {
+		assert.strictEqual(10 - 3, 7);
+	});
 });

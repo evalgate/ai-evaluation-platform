@@ -16,54 +16,66 @@ import { versioningService } from "@/lib/services/versioning.service";
 import { parsePaginationParams } from "@/lib/validation";
 
 export const GET = secureRoute(
-  async (req: NextRequest, ctx: AuthContext, params) => {
-    const evaluationId = parseInt(params.id, 10);
-    if (Number.isNaN(evaluationId)) return validationError("Valid evaluation ID required");
+	async (req: NextRequest, ctx: AuthContext, params) => {
+		const evaluationId = parseInt(params.id, 10);
+		if (Number.isNaN(evaluationId))
+			return validationError("Valid evaluation ID required");
 
-    // Verify ownership
-    const [evaluation] = await db
-      .select()
-      .from(evaluations)
-      .where(
-        and(eq(evaluations.id, evaluationId), eq(evaluations.organizationId, ctx.organizationId)),
-      )
-      .limit(1);
+		// Verify ownership
+		const [evaluation] = await db
+			.select()
+			.from(evaluations)
+			.where(
+				and(
+					eq(evaluations.id, evaluationId),
+					eq(evaluations.organizationId, ctx.organizationId),
+				),
+			)
+			.limit(1);
 
-    if (!evaluation) return notFound("Evaluation not found");
+		if (!evaluation) return notFound("Evaluation not found");
 
-    const { searchParams } = new URL(req.url);
-    const { limit, offset } = parsePaginationParams(searchParams);
+		const { searchParams } = new URL(req.url);
+		const { limit, offset } = parsePaginationParams(searchParams);
 
-    const versions = await versioningService.listVersions(evaluationId, limit, offset);
+		const versions = await versioningService.listVersions(
+			evaluationId,
+			limit,
+			offset,
+		);
 
-    return NextResponse.json({ data: versions, count: versions.length });
-  },
-  { requiredScopes: [SCOPES.EVAL_READ] },
+		return NextResponse.json({ data: versions, count: versions.length });
+	},
+	{ requiredScopes: [SCOPES.EVAL_READ] },
 );
 
 export const POST = secureRoute(
-  async (_req: NextRequest, ctx: AuthContext, params) => {
-    const evaluationId = parseInt(params.id, 10);
-    if (Number.isNaN(evaluationId)) return validationError("Valid evaluation ID required");
+	async (_req: NextRequest, ctx: AuthContext, params) => {
+		const evaluationId = parseInt(params.id, 10);
+		if (Number.isNaN(evaluationId))
+			return validationError("Valid evaluation ID required");
 
-    // Verify ownership
-    const [evaluation] = await db
-      .select()
-      .from(evaluations)
-      .where(
-        and(eq(evaluations.id, evaluationId), eq(evaluations.organizationId, ctx.organizationId)),
-      )
-      .limit(1);
+		// Verify ownership
+		const [evaluation] = await db
+			.select()
+			.from(evaluations)
+			.where(
+				and(
+					eq(evaluations.id, evaluationId),
+					eq(evaluations.organizationId, ctx.organizationId),
+				),
+			)
+			.limit(1);
 
-    if (!evaluation) return notFound("Evaluation not found");
+		if (!evaluation) return notFound("Evaluation not found");
 
-    const result = await versioningService.createVersion(
-      evaluationId,
-      ctx.organizationId,
-      ctx.userId,
-    );
+		const result = await versioningService.createVersion(
+			evaluationId,
+			ctx.organizationId,
+			ctx.userId,
+		);
 
-    return NextResponse.json(result, { status: 201 });
-  },
-  { requiredScopes: [SCOPES.EVAL_WRITE] },
+		return NextResponse.json(result, { status: 201 });
+	},
+	{ requiredScopes: [SCOPES.EVAL_WRITE] },
 );

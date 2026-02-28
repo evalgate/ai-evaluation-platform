@@ -2,23 +2,23 @@ import { Sparkles, Zap } from "lucide-react";
 import type { EvaluationTemplate } from "./types";
 
 export const EXPERIMENT_TEMPLATES: EvaluationTemplate[] = [
-  // ===== A/B TESTING TEMPLATES =====
-  {
-    id: "ab-prompt-variation",
-    name: "Prompt Variation Test",
-    category: "ab_testing",
-    icon: Zap,
-    description: "Compare performance of different prompt variations",
-    type: "ab_test",
-    complexity: "intermediate",
-    testCases: [
-      {
-        input: "Same query tested with different prompt variations",
-        expectedOutput: "Comparative performance metrics",
-        rubric: "Response quality, consistency, performance differences",
-      },
-    ],
-    judgePrompt: `A/B Test Evaluation for Prompt Variations:
+	// ===== A/B TESTING TEMPLATES =====
+	{
+		id: "ab-prompt-variation",
+		name: "Prompt Variation Test",
+		category: "ab_testing",
+		icon: Zap,
+		description: "Compare performance of different prompt variations",
+		type: "ab_test",
+		complexity: "intermediate",
+		testCases: [
+			{
+				input: "Same query tested with different prompt variations",
+				expectedOutput: "Comparative performance metrics",
+				rubric: "Response quality, consistency, performance differences",
+			},
+		],
+		judgePrompt: `A/B Test Evaluation for Prompt Variations:
 
 Query: {query}
 Prompt A Response: {response_a}
@@ -60,25 +60,26 @@ Output format:
   "recommendation": "deploy_prompt_a|deploy_prompt_b|continue_testing",
   "reasoning": "detailed A/B test analysis"
 }`,
-  },
+	},
 
-  // ===== PROMPT OPTIMIZATION TEMPLATES =====
-  {
-    id: "prompt-optimization-eval",
-    name: "Automated Prompt Optimization",
-    category: "prompt_optimization",
-    icon: Sparkles,
-    description: "Evaluate effectiveness of optimized prompts",
-    type: "model_eval",
-    complexity: "advanced",
-    testCases: [
-      {
-        input: "Optimized prompt vs baseline prompt performance",
-        expectedOutput: "Improvement assessment and optimization recommendations",
-        rubric: "Performance improvement, optimization quality, generalization",
-      },
-    ],
-    judgePrompt: `Prompt Optimization Evaluation:
+	// ===== PROMPT OPTIMIZATION TEMPLATES =====
+	{
+		id: "prompt-optimization-eval",
+		name: "Automated Prompt Optimization",
+		category: "prompt_optimization",
+		icon: Sparkles,
+		description: "Evaluate effectiveness of optimized prompts",
+		type: "model_eval",
+		complexity: "advanced",
+		testCases: [
+			{
+				input: "Optimized prompt vs baseline prompt performance",
+				expectedOutput:
+					"Improvement assessment and optimization recommendations",
+				rubric: "Performance improvement, optimization quality, generalization",
+			},
+		],
+		judgePrompt: `Prompt Optimization Evaluation:
 
 Baseline Prompt: {baseline_prompt}
 Optimized Prompt: {optimized_prompt}
@@ -111,23 +112,23 @@ Output format:
   "optimization_suggestions": ["list further optimization ideas"],
   "reasoning": "detailed optimization analysis"
 }`,
-  },
-  {
-    id: "few-shot-learning-eval",
-    name: "Few-Shot Learning Evaluation",
-    category: "prompt_optimization",
-    icon: Sparkles,
-    description: "Evaluate effectiveness of few-shot examples in prompts",
-    type: "model_eval",
-    complexity: "intermediate",
-    testCases: [
-      {
-        input: "Prompt with few-shot examples vs zero-shot prompt",
-        expectedOutput: "Few-shot effectiveness assessment",
-        rubric: "Example quality, learning effectiveness, generalization",
-      },
-    ],
-    judgePrompt: `Few-Shot Learning Evaluation:
+	},
+	{
+		id: "few-shot-learning-eval",
+		name: "Few-Shot Learning Evaluation",
+		category: "prompt_optimization",
+		icon: Sparkles,
+		description: "Evaluate effectiveness of few-shot examples in prompts",
+		type: "model_eval",
+		complexity: "intermediate",
+		testCases: [
+			{
+				input: "Prompt with few-shot examples vs zero-shot prompt",
+				expectedOutput: "Few-shot effectiveness assessment",
+				rubric: "Example quality, learning effectiveness, generalization",
+			},
+		],
+		judgePrompt: `Few-Shot Learning Evaluation:
 
 Zero-Shot Prompt: {zero_shot_prompt}
 Few-Shot Prompt: {few_shot_prompt}
@@ -161,5 +162,5 @@ Output format:
   "recommendation": "use_few_shot|stick_to_zero_shot|improve_examples",
   "reasoning": "detailed few-shot analysis"
 }`,
-  },
+	},
 ];

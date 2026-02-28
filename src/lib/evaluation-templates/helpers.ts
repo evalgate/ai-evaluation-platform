@@ -8,18 +8,20 @@ import type { EvaluationTemplate } from "./types";
 
 // Assemble all templates from category files
 export const COMPREHENSIVE_TEMPLATES: EvaluationTemplate[] = [
-  ...CORE_TEMPLATES,
-  ...SAFETY_TEMPLATES,
-  ...RAG_TEMPLATES,
-  ...AGENT_TEMPLATES,
-  ...HUMAN_TEMPLATES,
-  ...EXPERIMENT_TEMPLATES,
+	...CORE_TEMPLATES,
+	...SAFETY_TEMPLATES,
+	...RAG_TEMPLATES,
+	...AGENT_TEMPLATES,
+	...HUMAN_TEMPLATES,
+	...EXPERIMENT_TEMPLATES,
 ];
 
-export function getTemplatesByCategory(categoryId: string): EvaluationTemplate[] {
-  return COMPREHENSIVE_TEMPLATES.filter((t) => t.category === categoryId);
+export function getTemplatesByCategory(
+	categoryId: string,
+): EvaluationTemplate[] {
+	return COMPREHENSIVE_TEMPLATES.filter((t) => t.category === categoryId);
 }
 
 export function getTemplateById(id: string): EvaluationTemplate | undefined {
-  return COMPREHENSIVE_TEMPLATES.find((t) => t.id === id);
+	return COMPREHENSIVE_TEMPLATES.find((t) => t.id === id);
 }

@@ -27,197 +27,229 @@ const argv = process.argv.slice(2);
 const subcommand = argv[0];
 
 if (subcommand === "init") {
-  const cwd = process.cwd();
-  const ok = runInit(cwd);
-  process.exit(ok ? 0 : 1);
+	const cwd = process.cwd();
+	const ok = runInit(cwd);
+	process.exit(ok ? 0 : 1);
 } else if (subcommand === "baseline") {
-  const code = runBaseline(argv.slice(1));
-  process.exit(code);
+	const code = runBaseline(argv.slice(1));
+	process.exit(code);
 } else if (subcommand === "gate") {
-  const code = runGate(argv.slice(1));
-  process.exit(code);
+	const code = runGate(argv.slice(1));
+	process.exit(code);
 } else if (subcommand === "migrate") {
-  // Handle migrate subcommand
-  const migrateSubcommand = argv[1];
+	// Handle migrate subcommand
+	const migrateSubcommand = argv[1];
 
-  if (migrateSubcommand === "config") {
-    // Parse migrate config arguments
-    let inputPath = "";
-    let outputPath = "";
-    let verbose = false;
-    let helpers = true;
-    let preserveIds = true;
-    let provenance = true;
+	if (migrateSubcommand === "config") {
+		// Parse migrate config arguments
+		let inputPath = "";
+		let outputPath = "";
+		let verbose = false;
+		let helpers = true;
+		let preserveIds = true;
+		let provenance = true;
 
-    for (let i = 2; i < argv.length; i++) {
-      const arg = argv[i];
-      if (arg === "--in" || arg === "-i") {
-        inputPath = argv[++i];
-      } else if (arg === "--out" || arg === "-o") {
-        outputPath = argv[++i];
-      } else if (arg === "--verbose" || arg === "-v") {
-        verbose = true;
-      } else if (arg === "--no-helpers") {
-        helpers = false;
-      } else if (arg === "--no-preserve-ids") {
-        preserveIds = false;
-      } else if (arg === "--no-provenance") {
-        provenance = false;
-      }
-    }
+		for (let i = 2; i < argv.length; i++) {
+			const arg = argv[i];
+			if (arg === "--in" || arg === "-i") {
+				inputPath = argv[++i];
+			} else if (arg === "--out" || arg === "-o") {
+				outputPath = argv[++i];
+			} else if (arg === "--verbose" || arg === "-v") {
+				verbose = true;
+			} else if (arg === "--no-helpers") {
+				helpers = false;
+			} else if (arg === "--no-preserve-ids") {
+				preserveIds = false;
+			} else if (arg === "--no-provenance") {
+				provenance = false;
+			}
+		}
 
-    if (!inputPath || !outputPath) {
-      console.error("Error: Both --in and --out options are required");
-      console.error("Usage: evalai migrate config --in <input> --out <output> [options]");
-      process.exit(1);
-    }
+		if (!inputPath || !outputPath) {
+			console.error("Error: Both --in and --out options are required");
+			console.error(
+				"Usage: evalai migrate config --in <input> --out <output> [options]",
+			);
+			process.exit(1);
+		}
 
-    migrateConfig({
-      input: inputPath,
-      output: outputPath,
-      verbose,
-      helpers,
-      preserveIds,
-      provenance,
-    }).catch((err) => {
-      console.error(`Migration failed: ${err instanceof Error ? err.message : String(err)}`);
-      process.exit(1);
-    });
-  } else {
-    console.error("Error: Unknown migrate subcommand. Use 'evalai migrate config'");
-    process.exit(1);
-  }
+		migrateConfig({
+			input: inputPath,
+			output: outputPath,
+			verbose,
+			helpers,
+			preserveIds,
+			provenance,
+		}).catch((err) => {
+			console.error(
+				`Migration failed: ${err instanceof Error ? err.message : String(err)}`,
+			);
+			process.exit(1);
+		});
+	} else {
+		console.error(
+			"Error: Unknown migrate subcommand. Use 'evalai migrate config'",
+		);
+		process.exit(1);
+	}
 } else if (subcommand === "upgrade") {
-  const code = runUpgrade(argv.slice(1));
-  process.exit(code);
+	const code = runUpgrade(argv.slice(1));
+	process.exit(code);
 } else if (subcommand === "doctor") {
-  runDoctor(argv.slice(1))
-    .then((code) => process.exit(code))
-    .catch((err) => {
-      console.error(`EvalAI ERROR: ${err instanceof Error ? err.message : String(err)}`);
-      process.exit(1);
-    });
+	runDoctor(argv.slice(1))
+		.then((code) => process.exit(code))
+		.catch((err) => {
+			console.error(
+				`EvalAI ERROR: ${err instanceof Error ? err.message : String(err)}`,
+			);
+			process.exit(1);
+		});
 } else if (subcommand === "check") {
-  const parsed = parseArgs(argv.slice(1));
-  if (!parsed.ok) {
-    console.error(parsed.message);
-    process.exit(parsed.exitCode);
-  }
-  runCheck(parsed.args)
-    .then((code) => process.exit(code))
-    .catch((err) => {
-      console.error(`EvalAI ERROR: ${err instanceof Error ? err.message : String(err)}`);
-      process.exit(4);
-    });
+	const parsed = parseArgs(argv.slice(1));
+	if (!parsed.ok) {
+		console.error(parsed.message);
+		process.exit(parsed.exitCode);
+	}
+	runCheck(parsed.args)
+		.then((code) => process.exit(code))
+		.catch((err) => {
+			console.error(
+				`EvalAI ERROR: ${err instanceof Error ? err.message : String(err)}`,
+			);
+			process.exit(4);
+		});
 } else if (subcommand === "explain") {
-  runExplain(argv.slice(1))
-    .then((code) => process.exit(code))
-    .catch((err) => {
-      console.error(`EvalAI ERROR: ${err instanceof Error ? err.message : String(err)}`);
-      process.exit(1);
-    });
+	runExplain(argv.slice(1))
+		.then((code) => process.exit(code))
+		.catch((err) => {
+			console.error(
+				`EvalAI ERROR: ${err instanceof Error ? err.message : String(err)}`,
+			);
+			process.exit(1);
+		});
 } else if (subcommand === "print-config") {
-  const code = runPrintConfig(argv.slice(1));
-  process.exit(code);
+	const code = runPrintConfig(argv.slice(1));
+	process.exit(code);
 } else if (subcommand === "share") {
-  const parsed = parseShareArgs(argv.slice(1));
-  if ("error" in parsed) {
-    console.error(parsed.error);
-    process.exit(1);
-  }
-  runShare(parsed)
-    .then((code) => process.exit(code))
-    .catch((err) => {
-      console.error(`EvalAI ERROR: ${err instanceof Error ? err.message : String(err)}`);
-      process.exit(1);
-    });
+	const parsed = parseShareArgs(argv.slice(1));
+	if ("error" in parsed) {
+		console.error(parsed.error);
+		process.exit(1);
+	}
+	runShare(parsed)
+		.then((code) => process.exit(code))
+		.catch((err) => {
+			console.error(
+				`EvalAI ERROR: ${err instanceof Error ? err.message : String(err)}`,
+			);
+			process.exit(1);
+		});
 } else if (subcommand === "discover") {
-  // Parse arguments for discover command
-  const args = argv.slice(1);
-  const manifestFlag = args.includes("--manifest");
+	// Parse arguments for discover command
+	const args = argv.slice(1);
+	const manifestFlag = args.includes("--manifest");
 
-  discoverSpecs({ manifest: manifestFlag })
-    .then(() => process.exit(0))
-    .catch((err) => {
-      console.error(`EvalAI ERROR: ${err instanceof Error ? err.message : String(err)}`);
-      process.exit(1);
-    });
+	discoverSpecs({ manifest: manifestFlag })
+		.then(() => process.exit(0))
+		.catch((err) => {
+			console.error(
+				`EvalAI ERROR: ${err instanceof Error ? err.message : String(err)}`,
+			);
+			process.exit(1);
+		});
 } else if (subcommand === "impact-analysis") {
-  // Parse arguments for impact-analysis command
-  const args = argv.slice(1);
-  const baseIndex = args.indexOf("--base");
-  const changedFilesIndex = args.indexOf("--changed-files");
-  const formatIndex = args.indexOf("--format");
+	// Parse arguments for impact-analysis command
+	const args = argv.slice(1);
+	const baseIndex = args.indexOf("--base");
+	const changedFilesIndex = args.indexOf("--changed-files");
+	const formatIndex = args.indexOf("--format");
 
-  const baseBranch = baseIndex !== -1 ? args[baseIndex + 1] : "main";
-  const changedFiles =
-    changedFilesIndex !== -1 ? args[changedFilesIndex + 1]?.split(",") : undefined;
-  const format = formatIndex !== -1 ? (args[formatIndex + 1] as "human" | "json") : "human";
+	const baseBranch = baseIndex !== -1 ? args[baseIndex + 1] : "main";
+	const changedFiles =
+		changedFilesIndex !== -1
+			? args[changedFilesIndex + 1]?.split(",")
+			: undefined;
+	const format =
+		formatIndex !== -1 ? (args[formatIndex + 1] as "human" | "json") : "human";
 
-  runImpactAnalysisCLI({ baseBranch, changedFiles, format }).catch((err) => {
-    console.error(`EvalAI ERROR: ${err instanceof Error ? err.message : String(err)}`);
-    process.exit(2);
-  });
+	runImpactAnalysisCLI({ baseBranch, changedFiles, format }).catch((err) => {
+		console.error(
+			`EvalAI ERROR: ${err instanceof Error ? err.message : String(err)}`,
+		);
+		process.exit(2);
+	});
 } else if (subcommand === "run") {
-  // Parse arguments for run command
-  const args = argv.slice(1);
-  const specIdsIndex = args.indexOf("--spec-ids");
-  const impactedOnlyIndex = args.indexOf("--impacted-only");
-  const baseIndex = args.indexOf("--base");
-  const formatIndex = args.indexOf("--format");
-  const writeResultsIndex = args.indexOf("--write-results");
+	// Parse arguments for run command
+	const args = argv.slice(1);
+	const specIdsIndex = args.indexOf("--spec-ids");
+	const impactedOnlyIndex = args.indexOf("--impacted-only");
+	const baseIndex = args.indexOf("--base");
+	const formatIndex = args.indexOf("--format");
+	const writeResultsIndex = args.indexOf("--write-results");
 
-  const specIds = specIdsIndex !== -1 ? args[specIdsIndex + 1]?.split(",") : undefined;
-  const impactedOnly = impactedOnlyIndex !== -1;
-  const baseBranch = baseIndex !== -1 ? args[baseIndex + 1] : undefined;
-  const format = formatIndex !== -1 ? (args[formatIndex + 1] as "human" | "json") : "human";
-  const writeResults = writeResultsIndex !== -1;
+	const specIds =
+		specIdsIndex !== -1 ? args[specIdsIndex + 1]?.split(",") : undefined;
+	const impactedOnly = impactedOnlyIndex !== -1;
+	const baseBranch = baseIndex !== -1 ? args[baseIndex + 1] : undefined;
+	const format =
+		formatIndex !== -1 ? (args[formatIndex + 1] as "human" | "json") : "human";
+	const writeResults = writeResultsIndex !== -1;
 
-  runEvaluationsCLI({
-    specIds,
-    impactedOnly: impactedOnly ? !!baseBranch : false,
-    baseBranch,
-    format,
-    writeResults,
-  }).catch((err) => {
-    console.error(`EvalAI ERROR: ${err instanceof Error ? err.message : String(err)}`);
-    process.exit(2);
-  });
+	runEvaluationsCLI({
+		specIds,
+		impactedOnly: impactedOnly ? !!baseBranch : false,
+		baseBranch,
+		format,
+		writeResults,
+	}).catch((err) => {
+		console.error(
+			`EvalAI ERROR: ${err instanceof Error ? err.message : String(err)}`,
+		);
+		process.exit(2);
+	});
 } else if (subcommand === "diff") {
-  // Parse arguments for diff command
-  const args = argv.slice(1);
-  const baseIndex = args.indexOf("--base");
-  const headIndex = args.indexOf("--head");
-  const formatIndex = args.indexOf("--format");
+	// Parse arguments for diff command
+	const args = argv.slice(1);
+	const baseIndex = args.indexOf("--base");
+	const headIndex = args.indexOf("--head");
+	const formatIndex = args.indexOf("--format");
 
-  const base = baseIndex !== -1 ? args[baseIndex + 1] : undefined;
-  const head = headIndex !== -1 ? args[headIndex + 1] : undefined;
-  const format = formatIndex !== -1 ? (args[formatIndex + 1] as "human" | "json") : "human";
+	const base = baseIndex !== -1 ? args[baseIndex + 1] : undefined;
+	const head = headIndex !== -1 ? args[headIndex + 1] : undefined;
+	const format =
+		formatIndex !== -1 ? (args[formatIndex + 1] as "human" | "json") : "human";
 
-  runDiffCLI({ base, head, format }).catch((err) => {
-    console.error(`EvalAI ERROR: ${err instanceof Error ? err.message : String(err)}`);
-    process.exit(2);
-  });
+	runDiffCLI({ base, head, format }).catch((err) => {
+		console.error(
+			`EvalAI ERROR: ${err instanceof Error ? err.message : String(err)}`,
+		);
+		process.exit(2);
+	});
 } else if (subcommand === "ci") {
-  // Parse arguments for ci command
-  const args = argv.slice(1);
-  const baseIndex = args.indexOf("--base");
-  const impactedOnlyIndex = args.indexOf("--impacted-only");
-  const formatIndex = args.indexOf("--format");
-  const writeResultsIndex = args.indexOf("--write-results");
+	// Parse arguments for ci command
+	const args = argv.slice(1);
+	const baseIndex = args.indexOf("--base");
+	const impactedOnlyIndex = args.indexOf("--impacted-only");
+	const formatIndex = args.indexOf("--format");
+	const writeResultsIndex = args.indexOf("--write-results");
 
-  const base = baseIndex !== -1 ? args[baseIndex + 1] : undefined;
-  const impactedOnly = impactedOnlyIndex !== -1;
-  const format =
-    formatIndex !== -1 ? (args[formatIndex + 1] as "human" | "json" | "github") : "human";
-  const writeResults = writeResultsIndex !== -1;
+	const base = baseIndex !== -1 ? args[baseIndex + 1] : undefined;
+	const impactedOnly = impactedOnlyIndex !== -1;
+	const format =
+		formatIndex !== -1
+			? (args[formatIndex + 1] as "human" | "json" | "github")
+			: "human";
+	const writeResults = writeResultsIndex !== -1;
 
-  runCICLI({ base, impactedOnly, format, writeResults }).catch((err) => {
-    console.error(`EvalAI ERROR: ${err instanceof Error ? err.message : String(err)}`);
-    process.exit(2);
-  });
+	runCICLI({ base, impactedOnly, format, writeResults }).catch((err) => {
+		console.error(
+			`EvalAI ERROR: ${err instanceof Error ? err.message : String(err)}`,
+		);
+		process.exit(2);
+	});
 } else {
-  console.log(`EvalAI CLI
+	console.log(`EvalAI CLI
 
 Usage:
   evalai init                Create evalai.config.json + baseline + CI workflow
@@ -311,5 +343,5 @@ Examples:
   evalai check --policy HIPAA --evaluationId 42 --apiKey $EVALAI_API_KEY
   evalai share --scope run --evaluationId 42 --runId 123 --expires 7d --apiKey $EVALAI_API_KEY
 `);
-  process.exit(subcommand === "--help" || subcommand === "-h" ? 0 : 1);
+	process.exit(subcommand === "--help" || subcommand === "-h" ? 0 : 1);
 }

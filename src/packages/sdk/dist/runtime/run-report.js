@@ -101,7 +101,9 @@ class RunReportBuilder {
         // Update summary
         this.updateSummary(result);
         // Add to failures if needed
-        if (!result.pass || result.classification === "error" || result.classification === "timeout") {
+        if (!result.pass ||
+            result.classification === "error" ||
+            result.classification === "timeout") {
             this.addFailure(testId, testName, filePath, position, result);
         }
     }
@@ -127,12 +129,14 @@ class RunReportBuilder {
             summary.failed++;
         }
         // Calculate rates and averages
-        summary.passRate = summary.total > 0 ? (summary.passed / summary.total) * 100 : 0;
+        summary.passRate =
+            summary.total > 0 ? (summary.passed / summary.total) * 100 : 0;
         // Average score calculation (excluding errors/timeouts)
         const scoredResults = this.report.results.filter((r) => r.score > 0);
         summary.averageScore =
             scoredResults.length > 0
-                ? scoredResults.reduce((sum, r) => sum + r.score, 0) / scoredResults.length
+                ? scoredResults.reduce((sum, r) => sum + r.score, 0) /
+                    scoredResults.length
                 : 0;
     }
     /**

@@ -86,7 +86,9 @@ class Expectation {
             expected: substring,
             actual: text,
             message: message ||
-                (passed ? `Text contains "${substring}"` : `Text does not contain "${substring}"`),
+                (passed
+                    ? `Text contains "${substring}"`
+                    : `Text does not contain "${substring}"`),
         };
     }
     /**
@@ -103,7 +105,9 @@ class Expectation {
             expected: keywords,
             actual: text,
             message: message ||
-                (passed ? `Contains all keywords` : `Missing keywords: ${missingKeywords.join(", ")}`),
+                (passed
+                    ? `Contains all keywords`
+                    : `Missing keywords: ${missingKeywords.join(", ")}`),
         };
     }
     /**
@@ -119,7 +123,9 @@ class Expectation {
             expected: `not containing "${substring}"`,
             actual: text,
             message: message ||
-                (passed ? `Text does not contain "${substring}"` : `Text contains "${substring}"`),
+                (passed
+                    ? `Text does not contain "${substring}"`
+                    : `Text contains "${substring}"`),
         };
     }
     /**
@@ -144,7 +150,8 @@ class Expectation {
             passed,
             expected: "no PII",
             actual: foundPII.length > 0 ? `Found: ${foundPII.join(", ")}` : "no PII",
-            message: message || (passed ? "No PII detected" : `PII detected: ${foundPII.join(", ")}`),
+            message: message ||
+                (passed ? "No PII detected" : `PII detected: ${foundPII.join(", ")}`),
         };
     }
     /**
@@ -159,7 +166,10 @@ class Expectation {
             passed,
             expected: pattern.toString(),
             actual: text,
-            message: message || (passed ? `Matches pattern ${pattern}` : `Does not match pattern ${pattern}`),
+            message: message ||
+                (passed
+                    ? `Matches pattern ${pattern}`
+                    : `Does not match pattern ${pattern}`),
         };
     }
     /**
@@ -205,7 +215,8 @@ class Expectation {
             passed,
             expected: schema,
             actual: parsedJson,
-            message: message || (passed ? "JSON matches schema" : "JSON does not match schema"),
+            message: message ||
+                (passed ? "JSON matches schema" : "JSON does not match schema"),
         };
     }
     /**
@@ -253,7 +264,10 @@ class Expectation {
             passed,
             expected,
             actual,
-            message: message || (passed ? `Sentiment is ${expected}` : `Expected ${expected}, got ${actual}`),
+            message: message ||
+                (passed
+                    ? `Sentiment is ${expected}`
+                    : `Expected ${expected}, got ${actual}`),
         };
     }
     /**
@@ -269,7 +283,10 @@ class Expectation {
             passed,
             expected: range,
             actual: length,
-            message: message || (passed ? `Length ${length} is within range` : `Length ${length} not in range`),
+            message: message ||
+                (passed
+                    ? `Length ${length} is within range`
+                    : `Length ${length} not in range`),
         };
     }
     /**
@@ -284,9 +301,13 @@ class Expectation {
             name: "toNotHallucinate",
             passed,
             expected: "all ground truth facts",
-            actual: missingFacts.length > 0 ? `Missing: ${missingFacts.join(", ")}` : "all facts present",
+            actual: missingFacts.length > 0
+                ? `Missing: ${missingFacts.join(", ")}`
+                : "all facts present",
             message: message ||
-                (passed ? "No hallucinations detected" : `Missing facts: ${missingFacts.join(", ")}`),
+                (passed
+                    ? "No hallucinations detected"
+                    : `Missing facts: ${missingFacts.join(", ")}`),
         };
     }
     /**
@@ -301,7 +322,10 @@ class Expectation {
             passed,
             expected: `<= ${maxMs}ms`,
             actual: `${duration}ms`,
-            message: message || (passed ? `${duration}ms within limit` : `${duration}ms exceeds ${maxMs}ms`),
+            message: message ||
+                (passed
+                    ? `${duration}ms within limit`
+                    : `${duration}ms exceeds ${maxMs}ms`),
         };
     }
     /**
@@ -344,7 +368,8 @@ class Expectation {
             passed,
             expected: `> ${expected}`,
             actual: value,
-            message: message || (passed ? `${value} > ${expected}` : `${value} <= ${expected}`),
+            message: message ||
+                (passed ? `${value} > ${expected}` : `${value} <= ${expected}`),
         };
     }
     /**
@@ -359,7 +384,8 @@ class Expectation {
             passed,
             expected: `< ${expected}`,
             actual: value,
-            message: message || (passed ? `${value} < ${expected}` : `${value} >= ${expected}`),
+            message: message ||
+                (passed ? `${value} < ${expected}` : `${value} >= ${expected}`),
         };
     }
     /**
@@ -374,7 +400,8 @@ class Expectation {
             passed,
             expected: `between ${min} and ${max}`,
             actual: value,
-            message: message || (passed ? `${value} is within range` : `${value} is outside range`),
+            message: message ||
+                (passed ? `${value} is within range` : `${value} is outside range`),
         };
     }
     /**
@@ -389,7 +416,8 @@ class Expectation {
             passed: hasCodeBlock,
             expected: "code block",
             actual: text,
-            message: message || (hasCodeBlock ? "Contains code block" : "No code block found"),
+            message: message ||
+                (hasCodeBlock ? "Contains code block" : "No code block found"),
         };
     }
     /**
@@ -405,9 +433,13 @@ class Expectation {
             name: "toBeProfessional",
             passed,
             expected: "professional tone",
-            actual: foundProfanity.length > 0 ? `Found: ${foundProfanity.join(", ")}` : "professional",
+            actual: foundProfanity.length > 0
+                ? `Found: ${foundProfanity.join(", ")}`
+                : "professional",
             message: message ||
-                (passed ? "Professional tone" : `Unprofessional language: ${foundProfanity.join(", ")}`),
+                (passed
+                    ? "Professional tone"
+                    : `Unprofessional language: ${foundProfanity.join(", ")}`),
         };
     }
     /**
@@ -432,7 +464,8 @@ class Expectation {
             passed,
             expected: "proper grammar",
             actual: issues.length > 0 ? `Issues: ${issues.join(", ")}` : "proper grammar",
-            message: message || (passed ? "Proper grammar" : `Grammar issues: ${issues.join(", ")}`),
+            message: message ||
+                (passed ? "Proper grammar" : `Grammar issues: ${issues.join(", ")}`),
         };
     }
 }

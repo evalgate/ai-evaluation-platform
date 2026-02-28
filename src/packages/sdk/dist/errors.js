@@ -162,8 +162,11 @@ class EvalAIError extends Error {
         this.details = details;
         // Initialize required properties from ERROR_DOCS
         const doc = ERROR_DOCS[code];
-        this.documentation = doc?.documentation ?? `https://docs.ai-eval-platform.com/errors/${code}`;
-        this.solutions = doc?.solutions ?? ["Check the error details for more information"];
+        this.documentation =
+            doc?.documentation ?? `https://docs.ai-eval-platform.com/errors/${code}`;
+        this.solutions = doc?.solutions ?? [
+            "Check the error details for more information",
+        ];
         this.retryable = doc?.retryable ?? false;
         // Extract retry-after for rate limits
         const errorDetails = details;
@@ -174,7 +177,8 @@ class EvalAIError extends Error {
         if (code === "FEATURE_LIMIT_REACHED" && errorDetails?.resetAt) {
             this.resetAt = new Date(errorDetails.resetAt);
         }
-        this.requestId = errorDetails?.error?.requestId ?? errorDetails?.requestId;
+        this.requestId =
+            errorDetails?.error?.requestId ?? errorDetails?.requestId;
         // Ensure proper prototype chain
         Object.setPrototypeOf(this, EvalAIError.prototype);
     }
@@ -236,7 +240,10 @@ function createErrorFromResponse(response, data) {
     const message = typeof errorData?.error === "string"
         ? errorData.error
         : (errObj?.message ?? errorData?.message ?? response.statusText);
-    const requestId = errObj?.requestId ?? errorData?.requestId ?? response.headers.get("x-request-id") ?? undefined;
+    const requestId = errObj?.requestId ??
+        errorData?.requestId ??
+        response.headers.get("x-request-id") ??
+        undefined;
     // Map HTTP status to error codes when code not in response
     if (!errObj?.code && !errorData?.code) {
         if (status === 401)

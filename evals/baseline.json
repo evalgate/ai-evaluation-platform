@@ -1,41 +1,41 @@
 {
-  "schemaVersion": 1,
-  "description": "Regression gate baseline — committed to repo, updated by pnpm eval:baseline-update",
-  "generatedAt": "2026-02-24T09:12:43.551Z",
-  "generatedBy": "PaulC",
-  "commitSha": "65288d63dbb10488eb34bbdf4609eaad79cf0e7c",
-  "updatedAt": "2026-02-24T09:12:43.551Z",
-  "updatedBy": "PaulC",
-  "tolerance": {
-    "scoreDrop": 5,
-    "passRateDrop": 5,
-    "maxLatencyIncreaseMs": 200,
-    "maxCostIncreaseUsd": 0.05
-  },
-  "goldenEval": {
-    "score": 100,
-    "passRate": 100,
-    "totalCases": 3,
-    "passedCases": 3
-  },
-  "qualityScore": {
-    "overall": 90,
-    "grade": "A",
-    "accuracy": 85,
-    "safety": 100,
-    "latency": 90,
-    "cost": 90,
-    "consistency": 90
-  },
-  "confidenceTests": {
-    "unitPassed": true,
-    "unitTotal": 87,
-    "dbPassed": true,
-    "dbTotal": 26
-  },
-  "productMetrics": {},
-  "qualityMetrics": {
-    "unitLaneDurationMs": 7259,
-    "dbLaneDurationMs": 16777
-  }
+	"schemaVersion": 1,
+	"description": "Regression gate baseline — committed to repo, updated by pnpm eval:baseline-update",
+	"generatedAt": "2026-02-24T09:12:43.551Z",
+	"generatedBy": "PaulC",
+	"commitSha": "65288d63dbb10488eb34bbdf4609eaad79cf0e7c",
+	"updatedAt": "2026-02-24T09:12:43.551Z",
+	"updatedBy": "PaulC",
+	"tolerance": {
+		"scoreDrop": 5,
+		"passRateDrop": 5,
+		"maxLatencyIncreaseMs": 200,
+		"maxCostIncreaseUsd": 0.05
+	},
+	"goldenEval": {
+		"score": 100,
+		"passRate": 100,
+		"totalCases": 3,
+		"passedCases": 3
+	},
+	"qualityScore": {
+		"overall": 90,
+		"grade": "A",
+		"accuracy": 85,
+		"safety": 100,
+		"latency": 90,
+		"cost": 90,
+		"consistency": 90
+	},
+	"confidenceTests": {
+		"unitPassed": true,
+		"unitTotal": 87,
+		"dbPassed": true,
+		"dbTotal": 26
+	},
+	"productMetrics": {},
+	"qualityMetrics": {
+		"unitLaneDurationMs": 7259,
+		"dbLaneDurationMs": 16777
+	}
 }

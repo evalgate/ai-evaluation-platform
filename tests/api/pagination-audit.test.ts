@@ -16,37 +16,42 @@ import { describe, expect, it } from "vitest";
 const API_DIR = path.resolve(__dirname, "../../app/api");
 
 function usesManualPagination(content: string): boolean {
-  return (
-    /parseInt\s*\(\s*searchParams\.get\s*\(\s*["']limit["']\s*\)/.test(content) ||
-    /parseInt\s*\(\s*searchParams\.get\s*\(\s*["']offset["']\s*\)/.test(content)
-  );
+	return (
+		/parseInt\s*\(\s*searchParams\.get\s*\(\s*["']limit["']\s*\)/.test(
+			content,
+		) ||
+		/parseInt\s*\(\s*searchParams\.get\s*\(\s*["']offset["']\s*\)/.test(content)
+	);
 }
 
 function usesParsePaginationParams(content: string): boolean {
-  return (
-    content.includes("parsePaginationParams") &&
-    content.includes("parsePaginationParams(searchParams)")
-  );
+	return (
+		content.includes("parsePaginationParams") &&
+		content.includes("parsePaginationParams(searchParams)")
+	);
 }
 
 describe("API Pagination Audit", () => {
-  const routeFiles = globSync("**/route.ts", { cwd: API_DIR });
+	const routeFiles = globSync("**/route.ts", { cwd: API_DIR });
 
-  it("list endpoints with limit/offset should use parsePaginationParams", () => {
-    const violations: string[] = [];
+	it("list endpoints with limit/offset should use parsePaginationParams", () => {
+		const violations: string[] = [];
 
-    for (const routeFile of routeFiles) {
-      const fullPath = path.join(API_DIR, routeFile);
-      const content = readFileSync(fullPath, "utf-8");
+		for (const routeFile of routeFiles) {
+			const fullPath = path.join(API_DIR, routeFile);
+			const content = readFileSync(fullPath, "utf-8");
 
-      if (usesManualPagination(content) && !usesParsePaginationParams(content)) {
-        violations.push(routeFile);
-      }
-    }
+			if (
+				usesManualPagination(content) &&
+				!usesParsePaginationParams(content)
+			) {
+				violations.push(routeFile);
+			}
+		}
 
-    expect(
-      violations,
-      `These routes use manual limit/offset parsing; migrate to parsePaginationParams: ${violations.join(", ")}`,
-    ).toHaveLength(0);
-  });
+		expect(
+			violations,
+			`These routes use manual limit/offset parsing; migrate to parsePaginationParams: ${violations.join(", ")}`,
+		).toHaveLength(0);
+	});
 });

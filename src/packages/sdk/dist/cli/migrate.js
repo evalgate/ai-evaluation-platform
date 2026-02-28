@@ -43,9 +43,9 @@ exports.migrateConfig = migrateConfig;
 exports.createMigrateCommand = createMigrateCommand;
 exports.validateConfigFile = validateConfigFile;
 exports.previewMigration = previewMigration;
-const commander_1 = require("commander");
 const fs = __importStar(require("node:fs/promises"));
 const path = __importStar(require("node:path"));
+const commander_1 = require("commander");
 const testsuite_to_dsl_1 = require("../runtime/adapters/testsuite-to-dsl");
 const testing_1 = require("../testing");
 /**

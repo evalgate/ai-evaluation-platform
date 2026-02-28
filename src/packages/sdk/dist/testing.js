@@ -59,7 +59,10 @@ class TestSuite {
                 if (this.config.executor) {
                     const timeout = this.config.timeout || 30000;
                     const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error(`Test timeout after ${timeout}ms`)), timeout));
-                    actual = await Promise.race([this.config.executor(testCase.input), timeoutPromise]);
+                    actual = await Promise.race([
+                        this.config.executor(testCase.input),
+                        timeoutPromise,
+                    ]);
                 }
                 else if (testCase.expected) {
                     actual = testCase.expected; // Use expected as actual if no executor
@@ -127,7 +130,9 @@ class TestSuite {
         const retriedCases = [];
         const retries = this.config.retries ?? 0;
         if (retries > 0 && results.length > 0) {
-            const failingIndices = results.map((r, i) => (r.passed ? -1 : i)).filter((i) => i >= 0);
+            const failingIndices = results
+                .map((r, i) => (r.passed ? -1 : i))
+                .filter((i) => i >= 0);
             for (let attempt = 0; attempt < retries && failingIndices.length > 0; attempt++) {
                 const toRetry = [...failingIndices];
                 failingIndices.length = 0;

@@ -48,9 +48,9 @@ exports.analyzeImpact = analyzeImpact;
 exports.printHumanResults = printHumanResults;
 exports.printJsonResults = printJsonResults;
 exports.runImpactAnalysisCLI = runImpactAnalysisCLI;
+const node_child_process_1 = require("node:child_process");
 const fs = __importStar(require("node:fs/promises"));
 const path = __importStar(require("node:path"));
-const node_child_process_1 = require("node:child_process");
 /**
  * Run impact analysis
  */
@@ -179,7 +179,8 @@ function analyzeImpact(changedFiles, manifest) {
             // Add all specs
             for (const spec of manifest.specs) {
                 impactedSpecIds.add(spec.id);
-                reasonBySpecId[spec.id] = `Unknown file changed: ${changedFile} (safe fallback)`;
+                reasonBySpecId[spec.id] =
+                    `Unknown file changed: ${changedFile} (safe fallback)`;
             }
             break; // No need to continue analyzing
         }

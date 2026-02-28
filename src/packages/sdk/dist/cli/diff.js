@@ -239,7 +239,8 @@ async function findPreviousRun() {
         return await loadRunReport(`.evalai/runs/${previousRunId}.json`);
     }
     catch (error) {
-        if (error instanceof Error && error.message.includes("Need at least 2 runs")) {
+        if (error instanceof Error &&
+            error.message.includes("Need at least 2 runs")) {
             throw error;
         }
         throw new Error("No run history found. Run 'evalai run --write-results' first.");
@@ -457,8 +458,12 @@ function calculateDiffSummary(base, head, changedSpecs) {
     const headScores = head.results
         .filter((r) => r.result.score !== undefined)
         .map((r) => r.result.score);
-    const baseAvgScore = baseScores.length > 0 ? baseScores.reduce((a, b) => a + b, 0) / baseScores.length : 0;
-    const headAvgScore = headScores.length > 0 ? headScores.reduce((a, b) => a + b, 0) / headScores.length : 0;
+    const baseAvgScore = baseScores.length > 0
+        ? baseScores.reduce((a, b) => a + b, 0) / baseScores.length
+        : 0;
+    const headAvgScore = headScores.length > 0
+        ? headScores.reduce((a, b) => a + b, 0) / headScores.length
+        : 0;
     const scoreDelta = round(headAvgScore - baseAvgScore, 4);
     // Count classifications
     const regressions = changedSpecs.filter((s) => ["new_failure", "score_drop", "execution_error"].includes(s.classification)).length;

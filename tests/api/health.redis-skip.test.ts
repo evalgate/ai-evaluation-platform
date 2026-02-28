@@ -6,33 +6,33 @@ let mockFrom: ReturnType<typeof vi.fn>;
 let mockSelect: ReturnType<typeof vi.fn>;
 
 vi.mock("@/db", () => {
-  mockLimit = vi.fn(() => Promise.resolve([{ "1": 1 }]));
-  mockFrom = vi.fn(() => ({ limit: mockLimit }));
-  mockSelect = vi.fn(() => ({ from: mockFrom }));
-  return { db: { select: mockSelect } };
+	mockLimit = vi.fn(() => Promise.resolve([{ "1": 1 }]));
+	mockFrom = vi.fn(() => ({ limit: mockLimit }));
+	mockSelect = vi.fn(() => ({ from: mockFrom }));
+	return { db: { select: mockSelect } };
 });
 
 describe("/api/health redis skip", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
+	beforeEach(() => {
+		vi.clearAllMocks();
 
-    // ✅ Ensure no db module complains at import time
-    process.env.DATABASE_URL =
-      process.env.DATABASE_URL ?? "postgresql://test:test@localhost:5432/test";
+		// ✅ Ensure no db module complains at import time
+		process.env.DATABASE_URL =
+			process.env.DATABASE_URL ?? "postgresql://test:test@localhost:5432/test";
 
-    delete process.env.UPSTASH_REDIS_REST_URL;
-    delete process.env.UPSTASH_REDIS_REST_TOKEN;
-  });
+		delete process.env.UPSTASH_REDIS_REST_URL;
+		delete process.env.UPSTASH_REDIS_REST_TOKEN;
+	});
 
-  it("marks redis healthy when not configured", async () => {
-    // ✅ Import route only AFTER env is set and mocks are registered
-    const { GET } = await import("@/app/api/health/route");
+	it("marks redis healthy when not configured", async () => {
+		// ✅ Import route only AFTER env is set and mocks are registered
+		const { GET } = await import("@/app/api/health/route");
 
-    const req = new NextRequest("http://localhost:3000/api/health");
-    const res = await GET(req);
+		const req = new NextRequest("http://localhost:3000/api/health");
+		const res = await GET(req);
 
-    expect(res.status).toBe(200);
-    const body = await res.json();
-    expect(body.checks.redis.status).toBe("healthy");
-  });
+		expect(res.status).toBe(200);
+		const body = await res.json();
+		expect(body.checks.redis.status).toBe("healthy");
+	});
 });

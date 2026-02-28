@@ -6,52 +6,60 @@ import { benchmarkService } from "@/lib/services/benchmark.service";
 import { parsePaginationParams } from "@/lib/validation";
 
 export const GET = secureRoute(
-  async (req: NextRequest, _ctx: AuthContext, params) => {
-    try {
-      const { id } = params;
-      const benchmarkId = parseInt(id, 10);
+	async (req: NextRequest, _ctx: AuthContext, params) => {
+		try {
+			const { id } = params;
+			const benchmarkId = parseInt(id, 10);
 
-      if (Number.isNaN(benchmarkId)) {
-        return validationError("Valid benchmark ID is required");
-      }
+			if (Number.isNaN(benchmarkId)) {
+				return validationError("Valid benchmark ID is required");
+			}
 
-      const { searchParams } = new URL(req.url);
-      const sortBy =
-        (searchParams.get("sortBy") as "accuracy" | "latency" | "cost" | "score") || "score";
-      const { limit } = parsePaginationParams(searchParams);
+			const { searchParams } = new URL(req.url);
+			const sortBy =
+				(searchParams.get("sortBy") as
+					| "accuracy"
+					| "latency"
+					| "cost"
+					| "score") || "score";
+			const { limit } = parsePaginationParams(searchParams);
 
-      const benchmark = await benchmarkService.getBenchmarkById(benchmarkId);
-      if (!benchmark) {
-        return notFound("Benchmark not found");
-      }
+			const benchmark = await benchmarkService.getBenchmarkById(benchmarkId);
+			if (!benchmark) {
+				return notFound("Benchmark not found");
+			}
 
-      const leaderboard = await benchmarkService.getLeaderboard(benchmarkId, sortBy, limit);
+			const leaderboard = await benchmarkService.getLeaderboard(
+				benchmarkId,
+				sortBy,
+				limit,
+			);
 
-      return NextResponse.json(
-        {
-          benchmark: {
-            id: benchmark.id,
-            name: benchmark.name,
-            taskType: benchmark.taskType,
-          },
-          sortBy,
-          entries: leaderboard,
-          totalEntries: leaderboard.length,
-        },
-        {
-          headers: {
-            "Cache-Control": "private, max-age=60",
-          },
-        },
-      );
-    } catch (error: unknown) {
-      logger.error("Error fetching leaderboard", {
-        error: error instanceof Error ? error.message : String(error),
-        route: "/api/benchmarks/[id]/leaderboard",
-        method: "GET",
-      });
-      return internalError();
-    }
-  },
-  { rateLimit: "free" },
+			return NextResponse.json(
+				{
+					benchmark: {
+						id: benchmark.id,
+						name: benchmark.name,
+						taskType: benchmark.taskType,
+					},
+					sortBy,
+					entries: leaderboard,
+					totalEntries: leaderboard.length,
+				},
+				{
+					headers: {
+						"Cache-Control": "private, max-age=60",
+					},
+				},
+			);
+		} catch (error: unknown) {
+			logger.error("Error fetching leaderboard", {
+				error: error instanceof Error ? error.message : String(error),
+				route: "/api/benchmarks/[id]/leaderboard",
+				method: "GET",
+			});
+			return internalError();
+		}
+	},
+	{ rateLimit: "free" },
 );

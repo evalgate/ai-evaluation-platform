@@ -1,7 +1,7 @@
 {
-  "name": "fixture-npm-jest",
-  "version": "1.0.0",
-  "scripts": {
-    "test": "node --test test.mjs"
-  }
+	"name": "fixture-npm-jest",
+	"version": "1.0.0",
+	"scripts": {
+		"test": "node --test test.mjs"
+	}
 }

@@ -25,89 +25,93 @@ const MAX_LIMIT = 200;
  *   minAttempt — minimum attempt count
  */
 export const GET = secureRoute(
-  async (req: NextRequest, ctx) => {
-    const { searchParams } = new URL(req.url);
+	async (req: NextRequest, ctx) => {
+		const { searchParams } = new URL(req.url);
 
-    // Parse & validate numeric params
-    const rawLimit = searchParams.get("limit");
-    const rawOffset = searchParams.get("offset");
-    if (rawLimit && Number.isNaN(Number(rawLimit))) {
-      return validationError("limit must be a number");
-    }
-    if (rawOffset && Number.isNaN(Number(rawOffset))) {
-      return validationError("offset must be a number");
-    }
+		// Parse & validate numeric params
+		const rawLimit = searchParams.get("limit");
+		const rawOffset = searchParams.get("offset");
+		if (rawLimit && Number.isNaN(Number(rawLimit))) {
+			return validationError("limit must be a number");
+		}
+		if (rawOffset && Number.isNaN(Number(rawOffset))) {
+			return validationError("offset must be a number");
+		}
 
-    const limit = rawLimit ? Math.min(Math.max(1, Number(rawLimit)), MAX_LIMIT) : DEFAULT_LIMIT;
-    const offset = rawOffset ? Math.max(0, Number(rawOffset)) : 0;
+		const limit = rawLimit
+			? Math.min(Math.max(1, Number(rawLimit)), MAX_LIMIT)
+			: DEFAULT_LIMIT;
+		const offset = rawOffset ? Math.max(0, Number(rawOffset)) : 0;
 
-    // Optional filters
-    const typeFilter = searchParams.get("type");
-    const errorCodeFilter = searchParams.get("errorCode");
-    const sinceFilter = searchParams.get("since");
-    const untilFilter = searchParams.get("until");
-    const minAttemptFilter = searchParams.get("minAttempt");
+		// Optional filters
+		const typeFilter = searchParams.get("type");
+		const errorCodeFilter = searchParams.get("errorCode");
+		const sinceFilter = searchParams.get("since");
+		const untilFilter = searchParams.get("until");
+		const minAttemptFilter = searchParams.get("minAttempt");
 
-    // Build WHERE conditions
-    const conditions = [
-      eq(jobs.status, "dead_letter"),
-      eq(jobs.organizationId, ctx.organizationId),
-    ];
+		// Build WHERE conditions
+		const conditions = [
+			eq(jobs.status, "dead_letter"),
+			eq(jobs.organizationId, ctx.organizationId),
+		];
 
-    if (typeFilter) conditions.push(eq(jobs.type, typeFilter));
-    if (errorCodeFilter) conditions.push(eq(jobs.lastErrorCode, errorCodeFilter));
-    if (sinceFilter) {
-      const sinceDate = new Date(sinceFilter);
-      if (Number.isNaN(sinceDate.getTime()))
-        return validationError("since must be a valid ISO date");
-      conditions.push(gte(jobs.updatedAt, sinceDate));
-    }
-    if (untilFilter) {
-      const untilDate = new Date(untilFilter);
-      if (Number.isNaN(untilDate.getTime()))
-        return validationError("until must be a valid ISO date");
-      conditions.push(lte(jobs.updatedAt, untilDate));
-    }
-    if (minAttemptFilter) {
-      const minAttempt = Number(minAttemptFilter);
-      if (Number.isNaN(minAttempt)) return validationError("minAttempt must be a number");
-      conditions.push(gte(jobs.attempt, minAttempt));
-    }
+		if (typeFilter) conditions.push(eq(jobs.type, typeFilter));
+		if (errorCodeFilter)
+			conditions.push(eq(jobs.lastErrorCode, errorCodeFilter));
+		if (sinceFilter) {
+			const sinceDate = new Date(sinceFilter);
+			if (Number.isNaN(sinceDate.getTime()))
+				return validationError("since must be a valid ISO date");
+			conditions.push(gte(jobs.updatedAt, sinceDate));
+		}
+		if (untilFilter) {
+			const untilDate = new Date(untilFilter);
+			if (Number.isNaN(untilDate.getTime()))
+				return validationError("until must be a valid ISO date");
+			conditions.push(lte(jobs.updatedAt, untilDate));
+		}
+		if (minAttemptFilter) {
+			const minAttempt = Number(minAttemptFilter);
+			if (Number.isNaN(minAttempt))
+				return validationError("minAttempt must be a number");
+			conditions.push(gte(jobs.attempt, minAttempt));
+		}
 
-    const where = and(...conditions);
+		const where = and(...conditions);
 
-    // Fetch page and count in one go to avoid mock complexity
-    const dlqJobs = await db
-      .select({
-        id: jobs.id,
-        type: jobs.type,
-        status: jobs.status,
-        attempt: jobs.attempt,
-        maxAttempts: jobs.maxAttempts,
-        lastErrorCode: jobs.lastErrorCode,
-        lastError: jobs.lastError,
-        lastStartedAt: jobs.lastStartedAt,
-        lastFinishedAt: jobs.lastFinishedAt,
-        lastDurationMs: jobs.lastDurationMs,
-        nextRunAt: jobs.nextRunAt,
-        createdAt: jobs.createdAt,
-        updatedAt: jobs.updatedAt,
-      })
-      .from(jobs)
-      .where(where)
-      .orderBy(desc(jobs.updatedAt))
-      .limit(limit)
-      .offset(offset);
+		// Fetch page and count in one go to avoid mock complexity
+		const dlqJobs = await db
+			.select({
+				id: jobs.id,
+				type: jobs.type,
+				status: jobs.status,
+				attempt: jobs.attempt,
+				maxAttempts: jobs.maxAttempts,
+				lastErrorCode: jobs.lastErrorCode,
+				lastError: jobs.lastError,
+				lastStartedAt: jobs.lastStartedAt,
+				lastFinishedAt: jobs.lastFinishedAt,
+				lastDurationMs: jobs.lastDurationMs,
+				nextRunAt: jobs.nextRunAt,
+				createdAt: jobs.createdAt,
+				updatedAt: jobs.updatedAt,
+			})
+			.from(jobs)
+			.where(where)
+			.orderBy(desc(jobs.updatedAt))
+			.limit(limit)
+			.offset(offset);
 
-    const total = dlqJobs.length;
+		const total = dlqJobs.length;
 
-    return NextResponse.json({
-      jobs: dlqJobs,
-      total,
-      limit,
-      offset,
-      hasMore: offset + dlqJobs.length < total,
-    });
-  },
-  { minRole: "admin" },
+		return NextResponse.json({
+			jobs: dlqJobs,
+			total,
+			limit,
+			offset,
+			hasMore: offset + dlqJobs.length < total,
+		});
+	},
+	{ minRole: "admin" },
 );

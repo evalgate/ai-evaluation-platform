@@ -1,12 +1,12 @@
 {
-  "github-actions.org-secrets.enabled": false,
-  "github-actions.remote-name": "origin",
-  "github-actions.use-enterprise-url": false,
-  "yaml.validate": false,
-  "github-actions.workflows.pinned.workflows": [".github/workflows/*.yml"],
-  "typescript.workspaceConfig": "./tsconfig.test.json",
-  "typescript.preferences.includePackageJsonAutoImports": "off",
-  "typescript.suggest.autoImports": true,
-  "typescript.updateImportsOnFileMove.enabled": "always",
-  "typescript.preferences.importModuleSpecifier": "relative"
+	"github-actions.org-secrets.enabled": false,
+	"github-actions.remote-name": "origin",
+	"github-actions.use-enterprise-url": false,
+	"yaml.validate": false,
+	"github-actions.workflows.pinned.workflows": [".github/workflows/*.yml"],
+	"typescript.workspaceConfig": "./tsconfig.test.json",
+	"typescript.preferences.includePackageJsonAutoImports": "off",
+	"typescript.suggest.autoImports": true,
+	"typescript.updateImportsOnFileMove.enabled": "always",
+	"typescript.preferences.importModuleSpecifier": "relative"
 }

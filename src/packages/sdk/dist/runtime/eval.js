@@ -43,10 +43,10 @@ exports.evalai = exports.defineEval = void 0;
 exports.defineSuite = defineSuite;
 exports.createContext = createContext;
 exports.createResult = createResult;
-const path = __importStar(require("node:path"));
 const crypto = __importStar(require("node:crypto"));
-const types_1 = require("./types");
+const path = __importStar(require("node:path"));
 const registry_1 = require("./registry");
+const types_1 = require("./types");
 /**
  * Extract AST position from call stack
  * This provides stable identity that survives renames but changes when logic moves
@@ -61,7 +61,9 @@ function getCallerPosition() {
     // Skip current function and find the actual caller
     for (let i = 3; i < lines.length; i++) {
         const line = lines[i];
-        if (!line || line.includes("node_modules") || line.includes("internal/modules")) {
+        if (!line ||
+            line.includes("node_modules") ||
+            line.includes("internal/modules")) {
             continue;
         }
         // Extract file path, line, and column
@@ -95,7 +97,12 @@ function generateSpecId(namespace, filePath, name, position) {
     const projectRoot = process.cwd();
     const relativePath = path.relative(projectRoot, filePath);
     const canonicalPath = relativePath.split(path.sep).join("/"); // Force POSIX separators
-    const components = [namespace, canonicalPath, name, `${position.line}:${position.column}`];
+    const components = [
+        namespace,
+        canonicalPath,
+        name,
+        `${position.line}:${position.column}`,
+    ];
     const content = components.join("|");
     return crypto.createHash("sha256").update(content).digest("hex").slice(0, 20);
 }

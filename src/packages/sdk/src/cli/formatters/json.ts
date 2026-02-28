@@ -6,5 +6,5 @@
 import type { CheckReport } from "./types";
 
 export function formatJson(report: CheckReport): string {
-  return JSON.stringify(report, null, 0);
+	return JSON.stringify(report, null, 0);
 }

@@ -14,18 +14,21 @@ import { db } from "@/db";
  *   const rows = await sdb.selectFrom(evaluations);
  */
 export function scopedDb(organizationId: number) {
-  return {
-    /** Scoped select: auto-appends org filter */
-    selectFrom<T extends PgTable & { organizationId: any }>(table: T) {
-      return db.select().from(table).where(eq(table.organizationId, organizationId));
-    },
-    /** Scoped delete: prevents cross-tenant deletion */
-    deleteFrom<T extends PgTable & { organizationId: any }>(table: T) {
-      return db.delete(table).where(eq(table.organizationId, organizationId));
-    },
-    /** Raw db for tables without org column (join-through patterns) */
-    raw: db,
-    /** The organization ID this scope is bound to */
-    organizationId,
-  };
+	return {
+		/** Scoped select: auto-appends org filter */
+		selectFrom<T extends PgTable & { organizationId: any }>(table: T) {
+			return db
+				.select()
+				.from(table)
+				.where(eq(table.organizationId, organizationId));
+		},
+		/** Scoped delete: prevents cross-tenant deletion */
+		deleteFrom<T extends PgTable & { organizationId: any }>(table: T) {
+			return db.delete(table).where(eq(table.organizationId, organizationId));
+		},
+		/** Raw db for tables without org column (join-through patterns) */
+		raw: db,
+		/** The organization ID this scope is bound to */
+		organizationId,
+	};
 }

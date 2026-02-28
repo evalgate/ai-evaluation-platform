@@ -43,7 +43,11 @@ exports.mergeConfigWithArgs = mergeConfigWithArgs;
 const fs = __importStar(require("node:fs"));
 const path = __importStar(require("node:path"));
 const profiles_1 = require("./profiles");
-const CONFIG_FILES = ["evalai.config.json", "evalai.config.js", "evalai.config.cjs"];
+const CONFIG_FILES = [
+    "evalai.config.json",
+    "evalai.config.js",
+    "evalai.config.cjs",
+];
 /**
  * Find config file path in directory, walking up to root
  */
@@ -113,7 +117,11 @@ function loadConfig(cwd = process.cwd()) {
             }
             for (const key of Object.keys(config.packages)) {
                 if (relNorm === key || relNorm.startsWith(`${key}/`)) {
-                    return { ...config, ...config.packages[key], packages: config.packages };
+                    return {
+                        ...config,
+                        ...config.packages[key],
+                        packages: config.packages,
+                    };
                 }
             }
         }
@@ -156,11 +164,14 @@ function mergeConfigWithArgs(config, args) {
             merged.minScore = profile.minScore;
         if (merged.maxDrop === undefined && args.maxDrop === undefined)
             merged.maxDrop = profile.maxDrop;
-        if (merged.warnDrop === undefined && args.warnDrop === undefined && "warnDrop" in profile)
+        if (merged.warnDrop === undefined &&
+            args.warnDrop === undefined &&
+            "warnDrop" in profile)
             merged.warnDrop = profile.warnDrop;
         if (merged.minN === undefined && args.minN === undefined)
             merged.minN = profile.minN;
-        if (merged.allowWeakEvidence === undefined && args.allowWeakEvidence === undefined)
+        if (merged.allowWeakEvidence === undefined &&
+            args.allowWeakEvidence === undefined)
             merged.allowWeakEvidence = profile.allowWeakEvidence;
     }
     // Args override
@@ -172,18 +183,27 @@ function mergeConfigWithArgs(config, args) {
     }
     if (args.minScore !== undefined) {
         merged.minScore =
-            typeof args.minScore === "number" ? args.minScore : parseInt(String(args.minScore), 10);
+            typeof args.minScore === "number"
+                ? args.minScore
+                : parseInt(String(args.minScore), 10);
     }
     if (args.maxDrop !== undefined) {
         merged.maxDrop =
-            typeof args.maxDrop === "number" ? args.maxDrop : parseInt(String(args.maxDrop), 10);
+            typeof args.maxDrop === "number"
+                ? args.maxDrop
+                : parseInt(String(args.maxDrop), 10);
     }
     if (args.warnDrop !== undefined) {
         merged.warnDrop =
-            typeof args.warnDrop === "number" ? args.warnDrop : parseInt(String(args.warnDrop), 10);
+            typeof args.warnDrop === "number"
+                ? args.warnDrop
+                : parseInt(String(args.warnDrop), 10);
     }
     if (args.minN !== undefined) {
-        merged.minN = typeof args.minN === "number" ? args.minN : parseInt(String(args.minN), 10);
+        merged.minN =
+            typeof args.minN === "number"
+                ? args.minN
+                : parseInt(String(args.minN), 10);
     }
     if (args.allowWeakEvidence !== undefined) {
         merged.allowWeakEvidence =

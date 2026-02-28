@@ -9,11 +9,13 @@ import type { z } from "zod";
 import { validationError, zodValidationError } from "@/lib/api/errors";
 
 export type ParseBodyResult<T> =
-  | { ok: true; data: T }
-  | {
-      ok: false;
-      response: ReturnType<typeof validationError> | ReturnType<typeof zodValidationError>;
-    };
+	| { ok: true; data: T }
+	| {
+			ok: false;
+			response:
+				| ReturnType<typeof validationError>
+				| ReturnType<typeof zodValidationError>;
+	  };
 
 /**
  * Parse and validate request body against a Zod schema.
@@ -21,25 +23,25 @@ export type ParseBodyResult<T> =
  * On schema validation failure: returns zodValidationError (canonical envelope).
  */
 export async function parseBody<T>(
-  req: NextRequest,
-  schema: z.ZodSchema<T>,
-  options?: { allowEmpty?: boolean },
+	req: NextRequest,
+	schema: z.ZodSchema<T>,
+	options?: { allowEmpty?: boolean },
 ): Promise<ParseBodyResult<T>> {
-  let data: unknown;
-  try {
-    data = await req.json();
-  } catch {
-    if (options?.allowEmpty) {
-      data = {};
-    } else {
-      return { ok: false, response: validationError("Invalid JSON body") };
-    }
-  }
+	let data: unknown;
+	try {
+		data = await req.json();
+	} catch {
+		if (options?.allowEmpty) {
+			data = {};
+		} else {
+			return { ok: false, response: validationError("Invalid JSON body") };
+		}
+	}
 
-  const result = schema.safeParse(data);
-  if (!result.success) {
-    return { ok: false, response: zodValidationError(result.error) };
-  }
+	const result = schema.safeParse(data);
+	if (!result.success) {
+		return { ok: false, response: zodValidationError(result.error) };
+	}
 
-  return { ok: true, data: result.data };
+	return { ok: true, data: result.data };
 }

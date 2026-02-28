@@ -275,7 +275,8 @@ function addNpmScripts(cwd) {
         changed = true;
     }
     if (!scripts["eval:baseline-update"]) {
-        scripts["eval:baseline-update"] = "npx tsx scripts/regression-gate.ts --update-baseline";
+        scripts["eval:baseline-update"] =
+            "npx tsx scripts/regression-gate.ts --update-baseline";
         changed = true;
     }
     if (changed) {

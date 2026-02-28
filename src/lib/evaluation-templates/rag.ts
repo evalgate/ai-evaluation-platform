@@ -1,37 +1,39 @@
 import {
-  Crosshair,
-  DollarSign,
-  FileCode,
-  Layers,
-  MessageSquare,
-  Search,
-  Stethoscope,
+	Crosshair,
+	DollarSign,
+	FileCode,
+	Layers,
+	MessageSquare,
+	Search,
+	Stethoscope,
 } from "lucide-react";
 import type { EvaluationTemplate } from "./types";
 
 export const RAG_TEMPLATES: EvaluationTemplate[] = [
-  // ===== MULTIMODAL EVALUATION TEMPLATES =====
-  {
-    id: "multimodal-cross-modal-reasoning",
-    name: "Cross-Modal Reasoning",
-    category: "multimodal",
-    icon: Layers,
-    description: "Evaluate reasoning across text, image, audio, and video",
-    type: "model_eval",
-    complexity: "advanced",
-    testCases: [
-      {
-        input: "Image of a graph + Question: 'What trend does this show?'",
-        expectedOutput: "Accurate interpretation integrating visual and textual reasoning",
-        rubric: "Must correctly interpret visual data and connect to query",
-      },
-      {
-        input: "Video clip + Question: 'What happened between 0:30 and 1:00?'",
-        expectedOutput: "Temporal reasoning with accurate event description",
-        rubric: "Must demonstrate temporal understanding and visual comprehension",
-      },
-    ],
-    judgePrompt: `Evaluate this multimodal AI response:
+	// ===== MULTIMODAL EVALUATION TEMPLATES =====
+	{
+		id: "multimodal-cross-modal-reasoning",
+		name: "Cross-Modal Reasoning",
+		category: "multimodal",
+		icon: Layers,
+		description: "Evaluate reasoning across text, image, audio, and video",
+		type: "model_eval",
+		complexity: "advanced",
+		testCases: [
+			{
+				input: "Image of a graph + Question: 'What trend does this show?'",
+				expectedOutput:
+					"Accurate interpretation integrating visual and textual reasoning",
+				rubric: "Must correctly interpret visual data and connect to query",
+			},
+			{
+				input: "Video clip + Question: 'What happened between 0:30 and 1:00?'",
+				expectedOutput: "Temporal reasoning with accurate event description",
+				rubric:
+					"Must demonstrate temporal understanding and visual comprehension",
+			},
+		],
+		judgePrompt: `Evaluate this multimodal AI response:
 
 Image Description: {image_description}
 Text Query: {query}
@@ -54,28 +56,29 @@ Output format:
   "strengths": ["what worked well"],
   "weaknesses": ["areas for improvement"]
 }`,
-  },
-  {
-    id: "multimodal-visual-grounding",
-    name: "Visual Grounding Assessment",
-    category: "multimodal",
-    icon: Crosshair,
-    description: "Test ability to ground language in visual elements",
-    type: "model_eval",
-    complexity: "advanced",
-    testCases: [
-      {
-        input: "Image with multiple objects + 'Count the red objects'",
-        expectedOutput: "Accurate count with spatial awareness",
-        rubric: "Must correctly identify, localize, and count objects",
-      },
-      {
-        input: "Scene image + 'Describe the spatial relationship between X and Y'",
-        expectedOutput: "Accurate spatial relationship description",
-        rubric: "Must understand and articulate spatial relationships",
-      },
-    ],
-    judgePrompt: `Evaluate visual grounding capabilities:
+	},
+	{
+		id: "multimodal-visual-grounding",
+		name: "Visual Grounding Assessment",
+		category: "multimodal",
+		icon: Crosshair,
+		description: "Test ability to ground language in visual elements",
+		type: "model_eval",
+		complexity: "advanced",
+		testCases: [
+			{
+				input: "Image with multiple objects + 'Count the red objects'",
+				expectedOutput: "Accurate count with spatial awareness",
+				rubric: "Must correctly identify, localize, and count objects",
+			},
+			{
+				input:
+					"Scene image + 'Describe the spatial relationship between X and Y'",
+				expectedOutput: "Accurate spatial relationship description",
+				rubric: "Must understand and articulate spatial relationships",
+			},
+		],
+		judgePrompt: `Evaluate visual grounding capabilities:
 
 Image: {image_description}
 Query: {query}
@@ -97,30 +100,31 @@ Output format:
   "errors": ["list mistakes"],
   "reasoning": "detailed analysis"
 }`,
-  },
+	},
 
-  // ===== INDUSTRY-SPECIFIC TEMPLATES =====
-  {
-    id: "industry-customer-support",
-    name: "Customer Support Chatbot",
-    category: "industry",
-    icon: MessageSquare,
-    description: "Comprehensive evaluation for support chatbots",
-    type: "model_eval",
-    complexity: "intermediate",
-    testCases: [
-      {
-        input: "Customer complaint about delayed order",
-        expectedOutput: "Empathetic response with clear resolution path",
-        rubric: "Must show empathy, provide solution, and maintain brand voice",
-      },
-      {
-        input: "Technical support request for product issue",
-        expectedOutput: "Accurate technical guidance with escalation options",
-        rubric: "Technical accuracy, clear instructions, appropriate escalation",
-      },
-    ],
-    judgePrompt: `Evaluate customer support chatbot performance:
+	// ===== INDUSTRY-SPECIFIC TEMPLATES =====
+	{
+		id: "industry-customer-support",
+		name: "Customer Support Chatbot",
+		category: "industry",
+		icon: MessageSquare,
+		description: "Comprehensive evaluation for support chatbots",
+		type: "model_eval",
+		complexity: "intermediate",
+		testCases: [
+			{
+				input: "Customer complaint about delayed order",
+				expectedOutput: "Empathetic response with clear resolution path",
+				rubric: "Must show empathy, provide solution, and maintain brand voice",
+			},
+			{
+				input: "Technical support request for product issue",
+				expectedOutput: "Accurate technical guidance with escalation options",
+				rubric:
+					"Technical accuracy, clear instructions, appropriate escalation",
+			},
+		],
+		judgePrompt: `Evaluate customer support chatbot performance:
 
 Customer Issue: {issue}
 Bot Response: {response}
@@ -144,28 +148,31 @@ Output format:
   "customer_satisfaction": "high|medium|low",
   "reasoning": "detailed analysis"
 }`,
-  },
-  {
-    id: "industry-financial",
-    name: "Financial Assistant",
-    category: "industry",
-    icon: DollarSign,
-    description: "Evaluation for financial advice and services",
-    type: "model_eval",
-    complexity: "advanced",
-    testCases: [
-      {
-        input: "Investment advice request for retirement planning",
-        expectedOutput: "Responsible financial guidance with appropriate disclaimers",
-        rubric: "Must include risk warnings, diversification advice, and regulatory compliance",
-      },
-      {
-        input: "Question about loan eligibility and requirements",
-        expectedOutput: "Accurate loan information with qualification criteria",
-        rubric: "Financial accuracy, regulatory compliance, clear eligibility criteria",
-      },
-    ],
-    judgePrompt: `Evaluate financial AI assistant:
+	},
+	{
+		id: "industry-financial",
+		name: "Financial Assistant",
+		category: "industry",
+		icon: DollarSign,
+		description: "Evaluation for financial advice and services",
+		type: "model_eval",
+		complexity: "advanced",
+		testCases: [
+			{
+				input: "Investment advice request for retirement planning",
+				expectedOutput:
+					"Responsible financial guidance with appropriate disclaimers",
+				rubric:
+					"Must include risk warnings, diversification advice, and regulatory compliance",
+			},
+			{
+				input: "Question about loan eligibility and requirements",
+				expectedOutput: "Accurate loan information with qualification criteria",
+				rubric:
+					"Financial accuracy, regulatory compliance, clear eligibility criteria",
+			},
+		],
+		judgePrompt: `Evaluate financial AI assistant:
 
 Financial Query: {query}
 AI Response: {response}
@@ -189,28 +196,31 @@ Output format:
   "compliance_status": "compliant|needs_review|non_compliant",
   "reasoning": "detailed analysis"
 }`,
-  },
-  {
-    id: "industry-code-generation",
-    name: "Code Generation Assistant",
-    category: "industry",
-    icon: FileCode,
-    description: "Evaluate generated code quality and security",
-    type: "unit_test",
-    complexity: "advanced",
-    testCases: [
-      {
-        input: "Generate a REST API endpoint for user authentication",
-        expectedOutput: "Secure, well-structured code with proper error handling",
-        rubric: "Security best practices, code quality, documentation, error handling",
-      },
-      {
-        input: "Create a database query for complex report generation",
-        expectedOutput: "Optimized SQL with proper indexing and security",
-        rubric: "Query optimization, SQL injection prevention, performance considerations",
-      },
-    ],
-    code: `function evaluateCodeQuality(generatedCode, requirements) {
+	},
+	{
+		id: "industry-code-generation",
+		name: "Code Generation Assistant",
+		category: "industry",
+		icon: FileCode,
+		description: "Evaluate generated code quality and security",
+		type: "unit_test",
+		complexity: "advanced",
+		testCases: [
+			{
+				input: "Generate a REST API endpoint for user authentication",
+				expectedOutput:
+					"Secure, well-structured code with proper error handling",
+				rubric:
+					"Security best practices, code quality, documentation, error handling",
+			},
+			{
+				input: "Create a database query for complex report generation",
+				expectedOutput: "Optimized SQL with proper indexing and security",
+				rubric:
+					"Query optimization, SQL injection prevention, performance considerations",
+			},
+		],
+		code: `function evaluateCodeQuality(generatedCode, requirements) {
   const issues = [];
   const score = { security: 0, quality: 0, performance: 0, documentation: 0 };
   
@@ -242,29 +252,29 @@ Output format:
     recommendations: generateRecommendations(issues)
   };
 }`,
-  },
-  {
-    id: "industry-medical",
-    name: "Medical Information",
-    category: "industry",
-    icon: Stethoscope,
-    description: "Healthcare and medical content evaluation",
-    type: "model_eval",
-    complexity: "advanced",
-    testCases: [
-      {
-        input: "Patient asks about symptoms and possible conditions",
-        expectedOutput: "Helpful information with clear medical disclaimer",
-        rubric:
-          "Must include disclaimer to consult healthcare professional, avoid definitive diagnosis",
-      },
-      {
-        input: "Question about medication interactions and side effects",
-        expectedOutput: "Accurate medication information with safety warnings",
-        rubric: "Medical accuracy, safety warnings, appropriate disclaimer",
-      },
-    ],
-    judgePrompt: `Evaluate medical AI assistant:
+	},
+	{
+		id: "industry-medical",
+		name: "Medical Information",
+		category: "industry",
+		icon: Stethoscope,
+		description: "Healthcare and medical content evaluation",
+		type: "model_eval",
+		complexity: "advanced",
+		testCases: [
+			{
+				input: "Patient asks about symptoms and possible conditions",
+				expectedOutput: "Helpful information with clear medical disclaimer",
+				rubric:
+					"Must include disclaimer to consult healthcare professional, avoid definitive diagnosis",
+			},
+			{
+				input: "Question about medication interactions and side effects",
+				expectedOutput: "Accurate medication information with safety warnings",
+				rubric: "Medical accuracy, safety warnings, appropriate disclaimer",
+			},
+		],
+		judgePrompt: `Evaluate medical AI assistant:
 
 Medical Query: {query}
 AI Response: {response}
@@ -289,28 +299,30 @@ Output format:
   "medical_disclaimer_present": true|false,
   "reasoning": "detailed analysis"
 }`,
-  },
-  {
-    id: "industry-rag",
-    name: "RAG System",
-    category: "industry",
-    icon: Search,
-    description: "Retrieval-augmented generation evaluation",
-    type: "model_eval",
-    complexity: "advanced",
-    testCases: [
-      {
-        input: "Question about specific compunknown policy",
-        expectedOutput: "Answer based on retrieved documents with citations",
-        rubric: "Must cite sources, stay within retrieved context, acknowledge uncertainty",
-      },
-      {
-        input: "Technical query requiring multiple document sources",
-        expectedOutput: "Synthesized answer from multiple retrieved documents",
-        rubric: "Document synthesis, source attribution, comprehensive coverage",
-      },
-    ],
-    judgePrompt: `Evaluate RAG system performance:
+	},
+	{
+		id: "industry-rag",
+		name: "RAG System",
+		category: "industry",
+		icon: Search,
+		description: "Retrieval-augmented generation evaluation",
+		type: "model_eval",
+		complexity: "advanced",
+		testCases: [
+			{
+				input: "Question about specific compunknown policy",
+				expectedOutput: "Answer based on retrieved documents with citations",
+				rubric:
+					"Must cite sources, stay within retrieved context, acknowledge uncertainty",
+			},
+			{
+				input: "Technical query requiring multiple document sources",
+				expectedOutput: "Synthesized answer from multiple retrieved documents",
+				rubric:
+					"Document synthesis, source attribution, comprehensive coverage",
+			},
+		],
+		judgePrompt: `Evaluate RAG system performance:
 
 Query: {query}
 Retrieved Documents: {retrieved_docs}
@@ -335,5 +347,5 @@ Output format:
   "hallucinations_detected": [],
   "reasoning": "detailed analysis"
 }`,
-  },
+	},
 ];

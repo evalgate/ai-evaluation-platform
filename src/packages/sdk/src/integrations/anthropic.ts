@@ -23,16 +23,16 @@ import type { AIEvalClient } from "../client";
 import { mergeWithContext } from "../context";
 
 export interface AnthropicTraceOptions {
-  /** Whether to capture input (default: true) */
-  captureInput?: boolean;
-  /** Whether to capture output (default: true) */
-  captureOutput?: boolean;
-  /** Whether to capture metadata (default: true) */
-  captureMetadata?: boolean;
-  /** Organization ID for traces */
-  organizationId?: number;
-  /** Custom trace name prefix */
-  tracePrefix?: string;
+	/** Whether to capture input (default: true) */
+	captureInput?: boolean;
+	/** Whether to capture output (default: true) */
+	captureOutput?: boolean;
+	/** Whether to capture metadata (default: true) */
+	captureMetadata?: boolean;
+	/** Organization ID for traces */
+	organizationId?: number;
+	/** Custom trace name prefix */
+	tracePrefix?: string;
 }
 
 /**
@@ -55,86 +55,86 @@ export interface AnthropicTraceOptions {
  * ```
  */
 export function traceAnthropic(
-  anthropic: any,
-  evalClient: AIEvalClient,
-  options: AnthropicTraceOptions = {},
+	anthropic: any,
+	evalClient: AIEvalClient,
+	options: AnthropicTraceOptions = {},
 ): any {
-  const {
-    captureInput = true,
-    captureOutput = true,
-    captureMetadata = true,
-    organizationId,
-    tracePrefix = "anthropic",
-  } = options;
+	const {
+		captureInput = true,
+		captureOutput = true,
+		captureMetadata = true,
+		organizationId,
+		tracePrefix = "anthropic",
+	} = options;
 
-  // Create proxy for messages.create
-  const originalCreate = anthropic.messages.create.bind(anthropic.messages);
+	// Create proxy for messages.create
+	const originalCreate = anthropic.messages.create.bind(anthropic.messages);
 
-  anthropic.messages.create = async (params: any, requestOptions?: any) => {
-    const startTime = Date.now();
-    const traceId = `${tracePrefix}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+	anthropic.messages.create = async (params: any, requestOptions?: any) => {
+		const startTime = Date.now();
+		const traceId = `${tracePrefix}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
-    try {
-      // Call original method
-      const message = await originalCreate(params, requestOptions);
-      const durationMs = Date.now() - startTime;
+		try {
+			// Call original method
+			const message = await originalCreate(params, requestOptions);
+			const durationMs = Date.now() - startTime;
 
-      // Create trace with success status and complete metadata
-      const traceMetadata = mergeWithContext({
-        model: params.model,
-        temperature: params.temperature,
-        max_tokens: params.max_tokens,
-        ...(captureInput ? { input: params.messages } : {}),
-        ...(captureOutput ? { output: message.content } : {}),
-        ...(captureMetadata
-          ? {
-              usage: message.usage,
-              stop_reason: message.stop_reason,
-            }
-          : {}),
-      });
+			// Create trace with success status and complete metadata
+			const traceMetadata = mergeWithContext({
+				model: params.model,
+				temperature: params.temperature,
+				max_tokens: params.max_tokens,
+				...(captureInput ? { input: params.messages } : {}),
+				...(captureOutput ? { output: message.content } : {}),
+				...(captureMetadata
+					? {
+							usage: message.usage,
+							stop_reason: message.stop_reason,
+						}
+					: {}),
+			});
 
-      await evalClient.traces.create({
-        name: `Anthropic: ${params.model}`,
-        traceId,
-        organizationId: organizationId || evalClient.getOrganizationId(),
-        status: "success",
-        durationMs,
-        metadata: traceMetadata,
-      });
+			await evalClient.traces.create({
+				name: `Anthropic: ${params.model}`,
+				traceId,
+				organizationId: organizationId || evalClient.getOrganizationId(),
+				status: "success",
+				durationMs,
+				metadata: traceMetadata,
+			});
 
-      return message;
-    } catch (error) {
-      const durationMs = Date.now() - startTime;
+			return message;
+		} catch (error) {
+			const durationMs = Date.now() - startTime;
 
-      // Create trace with error status
-      const errorMetadata = mergeWithContext({
-        model: params.model,
-        temperature: params.temperature,
-        max_tokens: params.max_tokens,
-        ...(captureInput ? { input: params.messages } : {}),
-        ...(captureMetadata ? { params } : {}),
-        error: error instanceof Error ? error.message : String(error),
-      });
+			// Create trace with error status
+			const errorMetadata = mergeWithContext({
+				model: params.model,
+				temperature: params.temperature,
+				max_tokens: params.max_tokens,
+				...(captureInput ? { input: params.messages } : {}),
+				...(captureMetadata ? { params } : {}),
+				error: error instanceof Error ? error.message : String(error),
+			});
 
-      await evalClient.traces
-        .create({
-          name: `Anthropic: ${params.model}`,
-          traceId,
-          organizationId: organizationId || evalClient.getOrganizationId(),
-          status: "error",
-          durationMs,
-          metadata: errorMetadata,
-        })
-        .catch(() => {
-          // Ignore errors in trace creation to avoid masking the original error
-        });
+			await evalClient.traces
+				.create({
+					name: `Anthropic: ${params.model}`,
+					traceId,
+					organizationId: organizationId || evalClient.getOrganizationId(),
+					status: "error",
+					durationMs,
+					metadata: errorMetadata,
+				})
+				.catch(() => {
+					// Ignore errors in trace creation to avoid masking the original error
+				});
 
-      throw error;
-    }
-  };
+			throw error;
+		}
+	};
 
-  return anthropic;
+	return anthropic;
 }
 
 /**
@@ -156,50 +156,50 @@ export function traceAnthropic(
  * ```
  */
 export async function traceAnthropicCall<T>(
-  evalClient: AIEvalClient,
-  name: string,
-  fn: () => Promise<T>,
-  options: AnthropicTraceOptions = {},
+	evalClient: AIEvalClient,
+	name: string,
+	fn: () => Promise<T>,
+	options: AnthropicTraceOptions = {},
 ): Promise<T> {
-  const startTime = Date.now();
-  const traceId = `anthropic-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+	const startTime = Date.now();
+	const traceId = `anthropic-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
-  try {
-    await evalClient.traces.create({
-      name,
-      traceId,
-      organizationId: options.organizationId || evalClient.getOrganizationId(),
-      status: "pending",
-      metadata: mergeWithContext({}),
-    });
+	try {
+		await evalClient.traces.create({
+			name,
+			traceId,
+			organizationId: options.organizationId || evalClient.getOrganizationId(),
+			status: "pending",
+			metadata: mergeWithContext({}),
+		});
 
-    const result = await fn();
-    const durationMs = Date.now() - startTime;
+		const result = await fn();
+		const durationMs = Date.now() - startTime;
 
-    await evalClient.traces.create({
-      name,
-      traceId,
-      organizationId: options.organizationId || evalClient.getOrganizationId(),
-      status: "success",
-      durationMs,
-      metadata: mergeWithContext({}),
-    });
+		await evalClient.traces.create({
+			name,
+			traceId,
+			organizationId: options.organizationId || evalClient.getOrganizationId(),
+			status: "success",
+			durationMs,
+			metadata: mergeWithContext({}),
+		});
 
-    return result;
-  } catch (error) {
-    const durationMs = Date.now() - startTime;
+		return result;
+	} catch (error) {
+		const durationMs = Date.now() - startTime;
 
-    await evalClient.traces.create({
-      name,
-      traceId,
-      organizationId: options.organizationId || evalClient.getOrganizationId(),
-      status: "error",
-      durationMs,
-      metadata: mergeWithContext({
-        error: error instanceof Error ? error.message : String(error),
-      }),
-    });
+		await evalClient.traces.create({
+			name,
+			traceId,
+			organizationId: options.organizationId || evalClient.getOrganizationId(),
+			status: "error",
+			durationMs,
+			metadata: mergeWithContext({
+				error: error instanceof Error ? error.message : String(error),
+			}),
+		});
 
-    throw error;
-  }
+		throw error;
+	}
 }

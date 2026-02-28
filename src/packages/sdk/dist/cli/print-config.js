@@ -135,13 +135,20 @@ function buildResolvedConfig(cwd, flags) {
                 : "default";
     fields.push({
         key: "baseUrl",
-        value: flags.baseUrl || envBaseUrl || fileConfig?.baseUrl || "http://localhost:3000",
+        value: flags.baseUrl ||
+            envBaseUrl ||
+            fileConfig?.baseUrl ||
+            "http://localhost:3000",
         source: baseUrlSource,
     });
     // apiKey (always redacted)
     const envApiKey = process.env.EVALAI_API_KEY;
     const rawApiKey = flags.apiKey || envApiKey || "";
-    const apiKeySource = flags.apiKey ? "arg" : envApiKey ? "env" : "default";
+    const apiKeySource = flags.apiKey
+        ? "arg"
+        : envApiKey
+            ? "env"
+            : "default";
     fields.push({
         key: "apiKey",
         value: redact(rawApiKey) ?? "(not set)",
@@ -150,7 +157,11 @@ function buildResolvedConfig(cwd, flags) {
     });
     // profile
     const profileName = (flags.profile || fileConfig?.profile);
-    const profileSource = flags.profile ? "arg" : fileConfig?.profile ? "file" : "default";
+    const profileSource = flags.profile
+        ? "arg"
+        : fileConfig?.profile
+            ? "file"
+            : "default";
     fields.push({
         key: "profile",
         value: profileName ?? null,
@@ -184,7 +195,11 @@ function buildResolvedConfig(cwd, flags) {
         });
     }
     // baseline
-    const baselineSource = flags.baseline ? "arg" : fileConfig?.baseline ? "file" : "default";
+    const baselineSource = flags.baseline
+        ? "arg"
+        : fileConfig?.baseline
+            ? "file"
+            : "default";
     fields.push({
         key: "baseline",
         value: merged.baseline ?? "published",

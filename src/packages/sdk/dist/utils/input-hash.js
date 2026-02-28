@@ -34,5 +34,8 @@ function normalizeInput(input) {
 }
 /** SHA-256 hash of normalized input. */
 function sha256Input(s) {
-    return node_crypto_1.default.createHash("sha256").update(normalizeInput(s), "utf8").digest("hex");
+    return node_crypto_1.default
+        .createHash("sha256")
+        .update(normalizeInput(s), "utf8")
+        .digest("hex");
 }

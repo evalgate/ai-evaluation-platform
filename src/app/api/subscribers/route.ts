@@ -8,14 +8,19 @@ import { type NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/db";
 import { emailSubscribers } from "@/db/schema";
-import { internalError, notFound, validationError, zodValidationError } from "@/lib/api/errors";
+import {
+	internalError,
+	notFound,
+	validationError,
+	zodValidationError,
+} from "@/lib/api/errors";
 import { logger } from "@/lib/logger";
 
 const subscribeSchema = z.object({
-  email: z.string().email("Invalid email address"),
-  source: z.string().min(1, "Source is required"),
-  context: z.record(z.unknown()).optional(),
-  subscribedAt: z.string().optional(),
+	email: z.string().email("Invalid email address"),
+	source: z.string().min(1, "Source is required"),
+	context: z.record(z.unknown()).optional(),
+	subscribedAt: z.string().optional(),
 });
 
 /**
@@ -23,106 +28,106 @@ const subscribeSchema = z.object({
  * Subscribe a new email address
  */
 export async function POST(request: NextRequest) {
-  try {
-    const body = await request.json();
+	try {
+		const body = await request.json();
 
-    // Validate input
-    const validated = subscribeSchema.parse(body);
-    const { email, source, context = {} } = validated;
+		// Validate input
+		const validated = subscribeSchema.parse(body);
+		const { email, source, context = {} } = validated;
 
-    // Check if already subscribed
-    const existing = await db
-      .select()
-      .from(emailSubscribers)
-      .where(eq(emailSubscribers.email, email))
-      .limit(1);
+		// Check if already subscribed
+		const existing = await db
+			.select()
+			.from(emailSubscribers)
+			.where(eq(emailSubscribers.email, email))
+			.limit(1);
 
-    if (existing.length > 0) {
-      const subscriber = existing[0];
+		if (existing.length > 0) {
+			const subscriber = existing[0];
 
-      // If they previously unsubscribed, re-subscribe them
-      if (subscriber.status === "unsubscribed") {
-        await db
-          .update(emailSubscribers)
-          .set({
-            status: "active",
-            source, // Update source
-            context: JSON.stringify(context),
-            subscribedAt: new Date(),
-            unsubscribedAt: null,
-            updatedAt: new Date(),
-          })
-          .where(eq(emailSubscribers.email, email));
+			// If they previously unsubscribed, re-subscribe them
+			if (subscriber.status === "unsubscribed") {
+				await db
+					.update(emailSubscribers)
+					.set({
+						status: "active",
+						source, // Update source
+						context: JSON.stringify(context),
+						subscribedAt: new Date(),
+						unsubscribedAt: null,
+						updatedAt: new Date(),
+					})
+					.where(eq(emailSubscribers.email, email));
 
-        logger.info("Email re-subscribed", { email, source });
+				logger.info("Email re-subscribed", { email, source });
 
-        return NextResponse.json({
-          success: true,
-          message: "Welcome back! You have been re-subscribed.",
-          subscriber: { email, status: "active" },
-        });
-      }
+				return NextResponse.json({
+					success: true,
+					message: "Welcome back! You have been re-subscribed.",
+					subscriber: { email, status: "active" },
+				});
+			}
 
-      // Already active subscriber
-      return NextResponse.json({
-        success: true,
-        message: "You are already subscribed!",
-        subscriber: { email, status: subscriber.status },
-      });
-    }
+			// Already active subscriber
+			return NextResponse.json({
+				success: true,
+				message: "You are already subscribed!",
+				subscriber: { email, status: subscriber.status },
+			});
+		}
 
-    // Determine tags based on source and context
-    const tags = generateTags(source, context);
+		// Determine tags based on source and context
+		const tags = generateTags(source, context);
 
-    // Create new subscriber
-    const now = new Date();
-    const [newSubscriber] = await db
-      .insert(emailSubscribers)
-      .values({
-        email,
-        source,
-        context: JSON.stringify(context),
-        status: "active",
-        tags: JSON.stringify(tags),
-        subscribedAt: now,
-        unsubscribedAt: null,
-        lastEmailSentAt: null,
-        emailCount: 0,
-        createdAt: now,
-        updatedAt: now,
-      })
-      .returning();
+		// Create new subscriber
+		const now = new Date();
+		const [newSubscriber] = await db
+			.insert(emailSubscribers)
+			.values({
+				email,
+				source,
+				context: JSON.stringify(context),
+				status: "active",
+				tags: JSON.stringify(tags),
+				subscribedAt: now,
+				unsubscribedAt: null,
+				lastEmailSentAt: null,
+				emailCount: 0,
+				createdAt: now,
+				updatedAt: now,
+			})
+			.returning();
 
-    logger.info("New email subscriber", { email, source, tags });
+		logger.info("New email subscriber", { email, source, tags });
 
-    // TODO: Integrate with email service (Resend, SendGrid, etc.)
-    // - Send welcome email with evaluation results
-    // - Add to nurture sequence
-    // - Notify team in Slack
+		// TODO: Integrate with email service (Resend, SendGrid, etc.)
+		// - Send welcome email with evaluation results
+		// - Add to nurture sequence
+		// - Notify team in Slack
 
-    return NextResponse.json(
-      {
-        success: true,
-        message: "Successfully subscribed! Check your email.",
-        subscriber: {
-          email: newSubscriber.email,
-          status: newSubscriber.status,
-          tags,
-        },
-      },
-      { status: 201 },
-    );
-  } catch (error: unknown) {
-    logger.error("Failed to subscribe email", {
-      error: error instanceof Error ? error.message : String(error),
-    });
+		return NextResponse.json(
+			{
+				success: true,
+				message: "Successfully subscribed! Check your email.",
+				subscriber: {
+					email: newSubscriber.email,
+					status: newSubscriber.status,
+					tags,
+				},
+			},
+			{ status: 201 },
+		);
+	} catch (error: unknown) {
+		logger.error("Failed to subscribe email", {
+			error: error instanceof Error ? error.message : String(error),
+		});
 
-    if (error instanceof z.ZodError) {
-      return zodValidationError(error);
-    }
+		if (error instanceof z.ZodError) {
+			return zodValidationError(error);
+		}
 
-    return internalError("Failed to subscribe. Please try again.");
-  }
+		return internalError("Failed to subscribe. Please try again.");
+	}
 }
 
 /**
@@ -130,88 +135,91 @@ export async function POST(request: NextRequest) {
  * Unsubscribe an email address
  */
 export async function DELETE(request: NextRequest) {
-  try {
-    const email = request.nextUrl.searchParams.get("email");
+	try {
+		const email = request.nextUrl.searchParams.get("email");
 
-    if (!email) {
-      return validationError("Email parameter is required");
-    }
+		if (!email) {
+			return validationError("Email parameter is required");
+		}
 
-    // Find subscriber
-    const existing = await db
-      .select()
-      .from(emailSubscribers)
-      .where(eq(emailSubscribers.email, email))
-      .limit(1);
+		// Find subscriber
+		const existing = await db
+			.select()
+			.from(emailSubscribers)
+			.where(eq(emailSubscribers.email, email))
+			.limit(1);
 
-    if (existing.length === 0) {
-      return notFound("Email not found");
-    }
+		if (existing.length === 0) {
+			return notFound("Email not found");
+		}
 
-    // Update status to unsubscribed
-    await db
-      .update(emailSubscribers)
-      .set({
-        status: "unsubscribed",
-        unsubscribedAt: new Date(),
-        updatedAt: new Date(),
-      })
-      .where(eq(emailSubscribers.email, email));
+		// Update status to unsubscribed
+		await db
+			.update(emailSubscribers)
+			.set({
+				status: "unsubscribed",
+				unsubscribedAt: new Date(),
+				updatedAt: new Date(),
+			})
+			.where(eq(emailSubscribers.email, email));
 
-    logger.info("Email unsubscribed", { email });
+		logger.info("Email unsubscribed", { email });
 
-    return NextResponse.json({
-      success: true,
-      message: "Successfully unsubscribed",
-    });
-  } catch (error: unknown) {
-    logger.error("Failed to unsubscribe email", {
-      error: error instanceof Error ? error.message : String(error),
-    });
+		return NextResponse.json({
+			success: true,
+			message: "Successfully unsubscribed",
+		});
+	} catch (error: unknown) {
+		logger.error("Failed to unsubscribe email", {
+			error: error instanceof Error ? error.message : String(error),
+		});
 
-    return internalError("Failed to unsubscribe. Please try again.");
-  }
+		return internalError("Failed to unsubscribe. Please try again.");
+	}
 }
 
 /**
  * Generate tags based on source and context
  */
-function generateTags(source: string, context: Record<string, unknown>): string[] {
-  const tags: string[] = [];
+function generateTags(
+	source: string,
+	context: Record<string, unknown>,
+): string[] {
+	const tags: string[] = [];
 
-  // Source tags
-  tags.push(`source:${source}`);
+	// Source tags
+	tags.push(`source:${source}`);
 
-  // Context-based tags
-  if (source === "playground") {
-    tags.push("playground-lead");
-    tags.push("high-intent");
+	// Context-based tags
+	if (source === "playground") {
+		tags.push("playground-lead");
+		tags.push("high-intent");
 
-    if (context.scenario) {
-      tags.push(`scenario:${context.scenario}`);
-    }
+		if (context.scenario) {
+			tags.push(`scenario:${context.scenario}`);
+		}
 
-    if (context.score && (context.score as number) > 80) {
-      tags.push("impressed-by-results");
-    }
+		if (context.score && (context.score as number) > 80) {
+			tags.push("impressed-by-results");
+		}
 
-    if (context.testsPassed && (context.testsPassed as number) > 5) {
-      tags.push("engaged-user");
-    }
-  }
+		if (context.testsPassed && (context.testsPassed as number) > 5) {
+			tags.push("engaged-user");
+		}
+	}
 
-  if (source === "homepage") {
-    tags.push("homepage-lead");
-  }
+	if (source === "homepage") {
+		tags.push("homepage-lead");
+	}
 
-  if (source === "blog") {
-    tags.push("content-reader");
-  }
+	if (source === "blog") {
+		tags.push("content-reader");
+	}
 
-  if (source === "templates") {
-    tags.push("template-user");
-    tags.push("developer");
-  }
+	if (source === "templates") {
+		tags.push("template-user");
+		tags.push("developer");
+	}
 
-  return tags;
+	return tags;
 }

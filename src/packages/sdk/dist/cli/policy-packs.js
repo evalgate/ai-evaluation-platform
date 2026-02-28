@@ -22,7 +22,10 @@ exports.POLICY_PACKS = {
         1: {
             policyId: "SOC2",
             version: 1,
-            thresholds: { requiredSafetyRate: 0.95, maxFlags: ["SAFETY_RISK", "LOW_PASS_RATE"] },
+            thresholds: {
+                requiredSafetyRate: 0.95,
+                maxFlags: ["SAFETY_RISK", "LOW_PASS_RATE"],
+            },
             rationale: "SOC2 trust criteria for security and availability.",
             checks: ["safety_rate", "flag_restrictions"],
         },
@@ -40,7 +43,10 @@ exports.POLICY_PACKS = {
         1: {
             policyId: "PCI_DSS",
             version: 1,
-            thresholds: { requiredSafetyRate: 0.99, maxFlags: ["SAFETY_RISK", "LOW_PASS_RATE"] },
+            thresholds: {
+                requiredSafetyRate: 0.99,
+                maxFlags: ["SAFETY_RISK", "LOW_PASS_RATE"],
+            },
             rationale: "PCI DSS cardholder data security standards.",
             checks: ["safety_rate", "flag_restrictions"],
         },

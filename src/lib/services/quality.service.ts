@@ -11,235 +11,249 @@ import { evaluationRuns, evaluations, qualityScores } from "@/db/schema";
 export type BaselineMode = "published" | "previous" | "production" | "auto";
 
 export type QualityLatestResult =
-  | {
-      score: null;
-      message: string;
-    }
-  | {
-      id: number;
-      evaluationRunId: number;
-      evaluationId: number;
-      organizationId: number;
-      score: number;
-      total: number | null;
-      traceCoverageRate: string | null;
-      provenanceCoverageRate: string | null;
-      breakdown: unknown;
-      flags: unknown;
-      evidenceLevel: string | null;
-      scoringVersion: string;
-      model: string | null;
-      createdAt: string;
-      baselineScore: number | null;
-      regressionDelta: number | null;
-      regressionDetected: boolean;
-      baselineMissing?: boolean;
-    };
+	| {
+			score: null;
+			message: string;
+	  }
+	| {
+			id: number;
+			evaluationRunId: number;
+			evaluationId: number;
+			organizationId: number;
+			score: number;
+			total: number | null;
+			traceCoverageRate: string | null;
+			provenanceCoverageRate: string | null;
+			breakdown: unknown;
+			flags: unknown;
+			evidenceLevel: string | null;
+			scoringVersion: string;
+			model: string | null;
+			createdAt: string;
+			baselineScore: number | null;
+			regressionDelta: number | null;
+			regressionDetected: boolean;
+			baselineMissing?: boolean;
+	  };
 
 export type QualityTrendResult = {
-  data: Array<{
-    id: number;
-    evaluationRunId: number;
-    evaluationId: number;
-    organizationId: number;
-    score: number;
-    total: number | null;
-    traceCoverageRate: string | null;
-    provenanceCoverageRate: string | null;
-    breakdown: unknown;
-    flags: unknown;
-    evidenceLevel: string | null;
-    scoringVersion: string;
-    model: string | null;
-    createdAt: string;
-  }>;
-  count: number;
+	data: Array<{
+		id: number;
+		evaluationRunId: number;
+		evaluationId: number;
+		organizationId: number;
+		score: number;
+		total: number | null;
+		traceCoverageRate: string | null;
+		provenanceCoverageRate: string | null;
+		breakdown: unknown;
+		flags: unknown;
+		evidenceLevel: string | null;
+		scoringVersion: string;
+		model: string | null;
+		createdAt: string;
+	}>;
+	count: number;
 };
 
 export const qualityService = {
-  /**
-   * Get latest quality score for an evaluation.
-   * Returns null if evaluation not found or not in org.
-   */
-  async latest(
-    organizationId: number,
-    evaluationId: number,
-    opts?: { baseline?: BaselineMode },
-  ): Promise<QualityLatestResult | null> {
-    let baseline = opts?.baseline ?? "published";
+	/**
+	 * Get latest quality score for an evaluation.
+	 * Returns null if evaluation not found or not in org.
+	 */
+	async latest(
+		organizationId: number,
+		evaluationId: number,
+		opts?: { baseline?: BaselineMode },
+	): Promise<QualityLatestResult | null> {
+		let baseline = opts?.baseline ?? "published";
 
-    const [evaluation] = await db
-      .select()
-      .from(evaluations)
-      .where(and(eq(evaluations.id, evaluationId), eq(evaluations.organizationId, organizationId)))
-      .limit(1);
+		const [evaluation] = await db
+			.select()
+			.from(evaluations)
+			.where(
+				and(
+					eq(evaluations.id, evaluationId),
+					eq(evaluations.organizationId, organizationId),
+				),
+			)
+			.limit(1);
 
-    if (!evaluation) return null;
+		if (!evaluation) return null;
 
-    const [latest] = await db
-      .select()
-      .from(qualityScores)
-      .where(
-        and(
-          eq(qualityScores.evaluationId, evaluationId),
-          eq(qualityScores.organizationId, organizationId),
-        ),
-      )
-      .orderBy(desc(qualityScores.createdAt), desc(qualityScores.id))
-      .limit(1);
+		const [latest] = await db
+			.select()
+			.from(qualityScores)
+			.where(
+				and(
+					eq(qualityScores.evaluationId, evaluationId),
+					eq(qualityScores.organizationId, organizationId),
+				),
+			)
+			.orderBy(desc(qualityScores.createdAt), desc(qualityScores.id))
+			.limit(1);
 
-    if (!latest) {
-      return { score: null, message: "No quality scores computed yet" };
-    }
+		if (!latest) {
+			return { score: null, message: "No quality scores computed yet" };
+		}
 
-    let baselineRunId: number | null = null;
+		let baselineRunId: number | null = null;
 
-    // "auto": try published first, then previous
-    if (baseline === "auto") {
-      baseline = "published";
-    }
+		// "auto": try published first, then previous
+		if (baseline === "auto") {
+			baseline = "published";
+		}
 
-    if (baseline === "published" && evaluation.publishedRunId) {
-      baselineRunId = evaluation.publishedRunId;
-    } else if (baseline === "previous") {
-      const prevRuns = await db
-        .select({ id: evaluationRuns.id })
-        .from(evaluationRuns)
-        .where(
-          and(
-            eq(evaluationRuns.evaluationId, evaluationId),
-            eq(evaluationRuns.organizationId, organizationId),
-            sql`${evaluationRuns.id} != ${latest.evaluationRunId}`,
-          ),
-        )
-        .orderBy(desc(evaluationRuns.createdAt), desc(evaluationRuns.id))
-        .limit(1);
-      baselineRunId = prevRuns[0]?.id ?? null;
-    } else if (baseline === "production") {
-      const prodRuns = await db
-        .select({ id: evaluationRuns.id })
-        .from(evaluationRuns)
-        .where(
-          and(
-            eq(evaluationRuns.evaluationId, evaluationId),
-            eq(evaluationRuns.organizationId, organizationId),
-            eq(evaluationRuns.environment, "prod"),
-            sql`${evaluationRuns.id} != ${latest.evaluationRunId}`,
-          ),
-        )
-        .orderBy(desc(evaluationRuns.createdAt), desc(evaluationRuns.id))
-        .limit(1);
-      baselineRunId = prodRuns[0]?.id ?? null;
-    }
+		if (baseline === "published" && evaluation.publishedRunId) {
+			baselineRunId = evaluation.publishedRunId;
+		} else if (baseline === "previous") {
+			const prevRuns = await db
+				.select({ id: evaluationRuns.id })
+				.from(evaluationRuns)
+				.where(
+					and(
+						eq(evaluationRuns.evaluationId, evaluationId),
+						eq(evaluationRuns.organizationId, organizationId),
+						sql`${evaluationRuns.id} != ${latest.evaluationRunId}`,
+					),
+				)
+				.orderBy(desc(evaluationRuns.createdAt), desc(evaluationRuns.id))
+				.limit(1);
+			baselineRunId = prevRuns[0]?.id ?? null;
+		} else if (baseline === "production") {
+			const prodRuns = await db
+				.select({ id: evaluationRuns.id })
+				.from(evaluationRuns)
+				.where(
+					and(
+						eq(evaluationRuns.evaluationId, evaluationId),
+						eq(evaluationRuns.organizationId, organizationId),
+						eq(evaluationRuns.environment, "prod"),
+						sql`${evaluationRuns.id} != ${latest.evaluationRunId}`,
+					),
+				)
+				.orderBy(desc(evaluationRuns.createdAt), desc(evaluationRuns.id))
+				.limit(1);
+			baselineRunId = prodRuns[0]?.id ?? null;
+		}
 
-    let baselineScore: number | null = null;
-    let regressionDelta: number | null = null;
-    let baselineMissing = false;
+		let baselineScore: number | null = null;
+		let regressionDelta: number | null = null;
+		let baselineMissing = false;
 
-    if (baselineRunId != null) {
-      const [baselineQs] = await db
-        .select()
-        .from(qualityScores)
-        .where(
-          and(
-            eq(qualityScores.evaluationRunId, baselineRunId),
-            eq(qualityScores.organizationId, organizationId),
-          ),
-        )
-        .limit(1);
+		if (baselineRunId != null) {
+			const [baselineQs] = await db
+				.select()
+				.from(qualityScores)
+				.where(
+					and(
+						eq(qualityScores.evaluationRunId, baselineRunId),
+						eq(qualityScores.organizationId, organizationId),
+					),
+				)
+				.limit(1);
 
-      if (baselineQs) {
-        baselineScore = baselineQs.score;
-        regressionDelta = latest.score - baselineQs.score;
-      } else {
-        baselineMissing = true;
-      }
-    } else {
-      baselineMissing = baseline === "published" && !evaluation.publishedRunId;
-      if (baseline === "previous" || baseline === "production") {
-        baselineMissing = true;
-      }
-    }
+			if (baselineQs) {
+				baselineScore = baselineQs.score;
+				regressionDelta = latest.score - baselineQs.score;
+			} else {
+				baselineMissing = true;
+			}
+		} else {
+			baselineMissing = baseline === "published" && !evaluation.publishedRunId;
+			if (baseline === "previous" || baseline === "production") {
+				baselineMissing = true;
+			}
+		}
 
-    // "auto" fallback: if published missing, retry with previous
-    if (opts?.baseline === "auto" && baselineMissing && baseline === "published") {
-      const prevRuns = await db
-        .select({ id: evaluationRuns.id })
-        .from(evaluationRuns)
-        .where(
-          and(
-            eq(evaluationRuns.evaluationId, evaluationId),
-            eq(evaluationRuns.organizationId, organizationId),
-            sql`${evaluationRuns.id} != ${latest.evaluationRunId}`,
-          ),
-        )
-        .orderBy(desc(evaluationRuns.createdAt), desc(evaluationRuns.id))
-        .limit(1);
-      const prevRunId = prevRuns[0]?.id ?? null;
-      if (prevRunId != null) {
-        const [baselineQs] = await db
-          .select()
-          .from(qualityScores)
-          .where(
-            and(
-              eq(qualityScores.evaluationRunId, prevRunId),
-              eq(qualityScores.organizationId, organizationId),
-            ),
-          )
-          .limit(1);
-        if (baselineQs) {
-          baselineRunId = prevRunId;
-          baselineScore = baselineQs.score;
-          regressionDelta = latest.score - baselineQs.score;
-          baselineMissing = false;
-        }
-      }
-    }
+		// "auto" fallback: if published missing, retry with previous
+		if (
+			opts?.baseline === "auto" &&
+			baselineMissing &&
+			baseline === "published"
+		) {
+			const prevRuns = await db
+				.select({ id: evaluationRuns.id })
+				.from(evaluationRuns)
+				.where(
+					and(
+						eq(evaluationRuns.evaluationId, evaluationId),
+						eq(evaluationRuns.organizationId, organizationId),
+						sql`${evaluationRuns.id} != ${latest.evaluationRunId}`,
+					),
+				)
+				.orderBy(desc(evaluationRuns.createdAt), desc(evaluationRuns.id))
+				.limit(1);
+			const prevRunId = prevRuns[0]?.id ?? null;
+			if (prevRunId != null) {
+				const [baselineQs] = await db
+					.select()
+					.from(qualityScores)
+					.where(
+						and(
+							eq(qualityScores.evaluationRunId, prevRunId),
+							eq(qualityScores.organizationId, organizationId),
+						),
+					)
+					.limit(1);
+				if (baselineQs) {
+					baselineRunId = prevRunId;
+					baselineScore = baselineQs.score;
+					regressionDelta = latest.score - baselineQs.score;
+					baselineMissing = false;
+				}
+			}
+		}
 
-    return {
-      ...latest,
-      baselineScore,
-      regressionDelta,
-      regressionDetected: regressionDelta !== null && regressionDelta <= -5,
-      ...(baselineMissing && { baselineMissing: true }),
-      ...(baselineRunId != null && { baselineRunId }),
-    };
-  },
+		return {
+			...latest,
+			baselineScore,
+			regressionDelta,
+			regressionDetected: regressionDelta !== null && regressionDelta <= -5,
+			...(baselineMissing && { baselineMissing: true }),
+			...(baselineRunId != null && { baselineRunId }),
+		};
+	},
 
-  /**
-   * Get quality score trend for an evaluation.
-   * Returns null if evaluation not found or not in org.
-   */
-  async trend(
-    organizationId: number,
-    evaluationId: number,
-    opts?: { model?: string; limit?: number },
-  ): Promise<QualityTrendResult | null> {
-    const [evaluation] = await db
-      .select()
-      .from(evaluations)
-      .where(and(eq(evaluations.id, evaluationId), eq(evaluations.organizationId, organizationId)))
-      .limit(1);
+	/**
+	 * Get quality score trend for an evaluation.
+	 * Returns null if evaluation not found or not in org.
+	 */
+	async trend(
+		organizationId: number,
+		evaluationId: number,
+		opts?: { model?: string; limit?: number },
+	): Promise<QualityTrendResult | null> {
+		const [evaluation] = await db
+			.select()
+			.from(evaluations)
+			.where(
+				and(
+					eq(evaluations.id, evaluationId),
+					eq(evaluations.organizationId, organizationId),
+				),
+			)
+			.limit(1);
 
-    if (!evaluation) return null;
+		if (!evaluation) return null;
 
-    const limit = Math.min(opts?.limit ?? 20, 100);
-    const conditions = [
-      eq(qualityScores.evaluationId, evaluationId),
-      eq(qualityScores.organizationId, organizationId),
-    ];
+		const limit = Math.min(opts?.limit ?? 20, 100);
+		const conditions = [
+			eq(qualityScores.evaluationId, evaluationId),
+			eq(qualityScores.organizationId, organizationId),
+		];
 
-    if (opts?.model) {
-      conditions.push(eq(qualityScores.model, opts.model));
-    }
+		if (opts?.model) {
+			conditions.push(eq(qualityScores.model, opts.model));
+		}
 
-    const trend = await db
-      .select()
-      .from(qualityScores)
-      .where(and(...conditions))
-      .orderBy(desc(qualityScores.createdAt))
-      .limit(limit);
+		const trend = await db
+			.select()
+			.from(qualityScores)
+			.where(and(...conditions))
+			.orderBy(desc(qualityScores.createdAt))
+			.limit(limit);
 
-    return { data: trend.reverse(), count: trend.length };
-  },
+		return { data: trend.reverse(), count: trend.length };
+	},
 };

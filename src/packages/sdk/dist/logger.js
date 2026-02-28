@@ -133,10 +133,14 @@ class Logger {
         }
         // Level
         const levelStr = entry.level.toUpperCase().padEnd(5);
-        parts.push(this.options.pretty ? `${LOG_COLORS[entry.level]}${levelStr}${COLOR_RESET}` : levelStr);
+        parts.push(this.options.pretty
+            ? `${LOG_COLORS[entry.level]}${levelStr}${COLOR_RESET}`
+            : levelStr);
         // Prefix
         if (entry.prefix) {
-            parts.push(this.options.pretty ? `\x1b[35m[${entry.prefix}]${COLOR_RESET}` : `[${entry.prefix}]`);
+            parts.push(this.options.pretty
+                ? `\x1b[35m[${entry.prefix}]${COLOR_RESET}`
+                : `[${entry.prefix}]`);
         }
         // Message
         parts.push(entry.message);

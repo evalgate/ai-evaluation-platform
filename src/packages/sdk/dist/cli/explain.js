@@ -87,7 +87,9 @@ const REPORT_SEARCH_PATHS = [
 ];
 function findReport(cwd, explicitPath) {
     if (explicitPath) {
-        const abs = path.isAbsolute(explicitPath) ? explicitPath : path.join(cwd, explicitPath);
+        const abs = path.isAbsolute(explicitPath)
+            ? explicitPath
+            : path.join(cwd, explicitPath);
         return fs.existsSync(abs) ? abs : null;
     }
     for (const rel of REPORT_SEARCH_PATHS) {
@@ -115,16 +117,20 @@ function classifyRootCauses(report) {
         causes.push("cost_regression");
     }
     // Latency regression
-    if (reasonCode === "LATENCY_BUDGET_EXCEEDED" || reasonCode === "LATENCY_RISK") {
+    if (reasonCode === "LATENCY_BUDGET_EXCEEDED" ||
+        reasonCode === "LATENCY_RISK") {
         causes.push("latency_regression");
     }
     // Coverage drop (test count decreased)
-    if (reasonCode === "LOW_SAMPLE_SIZE" || reasonCode === "INSUFFICIENT_EVIDENCE") {
+    if (reasonCode === "LOW_SAMPLE_SIZE" ||
+        reasonCode === "INSUFFICIENT_EVIDENCE") {
         causes.push("coverage_drop");
     }
     // Analyze failed cases for drift patterns
     if (failedCases.length > 0) {
-        const outputs = failedCases.map((fc) => (fc.output ?? "").toLowerCase()).filter(Boolean);
+        const outputs = failedCases
+            .map((fc) => (fc.output ?? "").toLowerCase())
+            .filter(Boolean);
         const expectedOutputs = failedCases
             .map((fc) => (fc.expectedOutput ?? "").toLowerCase())
             .filter(Boolean);
@@ -136,7 +142,9 @@ function classifyRootCauses(report) {
             causes.push("formatting_drift");
         }
         // Tool use drift: output mentions tool calls or function calls
-        const hasToolIssue = outputs.some((o) => o.includes("tool_call") || o.includes("function_call") || o.includes("tool_use"));
+        const hasToolIssue = outputs.some((o) => o.includes("tool_call") ||
+            o.includes("function_call") ||
+            o.includes("tool_use"));
         if (hasToolIssue) {
             causes.push("tool_use_drift");
         }
@@ -356,7 +364,9 @@ function buildExplainOutput(report, reportPath) {
 function buildFromCheckReport(report, reportPath) {
     const failedCases = report.failedCases ?? [];
     // Top failures (up to 3)
-    const topFailures = failedCases.slice(0, 3).map((fc, i) => ({
+    const topFailures = failedCases
+        .slice(0, 3)
+        .map((fc, i) => ({
         rank: i + 1,
         name: fc.name,
         input: fc.inputSnippet || fc.input,
@@ -444,7 +454,11 @@ function buildFromBuiltinReport(report, reportPath) {
 }
 // ── Output formatting ──
 function printHuman(output) {
-    const verdictIcon = output.verdict === "pass" ? "\u2705" : output.verdict === "warn" ? "\u26A0\uFE0F" : "\u274C";
+    const verdictIcon = output.verdict === "pass"
+        ? "\u2705"
+        : output.verdict === "warn"
+            ? "\u26A0\uFE0F"
+            : "\u274C";
     console.log(`\n  evalai explain\n`);
     console.log(`  ${verdictIcon} Verdict: ${output.verdict.toUpperCase()}`);
     if (output.score != null) {
@@ -460,7 +474,11 @@ function printHuman(output) {
     if (output.changes.length > 0) {
         console.log("\n  What changed:");
         for (const c of output.changes) {
-            const arrow = c.direction === "worse" ? "\u2193" : c.direction === "better" ? "\u2191" : "\u2192";
+            const arrow = c.direction === "worse"
+                ? "\u2193"
+                : c.direction === "better"
+                    ? "\u2191"
+                    : "\u2192";
             console.log(`    ${arrow} ${c.metric}: ${c.baseline} \u2192 ${c.current}`);
         }
     }
@@ -490,7 +508,11 @@ function printHuman(output) {
     if (output.suggestedFixes.length > 0) {
         console.log("\n  Suggested fixes:");
         for (const fix of output.suggestedFixes) {
-            const pIcon = fix.priority === "high" ? "\u203C\uFE0F" : fix.priority === "medium" ? "\u2757" : "\u2022";
+            const pIcon = fix.priority === "high"
+                ? "\u203C\uFE0F"
+                : fix.priority === "medium"
+                    ? "\u2757"
+                    : "\u2022";
             console.log(`    ${pIcon} ${fix.action}`);
             console.log(`      ${fix.detail}`);
         }
@@ -503,7 +525,9 @@ async function runExplain(argv) {
     const cwd = process.cwd();
     const reportPath = findReport(cwd, flags.reportPath);
     if (!reportPath) {
-        const searched = flags.reportPath ? flags.reportPath : REPORT_SEARCH_PATHS.join(", ");
+        const searched = flags.reportPath
+            ? flags.reportPath
+            : REPORT_SEARCH_PATHS.join(", ");
         console.error(`\n  \u274C No report found. Searched: ${searched}`);
         console.error("  Run a gate first:");
         console.error("    npx evalai gate --format json");
@@ -519,7 +543,9 @@ async function runExplain(argv) {
         return 1;
     }
     // Schema version compatibility check
-    const reportSchema = typeof reportData.schemaVersion === "number" ? reportData.schemaVersion : undefined;
+    const reportSchema = typeof reportData.schemaVersion === "number"
+        ? reportData.schemaVersion
+        : undefined;
     if (reportSchema != null && reportSchema > types_1.CHECK_REPORT_SCHEMA_VERSION) {
         console.error(`\n  \u26A0\uFE0F  Report schema version ${reportSchema} is newer than this CLI supports (v${types_1.CHECK_REPORT_SCHEMA_VERSION}).`);
         console.error("  Update your SDK: npm install @pauly4010/evalai-sdk@latest\n");

@@ -3,26 +3,26 @@
  */
 
 export interface PaginationParams {
-  limit?: number;
-  cursor?: string;
-  offset?: number;
+	limit?: number;
+	cursor?: string;
+	offset?: number;
 }
 
 export interface PaginatedResponse<T> {
-  data: T[];
-  pagination: {
-    hasMore: boolean;
-    nextCursor?: string;
-    prevCursor?: string;
-    total?: number;
-    limit: number;
-    offset?: number;
-  };
+	data: T[];
+	pagination: {
+		hasMore: boolean;
+		nextCursor?: string;
+		prevCursor?: string;
+		total?: number;
+		limit: number;
+		offset?: number;
+	};
 }
 
 export interface PaginationOptions {
-  limit?: number;
-  offset?: number;
+	limit?: number;
+	offset?: number;
 }
 
 /**
@@ -30,152 +30,168 @@ export interface PaginationOptions {
  * Allows for easy iteration over all pages
  */
 export class PaginatedIterator<T> implements AsyncIterableIterator<T[]> {
-  private currentOffset: number = 0;
-  private hasMore: boolean = true;
+	private currentOffset: number = 0;
+	private hasMore: boolean = true;
 
-  constructor(
-    private fetchFn: (offset: number, limit: number) => Promise<{ data: T[]; hasMore: boolean }>,
-    private limit: number = 50,
-  ) {}
+	constructor(
+		private fetchFn: (
+			offset: number,
+			limit: number,
+		) => Promise<{ data: T[]; hasMore: boolean }>,
+		private limit: number = 50,
+	) {}
 
-  async next(): Promise<IteratorResult<T[]>> {
-    if (!this.hasMore) {
-      return { done: true, value: undefined };
-    }
+	async next(): Promise<IteratorResult<T[]>> {
+		if (!this.hasMore) {
+			return { done: true, value: undefined };
+		}
 
-    const result = await this.fetchFn(this.currentOffset, this.limit);
-    this.hasMore = result.hasMore;
-    this.currentOffset += this.limit;
+		const result = await this.fetchFn(this.currentOffset, this.limit);
+		this.hasMore = result.hasMore;
+		this.currentOffset += this.limit;
 
-    return {
-      done: false,
-      value: result.data,
-    };
-  }
+		return {
+			done: false,
+			value: result.data,
+		};
+	}
 
-  [Symbol.asyncIterator](): AsyncIterableIterator<T[]> {
-    return this;
-  }
+	[Symbol.asyncIterator](): AsyncIterableIterator<T[]> {
+		return this;
+	}
 
-  /**
-   * Collect all pages into a single array
-   * Warning: Use with caution on large datasets
-   */
-  async toArray(): Promise<T[]> {
-    const allItems: T[] = [];
+	/**
+	 * Collect all pages into a single array
+	 * Warning: Use with caution on large datasets
+	 */
+	async toArray(): Promise<T[]> {
+		const allItems: T[] = [];
 
-    for await (const page of this) {
-      allItems.push(...page);
-    }
+		for await (const page of this) {
+			allItems.push(...page);
+		}
 
-    return allItems;
-  }
+		return allItems;
+	}
 }
 
 /**
  * Helper to create paginated iterator
  */
 export function createPaginatedIterator<T>(
-  fetchFn: (offset: number, limit: number) => Promise<{ data: T[]; hasMore: boolean }>,
-  limit: number = 50,
+	fetchFn: (
+		offset: number,
+		limit: number,
+	) => Promise<{ data: T[]; hasMore: boolean }>,
+	limit: number = 50,
 ): PaginatedIterator<T> {
-  return new PaginatedIterator(fetchFn, limit);
+	return new PaginatedIterator(fetchFn, limit);
 }
 
 /**
  * Auto-paginate helper that fetches all pages automatically
  */
 export async function* autoPaginate<T>(
-  fetchFn: (offset: number, limit: number) => Promise<T[]>,
-  limit: number = 50,
+	fetchFn: (offset: number, limit: number) => Promise<T[]>,
+	limit: number = 50,
 ): AsyncGenerator<T, void, unknown> {
-  let offset = 0;
-  let hasMore = true;
+	let offset = 0;
+	let hasMore = true;
 
-  while (hasMore) {
-    const items = await fetchFn(offset, limit);
+	while (hasMore) {
+		const items = await fetchFn(offset, limit);
 
-    if (items.length === 0) {
-      break;
-    }
+		if (items.length === 0) {
+			break;
+		}
 
-    for (const item of items) {
-      yield item;
-    }
+		for (const item of items) {
+			yield item;
+		}
 
-    hasMore = items.length === limit;
-    offset += limit;
-  }
+		hasMore = items.length === limit;
+		offset += limit;
+	}
 }
 
 /**
  * Encode cursor for pagination (base64)
  */
 export function encodeCursor(data: unknown): string {
-  const json = JSON.stringify(data);
+	const json = JSON.stringify(data);
 
-  if (typeof globalThis !== "undefined" && "btoa" in globalThis) {
-    return (globalThis as any).btoa(json);
-  } else {
-    return Buffer.from(json).toString("base64");
-  }
+	if (typeof globalThis !== "undefined" && "btoa" in globalThis) {
+		return (globalThis as any).btoa(json);
+	} else {
+		return Buffer.from(json).toString("base64");
+	}
 }
 
 /**
  * Decode cursor from base64
  */
 export function decodeCursor(cursor: string): unknown {
-  try {
-    let json: string;
+	try {
+		let json: string;
 
-    if (typeof globalThis !== "undefined" && "atob" in globalThis) {
-      json = (globalThis as any).atob(cursor);
-    } else {
-      json = Buffer.from(cursor, "base64").toString("utf-8");
-    }
+		if (typeof globalThis !== "undefined" && "atob" in globalThis) {
+			json = (globalThis as any).atob(cursor);
+		} else {
+			json = Buffer.from(cursor, "base64").toString("utf-8");
+		}
 
-    return JSON.parse(json);
-  } catch (_error) {
-    throw new Error("Invalid cursor format");
-  }
+		return JSON.parse(json);
+	} catch (_error) {
+		throw new Error("Invalid cursor format");
+	}
 }
 
 /**
  * Create pagination metadata from response
  */
 export function createPaginationMeta<T>(
-  items: T[],
-  limit: number,
-  offset: number,
-  total?: number,
+	items: T[],
+	limit: number,
+	offset: number,
+	total?: number,
 ): PaginatedResponse<T>["pagination"] {
-  const hasMore = items.length === limit;
+	const hasMore = items.length === limit;
 
-  return {
-    hasMore,
-    limit,
-    offset,
-    total,
-    nextCursor: hasMore ? encodeCursor({ offset: offset + limit, limit }) : undefined,
-    prevCursor:
-      offset > 0 ? encodeCursor({ offset: Math.max(0, offset - limit), limit }) : undefined,
-  };
+	return {
+		hasMore,
+		limit,
+		offset,
+		total,
+		nextCursor: hasMore
+			? encodeCursor({ offset: offset + limit, limit })
+			: undefined,
+		prevCursor:
+			offset > 0
+				? encodeCursor({ offset: Math.max(0, offset - limit), limit })
+				: undefined,
+	};
 }
 
 /**
  * Parse pagination params from cursor or offset
  */
-export function parsePaginationParams(params: PaginationParams): { limit: number; offset: number } {
-  if (params.cursor) {
-    const decoded = decodeCursor(params.cursor) as { limit?: number; offset?: number };
-    return {
-      limit: decoded.limit || 50,
-      offset: decoded.offset || 0,
-    };
-  }
+export function parsePaginationParams(params: PaginationParams): {
+	limit: number;
+	offset: number;
+} {
+	if (params.cursor) {
+		const decoded = decodeCursor(params.cursor) as {
+			limit?: number;
+			offset?: number;
+		};
+		return {
+			limit: decoded.limit || 50,
+			offset: decoded.offset || 0,
+		};
+	}
 
-  return {
-    limit: params.limit || 50,
-    offset: params.offset || 0,
-  };
+	return {
+		limit: params.limit || 50,
+		offset: params.offset || 0,
+	};
 }

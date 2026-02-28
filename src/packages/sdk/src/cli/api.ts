@@ -7,216 +7,224 @@
 import { SDK_VERSION, SPEC_VERSION } from "../version";
 
 const API_HEADERS: Record<string, string> = {
-  "X-EvalAI-SDK-Version": SDK_VERSION,
-  "X-EvalAI-Spec-Version": SPEC_VERSION,
+	"X-EvalAI-SDK-Version": SDK_VERSION,
+	"X-EvalAI-Spec-Version": SPEC_VERSION,
 };
 
 export type QualityLatestData = {
-  score?: number;
-  total?: number | null;
-  evidenceLevel?: string | null;
-  baselineScore?: number | null;
-  regressionDelta?: number | null;
-  baselineMissing?: boolean | null;
-  breakdown?: { passRate?: number; safety?: number; judge?: number };
-  flags?: string[];
-  evaluationRunId?: number;
-  evaluationId?: number;
-  avgLatencyMs?: number | null;
-  costUsd?: number | null;
-  baselineCostUsd?: number | null;
-  baselineRunId?: number | null;
+	score?: number;
+	total?: number | null;
+	evidenceLevel?: string | null;
+	baselineScore?: number | null;
+	regressionDelta?: number | null;
+	baselineMissing?: boolean | null;
+	breakdown?: { passRate?: number; safety?: number; judge?: number };
+	flags?: string[];
+	evaluationRunId?: number;
+	evaluationId?: number;
+	avgLatencyMs?: number | null;
+	costUsd?: number | null;
+	baselineCostUsd?: number | null;
+	baselineRunId?: number | null;
 };
 
 export type RunDetailsData = {
-  results?: Array<{
-    testCaseId?: number;
-    status?: string;
-    output?: string;
-    durationMs?: number;
-    assertionsJson?: Record<string, unknown>;
-    test_cases?: { name?: string; input?: string; expectedOutput?: string };
-  }>;
+	results?: Array<{
+		testCaseId?: number;
+		status?: string;
+		output?: string;
+		durationMs?: number;
+		assertionsJson?: Record<string, unknown>;
+		test_cases?: { name?: string; input?: string; expectedOutput?: string };
+	}>;
 };
 
 export async function fetchQualityLatest(
-  baseUrl: string,
-  apiKey: string,
-  evaluationId: string,
-  baseline: string,
+	baseUrl: string,
+	apiKey: string,
+	evaluationId: string,
+	baseline: string,
 ): Promise<
-  | { ok: true; data: QualityLatestData; requestId?: string }
-  | { ok: false; status: number; body: string; requestId?: string }
+	| { ok: true; data: QualityLatestData; requestId?: string }
+	| { ok: false; status: number; body: string; requestId?: string }
 > {
-  const headers = { ...API_HEADERS, Authorization: `Bearer ${apiKey}` };
-  const url = `${baseUrl.replace(/\/$/, "")}/api/quality?evaluationId=${evaluationId}&action=latest&baseline=${baseline}`;
+	const headers = { ...API_HEADERS, Authorization: `Bearer ${apiKey}` };
+	const url = `${baseUrl.replace(/\/$/, "")}/api/quality?evaluationId=${evaluationId}&action=latest&baseline=${baseline}`;
 
-  try {
-    const res = await fetch(url, { headers });
-    const requestId = res.headers.get("x-request-id") ?? undefined;
-    const body = await res.text();
+	try {
+		const res = await fetch(url, { headers });
+		const requestId = res.headers.get("x-request-id") ?? undefined;
+		const body = await res.text();
 
-    if (!res.ok) {
-      return { ok: false, status: res.status, body, requestId };
-    }
+		if (!res.ok) {
+			return { ok: false, status: res.status, body, requestId };
+		}
 
-    const data = JSON.parse(body) as QualityLatestData;
-    return { ok: true, data, requestId };
-  } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : String(err);
-    return { ok: false, status: 0, body: msg, requestId: undefined };
-  }
+		const data = JSON.parse(body) as QualityLatestData;
+		return { ok: true, data, requestId };
+	} catch (err: unknown) {
+		const msg = err instanceof Error ? err.message : String(err);
+		return { ok: false, status: 0, body: msg, requestId: undefined };
+	}
 }
 
 export async function fetchRunDetails(
-  baseUrl: string,
-  apiKey: string,
-  evaluationId: string,
-  runId: number,
+	baseUrl: string,
+	apiKey: string,
+	evaluationId: string,
+	runId: number,
 ): Promise<{ ok: true; data: RunDetailsData } | { ok: false }> {
-  const headers = { ...API_HEADERS, Authorization: `Bearer ${apiKey}` };
-  const url = `${baseUrl.replace(/\/$/, "")}/api/evaluations/${evaluationId}/runs/${runId}`;
+	const headers = { ...API_HEADERS, Authorization: `Bearer ${apiKey}` };
+	const url = `${baseUrl.replace(/\/$/, "")}/api/evaluations/${evaluationId}/runs/${runId}`;
 
-  try {
-    const res = await fetch(url, { headers });
-    if (!res.ok) return { ok: false };
-    const data = (await res.json()) as RunDetailsData;
-    return { ok: true, data };
-  } catch {
-    return { ok: false };
-  }
+	try {
+		const res = await fetch(url, { headers });
+		if (!res.ok) return { ok: false };
+		const data = (await res.json()) as RunDetailsData;
+		return { ok: true, data };
+	} catch {
+		return { ok: false };
+	}
 }
 
 export type CiContext = {
-  provider?: "github" | "gitlab" | "circle" | "unknown";
-  repo?: string;
-  sha?: string;
-  branch?: string;
-  pr?: number;
-  runUrl?: string;
-  actor?: string;
+	provider?: "github" | "gitlab" | "circle" | "unknown";
+	repo?: string;
+	sha?: string;
+	branch?: string;
+	pr?: number;
+	runUrl?: string;
+	actor?: string;
 };
 
 export type ImportResult = {
-  testCaseId: number;
-  status: "passed" | "failed";
-  output: string;
-  latencyMs?: number;
-  costUsd?: number;
-  assertionsJson?: Record<string, unknown>;
+	testCaseId: number;
+	status: "passed" | "failed";
+	output: string;
+	latencyMs?: number;
+	costUsd?: number;
+	assertionsJson?: Record<string, unknown>;
 };
 
 export type PublishShareResult = {
-  shareId: string;
-  shareUrl: string;
-  shareScope: string;
+	shareId: string;
+	shareUrl: string;
+	shareScope: string;
 };
 
 export async function fetchRunExport(
-  baseUrl: string,
-  apiKey: string,
-  evaluationId: string,
-  runId: number,
+	baseUrl: string,
+	apiKey: string,
+	evaluationId: string,
+	runId: number,
 ): Promise<
-  { ok: true; exportData: Record<string, unknown> } | { ok: false; status: number; body: string }
+	| { ok: true; exportData: Record<string, unknown> }
+	| { ok: false; status: number; body: string }
 > {
-  const headers = { ...API_HEADERS, Authorization: `Bearer ${apiKey}` };
-  const url = `${baseUrl.replace(/\/$/, "")}/api/evaluations/${evaluationId}/runs/${runId}/export`;
+	const headers = { ...API_HEADERS, Authorization: `Bearer ${apiKey}` };
+	const url = `${baseUrl.replace(/\/$/, "")}/api/evaluations/${evaluationId}/runs/${runId}/export`;
 
-  try {
-    const res = await fetch(url, { headers });
-    const text = await res.text();
-    if (!res.ok) return { ok: false, status: res.status, body: text };
-    const exportData = JSON.parse(text) as Record<string, unknown>;
-    return { ok: true, exportData };
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
-    return { ok: false, status: 0, body: msg };
-  }
+	try {
+		const res = await fetch(url, { headers });
+		const text = await res.text();
+		if (!res.ok) return { ok: false, status: res.status, body: text };
+		const exportData = JSON.parse(text) as Record<string, unknown>;
+		return { ok: true, exportData };
+	} catch (err) {
+		const msg = err instanceof Error ? err.message : String(err);
+		return { ok: false, status: 0, body: msg };
+	}
 }
 
 export async function publishShare(
-  baseUrl: string,
-  apiKey: string,
-  evaluationId: string,
-  exportData: Record<string, unknown>,
-  evaluationRunId: number,
-  options?: { expiresInDays?: number },
-): Promise<{ ok: true; data: PublishShareResult } | { ok: false; status: number; body: string }> {
-  const headers: Record<string, string> = {
-    ...API_HEADERS,
-    Authorization: `Bearer ${apiKey}`,
-    "Content-Type": "application/json",
-  };
-  const body = {
-    exportData,
-    shareScope: "run",
-    evaluationRunId,
-    ...(options?.expiresInDays != null && { expiresInDays: options.expiresInDays }),
-  };
-  const url = `${baseUrl.replace(/\/$/, "")}/api/evaluations/${evaluationId}/publish`;
+	baseUrl: string,
+	apiKey: string,
+	evaluationId: string,
+	exportData: Record<string, unknown>,
+	evaluationRunId: number,
+	options?: { expiresInDays?: number },
+): Promise<
+	| { ok: true; data: PublishShareResult }
+	| { ok: false; status: number; body: string }
+> {
+	const headers: Record<string, string> = {
+		...API_HEADERS,
+		Authorization: `Bearer ${apiKey}`,
+		"Content-Type": "application/json",
+	};
+	const body = {
+		exportData,
+		shareScope: "run",
+		evaluationRunId,
+		...(options?.expiresInDays != null && {
+			expiresInDays: options.expiresInDays,
+		}),
+	};
+	const url = `${baseUrl.replace(/\/$/, "")}/api/evaluations/${evaluationId}/publish`;
 
-  try {
-    const res = await fetch(url, {
-      method: "POST",
-      headers,
-      body: JSON.stringify(body),
-    });
-    const text = await res.text();
-    if (!res.ok) return { ok: false, status: res.status, body: text };
-    const data = JSON.parse(text) as PublishShareResult;
-    return { ok: true, data };
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
-    return { ok: false, status: 0, body: msg };
-  }
+	try {
+		const res = await fetch(url, {
+			method: "POST",
+			headers,
+			body: JSON.stringify(body),
+		});
+		const text = await res.text();
+		if (!res.ok) return { ok: false, status: res.status, body: text };
+		const data = JSON.parse(text) as PublishShareResult;
+		return { ok: true, data };
+	} catch (err) {
+		const msg = err instanceof Error ? err.message : String(err);
+		return { ok: false, status: 0, body: msg };
+	}
 }
 
 export async function importRunOnFail(
-  baseUrl: string,
-  apiKey: string,
-  evaluationId: string,
-  results: ImportResult[],
-  options: {
-    idempotencyKey?: string;
-    ci?: CiContext;
-    importClientVersion?: string;
-    checkReport?: Record<string, unknown>;
-  },
-): Promise<{ ok: true; runId: number } | { ok: false; status: number; body: string }> {
-  const headers: Record<string, string> = {
-    ...API_HEADERS,
-    Authorization: `Bearer ${apiKey}`,
-    "Content-Type": "application/json",
-  };
-  if (options.idempotencyKey) {
-    headers["Idempotency-Key"] = options.idempotencyKey;
-  }
+	baseUrl: string,
+	apiKey: string,
+	evaluationId: string,
+	results: ImportResult[],
+	options: {
+		idempotencyKey?: string;
+		ci?: CiContext;
+		importClientVersion?: string;
+		checkReport?: Record<string, unknown>;
+	},
+): Promise<
+	{ ok: true; runId: number } | { ok: false; status: number; body: string }
+> {
+	const headers: Record<string, string> = {
+		...API_HEADERS,
+		Authorization: `Bearer ${apiKey}`,
+		"Content-Type": "application/json",
+	};
+	if (options.idempotencyKey) {
+		headers["Idempotency-Key"] = options.idempotencyKey;
+	}
 
-  const body = {
-    environment: "dev" as const,
-    results,
-    importClientVersion: options.importClientVersion ?? "evalai-cli",
-    ci: options.ci,
-    ...(options.checkReport != null && { checkReport: options.checkReport }),
-  };
+	const body = {
+		environment: "dev" as const,
+		results,
+		importClientVersion: options.importClientVersion ?? "evalai-cli",
+		ci: options.ci,
+		...(options.checkReport != null && { checkReport: options.checkReport }),
+	};
 
-  const url = `${baseUrl.replace(/\/$/, "")}/api/evaluations/${evaluationId}/runs/import`;
+	const url = `${baseUrl.replace(/\/$/, "")}/api/evaluations/${evaluationId}/runs/import`;
 
-  try {
-    const res = await fetch(url, {
-      method: "POST",
-      headers,
-      body: JSON.stringify(body),
-    });
-    const text = await res.text();
-    if (!res.ok) {
-      return { ok: false, status: res.status, body: text };
-    }
-    const data = JSON.parse(text) as { runId: number };
-    return { ok: true, runId: data.runId };
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
-    return { ok: false, status: 0, body: msg };
-  }
+	try {
+		const res = await fetch(url, {
+			method: "POST",
+			headers,
+			body: JSON.stringify(body),
+		});
+		const text = await res.text();
+		if (!res.ok) {
+			return { ok: false, status: res.status, body: text };
+		}
+		const data = JSON.parse(text) as { runId: number };
+		return { ok: true, runId: data.runId };
+	} catch (err) {
+		const msg = err instanceof Error ? err.message : String(err);
+		return { ok: false, status: 0, body: msg };
+	}
 }

@@ -226,7 +226,11 @@ class WorkflowTracer {
             }),
         });
         this.activeSpans.delete(span.spanId);
-        this.log("Ended agent span", { agentName: span.agentName, spanId: span.spanId, durationMs });
+        this.log("Ended agent span", {
+            agentName: span.agentName,
+            spanId: span.spanId,
+            durationMs,
+        });
     }
     // ==========================================================================
     // HANDOFFS
@@ -417,23 +421,62 @@ class WorkflowTracer {
         // Default pricing (can be extended with API lookup)
         const knownPricing = {
             // OpenAI
-            "openai/gpt-4": { inputPricePerMillion: 30.0, outputPricePerMillion: 60.0 },
-            "openai/gpt-4-turbo": { inputPricePerMillion: 10.0, outputPricePerMillion: 30.0 },
-            "openai/gpt-4o": { inputPricePerMillion: 5.0, outputPricePerMillion: 15.0 },
-            "openai/gpt-4o-mini": { inputPricePerMillion: 0.15, outputPricePerMillion: 0.6 },
-            "openai/gpt-3.5-turbo": { inputPricePerMillion: 0.5, outputPricePerMillion: 1.5 },
+            "openai/gpt-4": {
+                inputPricePerMillion: 30.0,
+                outputPricePerMillion: 60.0,
+            },
+            "openai/gpt-4-turbo": {
+                inputPricePerMillion: 10.0,
+                outputPricePerMillion: 30.0,
+            },
+            "openai/gpt-4o": {
+                inputPricePerMillion: 5.0,
+                outputPricePerMillion: 15.0,
+            },
+            "openai/gpt-4o-mini": {
+                inputPricePerMillion: 0.15,
+                outputPricePerMillion: 0.6,
+            },
+            "openai/gpt-3.5-turbo": {
+                inputPricePerMillion: 0.5,
+                outputPricePerMillion: 1.5,
+            },
             // Anthropic
-            "anthropic/claude-3-opus": { inputPricePerMillion: 15.0, outputPricePerMillion: 75.0 },
-            "anthropic/claude-3-sonnet": { inputPricePerMillion: 3.0, outputPricePerMillion: 15.0 },
-            "anthropic/claude-3-haiku": { inputPricePerMillion: 0.25, outputPricePerMillion: 1.25 },
-            "anthropic/claude-3.5-sonnet": { inputPricePerMillion: 3.0, outputPricePerMillion: 15.0 },
+            "anthropic/claude-3-opus": {
+                inputPricePerMillion: 15.0,
+                outputPricePerMillion: 75.0,
+            },
+            "anthropic/claude-3-sonnet": {
+                inputPricePerMillion: 3.0,
+                outputPricePerMillion: 15.0,
+            },
+            "anthropic/claude-3-haiku": {
+                inputPricePerMillion: 0.25,
+                outputPricePerMillion: 1.25,
+            },
+            "anthropic/claude-3.5-sonnet": {
+                inputPricePerMillion: 3.0,
+                outputPricePerMillion: 15.0,
+            },
             // Google
-            "google/gemini-pro": { inputPricePerMillion: 0.5, outputPricePerMillion: 1.5 },
-            "google/gemini-1.5-pro": { inputPricePerMillion: 3.5, outputPricePerMillion: 10.5 },
-            "google/gemini-1.5-flash": { inputPricePerMillion: 0.075, outputPricePerMillion: 0.3 },
+            "google/gemini-pro": {
+                inputPricePerMillion: 0.5,
+                outputPricePerMillion: 1.5,
+            },
+            "google/gemini-1.5-pro": {
+                inputPricePerMillion: 3.5,
+                outputPricePerMillion: 10.5,
+            },
+            "google/gemini-1.5-flash": {
+                inputPricePerMillion: 0.075,
+                outputPricePerMillion: 0.3,
+            },
         };
         const key = `${provider}/${model}`;
-        return knownPricing[key] || { inputPricePerMillion: 1.0, outputPricePerMillion: 3.0 };
+        return (knownPricing[key] || {
+            inputPricePerMillion: 1.0,
+            outputPricePerMillion: 3.0,
+        });
     }
     /**
      * Generate a unique ID

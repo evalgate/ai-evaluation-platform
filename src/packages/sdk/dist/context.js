@@ -28,7 +28,9 @@ exports.withContext = withContext;
 exports.withContextSync = withContextSync;
 exports.WithContext = WithContext;
 // Detect environment
-const isNode = typeof process !== "undefined" && process.versions?.node && typeof require !== "undefined";
+const isNode = typeof process !== "undefined" &&
+    process.versions?.node &&
+    typeof require !== "undefined";
 // Browser fallback: simple context stack
 class BrowserContextStorage {
     constructor() {

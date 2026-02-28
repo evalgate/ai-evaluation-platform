@@ -1,34 +1,36 @@
 import {
-  Award,
-  BarChart,
-  Bot,
-  Brain,
-  Clock,
-  RefreshCw,
-  Target,
-  TrendingUp,
-  UserCheck,
+	Award,
+	BarChart,
+	Bot,
+	Brain,
+	Clock,
+	RefreshCw,
+	Target,
+	TrendingUp,
+	UserCheck,
 } from "lucide-react";
 import type { EvaluationTemplate } from "./types";
 
 export const AGENT_TEMPLATES: EvaluationTemplate[] = [
-  // ===== AI AGENT EVALUATION TEMPLATES =====
-  {
-    id: "agent-multistep-completion",
-    name: "Multi-Step Task Completion",
-    category: "agent_eval",
-    icon: Bot,
-    description: "Evaluate agent's ability to complete complex multi-step tasks",
-    type: "model_eval",
-    complexity: "advanced",
-    testCases: [
-      {
-        input: "Book a restaurant reservation for 4 people on Friday at 7pm",
-        expectedOutput: "Successful booking with proper planning and execution",
-        rubric: "Planning (25%), Execution (25%), Adaptation (25%), Efficiency (25%)",
-      },
-    ],
-    judgePrompt: `Evaluate the AI agent's multi-step task completion:
+	// ===== AI AGENT EVALUATION TEMPLATES =====
+	{
+		id: "agent-multistep-completion",
+		name: "Multi-Step Task Completion",
+		category: "agent_eval",
+		icon: Bot,
+		description:
+			"Evaluate agent's ability to complete complex multi-step tasks",
+		type: "model_eval",
+		complexity: "advanced",
+		testCases: [
+			{
+				input: "Book a restaurant reservation for 4 people on Friday at 7pm",
+				expectedOutput: "Successful booking with proper planning and execution",
+				rubric:
+					"Planning (25%), Execution (25%), Adaptation (25%), Efficiency (25%)",
+			},
+		],
+		judgePrompt: `Evaluate the AI agent's multi-step task completion:
 
 Task: {task_description}
 Agent Trace: {agent_trace}
@@ -71,24 +73,26 @@ Output format:
   "reasoning": "detailed analysis",
   "improvement_areas": ["suggestions"]
 }`,
-  },
-  {
-    id: "agent-user-simulation",
-    name: "Interactive User Simulation",
-    category: "agent_eval",
-    icon: UserCheck,
-    description: "Test agent performance with simulated human users (τ-bench methodology)",
-    type: "model_eval",
-    complexity: "advanced",
-    testCases: [
-      {
-        input: "Simulated user with specific goals and preferences",
-        expectedOutput: "Natural conversation with successful problem resolution",
-        rubric:
-          "Communication (20%), Information Gathering (20%), Policy Compliance (20%), Problem Resolution (20%), User Experience (20%)",
-      },
-    ],
-    judgePrompt: `Evaluate agent's interaction with simulated user:
+	},
+	{
+		id: "agent-user-simulation",
+		name: "Interactive User Simulation",
+		category: "agent_eval",
+		icon: UserCheck,
+		description:
+			"Test agent performance with simulated human users (τ-bench methodology)",
+		type: "model_eval",
+		complexity: "advanced",
+		testCases: [
+			{
+				input: "Simulated user with specific goals and preferences",
+				expectedOutput:
+					"Natural conversation with successful problem resolution",
+				rubric:
+					"Communication (20%), Information Gathering (20%), Policy Compliance (20%), Problem Resolution (20%), User Experience (20%)",
+			},
+		],
+		judgePrompt: `Evaluate agent's interaction with simulated user:
 
 User Profile: {user_profile}
 Conversation: {conversation_transcript}
@@ -113,25 +117,25 @@ Output format:
   "reasoning": "detailed analysis",
   "conversation_quality": "excellent|good|fair|poor"
 }`,
-  },
+	},
 
-  // ===== ADVANCED METRICS TEMPLATES =====
-  {
-    id: "metrics-geval",
-    name: "G-Eval Framework",
-    category: "advanced_metrics",
-    icon: Award,
-    description: "GPT-based evaluation with natural language criteria",
-    type: "model_eval",
-    complexity: "advanced",
-    testCases: [
-      {
-        input: "Complex response requiring nuanced evaluation",
-        expectedOutput: "Detailed assessment across multiple dimensions",
-        rubric: "Comprehensive evaluation with specific criteria and scoring",
-      },
-    ],
-    judgePrompt: `G-Eval Framework Assessment:
+	// ===== ADVANCED METRICS TEMPLATES =====
+	{
+		id: "metrics-geval",
+		name: "G-Eval Framework",
+		category: "advanced_metrics",
+		icon: Award,
+		description: "GPT-based evaluation with natural language criteria",
+		type: "model_eval",
+		complexity: "advanced",
+		testCases: [
+			{
+				input: "Complex response requiring nuanced evaluation",
+				expectedOutput: "Detailed assessment across multiple dimensions",
+				rubric: "Comprehensive evaluation with specific criteria and scoring",
+			},
+		],
+		judgePrompt: `G-Eval Framework Assessment:
 
 Task: {task}
 Response: {response}
@@ -157,23 +161,24 @@ Output format:
   },
   "reasoning": "comprehensive evaluation rationale"
 }`,
-  },
-  {
-    id: "metrics-ragas",
-    name: "RAGAS Metrics",
-    category: "advanced_metrics",
-    icon: BarChart,
-    description: "Retrieval-Augmented Generation Assessment metrics",
-    type: "model_eval",
-    complexity: "advanced",
-    testCases: [
-      {
-        input: "RAG system response with retrieved context",
-        expectedOutput: "Comprehensive RAGAS evaluation",
-        rubric: "Faithfulness, answer relevance, context relevance, context recall",
-      },
-    ],
-    judgePrompt: `RAGAS Metrics Evaluation:
+	},
+	{
+		id: "metrics-ragas",
+		name: "RAGAS Metrics",
+		category: "advanced_metrics",
+		icon: BarChart,
+		description: "Retrieval-Augmented Generation Assessment metrics",
+		type: "model_eval",
+		complexity: "advanced",
+		testCases: [
+			{
+				input: "RAG system response with retrieved context",
+				expectedOutput: "Comprehensive RAGAS evaluation",
+				rubric:
+					"Faithfulness, answer relevance, context relevance, context recall",
+			},
+		],
+		judgePrompt: `RAGAS Metrics Evaluation:
 
 Question: {question}
 Context: {context}
@@ -199,25 +204,25 @@ Output format:
     "improvements": ["suggestions for better performance"]
   }
 }`,
-  },
+	},
 
-  // ===== CHAIN-OF-THOUGHT EVALUATION TEMPLATES =====
-  {
-    id: "cot-reasoning-quality",
-    name: "CoT Reasoning Quality",
-    category: "cot_evaluation",
-    icon: Brain,
-    description: "Evaluate chain-of-thought reasoning process and quality",
-    type: "model_eval",
-    complexity: "advanced",
-    testCases: [
-      {
-        input: "Complex problem requiring step-by-step reasoning",
-        expectedOutput: "Clear logical reasoning with intermediate steps",
-        rubric: "Logical flow, step completeness, accuracy of reasoning",
-      },
-    ],
-    judgePrompt: `Chain-of-Thought Reasoning Assessment:
+	// ===== CHAIN-OF-THOUGHT EVALUATION TEMPLATES =====
+	{
+		id: "cot-reasoning-quality",
+		name: "CoT Reasoning Quality",
+		category: "cot_evaluation",
+		icon: Brain,
+		description: "Evaluate chain-of-thought reasoning process and quality",
+		type: "model_eval",
+		complexity: "advanced",
+		testCases: [
+			{
+				input: "Complex problem requiring step-by-step reasoning",
+				expectedOutput: "Clear logical reasoning with intermediate steps",
+				rubric: "Logical flow, step completeness, accuracy of reasoning",
+			},
+		],
+		judgePrompt: `Chain-of-Thought Reasoning Assessment:
 
 Problem: {problem}
 CoT Response: {response}
@@ -247,25 +252,27 @@ Output format:
   "missing_steps": ["list missing reasoning"],
   "reasoning": "detailed analysis of CoT quality"
 }`,
-  },
+	},
 
-  // ===== CONTEXT WINDOW TEMPLATES =====
-  {
-    id: "context-window-utilization",
-    name: "Context Window Utilization",
-    category: "context_window",
-    icon: Clock,
-    description: "Test ability to handle and utilize large context windows",
-    type: "model_eval",
-    complexity: "advanced",
-    testCases: [
-      {
-        input: "Long document with specific question about content",
-        expectedOutput: "Accurate answer utilizing information from throughout the document",
-        rubric: "Information retrieval accuracy, context utilization, attention distribution",
-      },
-    ],
-    judgePrompt: `Context Window Utilization Assessment:
+	// ===== CONTEXT WINDOW TEMPLATES =====
+	{
+		id: "context-window-utilization",
+		name: "Context Window Utilization",
+		category: "context_window",
+		icon: Clock,
+		description: "Test ability to handle and utilize large context windows",
+		type: "model_eval",
+		complexity: "advanced",
+		testCases: [
+			{
+				input: "Long document with specific question about content",
+				expectedOutput:
+					"Accurate answer utilizing information from throughout the document",
+				rubric:
+					"Information retrieval accuracy, context utilization, attention distribution",
+			},
+		],
+		judgePrompt: `Context Window Utilization Assessment:
 
 Document Length: {doc_length} tokens
 Question: {question}
@@ -289,25 +296,25 @@ Output format:
   "missed_information": ["list important info missed"],
   "reasoning": "detailed analysis"
 }`,
-  },
+	},
 
-  // ===== MODEL STEERING TEMPLATES =====
-  {
-    id: "model-steering-effectiveness",
-    name: "Model Steering Effectiveness",
-    category: "model_steering",
-    icon: RefreshCw,
-    description: "Test ability to steer model behavior with system prompts",
-    type: "model_eval",
-    complexity: "intermediate",
-    testCases: [
-      {
-        input: "Query with specific persona/style requirements",
-        expectedOutput: "Response follows steering instructions precisely",
-        rubric: "Persona adherence, style consistency, instruction following",
-      },
-    ],
-    judgePrompt: `Model Steering Assessment:
+	// ===== MODEL STEERING TEMPLATES =====
+	{
+		id: "model-steering-effectiveness",
+		name: "Model Steering Effectiveness",
+		category: "model_steering",
+		icon: RefreshCw,
+		description: "Test ability to steer model behavior with system prompts",
+		type: "model_eval",
+		complexity: "intermediate",
+		testCases: [
+			{
+				input: "Query with specific persona/style requirements",
+				expectedOutput: "Response follows steering instructions precisely",
+				rubric: "Persona adherence, style consistency, instruction following",
+			},
+		],
+		judgePrompt: `Model Steering Assessment:
 
 System Prompt: {system_prompt}
 User Query: {query}
@@ -331,25 +338,26 @@ Output format:
   "violations": ["list steering violations"],
   "reasoning": "detailed analysis"
 }`,
-  },
+	},
 
-  // ===== REGRESSION TESTING TEMPLATES =====
-  {
-    id: "regression-version-comparison",
-    name: "Version Comparison Regression",
-    category: "regression",
-    icon: TrendingUp,
-    description: "Compare model performance across versions",
-    type: "model_eval",
-    complexity: "intermediate",
-    testCases: [
-      {
-        input: "Same query tested on multiple model versions",
-        expectedOutput: "Consistent or improved performance across versions",
-        rubric: "Performance consistency, improvement detection, regression identification",
-      },
-    ],
-    judgePrompt: `Version Regression Assessment:
+	// ===== REGRESSION TESTING TEMPLATES =====
+	{
+		id: "regression-version-comparison",
+		name: "Version Comparison Regression",
+		category: "regression",
+		icon: TrendingUp,
+		description: "Compare model performance across versions",
+		type: "model_eval",
+		complexity: "intermediate",
+		testCases: [
+			{
+				input: "Same query tested on multiple model versions",
+				expectedOutput: "Consistent or improved performance across versions",
+				rubric:
+					"Performance consistency, improvement detection, regression identification",
+			},
+		],
+		judgePrompt: `Version Regression Assessment:
 
 Query: {query}
 Version A Response: {response_a}
@@ -374,25 +382,26 @@ Output format:
   "recommendation": "deploy|rollback|investigate",
   "reasoning": "detailed version comparison"
 }`,
-  },
+	},
 
-  // ===== CALIBRATION TEMPLATES =====
-  {
-    id: "calibration-confidence-alignment",
-    name: "Confidence-Accuracy Alignment",
-    category: "calibration",
-    icon: Target,
-    description: "Test alignment between confidence scores and actual accuracy",
-    type: "model_eval",
-    complexity: "advanced",
-    testCases: [
-      {
-        input: "Responses with confidence scores",
-        expectedOutput: "Confidence scores align with actual accuracy",
-        rubric: "Calibration quality, confidence accuracy, reliability assessment",
-      },
-    ],
-    judgePrompt: `Confidence Calibration Assessment:
+	// ===== CALIBRATION TEMPLATES =====
+	{
+		id: "calibration-confidence-alignment",
+		name: "Confidence-Accuracy Alignment",
+		category: "calibration",
+		icon: Target,
+		description: "Test alignment between confidence scores and actual accuracy",
+		type: "model_eval",
+		complexity: "advanced",
+		testCases: [
+			{
+				input: "Responses with confidence scores",
+				expectedOutput: "Confidence scores align with actual accuracy",
+				rubric:
+					"Calibration quality, confidence accuracy, reliability assessment",
+			},
+		],
+		judgePrompt: `Confidence Calibration Assessment:
 
 Response: {response}
 Confidence Score: {confidence}
@@ -416,5 +425,5 @@ Output format:
   "calibration_quality": "well_calibrated|overconfident|underconfident|poorly_calibrated",
   "reasoning": "detailed calibration analysis"
 }`,
-  },
+	},
 ];

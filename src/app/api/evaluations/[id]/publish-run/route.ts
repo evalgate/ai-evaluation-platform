@@ -16,77 +16,87 @@ import { auditService } from "@/lib/services/audit.service";
 import { publishRunBodySchema } from "@/lib/validation";
 
 export const POST = secureRoute(
-  async (req: NextRequest, ctx: AuthContext, params) => {
-    const { id } = params;
-    const evaluationId = parseInt(id, 10);
-    if (Number.isNaN(evaluationId)) {
-      return validationError("Valid evaluation ID is required");
-    }
+	async (req: NextRequest, ctx: AuthContext, params) => {
+		const { id } = params;
+		const evaluationId = parseInt(id, 10);
+		if (Number.isNaN(evaluationId)) {
+			return validationError("Valid evaluation ID is required");
+		}
 
-    const parsed = await parseBody(req, publishRunBodySchema);
-    if (!parsed.ok) return parsed.response;
+		const parsed = await parseBody(req, publishRunBodySchema);
+		if (!parsed.ok) return parsed.response;
 
-    const runId = parsed.data.runId;
+		const runId = parsed.data.runId;
 
-    const organizationId = ctx.organizationId;
+		const organizationId = ctx.organizationId;
 
-    // Verify evaluation belongs to org
-    const [evalRow] = await db
-      .select({ id: evaluations.id })
-      .from(evaluations)
-      .where(and(eq(evaluations.id, evaluationId), eq(evaluations.organizationId, organizationId)))
-      .limit(1);
+		// Verify evaluation belongs to org
+		const [evalRow] = await db
+			.select({ id: evaluations.id })
+			.from(evaluations)
+			.where(
+				and(
+					eq(evaluations.id, evaluationId),
+					eq(evaluations.organizationId, organizationId),
+				),
+			)
+			.limit(1);
 
-    if (!evalRow) {
-      return notFound("Evaluation not found");
-    }
+		if (!evalRow) {
+			return notFound("Evaluation not found");
+		}
 
-    // Verify run belongs to this evaluation and org
-    const [runRow] = await db
-      .select({ id: evaluationRuns.id })
-      .from(evaluationRuns)
-      .where(
-        and(
-          eq(evaluationRuns.id, runId),
-          eq(evaluationRuns.evaluationId, evaluationId),
-          eq(evaluationRuns.organizationId, organizationId),
-        ),
-      )
-      .limit(1);
+		// Verify run belongs to this evaluation and org
+		const [runRow] = await db
+			.select({ id: evaluationRuns.id })
+			.from(evaluationRuns)
+			.where(
+				and(
+					eq(evaluationRuns.id, runId),
+					eq(evaluationRuns.evaluationId, evaluationId),
+					eq(evaluationRuns.organizationId, organizationId),
+				),
+			)
+			.limit(1);
 
-    if (!runRow) {
-      return notFound("Run not found or does not belong to this evaluation");
-    }
+		if (!runRow) {
+			return notFound("Run not found or does not belong to this evaluation");
+		}
 
-    const now = new Date();
-    await db
-      .update(evaluations)
-      .set({
-        publishedRunId: runId,
-        updatedAt: now,
-      })
-      .where(and(eq(evaluations.id, evaluationId), eq(evaluations.organizationId, organizationId)));
+		const now = new Date();
+		await db
+			.update(evaluations)
+			.set({
+				publishedRunId: runId,
+				updatedAt: now,
+			})
+			.where(
+				and(
+					eq(evaluations.id, evaluationId),
+					eq(evaluations.organizationId, organizationId),
+				),
+			);
 
-    logger.info("Published run set", { evaluationId, runId, organizationId });
+		logger.info("Published run set", { evaluationId, runId, organizationId });
 
-    await auditService.log({
-      organizationId,
-      userId: ctx.userId,
-      action: "baseline_updated",
-      resourceType: "evaluation",
-      resourceId: String(evaluationId),
-      metadata: {
-        evaluationId,
-        publishedRunId: runId,
-        apiKeyId: ctx.apiKeyId,
-      },
-    });
+		await auditService.log({
+			organizationId,
+			userId: ctx.userId,
+			action: "baseline_updated",
+			resourceType: "evaluation",
+			resourceId: String(evaluationId),
+			metadata: {
+				evaluationId,
+				publishedRunId: runId,
+				apiKeyId: ctx.apiKeyId,
+			},
+		});
 
-    return NextResponse.json({
-      success: true,
-      evaluationId,
-      publishedRunId: runId,
-    });
-  },
-  { minRole: "admin" },
+		return NextResponse.json({
+			success: true,
+			evaluationId,
+			publishedRunId: runId,
+		});
+	},
+	{ minRole: "admin" },
 );

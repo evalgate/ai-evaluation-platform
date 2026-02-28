@@ -9,19 +9,22 @@ import { secureRoute } from "@/lib/api/secure-route";
 import { MCP_TOOLS } from "@/lib/mcp/registry";
 
 export const GET = secureRoute(
-  async (_req: NextRequest, _ctx: unknown, _params: Record<string, string>) => {
-    const response = NextResponse.json({
-      mcpVersion: "1",
-      tools: MCP_TOOLS.map((t) => ({
-        name: t.name,
-        description: t.description,
-        inputSchema: t.inputSchema,
-        ...(t.version && { version: t.version }),
-        ...(t.longRunning && { longRunning: t.longRunning }),
-      })),
-    });
-    response.headers.set("Cache-Control", "public, max-age=300, stale-while-revalidate=86400");
-    return response;
-  },
-  { allowAnonymous: true, rateLimit: "anonymous" },
+	async (_req: NextRequest, _ctx: unknown, _params: Record<string, string>) => {
+		const response = NextResponse.json({
+			mcpVersion: "1",
+			tools: MCP_TOOLS.map((t) => ({
+				name: t.name,
+				description: t.description,
+				inputSchema: t.inputSchema,
+				...(t.version && { version: t.version }),
+				...(t.longRunning && { longRunning: t.longRunning }),
+			})),
+		});
+		response.headers.set(
+			"Cache-Control",
+			"public, max-age=300, stale-while-revalidate=86400",
+		);
+		return response;
+	},
+	{ allowAnonymous: true, rateLimit: "anonymous" },
 );

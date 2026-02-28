@@ -183,7 +183,11 @@ function parseArgs(argv) {
         };
     }
     if (Number.isNaN(minScore) || minScore < 0 || minScore > 100) {
-        return { ok: false, exitCode: constants_1.EXIT.BAD_ARGS, message: "Error: --minScore must be 0-100" };
+        return {
+            ok: false,
+            exitCode: constants_1.EXIT.BAD_ARGS,
+            message: "Error: --minScore must be 0-100",
+        };
     }
     if (minN !== undefined && (Number.isNaN(minN) || minN < 1)) {
         return {
@@ -210,9 +214,15 @@ function parseArgs(argv) {
             onFail,
             share,
             prCommentOut,
-            maxCostUsd: maxCostUsd != null && !Number.isNaN(maxCostUsd) ? maxCostUsd : undefined,
-            maxLatencyMs: maxLatencyMs != null && !Number.isNaN(maxLatencyMs) ? maxLatencyMs : undefined,
-            maxCostDeltaUsd: maxCostDeltaUsd != null && !Number.isNaN(maxCostDeltaUsd) ? maxCostDeltaUsd : undefined,
+            maxCostUsd: maxCostUsd != null && !Number.isNaN(maxCostUsd)
+                ? maxCostUsd
+                : undefined,
+            maxLatencyMs: maxLatencyMs != null && !Number.isNaN(maxLatencyMs)
+                ? maxLatencyMs
+                : undefined,
+            maxCostDeltaUsd: maxCostDeltaUsd != null && !Number.isNaN(maxCostDeltaUsd)
+                ? maxCostDeltaUsd
+                : undefined,
         },
     };
 }
@@ -297,7 +307,8 @@ async function runCheck(args) {
         runDetails?.results &&
         quality?.evaluationRunId) {
         const importResults = runDetails.results
-            .filter((r) => r.testCaseId != null && (r.status === "passed" || r.status === "failed"))
+            .filter((r) => r.testCaseId != null &&
+            (r.status === "passed" || r.status === "failed"))
             .map((r) => ({
             testCaseId: r.testCaseId,
             status: r.status,
@@ -306,7 +317,9 @@ async function runCheck(args) {
             assertionsJson: r.assertionsJson,
         }));
         if (importResults.length > 0) {
-            const idempotencyKey = ci ? (0, ci_context_1.computeIdempotencyKey)(args.evaluationId, ci) : undefined;
+            const idempotencyKey = ci
+                ? (0, ci_context_1.computeIdempotencyKey)(args.evaluationId, ci)
+                : undefined;
             const importRes = await (0, api_1.importRunOnFail)(args.baseUrl, args.apiKey, args.evaluationId, importResults, {
                 idempotencyKey,
                 ci,

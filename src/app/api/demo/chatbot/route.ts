@@ -12,5 +12,5 @@ import chatbotData from "../../../../../public/demo/chatbot.json";
  * Returns chatbot evaluation demo data
  */
 export async function GET() {
-  return NextResponse.json(chatbotData);
+	return NextResponse.json(chatbotData);
 }

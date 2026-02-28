@@ -1,213 +1,232 @@
 "use client";
 
 import {
-  BarChart3,
-  Beaker,
-  BookOpen,
-  Code,
-  DollarSign,
-  FileText,
-  Key,
-  Newspaper,
-  Package,
-  Settings,
-  Terminal,
-  Trophy,
-  Users,
-  Workflow,
+	BarChart3,
+	Beaker,
+	BookOpen,
+	Code,
+	DollarSign,
+	FileText,
+	Key,
+	Newspaper,
+	Package,
+	Settings,
+	Terminal,
+	Trophy,
+	Users,
+	Workflow,
 } from "lucide-react";
 import Link from "next/link";
 import type * as React from "react";
 import {
-  Sidebar,
-  SidebarContent,
-  SidebarGroup,
-  SidebarGroupLabel,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
+	Sidebar,
+	SidebarContent,
+	SidebarGroup,
+	SidebarGroupLabel,
+	SidebarMenu,
+	SidebarMenuButton,
+	SidebarMenuItem,
 } from "@/components/ui/sidebar";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  return (
-    <Sidebar collapsible="icon" {...props}>
-      <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupLabel>Platform</SidebarGroupLabel>
-          <SidebarMenu>
-            <SidebarMenuItem>
-              <SidebarMenuButton asChild>
-                <Link href="/dashboard" prefetch={true} className="flex items-center gap-2">
-                  <BarChart3 />
-                  <span>Dashboard</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton asChild>
-                <Link href="/evaluations" prefetch={true} className="flex items-center gap-2">
-                  <Beaker />
-                  <span>Evaluations</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton asChild>
-                <Link href="/traces" prefetch={true} className="flex items-center gap-2">
-                  <FileText />
-                  <span>Traces</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton asChild>
-                <Link href="/workflows" prefetch={true} className="flex items-center gap-2">
-                  <Workflow />
-                  <span>Workflows</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton asChild>
-                <Link href="/llm-judge" className="flex items-center gap-2">
-                  <Users />
-                  <span>LLM Judge</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton asChild>
-                <Link href="/costs" className="flex items-center gap-2">
-                  <DollarSign />
-                  <span>Costs</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton asChild>
-                <Link href="/benchmarks" className="flex items-center gap-2">
-                  <Trophy />
-                  <span>Benchmarks</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton asChild>
-                <Link href="/annotations" className="flex items-center gap-2">
-                  <Users />
-                  <span>Annotations</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          </SidebarMenu>
-        </SidebarGroup>
-        <SidebarGroup>
-          <SidebarGroupLabel>Developer</SidebarGroupLabel>
-          <SidebarMenu>
-            <SidebarMenuItem>
-              <SidebarMenuButton asChild>
-                <Link href="/developer" className="flex items-center gap-2">
-                  <Terminal />
-                  <span>Developer Dashboard</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton asChild>
-                <Link href="/developer/api-keys" className="flex items-center gap-2">
-                  <Key />
-                  <span>API Keys</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton asChild>
-                <Link href="/developer/sdk" className="flex items-center gap-2">
-                  <Package />
-                  <span>SDK</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton asChild>
-                <Link href="/prompts" className="flex items-center gap-2">
-                  <Terminal />
-                  <span>Prompts</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          </SidebarMenu>
-        </SidebarGroup>
-        <SidebarGroup>
-          <SidebarGroupLabel>Resources</SidebarGroupLabel>
-          <SidebarMenu>
-            <SidebarMenuItem>
-              <SidebarMenuButton asChild>
-                <a
-                  href="/documentation"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2"
-                >
-                  <BookOpen />
-                  <span>Documentation</span>
-                </a>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton asChild>
-                <a
-                  href="/guides"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2"
-                >
-                  <FileText />
-                  <span>Guides</span>
-                </a>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton asChild>
-                <a
-                  href="/api-reference"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2"
-                >
-                  <Code />
-                  <span>API Reference</span>
-                </a>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton asChild>
-                <a
-                  href="/blog"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2"
-                >
-                  <Newspaper />
-                  <span>Blog</span>
-                </a>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          </SidebarMenu>
-        </SidebarGroup>
-        <SidebarGroup className="mt-auto">
-          <SidebarMenu>
-            <SidebarMenuItem>
-              <SidebarMenuButton asChild>
-                <Link href="/settings" className="flex items-center gap-2">
-                  <Settings />
-                  <span>Settings</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          </SidebarMenu>
-        </SidebarGroup>
-      </SidebarContent>
-    </Sidebar>
-  );
+	return (
+		<Sidebar collapsible="icon" {...props}>
+			<SidebarContent>
+				<SidebarGroup>
+					<SidebarGroupLabel>Platform</SidebarGroupLabel>
+					<SidebarMenu>
+						<SidebarMenuItem>
+							<SidebarMenuButton asChild>
+								<Link
+									href="/dashboard"
+									prefetch={true}
+									className="flex items-center gap-2"
+								>
+									<BarChart3 />
+									<span>Dashboard</span>
+								</Link>
+							</SidebarMenuButton>
+						</SidebarMenuItem>
+						<SidebarMenuItem>
+							<SidebarMenuButton asChild>
+								<Link
+									href="/evaluations"
+									prefetch={true}
+									className="flex items-center gap-2"
+								>
+									<Beaker />
+									<span>Evaluations</span>
+								</Link>
+							</SidebarMenuButton>
+						</SidebarMenuItem>
+						<SidebarMenuItem>
+							<SidebarMenuButton asChild>
+								<Link
+									href="/traces"
+									prefetch={true}
+									className="flex items-center gap-2"
+								>
+									<FileText />
+									<span>Traces</span>
+								</Link>
+							</SidebarMenuButton>
+						</SidebarMenuItem>
+						<SidebarMenuItem>
+							<SidebarMenuButton asChild>
+								<Link
+									href="/workflows"
+									prefetch={true}
+									className="flex items-center gap-2"
+								>
+									<Workflow />
+									<span>Workflows</span>
+								</Link>
+							</SidebarMenuButton>
+						</SidebarMenuItem>
+						<SidebarMenuItem>
+							<SidebarMenuButton asChild>
+								<Link href="/llm-judge" className="flex items-center gap-2">
+									<Users />
+									<span>LLM Judge</span>
+								</Link>
+							</SidebarMenuButton>
+						</SidebarMenuItem>
+						<SidebarMenuItem>
+							<SidebarMenuButton asChild>
+								<Link href="/costs" className="flex items-center gap-2">
+									<DollarSign />
+									<span>Costs</span>
+								</Link>
+							</SidebarMenuButton>
+						</SidebarMenuItem>
+						<SidebarMenuItem>
+							<SidebarMenuButton asChild>
+								<Link href="/benchmarks" className="flex items-center gap-2">
+									<Trophy />
+									<span>Benchmarks</span>
+								</Link>
+							</SidebarMenuButton>
+						</SidebarMenuItem>
+						<SidebarMenuItem>
+							<SidebarMenuButton asChild>
+								<Link href="/annotations" className="flex items-center gap-2">
+									<Users />
+									<span>Annotations</span>
+								</Link>
+							</SidebarMenuButton>
+						</SidebarMenuItem>
+					</SidebarMenu>
+				</SidebarGroup>
+				<SidebarGroup>
+					<SidebarGroupLabel>Developer</SidebarGroupLabel>
+					<SidebarMenu>
+						<SidebarMenuItem>
+							<SidebarMenuButton asChild>
+								<Link href="/developer" className="flex items-center gap-2">
+									<Terminal />
+									<span>Developer Dashboard</span>
+								</Link>
+							</SidebarMenuButton>
+						</SidebarMenuItem>
+						<SidebarMenuItem>
+							<SidebarMenuButton asChild>
+								<Link
+									href="/developer/api-keys"
+									className="flex items-center gap-2"
+								>
+									<Key />
+									<span>API Keys</span>
+								</Link>
+							</SidebarMenuButton>
+						</SidebarMenuItem>
+						<SidebarMenuItem>
+							<SidebarMenuButton asChild>
+								<Link href="/developer/sdk" className="flex items-center gap-2">
+									<Package />
+									<span>SDK</span>
+								</Link>
+							</SidebarMenuButton>
+						</SidebarMenuItem>
+						<SidebarMenuItem>
+							<SidebarMenuButton asChild>
+								<Link href="/prompts" className="flex items-center gap-2">
+									<Terminal />
+									<span>Prompts</span>
+								</Link>
+							</SidebarMenuButton>
+						</SidebarMenuItem>
+					</SidebarMenu>
+				</SidebarGroup>
+				<SidebarGroup>
+					<SidebarGroupLabel>Resources</SidebarGroupLabel>
+					<SidebarMenu>
+						<SidebarMenuItem>
+							<SidebarMenuButton asChild>
+								<a
+									href="/documentation"
+									target="_blank"
+									rel="noopener noreferrer"
+									className="flex items-center gap-2"
+								>
+									<BookOpen />
+									<span>Documentation</span>
+								</a>
+							</SidebarMenuButton>
+						</SidebarMenuItem>
+						<SidebarMenuItem>
+							<SidebarMenuButton asChild>
+								<a
+									href="/guides"
+									target="_blank"
+									rel="noopener noreferrer"
+									className="flex items-center gap-2"
+								>
+									<FileText />
+									<span>Guides</span>
+								</a>
+							</SidebarMenuButton>
+						</SidebarMenuItem>
+						<SidebarMenuItem>
+							<SidebarMenuButton asChild>
+								<a
+									href="/api-reference"
+									target="_blank"
+									rel="noopener noreferrer"
+									className="flex items-center gap-2"
+								>
+									<Code />
+									<span>API Reference</span>
+								</a>
+							</SidebarMenuButton>
+						</SidebarMenuItem>
+						<SidebarMenuItem>
+							<SidebarMenuButton asChild>
+								<a
+									href="/blog"
+									target="_blank"
+									rel="noopener noreferrer"
+									className="flex items-center gap-2"
+								>
+									<Newspaper />
+									<span>Blog</span>
+								</a>
+							</SidebarMenuButton>
+						</SidebarMenuItem>
+					</SidebarMenu>
+				</SidebarGroup>
+				<SidebarGroup className="mt-auto">
+					<SidebarMenu>
+						<SidebarMenuItem>
+							<SidebarMenuButton asChild>
+								<Link href="/settings" className="flex items-center gap-2">
+									<Settings />
+									<span>Settings</span>
+								</Link>
+							</SidebarMenuButton>
+						</SidebarMenuItem>
+					</SidebarMenu>
+				</SidebarGroup>
+			</SidebarContent>
+		</Sidebar>
+	);
 }

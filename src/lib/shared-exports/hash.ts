@@ -12,6 +12,6 @@ export const HASH_VERSION = 1;
  * Uses deep-stable canonicalization so nested key order does not affect the hash.
  */
 export function computeExportHash(exportData: Record<string, unknown>): string {
-  const canonical = stableStringify(exportData);
-  return createHash("sha256").update(canonical).digest("hex");
+	const canonical = stableStringify(exportData);
+	return createHash("sha256").update(canonical).digest("hex");
 }

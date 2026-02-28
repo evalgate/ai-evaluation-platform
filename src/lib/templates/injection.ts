@@ -7,32 +7,32 @@ import { type TemplateContext, templateEngine } from "./engine";
  */
 
 export interface VariableDefinition {
-  name: string;
-  type: "string" | "number" | "boolean" | "object" | "array";
-  required: boolean;
-  defaultValue?: unknown;
-  description?: string;
-  validation?: {
-    min?: number;
-    max?: number;
-    pattern?: string;
-    enum?: unknown[];
-  };
+	name: string;
+	type: "string" | "number" | "boolean" | "object" | "array";
+	required: boolean;
+	defaultValue?: unknown;
+	description?: string;
+	validation?: {
+		min?: number;
+		max?: number;
+		pattern?: string;
+		enum?: unknown[];
+	};
 }
 
 export interface InjectionResult {
-  success: boolean;
-  rendered: string;
-  errors: string[];
-  warnings: string[];
-  usedVariables: string[];
-  unusedVariables: string[];
+	success: boolean;
+	rendered: string;
+	errors: string[];
+	warnings: string[];
+	usedVariables: string[];
+	unusedVariables: string[];
 }
 
 export interface VariableContext {
-  variables: Record<string, unknown>;
-  functions: Record<string, (...args: unknown[]) => unknown>;
-  metadata: Record<string, unknown>;
+	variables: Record<string, unknown>;
+	functions: Record<string, (...args: unknown[]) => unknown>;
+	metadata: Record<string, unknown>;
 }
 
 /**
@@ -40,457 +40,519 @@ export interface VariableContext {
  * Handles variable injection, validation, and context management.
  */
 export class TemplateInjection {
-  /**
-   * Inject variables into a template string.
-   */
-  static inject(
-    template: string,
-    context: VariableContext,
-    options: {
-      strict?: boolean;
-      validateRequired?: boolean;
-      trackUsage?: boolean;
-    } = {},
-  ): InjectionResult {
-    const { strict = false, validateRequired = true, trackUsage = true } = options;
-    const errors: string[] = [];
-    const warnings: string[] = [];
-    const usedVariables: string[] = [];
-    const unusedVariables: string[] = [];
+	/**
+	 * Inject variables into a template string.
+	 */
+	static inject(
+		template: string,
+		context: VariableContext,
+		options: {
+			strict?: boolean;
+			validateRequired?: boolean;
+			trackUsage?: boolean;
+		} = {},
+	): InjectionResult {
+		const {
+			strict = false,
+			validateRequired = true,
+			trackUsage = true,
+		} = options;
+		const errors: string[] = [];
+		const warnings: string[] = [];
+		const usedVariables: string[] = [];
+		const unusedVariables: string[] = [];
 
-    try {
-      // Validate required variables if requested
-      if (validateRequired) {
-        const requiredVars = TemplateInjection.extractRequiredVariables(template);
-        for (const varName of requiredVars) {
-          if (!(varName in context.variables)) {
-            errors.push(`Required variable '${varName}' is missing from context`);
-          }
-        }
-      }
+		try {
+			// Validate required variables if requested
+			if (validateRequired) {
+				const requiredVars =
+					TemplateInjection.extractRequiredVariables(template);
+				for (const varName of requiredVars) {
+					if (!(varName in context.variables)) {
+						errors.push(
+							`Required variable '${varName}' is missing from context`,
+						);
+					}
+				}
+			}
 
-      if (errors.length > 0 && strict) {
-        return {
-          success: false,
-          rendered: "",
-          errors,
-          warnings,
-          usedVariables: [],
-          unusedVariables: Object.keys(context.variables),
-        };
-      }
+			if (errors.length > 0 && strict) {
+				return {
+					success: false,
+					rendered: "",
+					errors,
+					warnings,
+					usedVariables: [],
+					unusedVariables: Object.keys(context.variables),
+				};
+			}
 
-      // Create enhanced context with functions
-      const enhancedContext: TemplateContext = {
-        ...context.variables,
-        ...context.functions,
-        ...context.metadata,
-      };
+			// Create enhanced context with functions
+			const enhancedContext: TemplateContext = {
+				...context.variables,
+				...context.functions,
+				...context.metadata,
+			};
 
-      // Render template
-      const rendered = templateEngine.render(template, enhancedContext, {
-        strict,
-        fallback: strict ? undefined : "",
-      });
+			// Render template
+			const rendered = templateEngine.render(template, enhancedContext, {
+				strict,
+				fallback: strict ? undefined : "",
+			});
 
-      // Track variable usage
-      if (trackUsage) {
-        const allVars = TemplateInjection.extractAllVariables(template);
-        usedVariables.push(...allVars);
-        unusedVariables.push(...Object.keys(context.variables).filter((v) => !allVars.includes(v)));
-      }
+			// Track variable usage
+			if (trackUsage) {
+				const allVars = TemplateInjection.extractAllVariables(template);
+				usedVariables.push(...allVars);
+				unusedVariables.push(
+					...Object.keys(context.variables).filter((v) => !allVars.includes(v)),
+				);
+			}
 
-      return {
-        success: true,
-        rendered,
-        errors,
-        warnings,
-        usedVariables,
-        unusedVariables,
-      };
-    } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      return {
-        success: false,
-        rendered: "",
-        errors: [`Template rendering failed: ${errorMessage}`],
-        warnings,
-        usedVariables: [],
-        unusedVariables: Object.keys(context.variables),
-      };
-    }
-  }
+			return {
+				success: true,
+				rendered,
+				errors,
+				warnings,
+				usedVariables,
+				unusedVariables,
+			};
+		} catch (error: unknown) {
+			const errorMessage =
+				error instanceof Error ? error.message : String(error);
+			return {
+				success: false,
+				rendered: "",
+				errors: [`Template rendering failed: ${errorMessage}`],
+				warnings,
+				usedVariables: [],
+				unusedVariables: Object.keys(context.variables),
+			};
+		}
+	}
 
-  /**
-   * Extract all variables from a template.
-   */
-  static extractAllVariables(template: string): string[] {
-    const variables = new Set<string>();
-    const regex = /\{\{([^}]+)\}\}/g;
-    let match = regex.exec(template);
+	/**
+	 * Extract all variables from a template.
+	 */
+	static extractAllVariables(template: string): string[] {
+		const variables = new Set<string>();
+		const regex = /\{\{([^}]+)\}\}/g;
+		let match = regex.exec(template);
 
-    while (match !== null) {
-      const variable = match[1].trim();
-      // Handle nested properties (e.g., user.name)
-      const parts = variable.split(".");
-      variables.add(parts[0]);
-      match = regex.exec(template);
-    }
+		while (match !== null) {
+			const variable = match[1].trim();
+			// Handle nested properties (e.g., user.name)
+			const parts = variable.split(".");
+			variables.add(parts[0]);
+			match = regex.exec(template);
+		}
 
-    return Array.from(variables);
-  }
+		return Array.from(variables);
+	}
 
-  /**
-   * Extract required variables from a template.
-   */
-  static extractRequiredVariables(template: string): string[] {
-    const variables = new Set<string>();
-    const regex = /\{\{([^}]+)\}\}/g;
-    let match = regex.exec(template);
+	/**
+	 * Extract required variables from a template.
+	 */
+	static extractRequiredVariables(template: string): string[] {
+		const variables = new Set<string>();
+		const regex = /\{\{([^}]+)\}\}/g;
+		let match = regex.exec(template);
 
-    while (match !== null) {
-      const variable = match[1].trim();
-      // Mark as required if it has no default value
-      if (!variable.includes("|") && !variable.includes("?")) {
-        const parts = variable.split(".");
-        variables.add(parts[0]);
-      }
-      match = regex.exec(template);
-    }
+		while (match !== null) {
+			const variable = match[1].trim();
+			// Mark as required if it has no default value
+			if (!variable.includes("|") && !variable.includes("?")) {
+				const parts = variable.split(".");
+				variables.add(parts[0]);
+			}
+			match = regex.exec(template);
+		}
 
-    return Array.from(variables);
-  }
+		return Array.from(variables);
+	}
 
-  /**
-   * Validate variable values against their definitions.
-   */
-  static validateVariables(
-    variables: Record<string, unknown>,
-    definitions: VariableDefinition[],
-  ): {
-    valid: boolean;
-    errors: string[];
-    validated: Record<string, unknown>;
-  } {
-    const errors: string[] = [];
-    const validated: Record<string, unknown> = {};
+	/**
+	 * Validate variable values against their definitions.
+	 */
+	static validateVariables(
+		variables: Record<string, unknown>,
+		definitions: VariableDefinition[],
+	): {
+		valid: boolean;
+		errors: string[];
+		validated: Record<string, unknown>;
+	} {
+		const errors: string[] = [];
+		const validated: Record<string, unknown> = {};
 
-    for (const def of definitions) {
-      const value = variables[def.name];
+		for (const def of definitions) {
+			const value = variables[def.name];
 
-      // Check required variables
-      if (def.required && (value === undefined || value === null)) {
-        errors.push(`Required variable '${def.name}' is missing`);
-        continue;
-      }
+			// Check required variables
+			if (def.required && (value === undefined || value === null)) {
+				errors.push(`Required variable '${def.name}' is missing`);
+				continue;
+			}
 
-      // Use default value if available
-      const finalValue = value !== undefined ? value : def.defaultValue;
+			// Use default value if available
+			const finalValue = value !== undefined ? value : def.defaultValue;
 
-      // Type validation
-      if (finalValue !== undefined && !TemplateInjection.validateType(finalValue, def)) {
-        errors.push(`Variable '${def.name}' must be of type ${def.type}`);
-        continue;
-      }
+			// Type validation
+			if (
+				finalValue !== undefined &&
+				!TemplateInjection.validateType(finalValue, def)
+			) {
+				errors.push(`Variable '${def.name}' must be of type ${def.type}`);
+				continue;
+			}
 
-      // Custom validation
-      if (finalValue !== undefined && def.validation) {
-        const validationError = TemplateInjection.validateCustom(finalValue, def);
-        if (validationError) {
-          errors.push(`Variable '${def.name}': ${validationError}`);
-          continue;
-        }
-      }
+			// Custom validation
+			if (finalValue !== undefined && def.validation) {
+				const validationError = TemplateInjection.validateCustom(
+					finalValue,
+					def,
+				);
+				if (validationError) {
+					errors.push(`Variable '${def.name}': ${validationError}`);
+					continue;
+				}
+			}
 
-      validated[def.name] = finalValue;
-    }
+			validated[def.name] = finalValue;
+		}
 
-    return {
-      valid: errors.length === 0,
-      errors,
-      validated,
-    };
-  }
+		return {
+			valid: errors.length === 0,
+			errors,
+			validated,
+		};
+	}
 
-  /**
-   * Validate variable type.
-   */
-  private static validateType(value: unknown, definition: VariableDefinition): boolean {
-    switch (definition.type) {
-      case "string":
-        return typeof value === "string";
-      case "number":
-        return typeof value === "number" && !Number.isNaN(value);
-      case "boolean":
-        return typeof value === "boolean";
-      case "object":
-        return typeof value === "object" && !Array.isArray(value) && value !== null;
-      case "array":
-        return Array.isArray(value);
-      default:
-        return true; // Unknown type, assume valid
-    }
-  }
+	/**
+	 * Validate variable type.
+	 */
+	private static validateType(
+		value: unknown,
+		definition: VariableDefinition,
+	): boolean {
+		switch (definition.type) {
+			case "string":
+				return typeof value === "string";
+			case "number":
+				return typeof value === "number" && !Number.isNaN(value);
+			case "boolean":
+				return typeof value === "boolean";
+			case "object":
+				return (
+					typeof value === "object" && !Array.isArray(value) && value !== null
+				);
+			case "array":
+				return Array.isArray(value);
+			default:
+				return true; // Unknown type, assume valid
+		}
+	}
 
-  /**
-   * Validate custom constraints.
-   */
-  private static validateCustom(value: unknown, definition: VariableDefinition): string | null {
-    const { validation } = definition;
+	/**
+	 * Validate custom constraints.
+	 */
+	private static validateCustom(
+		value: unknown,
+		definition: VariableDefinition,
+	): string | null {
+		const { validation } = definition;
 
-    if (!validation) return null;
+		if (!validation) return null;
 
-    // Min/Max validation for numbers
-    if (typeof value === "number") {
-      if (validation.min !== undefined && value < validation.min) {
-        return `Value must be at least ${validation.min}`;
-      }
-      if (validation.max !== undefined && value > validation.max) {
-        return `Value must be at most ${validation.max}`;
-      }
-    }
+		// Min/Max validation for numbers
+		if (typeof value === "number") {
+			if (validation.min !== undefined && value < validation.min) {
+				return `Value must be at least ${validation.min}`;
+			}
+			if (validation.max !== undefined && value > validation.max) {
+				return `Value must be at most ${validation.max}`;
+			}
+		}
 
-    // Pattern validation for strings
-    if (typeof value === "string" && validation.pattern) {
-      const regex = new RegExp(validation.pattern);
-      if (!regex.test(value)) {
-        return `Value must match pattern: ${validation.pattern}`;
-      }
-    }
+		// Pattern validation for strings
+		if (typeof value === "string" && validation.pattern) {
+			const regex = new RegExp(validation.pattern);
+			if (!regex.test(value)) {
+				return `Value must match pattern: ${validation.pattern}`;
+			}
+		}
 
-    // Enum validation
-    if (validation.enum && !validation.enum.includes(value)) {
-      return `Value must be one of: ${validation.enum.join(", ")}`;
-    }
+		// Enum validation
+		if (validation.enum && !validation.enum.includes(value)) {
+			return `Value must be one of: ${validation.enum.join(", ")}`;
+		}
 
-    return null;
-  }
+		return null;
+	}
 
-  /**
-   * Create a variable context from definitions and values.
-   */
-  static createContext(
-    definitions: VariableDefinition[],
-    values: Record<string, unknown>,
-    functions?: Record<string, (...args: unknown[]) => unknown>,
-    metadata?: Record<string, unknown>,
-  ): VariableContext {
-    const validation = TemplateInjection.validateVariables(values, definitions);
+	/**
+	 * Create a variable context from definitions and values.
+	 */
+	static createContext(
+		definitions: VariableDefinition[],
+		values: Record<string, unknown>,
+		functions?: Record<string, (...args: unknown[]) => unknown>,
+		metadata?: Record<string, unknown>,
+	): VariableContext {
+		const validation = TemplateInjection.validateVariables(values, definitions);
 
-    if (!validation.valid) {
-      throw new Error(`Variable validation failed: ${validation.errors.join(", ")}`);
-    }
+		if (!validation.valid) {
+			throw new Error(
+				`Variable validation failed: ${validation.errors.join(", ")}`,
+			);
+		}
 
-    return {
-      variables: validation.validated,
-      functions: functions || {},
-      metadata: metadata || {},
-    };
-  }
+		return {
+			variables: validation.validated,
+			functions: functions || {},
+			metadata: metadata || {},
+		};
+	}
 
-  /**
-   * Merge multiple contexts.
-   */
-  static mergeContexts(...contexts: VariableContext[]): VariableContext {
-    const merged: VariableContext = {
-      variables: {},
-      functions: {},
-      metadata: {},
-    };
+	/**
+	 * Merge multiple contexts.
+	 */
+	static mergeContexts(...contexts: VariableContext[]): VariableContext {
+		const merged: VariableContext = {
+			variables: {},
+			functions: {},
+			metadata: {},
+		};
 
-    for (const context of contexts) {
-      merged.variables = { ...merged.variables, ...context.variables };
-      merged.functions = { ...merged.functions, ...context.functions };
-      merged.metadata = { ...merged.metadata, ...context.metadata };
-    }
+		for (const context of contexts) {
+			merged.variables = { ...merged.variables, ...context.variables };
+			merged.functions = { ...merged.functions, ...context.functions };
+			merged.metadata = { ...merged.metadata, ...context.metadata };
+		}
 
-    return merged;
-  }
+		return merged;
+	}
 
-  /**
-   * Create a context with common helper functions.
-   */
-  static createHelperContext(): VariableContext {
-    return {
-      variables: {},
-      functions: {
-        // String functions
-        upper: ((str: string) => str.toUpperCase()) as (...args: unknown[]) => unknown,
-        lower: ((str: string) => str.toLowerCase()) as (...args: unknown[]) => unknown,
-        capitalize: ((str: string) => str.charAt(0).toUpperCase() + str.slice(1)) as (
-          ...args: unknown[]
-        ) => unknown,
-        trim: ((str: string) => str.trim()) as (...args: unknown[]) => unknown,
+	/**
+	 * Create a context with common helper functions.
+	 */
+	static createHelperContext(): VariableContext {
+		return {
+			variables: {},
+			functions: {
+				// String functions
+				upper: ((str: string) => str.toUpperCase()) as (
+					...args: unknown[]
+				) => unknown,
+				lower: ((str: string) => str.toLowerCase()) as (
+					...args: unknown[]
+				) => unknown,
+				capitalize: ((str: string) =>
+					str.charAt(0).toUpperCase() + str.slice(1)) as (
+					...args: unknown[]
+				) => unknown,
+				trim: ((str: string) => str.trim()) as (...args: unknown[]) => unknown,
 
-        // Number functions
-        round: ((num: number, decimals: number = 0) =>
-          Math.round(num * 10 ** decimals) / 10 ** decimals) as (...args: unknown[]) => unknown,
-        floor: ((num: number) => Math.floor(num)) as (...args: unknown[]) => unknown,
-        ceil: ((num: number) => Math.ceil(num)) as (...args: unknown[]) => unknown,
-        abs: ((num: number) => Math.abs(num)) as (...args: unknown[]) => unknown,
+				// Number functions
+				round: ((num: number, decimals: number = 0) =>
+					Math.round(num * 10 ** decimals) / 10 ** decimals) as (
+					...args: unknown[]
+				) => unknown,
+				floor: ((num: number) => Math.floor(num)) as (
+					...args: unknown[]
+				) => unknown,
+				ceil: ((num: number) => Math.ceil(num)) as (
+					...args: unknown[]
+				) => unknown,
+				abs: ((num: number) => Math.abs(num)) as (
+					...args: unknown[]
+				) => unknown,
 
-        // Date functions
-        formatDate: ((date: Date | string, _format: string = "YYYY-MM-DD") => {
-          const d = typeof date === "string" ? new Date(date) : date;
-          return d.toISOString().split("T")[0]; // Simple format
-        }) as (...args: unknown[]) => unknown,
+				// Date functions
+				formatDate: ((date: Date | string, _format: string = "YYYY-MM-DD") => {
+					const d = typeof date === "string" ? new Date(date) : date;
+					return d.toISOString().split("T")[0]; // Simple format
+				}) as (...args: unknown[]) => unknown,
 
-        // Array functions
-        join: ((array: unknown[], separator: string = ", ") => array.join(separator)) as (
-          ...args: unknown[]
-        ) => unknown,
-        length: ((array: unknown[]) => array.length) as (...args: unknown[]) => unknown,
-        first: ((array: unknown[]) => array[0]) as (...args: unknown[]) => unknown,
-        last: ((array: unknown[]) => array[array.length - 1]) as (...args: unknown[]) => unknown,
+				// Array functions
+				join: ((array: unknown[], separator: string = ", ") =>
+					array.join(separator)) as (...args: unknown[]) => unknown,
+				length: ((array: unknown[]) => array.length) as (
+					...args: unknown[]
+				) => unknown,
+				first: ((array: unknown[]) => array[0]) as (
+					...args: unknown[]
+				) => unknown,
+				last: ((array: unknown[]) => array[array.length - 1]) as (
+					...args: unknown[]
+				) => unknown,
 
-        // Object functions
-        keys: ((obj: object) => Object.keys(obj)) as (...args: unknown[]) => unknown,
-        values: ((obj: object) => Object.values(obj)) as (...args: unknown[]) => unknown,
-        entries: ((obj: object) => Object.entries(obj)) as (...args: unknown[]) => unknown,
+				// Object functions
+				keys: ((obj: object) => Object.keys(obj)) as (
+					...args: unknown[]
+				) => unknown,
+				values: ((obj: object) => Object.values(obj)) as (
+					...args: unknown[]
+				) => unknown,
+				entries: ((obj: object) => Object.entries(obj)) as (
+					...args: unknown[]
+				) => unknown,
 
-        // Utility functions
-        default: ((value: unknown, defaultValue: unknown) =>
-          value !== undefined ? value : defaultValue) as (...args: unknown[]) => unknown,
-        json: ((obj: unknown) => JSON.stringify(obj, null, 2)) as (...args: unknown[]) => unknown,
-        parse: ((str: string) => {
-          try {
-            return JSON.parse(str);
-          } catch {
-            return null;
-          }
-        }) as (...args: unknown[]) => unknown,
-      },
-      metadata: {
-        timestamp: new Date().toISOString(),
-        environment: process.env.NODE_ENV || "development",
-      },
-    };
-  }
+				// Utility functions
+				default: ((value: unknown, defaultValue: unknown) =>
+					value !== undefined ? value : defaultValue) as (
+					...args: unknown[]
+				) => unknown,
+				json: ((obj: unknown) => JSON.stringify(obj, null, 2)) as (
+					...args: unknown[]
+				) => unknown,
+				parse: ((str: string) => {
+					try {
+						return JSON.parse(str);
+					} catch {
+						return null;
+					}
+				}) as (...args: unknown[]) => unknown,
+			},
+			metadata: {
+				timestamp: new Date().toISOString(),
+				environment: process.env.NODE_ENV || "development",
+			},
+		};
+	}
 
-  /**
-   * Extract template metadata from comments.
-   */
-  static extractMetadata(template: string): Record<string, unknown> {
-    const metadata: Record<string, unknown> = {};
-    const metadataRegex = /<!--\s*meta:\s*(.+?)\s*-->/g;
-    let match = metadataRegex.exec(template);
+	/**
+	 * Extract template metadata from comments.
+	 */
+	static extractMetadata(template: string): Record<string, unknown> {
+		const metadata: Record<string, unknown> = {};
+		const metadataRegex = /<!--\s*meta:\s*(.+?)\s*-->/g;
+		let match = metadataRegex.exec(template);
 
-    while (match !== null) {
-      try {
-        const metaContent = match[1].trim();
-        if (metaContent.includes(":")) {
-          const [key, ...valueParts] = metaContent.split(":");
-          const value = valueParts.join(":").trim();
-          metadata[key.trim()] = value;
-        } else {
-          metadata[metaContent] = true;
-        }
-      } catch (_error) {
-        // Skip invalid metadata
-      }
-      match = metadataRegex.exec(template);
-    }
+		while (match !== null) {
+			try {
+				const metaContent = match[1].trim();
+				if (metaContent.includes(":")) {
+					const [key, ...valueParts] = metaContent.split(":");
+					const value = valueParts.join(":").trim();
+					metadata[key.trim()] = value;
+				} else {
+					metadata[metaContent] = true;
+				}
+			} catch (_error) {
+				// Skip invalid metadata
+			}
+			match = metadataRegex.exec(template);
+		}
 
-    return metadata;
-  }
+		return metadata;
+	}
 
-  /**
-   * Generate a template with variable definitions.
-   */
-  static generateTemplate(
-    content: string,
-    variables: VariableDefinition[],
-  ): {
-    template: string;
-    definitions: VariableDefinition[];
-  } {
-    let template = content;
-    const definitions: VariableDefinition[] = [];
+	/**
+	 * Generate a template with variable definitions.
+	 */
+	static generateTemplate(
+		content: string,
+		variables: VariableDefinition[],
+	): {
+		template: string;
+		definitions: VariableDefinition[];
+	} {
+		let template = content;
+		const definitions: VariableDefinition[] = [];
 
-    for (const variable of variables) {
-      const defaultValue =
-        variable.defaultValue !== undefined ? `| ${JSON.stringify(variable.defaultValue)}` : "";
+		for (const variable of variables) {
+			const defaultValue =
+				variable.defaultValue !== undefined
+					? `| ${JSON.stringify(variable.defaultValue)}`
+					: "";
 
-      const required = variable.required ? "" : "?";
+			const required = variable.required ? "" : "?";
 
-      template = template.replace(
-        new RegExp(`{{\\s*${variable.name}\\s*}}`, "g"),
-        `{{${variable.name}${required}${defaultValue}}}`,
-      );
+			template = template.replace(
+				new RegExp(`{{\\s*${variable.name}\\s*}}`, "g"),
+				`{{${variable.name}${required}${defaultValue}}}`,
+			);
 
-      definitions.push(variable);
-    }
+			definitions.push(variable);
+		}
 
-    return { template, definitions };
-  }
+		return { template, definitions };
+	}
 
-  /**
-   * Preview template with sample data.
-   */
-  static preview(
-    template: string,
-    definitions: VariableDefinition[],
-  ): {
-    preview: string;
-    sampleData: Record<string, unknown>;
-  } {
-    const sampleData: Record<string, unknown> = {};
+	/**
+	 * Preview template with sample data.
+	 */
+	static preview(
+		template: string,
+		definitions: VariableDefinition[],
+	): {
+		preview: string;
+		sampleData: Record<string, unknown>;
+	} {
+		const sampleData: Record<string, unknown> = {};
 
-    for (const def of definitions) {
-      switch (def.type) {
-        case "string":
-          sampleData[def.name] = def.defaultValue || `sample_${def.name}`;
-          break;
-        case "number":
-          sampleData[def.name] = def.defaultValue || 42;
-          break;
-        case "boolean":
-          sampleData[def.name] = def.defaultValue !== undefined ? def.defaultValue : true;
-          break;
-        case "object":
-          sampleData[def.name] = def.defaultValue || { sample: "data" };
-          break;
-        case "array":
-          sampleData[def.name] = def.defaultValue || ["item1", "item2"];
-          break;
-      }
-    }
+		for (const def of definitions) {
+			switch (def.type) {
+				case "string":
+					sampleData[def.name] = def.defaultValue || `sample_${def.name}`;
+					break;
+				case "number":
+					sampleData[def.name] = def.defaultValue || 42;
+					break;
+				case "boolean":
+					sampleData[def.name] =
+						def.defaultValue !== undefined ? def.defaultValue : true;
+					break;
+				case "object":
+					sampleData[def.name] = def.defaultValue || { sample: "data" };
+					break;
+				case "array":
+					sampleData[def.name] = def.defaultValue || ["item1", "item2"];
+					break;
+			}
+		}
 
-    const context = TemplateInjection.createContext(definitions, sampleData);
-    const result = TemplateInjection.inject(template, context);
+		const context = TemplateInjection.createContext(definitions, sampleData);
+		const result = TemplateInjection.inject(template, context);
 
-    return {
-      preview: result.rendered,
-      sampleData,
-    };
-  }
+		return {
+			preview: result.rendered,
+			sampleData,
+		};
+	}
 }
 
 // Convenience functions
 export const injectTemplate = (
-  template: string,
-  context: VariableContext,
-  options?: {
-    strict?: boolean;
-    validateRequired?: boolean;
-    trackUsage?: boolean;
-  },
+	template: string,
+	context: VariableContext,
+	options?: {
+		strict?: boolean;
+		validateRequired?: boolean;
+		trackUsage?: boolean;
+	},
 ): InjectionResult => {
-  return TemplateInjection.inject(template, context, options);
+	return TemplateInjection.inject(template, context, options);
 };
 
 export const validateTemplateVariables = (
-  variables: Record<string, unknown>,
-  definitions: VariableDefinition[],
+	variables: Record<string, unknown>,
+	definitions: VariableDefinition[],
 ) => {
-  return TemplateInjection.validateVariables(variables, definitions);
+	return TemplateInjection.validateVariables(variables, definitions);
 };
 
 export const createTemplateContext = (
-  definitions: VariableDefinition[],
-  values: Record<string, unknown>,
-  functions?: Record<string, (...args: unknown[]) => unknown>,
-  metadata?: Record<string, unknown>,
+	definitions: VariableDefinition[],
+	values: Record<string, unknown>,
+	functions?: Record<string, (...args: unknown[]) => unknown>,
+	metadata?: Record<string, unknown>,
 ): VariableContext => {
-  return TemplateInjection.createContext(definitions, values, functions, metadata);
+	return TemplateInjection.createContext(
+		definitions,
+		values,
+		functions,
+		metadata,
+	);
 };

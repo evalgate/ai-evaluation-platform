@@ -113,8 +113,12 @@ function createPaginationMeta(items, limit, offset, total) {
         limit,
         offset,
         total,
-        nextCursor: hasMore ? encodeCursor({ offset: offset + limit, limit }) : undefined,
-        prevCursor: offset > 0 ? encodeCursor({ offset: Math.max(0, offset - limit), limit }) : undefined,
+        nextCursor: hasMore
+            ? encodeCursor({ offset: offset + limit, limit })
+            : undefined,
+        prevCursor: offset > 0
+            ? encodeCursor({ offset: Math.max(0, offset - limit), limit })
+            : undefined,
     };
 }
 /**

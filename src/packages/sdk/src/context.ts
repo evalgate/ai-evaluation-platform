@@ -23,37 +23,39 @@
  * Context metadata that will be automatically injected
  */
 export interface ContextMetadata {
-  [key: string]: unknown;
+	[key: string]: unknown;
 }
 
 // Detect environment
 const isNode =
-  typeof process !== "undefined" && process.versions?.node && typeof require !== "undefined";
+	typeof process !== "undefined" &&
+	process.versions?.node &&
+	typeof require !== "undefined";
 
 // Browser fallback: simple context stack
 class BrowserContextStorage {
-  private stack: ContextMetadata[] = [];
+	private stack: ContextMetadata[] = [];
 
-  run<T>(context: ContextMetadata, fn: () => T): T {
-    this.stack.push(context);
-    try {
-      return fn();
-    } finally {
-      this.stack.pop();
-    }
-  }
+	run<T>(context: ContextMetadata, fn: () => T): T {
+		this.stack.push(context);
+		try {
+			return fn();
+		} finally {
+			this.stack.pop();
+		}
+	}
 
-  getStore(): ContextMetadata | undefined {
-    return this.stack[this.stack.length - 1];
-  }
+	getStore(): ContextMetadata | undefined {
+		return this.stack[this.stack.length - 1];
+	}
 }
 
 /**
  * Context storage interface
  */
 interface ContextStorage {
-  run<T>(context: ContextMetadata, fn: () => T): T;
-  getStore(): ContextMetadata | undefined;
+	run<T>(context: ContextMetadata, fn: () => T): T;
+	getStore(): ContextMetadata | undefined;
 }
 
 /**
@@ -63,63 +65,63 @@ interface ContextStorage {
 let contextStorage: ContextStorage;
 
 if (isNode) {
-  try {
-    // Dynamic import for Node.js only
-    const { AsyncLocalStorage } = require("node:async_hooks");
-    // Create without type argument due to require() being untyped
-    contextStorage = new AsyncLocalStorage();
-  } catch (_error) {
-    // Fallback if async_hooks is not available
-    contextStorage = new BrowserContextStorage();
-  }
+	try {
+		// Dynamic import for Node.js only
+		const { AsyncLocalStorage } = require("node:async_hooks");
+		// Create without type argument due to require() being untyped
+		contextStorage = new AsyncLocalStorage();
+	} catch (_error) {
+		// Fallback if async_hooks is not available
+		contextStorage = new BrowserContextStorage();
+	}
 } else {
-  // Use browser storage for non-Node environments
-  contextStorage = new BrowserContextStorage();
+	// Use browser storage for non-Node environments
+	contextStorage = new BrowserContextStorage();
 }
 
 /**
  * Context manager for automatic metadata propagation
  */
 export class EvalContext {
-  constructor(private metadata: ContextMetadata) {}
+	constructor(private metadata: ContextMetadata) {}
 
-  /**
-   * Run a function with this context
-   *
-   * @example
-   * ```typescript
-   * const context = new EvalContext({ userId: '123' });
-   *
-   * await context.run(async () => {
-   *   // All operations inherit context
-   *   await client.traces.create({ name: 'test' });
-   * });
-   * ```
-   */
-  async run<T>(fn: () => Promise<T>): Promise<T> {
-    return contextStorage.run(this.metadata, fn);
-  }
+	/**
+	 * Run a function with this context
+	 *
+	 * @example
+	 * ```typescript
+	 * const context = new EvalContext({ userId: '123' });
+	 *
+	 * await context.run(async () => {
+	 *   // All operations inherit context
+	 *   await client.traces.create({ name: 'test' });
+	 * });
+	 * ```
+	 */
+	async run<T>(fn: () => Promise<T>): Promise<T> {
+		return contextStorage.run(this.metadata, fn);
+	}
 
-  /**
-   * Run a synchronous function with this context
-   */
-  runSync<T>(fn: () => T): T {
-    return contextStorage.run(this.metadata, fn);
-  }
+	/**
+	 * Run a synchronous function with this context
+	 */
+	runSync<T>(fn: () => T): T {
+		return contextStorage.run(this.metadata, fn);
+	}
 
-  /**
-   * Get the current context metadata
-   */
-  getMetadata(): ContextMetadata {
-    return { ...this.metadata };
-  }
+	/**
+	 * Get the current context metadata
+	 */
+	getMetadata(): ContextMetadata {
+		return { ...this.metadata };
+	}
 
-  /**
-   * Merge additional metadata into context
-   */
-  with(additionalMetadata: ContextMetadata): EvalContext {
-    return new EvalContext({ ...this.metadata, ...additionalMetadata });
-  }
+	/**
+	 * Merge additional metadata into context
+	 */
+	with(additionalMetadata: ContextMetadata): EvalContext {
+		return new EvalContext({ ...this.metadata, ...additionalMetadata });
+	}
 }
 
 /**
@@ -139,7 +141,7 @@ export class EvalContext {
  * ```
  */
 export function createContext(metadata: ContextMetadata): EvalContext {
-  return new EvalContext(metadata);
+	return new EvalContext(metadata);
 }
 
 /**
@@ -154,7 +156,7 @@ export function createContext(metadata: ContextMetadata): EvalContext {
  * ```
  */
 export function getCurrentContext(): ContextMetadata | undefined {
-  return contextStorage.getStore();
+	return contextStorage.getStore();
 }
 
 /**
@@ -169,10 +171,12 @@ export function getCurrentContext(): ContextMetadata | undefined {
  * };
  * ```
  */
-export function mergeWithContext(metadata?: Record<string, unknown>): Record<string, unknown> {
-  const current = getCurrentContext();
-  if (!current) return metadata || {};
-  return { ...current, ...metadata };
+export function mergeWithContext(
+	metadata?: Record<string, unknown>,
+): Record<string, unknown> {
+	const current = getCurrentContext();
+	if (!current) return metadata || {};
+	return { ...current, ...metadata };
 }
 
 /**
@@ -189,19 +193,22 @@ export function mergeWithContext(metadata?: Record<string, unknown>): Record<str
  * });
  * ```
  */
-export async function withContext<T>(metadata: ContextMetadata, fn: () => Promise<T>): Promise<T> {
-  const current = getCurrentContext() || {};
-  const merged = { ...current, ...metadata };
-  return contextStorage.run(merged, fn);
+export async function withContext<T>(
+	metadata: ContextMetadata,
+	fn: () => Promise<T>,
+): Promise<T> {
+	const current = getCurrentContext() || {};
+	const merged = { ...current, ...metadata };
+	return contextStorage.run(merged, fn);
 }
 
 /**
  * Run with nested context (synchronous)
  */
 export function withContextSync<T>(metadata: ContextMetadata, fn: () => T): T {
-  const current = getCurrentContext() || {};
-  const merged = { ...current, ...metadata };
-  return contextStorage.run(merged, fn);
+	const current = getCurrentContext() || {};
+	const merged = { ...current, ...metadata };
+	return contextStorage.run(merged, fn);
 }
 
 /**
@@ -218,13 +225,17 @@ export function withContextSync<T>(metadata: ContextMetadata, fn: () => T): T {
  * ```
  */
 export function WithContext(metadata: ContextMetadata) {
-  return (_target: unknown, _propertyKey: string, descriptor: PropertyDescriptor) => {
-    const originalMethod = descriptor.value;
+	return (
+		_target: unknown,
+		_propertyKey: string,
+		descriptor: PropertyDescriptor,
+	) => {
+		const originalMethod = descriptor.value;
 
-    descriptor.value = async function (...args: unknown[]) {
-      return withContext(metadata, () => originalMethod.apply(this, args));
-    };
+		descriptor.value = async function (...args: unknown[]) {
+			return withContext(metadata, () => originalMethod.apply(this, args));
+		};
 
-    return descriptor;
-  };
+		return descriptor;
+	};
 }

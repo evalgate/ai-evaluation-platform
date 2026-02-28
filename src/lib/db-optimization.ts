@@ -7,203 +7,209 @@ import { logger } from "@/lib/logger";
 import { CacheTTL, cache } from "@/lib/redis-cache";
 
 export interface PaginationParams {
-  limit?: number;
-  offset?: number;
-  page?: number;
+	limit?: number;
+	offset?: number;
+	page?: number;
 }
 
 export interface PaginatedResult<T> {
-  data: T[];
-  pagination: {
-    total: number;
-    limit: number;
-    offset: number;
-    page: number;
-    totalPages: number;
-    hasMore: boolean;
-  };
+	data: T[];
+	pagination: {
+		total: number;
+		limit: number;
+		offset: number;
+		page: number;
+		totalPages: number;
+		hasMore: boolean;
+	};
 }
 
 export interface CursorPaginationParams {
-  limit?: number;
-  cursor?: string;
+	limit?: number;
+	cursor?: string;
 }
 
 export interface CursorPaginatedResult<T> {
-  data: T[];
-  pagination: {
-    limit: number;
-    nextCursor: string | null;
-    hasMore: boolean;
-  };
+	data: T[];
+	pagination: {
+		limit: number;
+		nextCursor: string | null;
+		hasMore: boolean;
+	};
 }
 
 /**
  * Normalize pagination parameters
  */
 export function normalizePagination(params: PaginationParams): {
-  limit: number;
-  offset: number;
+	limit: number;
+	offset: number;
 } {
-  const limit = Math.min(params.limit || 50, 100); // Max 100 items
-  const page = params.page || 1;
-  const offset = params.offset !== undefined ? params.offset : (page - 1) * limit;
+	const limit = Math.min(params.limit || 50, 100); // Max 100 items
+	const page = params.page || 1;
+	const offset =
+		params.offset !== undefined ? params.offset : (page - 1) * limit;
 
-  return { limit, offset };
+	return { limit, offset };
 }
 
 /**
  * Build paginated result
  */
 export function buildPaginatedResult<T>(
-  data: T[],
-  total: number,
-  params: PaginationParams,
+	data: T[],
+	total: number,
+	params: PaginationParams,
 ): PaginatedResult<T> {
-  const { limit, offset } = normalizePagination(params);
-  const page = Math.floor(offset / limit) + 1;
-  const totalPages = Math.ceil(total / limit);
+	const { limit, offset } = normalizePagination(params);
+	const page = Math.floor(offset / limit) + 1;
+	const totalPages = Math.ceil(total / limit);
 
-  return {
-    data,
-    pagination: {
-      total,
-      limit,
-      offset,
-      page,
-      totalPages,
-      hasMore: offset + data.length < total,
-    },
-  };
+	return {
+		data,
+		pagination: {
+			total,
+			limit,
+			offset,
+			page,
+			totalPages,
+			hasMore: offset + data.length < total,
+		},
+	};
 }
 
 /**
  * Encode cursor for cursor-based pagination
  */
 export function encodeCursor(data: unknown): string {
-  return Buffer.from(JSON.stringify(data)).toString("base64");
+	return Buffer.from(JSON.stringify(data)).toString("base64");
 }
 
 /**
  * Decode cursor for cursor-based pagination
  */
 export function decodeCursor(cursor: string): unknown {
-  try {
-    return JSON.parse(Buffer.from(cursor, "base64").toString("utf-8"));
-  } catch (_error) {
-    throw new Error("Invalid cursor");
-  }
+	try {
+		return JSON.parse(Buffer.from(cursor, "base64").toString("utf-8"));
+	} catch (_error) {
+		throw new Error("Invalid cursor");
+	}
 }
 
 /**
  * Build cursor-paginated result
  */
 export function buildCursorPaginatedResult<T>(
-  data: T[],
-  limit: number,
-  getCursor: (item: T) => unknown,
+	data: T[],
+	limit: number,
+	getCursor: (item: T) => unknown,
 ): CursorPaginatedResult<T> {
-  const hasMore = data.length > limit;
-  const items = hasMore ? data.slice(0, limit) : data;
+	const hasMore = data.length > limit;
+	const items = hasMore ? data.slice(0, limit) : data;
 
-  const nextCursor =
-    hasMore && items.length > 0 ? encodeCursor(getCursor(items[items.length - 1])) : null;
+	const nextCursor =
+		hasMore && items.length > 0
+			? encodeCursor(getCursor(items[items.length - 1]))
+			: null;
 
-  return {
-    data: items,
-    pagination: {
-      limit,
-      nextCursor,
-      hasMore,
-    },
-  };
+	return {
+		data: items,
+		pagination: {
+			limit,
+			nextCursor,
+			hasMore,
+		},
+	};
 }
 
 /**
  * Cached query wrapper with automatic invalidation
  */
 export async function cachedQuery<T>(
-  cacheKey: string,
-  queryFn: () => Promise<T>,
-  options: {
-    ttl?: number;
-    organizationId?: number;
-    resource?: string;
-  } = {},
+	cacheKey: string,
+	queryFn: () => Promise<T>,
+	options: {
+		ttl?: number;
+		organizationId?: number;
+		resource?: string;
+	} = {},
 ): Promise<T> {
-  const { ttl = CacheTTL.MEDIUM, organizationId, resource } = options;
+	const { ttl = CacheTTL.MEDIUM, organizationId, resource } = options;
 
-  // Generate full cache key
-  const fullKey = organizationId
-    ? `${resource || "query"}:org:${organizationId}:${cacheKey}`
-    : `${resource || "query"}:${cacheKey}`;
+	// Generate full cache key
+	const fullKey = organizationId
+		? `${resource || "query"}:org:${organizationId}:${cacheKey}`
+		: `${resource || "query"}:${cacheKey}`;
 
-  logger.debug("Cached query", { key: fullKey, ttl });
+	logger.debug("Cached query", { key: fullKey, ttl });
 
-  return await cache.wrap(fullKey, queryFn, { ttl });
+	return await cache.wrap(fullKey, queryFn, { ttl });
 }
 
 /**
  * Batch load related data to prevent N+1 queries
  */
 export async function batchLoad<T, K extends keyof T>(
-  items: T[],
-  foreignKey: K,
-  loadFn: (ids: Array<T[K]>) => Promise<Record<string, unknown>>,
+	items: T[],
+	foreignKey: K,
+	loadFn: (ids: Array<T[K]>) => Promise<Record<string, unknown>>,
 ): Promise<(T & { _loaded?: unknown })[]> {
-  if (items.length === 0) {
-    return [] as (T & { _loaded?: unknown })[];
-  }
+	if (items.length === 0) {
+		return [] as (T & { _loaded?: unknown })[];
+	}
 
-  // Extract unique foreign key values
-  const ids = [...new Set(items.map((item) => item[foreignKey]))];
+	// Extract unique foreign key values
+	const ids = [...new Set(items.map((item) => item[foreignKey]))];
 
-  logger.debug("Batch loading related data", { count: ids.length });
+	logger.debug("Batch loading related data", { count: ids.length });
 
-  // Load all related data in one query
-  const relatedData = await loadFn(ids);
+	// Load all related data in one query
+	const relatedData = await loadFn(ids);
 
-  // Attach related data to items
-  return items.map((item) => ({
-    ...item,
-    _loaded: relatedData[String(item[foreignKey])],
-  }));
+	// Attach related data to items
+	return items.map((item) => ({
+		...item,
+		_loaded: relatedData[String(item[foreignKey])],
+	}));
 }
 
 /**
  * Measure query performance
  */
-export async function measureQuery<T>(name: string, queryFn: () => Promise<T>): Promise<T> {
-  const startTime = Date.now();
+export async function measureQuery<T>(
+	name: string,
+	queryFn: () => Promise<T>,
+): Promise<T> {
+	const startTime = Date.now();
 
-  try {
-    const result = await queryFn();
-    const duration = Date.now() - startTime;
+	try {
+		const result = await queryFn();
+		const duration = Date.now() - startTime;
 
-    if (duration > 1000) {
-      logger.warn("Slow query detected", { name, duration });
-    } else {
-      logger.debug("Query executed", { name, duration });
-    }
+		if (duration > 1000) {
+			logger.warn("Slow query detected", { name, duration });
+		} else {
+			logger.debug("Query executed", { name, duration });
+		}
 
-    return result;
-  } catch (error: unknown) {
-    const duration = Date.now() - startTime;
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    logger.error("Query failed", { name, duration, error: errorMessage });
-    throw error;
-  }
+		return result;
+	} catch (error: unknown) {
+		const duration = Date.now() - startTime;
+		const errorMessage = error instanceof Error ? error.message : String(error);
+		logger.error("Query failed", { name, duration, error: errorMessage });
+		throw error;
+	}
 }
 
 /**
  * Invalidate cache for mutations
  */
 export async function invalidateCacheForMutation(
-  resource: string,
-  organizationId: number,
+	resource: string,
+	organizationId: number,
 ): Promise<void> {
-  logger.info("Invalidating cache for mutation", { resource, organizationId });
-  await cache.invalidateResource(resource, organizationId);
+	logger.info("Invalidating cache for mutation", { resource, organizationId });
+	await cache.invalidateResource(resource, organizationId);
 }
 
 /**
@@ -211,63 +217,80 @@ export async function invalidateCacheForMutation(
  * Tracks and logs slow queries automatically
  */
 export class QueryOptimizer {
-  private slowQueryThreshold = 1000; // 1 second
-  private queryStats: Map<string, { count: number; totalTime: number; maxTime: number }> =
-    new Map();
+	private slowQueryThreshold = 1000; // 1 second
+	private queryStats: Map<
+		string,
+		{ count: number; totalTime: number; maxTime: number }
+	> = new Map();
 
-  async trackQuery<T>(name: string, queryFn: () => Promise<T>): Promise<T> {
-    const startTime = Date.now();
+	async trackQuery<T>(name: string, queryFn: () => Promise<T>): Promise<T> {
+		const startTime = Date.now();
 
-    try {
-      const result = await queryFn();
-      const duration = Date.now() - startTime;
+		try {
+			const result = await queryFn();
+			const duration = Date.now() - startTime;
 
-      this.recordQuery(name, duration);
+			this.recordQuery(name, duration);
 
-      if (duration > this.slowQueryThreshold) {
-        logger.warn("Slow query detected", {
-          query: name,
-          duration,
-          threshold: this.slowQueryThreshold,
-        });
-      }
+			if (duration > this.slowQueryThreshold) {
+				logger.warn("Slow query detected", {
+					query: name,
+					duration,
+					threshold: this.slowQueryThreshold,
+				});
+			}
 
-      return result;
-    } catch (error: unknown) {
-      const duration = Date.now() - startTime;
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      logger.error("Query error", { query: name, duration, error: errorMessage });
-      throw error;
-    }
-  }
+			return result;
+		} catch (error: unknown) {
+			const duration = Date.now() - startTime;
+			const errorMessage =
+				error instanceof Error ? error.message : String(error);
+			logger.error("Query error", {
+				query: name,
+				duration,
+				error: errorMessage,
+			});
+			throw error;
+		}
+	}
 
-  private recordQuery(name: string, duration: number): void {
-    const stats = this.queryStats.get(name) || { count: 0, totalTime: 0, maxTime: 0 };
+	private recordQuery(name: string, duration: number): void {
+		const stats = this.queryStats.get(name) || {
+			count: 0,
+			totalTime: 0,
+			maxTime: 0,
+		};
 
-    stats.count++;
-    stats.totalTime += duration;
-    stats.maxTime = Math.max(stats.maxTime, duration);
+		stats.count++;
+		stats.totalTime += duration;
+		stats.maxTime = Math.max(stats.maxTime, duration);
 
-    this.queryStats.set(name, stats);
-  }
+		this.queryStats.set(name, stats);
+	}
 
-  getStats(): Record<string, { count: number; avgTime: number; maxTime: number }> {
-    const result: Record<string, { count: number; avgTime: number; maxTime: number }> = {};
+	getStats(): Record<
+		string,
+		{ count: number; avgTime: number; maxTime: number }
+	> {
+		const result: Record<
+			string,
+			{ count: number; avgTime: number; maxTime: number }
+		> = {};
 
-    this.queryStats.forEach((stats, name) => {
-      result[name] = {
-        count: stats.count,
-        avgTime: Math.round(stats.totalTime / stats.count),
-        maxTime: stats.maxTime,
-      };
-    });
+		this.queryStats.forEach((stats, name) => {
+			result[name] = {
+				count: stats.count,
+				avgTime: Math.round(stats.totalTime / stats.count),
+				maxTime: stats.maxTime,
+			};
+		});
 
-    return result;
-  }
+		return result;
+	}
 
-  resetStats(): void {
-    this.queryStats.clear();
-  }
+	resetStats(): void {
+		this.queryStats.clear();
+	}
 }
 
 // Export singleton

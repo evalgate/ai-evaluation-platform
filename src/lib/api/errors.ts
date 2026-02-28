@@ -13,47 +13,47 @@ import { logger } from "@/lib/logger";
 // ── Error codes ──
 
 export type ApiErrorCode =
-  | "UNAUTHORIZED"
-  | "FORBIDDEN"
-  | "NOT_FOUND"
-  | "VALIDATION_ERROR"
-  | "RATE_LIMITED"
-  | "CONFLICT"
-  | "INTERNAL_ERROR"
-  | "SERVICE_UNAVAILABLE"
-  | "QUOTA_EXCEEDED"
-  | "NO_ORG_MEMBERSHIP"
-  | "SHARE_REVOKED"
-  | "SHARE_EXPIRED"
-  | "SHARE_UNAVAILABLE";
+	| "UNAUTHORIZED"
+	| "FORBIDDEN"
+	| "NOT_FOUND"
+	| "VALIDATION_ERROR"
+	| "RATE_LIMITED"
+	| "CONFLICT"
+	| "INTERNAL_ERROR"
+	| "SERVICE_UNAVAILABLE"
+	| "QUOTA_EXCEEDED"
+	| "NO_ORG_MEMBERSHIP"
+	| "SHARE_REVOKED"
+	| "SHARE_EXPIRED"
+	| "SHARE_UNAVAILABLE";
 
 // ── Error response shape ──
 
 export interface ApiErrorResponse {
-  error: {
-    code: ApiErrorCode;
-    message: string;
-    details?: unknown;
-    requestId?: string;
-  };
+	error: {
+		code: ApiErrorCode;
+		message: string;
+		details?: unknown;
+		requestId?: string;
+	};
 }
 
 // ── HTTP status code mapping ──
 
 const CODE_TO_STATUS: Record<ApiErrorCode, number> = {
-  UNAUTHORIZED: 401,
-  FORBIDDEN: 403,
-  NOT_FOUND: 404,
-  VALIDATION_ERROR: 400,
-  RATE_LIMITED: 429,
-  CONFLICT: 409,
-  INTERNAL_ERROR: 500,
-  SERVICE_UNAVAILABLE: 503,
-  QUOTA_EXCEEDED: 402,
-  NO_ORG_MEMBERSHIP: 403,
-  SHARE_REVOKED: 410,
-  SHARE_EXPIRED: 410,
-  SHARE_UNAVAILABLE: 410,
+	UNAUTHORIZED: 401,
+	FORBIDDEN: 403,
+	NOT_FOUND: 404,
+	VALIDATION_ERROR: 400,
+	RATE_LIMITED: 429,
+	CONFLICT: 409,
+	INTERNAL_ERROR: 500,
+	SERVICE_UNAVAILABLE: 503,
+	QUOTA_EXCEEDED: 402,
+	NO_ORG_MEMBERSHIP: 403,
+	SHARE_REVOKED: 410,
+	SHARE_EXPIRED: 410,
+	SHARE_UNAVAILABLE: 410,
 };
 
 // ── Builder ──
@@ -63,67 +63,71 @@ const CODE_TO_STATUS: Record<ApiErrorCode, number> = {
  * If `status` is omitted it is derived from `code`.
  */
 export function apiError(
-  code: ApiErrorCode,
-  message: string,
-  statusOverride?: number,
-  details?: unknown,
+	code: ApiErrorCode,
+	message: string,
+	statusOverride?: number,
+	details?: unknown,
 ): NextResponse {
-  const status = statusOverride ?? CODE_TO_STATUS[code];
-  const requestId = getRequestId();
+	const status = statusOverride ?? CODE_TO_STATUS[code];
+	const requestId = getRequestId();
 
-  const body: ApiErrorResponse = {
-    error: {
-      code,
-      message,
-      ...(details !== undefined ? { details } : {}),
-      requestId,
-    },
-  };
+	const body: ApiErrorResponse = {
+		error: {
+			code,
+			message,
+			...(details !== undefined ? { details } : {}),
+			requestId,
+		},
+	};
 
-  logger.warn("API error response", { code, message, status, requestId });
+	logger.warn("API error response", { code, message, status, requestId });
 
-  const res = NextResponse.json(body, { status });
-  res.headers.set("x-request-id", requestId);
-  return res;
+	const res = NextResponse.json(body, { status });
+	res.headers.set("x-request-id", requestId);
+	return res;
 }
 
 // ── Convenience helpers ──
 
 export function unauthorized(message = "Unauthorized") {
-  return apiError("UNAUTHORIZED", message);
+	return apiError("UNAUTHORIZED", message);
 }
 
 export function forbidden(message = "Forbidden") {
-  return apiError("FORBIDDEN", message);
+	return apiError("FORBIDDEN", message);
 }
 
 export function notFound(message = "Resource not found") {
-  return apiError("NOT_FOUND", message);
+	return apiError("NOT_FOUND", message);
 }
 
 export function validationError(message: string, details?: unknown) {
-  return apiError("VALIDATION_ERROR", message, undefined, details);
+	return apiError("VALIDATION_ERROR", message, undefined, details);
 }
 
-export function rateLimited(message = "Too many requests. Please try again later.") {
-  return apiError("RATE_LIMITED", message);
+export function rateLimited(
+	message = "Too many requests. Please try again later.",
+) {
+	return apiError("RATE_LIMITED", message);
 }
 
 /** Plan entitlement / hard limits — use 403 (not 402) per trust plan. */
 export function quotaExceeded(message: string, details?: unknown) {
-  return apiError("QUOTA_EXCEEDED", message, 403, details);
+	return apiError("QUOTA_EXCEEDED", message, 403, details);
 }
 
 export function conflict(message: string) {
-  return apiError("CONFLICT", message);
+	return apiError("CONFLICT", message);
 }
 
 export function internalError(message = "Internal server error") {
-  return apiError("INTERNAL_ERROR", message);
+	return apiError("INTERNAL_ERROR", message);
 }
 
-export function serviceUnavailable(message = "Service temporarily unavailable") {
-  return apiError("SERVICE_UNAVAILABLE", message);
+export function serviceUnavailable(
+	message = "Service temporarily unavailable",
+) {
+	return apiError("SERVICE_UNAVAILABLE", message);
 }
 
 // ── Zod helper ──
@@ -132,5 +136,5 @@ export function serviceUnavailable(message = "Service temporarily unavailable") 
  * Convert a ZodError into a structured VALIDATION_ERROR response.
  */
 export function zodValidationError(err: ZodError) {
-  return validationError("Invalid request body", err.issues);
+	return validationError("Invalid request body", err.issues);
 }

@@ -5,20 +5,23 @@ import { arenaMatchesService } from "@/lib/services/arena-matches.service";
 import { parsePaginationParams } from "@/lib/validation";
 
 export const GET = secureRoute(async (req: NextRequest, ctx: AuthContext) => {
-  const { searchParams } = new URL(req.url);
-  const { limit } = parsePaginationParams(searchParams);
-  const days = parseInt(searchParams.get("days") || "30", 10);
+	const { searchParams } = new URL(req.url);
+	const { limit } = parsePaginationParams(searchParams);
+	const days = parseInt(searchParams.get("days") || "30", 10);
 
-  try {
-    const leaderboard = await arenaMatchesService.getLeaderboard(ctx.organizationId, {
-      limit,
-      timeRange: { days },
-    });
+	try {
+		const leaderboard = await arenaMatchesService.getLeaderboard(
+			ctx.organizationId,
+			{
+				limit,
+				timeRange: { days },
+			},
+		);
 
-    const stats = await arenaMatchesService.getArenaStats(ctx.organizationId);
+		const stats = await arenaMatchesService.getArenaStats(ctx.organizationId);
 
-    return NextResponse.json({ leaderboard, stats });
-  } catch (error: unknown) {
-    return internalError(error instanceof Error ? error.message : undefined);
-  }
+		return NextResponse.json({ leaderboard, stats });
+	} catch (error: unknown) {
+		return internalError(error instanceof Error ? error.message : undefined);
+	}
 });

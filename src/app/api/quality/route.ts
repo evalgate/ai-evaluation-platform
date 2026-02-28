@@ -13,100 +13,123 @@ import { type AuthContext, secureRoute } from "@/lib/api/secure-route";
 import { SCOPES } from "@/lib/auth/scopes";
 import { canonicalizeJson } from "@/lib/crypto/canonical-json";
 import { sha256Hex } from "@/lib/crypto/hash";
-import { SCORING_SPEC_V1, SCORING_SPEC_VERSION } from "@/lib/scoring/scoring-spec";
 import {
-  computeRunAggregates,
-  recomputeAndStoreQualityScore,
+	SCORING_SPEC_V1,
+	SCORING_SPEC_VERSION,
+} from "@/lib/scoring/scoring-spec";
+import {
+	computeRunAggregates,
+	recomputeAndStoreQualityScore,
 } from "@/lib/services/aggregate-metrics.service";
-import { type BaselineMode, qualityService } from "@/lib/services/quality.service";
-import { parsePaginationParams, recomputeQualityBodySchema } from "@/lib/validation";
+import {
+	type BaselineMode,
+	qualityService,
+} from "@/lib/services/quality.service";
+import {
+	parsePaginationParams,
+	recomputeQualityBodySchema,
+} from "@/lib/validation";
 
 export const GET = secureRoute(
-  async (req: NextRequest, ctx: AuthContext) => {
-    const { searchParams } = new URL(req.url);
-    const evaluationId = parseInt(searchParams.get("evaluationId") || "", 10);
-    const action = searchParams.get("action") || "latest";
-    const baselineParam = searchParams.get("baseline") || "published";
-    const baseline: BaselineMode =
-      baselineParam === "auto"
-        ? "auto"
-        : baselineParam === "previous" || baselineParam === "production"
-          ? baselineParam
-          : "published";
+	async (req: NextRequest, ctx: AuthContext) => {
+		const { searchParams } = new URL(req.url);
+		const evaluationId = parseInt(searchParams.get("evaluationId") || "", 10);
+		const action = searchParams.get("action") || "latest";
+		const baselineParam = searchParams.get("baseline") || "published";
+		const baseline: BaselineMode =
+			baselineParam === "auto"
+				? "auto"
+				: baselineParam === "previous" || baselineParam === "production"
+					? baselineParam
+					: "published";
 
-    if (Number.isNaN(evaluationId)) {
-      return validationError("evaluationId query parameter is required");
-    }
+		if (Number.isNaN(evaluationId)) {
+			return validationError("evaluationId query parameter is required");
+		}
 
-    if (action === "latest") {
-      const result = await qualityService.latest(ctx.organizationId, evaluationId, { baseline });
-      if (result === null) return notFound("Evaluation not found");
-      const out = { ...result } as Record<string, unknown>;
-      if (
-        "evaluationRunId" in result &&
-        result.evaluationRunId != null &&
-        "score" in result &&
-        result.score != null
-      ) {
-        const aggregates = await computeRunAggregates(result.evaluationRunId, ctx.organizationId);
-        out.avgLatencyMs = aggregates.avgLatencyMs;
-        out.costUsd = aggregates.runTotalCostUsd;
-        if (
-          "baselineRunId" in result &&
-          result.baselineRunId != null &&
-          typeof result.baselineRunId === "number"
-        ) {
-          const baselineAggregates = await computeRunAggregates(
-            result.baselineRunId,
-            ctx.organizationId,
-          );
-          out.baselineCostUsd = baselineAggregates.runTotalCostUsd;
-        }
-      }
-      return NextResponse.json(out);
-    }
+		if (action === "latest") {
+			const result = await qualityService.latest(
+				ctx.organizationId,
+				evaluationId,
+				{ baseline },
+			);
+			if (result === null) return notFound("Evaluation not found");
+			const out = { ...result } as Record<string, unknown>;
+			if (
+				"evaluationRunId" in result &&
+				result.evaluationRunId != null &&
+				"score" in result &&
+				result.score != null
+			) {
+				const aggregates = await computeRunAggregates(
+					result.evaluationRunId,
+					ctx.organizationId,
+				);
+				out.avgLatencyMs = aggregates.avgLatencyMs;
+				out.costUsd = aggregates.runTotalCostUsd;
+				if (
+					"baselineRunId" in result &&
+					result.baselineRunId != null &&
+					typeof result.baselineRunId === "number"
+				) {
+					const baselineAggregates = await computeRunAggregates(
+						result.baselineRunId,
+						ctx.organizationId,
+					);
+					out.baselineCostUsd = baselineAggregates.runTotalCostUsd;
+				}
+			}
+			return NextResponse.json(out);
+		}
 
-    if (action === "trend") {
-      const model = searchParams.get("model") || undefined;
-      const { limit } = parsePaginationParams(searchParams);
-      const result = await qualityService.trend(ctx.organizationId, evaluationId, { model, limit });
-      if (result === null) return notFound("Evaluation not found");
-      return NextResponse.json(result);
-    }
+		if (action === "trend") {
+			const model = searchParams.get("model") || undefined;
+			const { limit } = parsePaginationParams(searchParams);
+			const result = await qualityService.trend(
+				ctx.organizationId,
+				evaluationId,
+				{ model, limit },
+			);
+			if (result === null) return notFound("Evaluation not found");
+			return NextResponse.json(result);
+		}
 
-    return validationError('action must be "latest" or "trend"');
-  },
-  { requiredScopes: [SCOPES.RUNS_READ] },
+		return validationError('action must be "latest" or "trend"');
+	},
+	{ requiredScopes: [SCOPES.RUNS_READ] },
 );
 
 export const POST = secureRoute(
-  async (req: NextRequest, ctx: AuthContext) => {
-    const parsed = await parseBody(req, recomputeQualityBodySchema);
-    if (!parsed.ok) return parsed.response;
+	async (req: NextRequest, ctx: AuthContext) => {
+		const parsed = await parseBody(req, recomputeQualityBodySchema);
+		if (!parsed.ok) return parsed.response;
 
-    const { runId } = parsed.data;
+		const { runId } = parsed.data;
 
-    const result = await recomputeAndStoreQualityScore(runId, ctx.organizationId);
+		const result = await recomputeAndStoreQualityScore(
+			runId,
+			ctx.organizationId,
+		);
 
-    if (result === null) {
-      return notFound("Run not found");
-    }
+		if (result === null) {
+			return notFound("Run not found");
+		}
 
-    const scoringSpecHash = sha256Hex(canonicalizeJson(SCORING_SPEC_V1));
+		const scoringSpecHash = sha256Hex(canonicalizeJson(SCORING_SPEC_V1));
 
-    return NextResponse.json(
-      {
-        success: true,
-        runId,
-        score: result.score,
-        breakdown: result.breakdown,
-        flags: result.flags,
-        evidenceLevel: result.evidenceLevel,
-        scoringVersion: SCORING_SPEC_VERSION,
-        scoringSpecHash,
-      },
-      { status: 200 },
-    );
-  },
-  { requiredScopes: [SCOPES.RUNS_WRITE] },
+		return NextResponse.json(
+			{
+				success: true,
+				runId,
+				score: result.score,
+				breakdown: result.breakdown,
+				flags: result.flags,
+				evidenceLevel: result.evidenceLevel,
+				scoringVersion: SCORING_SPEC_VERSION,
+				scoringSpecHash,
+			},
+			{ status: 200 },
+		);
+	},
+	{ requiredScopes: [SCOPES.RUNS_WRITE] },
 );

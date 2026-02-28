@@ -12,5 +12,5 @@ import ragData from "../../../../../public/demo/rag.json";
  * Returns RAG hallucination detection demo data
  */
 export async function GET() {
-  return NextResponse.json(ragData);
+	return NextResponse.json(ragData);
 }

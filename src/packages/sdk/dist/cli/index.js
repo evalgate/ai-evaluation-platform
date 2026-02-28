@@ -160,7 +160,9 @@ else if (subcommand === "impact-analysis") {
     const changedFilesIndex = args.indexOf("--changed-files");
     const formatIndex = args.indexOf("--format");
     const baseBranch = baseIndex !== -1 ? args[baseIndex + 1] : "main";
-    const changedFiles = changedFilesIndex !== -1 ? args[changedFilesIndex + 1]?.split(",") : undefined;
+    const changedFiles = changedFilesIndex !== -1
+        ? args[changedFilesIndex + 1]?.split(",")
+        : undefined;
     const format = formatIndex !== -1 ? args[formatIndex + 1] : "human";
     (0, impact_analysis_1.runImpactAnalysisCLI)({ baseBranch, changedFiles, format }).catch((err) => {
         console.error(`EvalAI ERROR: ${err instanceof Error ? err.message : String(err)}`);
@@ -214,7 +216,9 @@ else if (subcommand === "ci") {
     const writeResultsIndex = args.indexOf("--write-results");
     const base = baseIndex !== -1 ? args[baseIndex + 1] : undefined;
     const impactedOnly = impactedOnlyIndex !== -1;
-    const format = formatIndex !== -1 ? args[formatIndex + 1] : "human";
+    const format = formatIndex !== -1
+        ? args[formatIndex + 1]
+        : "human";
     const writeResults = writeResultsIndex !== -1;
     (0, ci_1.runCICLI)({ base, impactedOnly, format, writeResults }).catch((err) => {
         console.error(`EvalAI ERROR: ${err instanceof Error ? err.message : String(err)}`);
