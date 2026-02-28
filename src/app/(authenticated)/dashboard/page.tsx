@@ -3,7 +3,7 @@ import { Activity, FileText, Plus } from "lucide-react";
 import { headers } from "next/headers";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { cache, Suspense } from "react";
+import { Suspense } from "react";
 import { PlanUsageIndicator } from "@/components/plan-usage-indicator";
 import {
 	Card,
@@ -16,33 +16,43 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { db } from "@/db";
 import { evaluationRuns, evaluations, traces } from "@/db/schema";
 import { auth } from "@/lib/auth";
+import { cachedDbQuery } from "@/lib/cache";
 
-const getDashboardStats = cache(async (organizationId: number) => {
-	const sevenDaysAgo = new Date(
-		Date.now() - 7 * 24 * 60 * 60 * 1000,
-	).toISOString();
+function getDashboardStats(organizationId: number) {
+	return cachedDbQuery(
+		["dashboard-stats", String(organizationId)],
+		async () => {
+			const sevenDaysAgo = new Date(
+				Date.now() - 7 * 24 * 60 * 60 * 1000,
+			).toISOString();
 
-	const [evalCount, traceCount, recentRuns] = await Promise.all([
-		db
-			.select({ count: sql<number>`count(*)` })
-			.from(evaluations)
-			.where(eq(evaluations.organizationId, organizationId)),
-		db
-			.select({ count: sql<number>`count(*)` })
-			.from(traces)
-			.where(eq(traces.organizationId, organizationId)),
-		db
-			.select({ count: sql<number>`count(*)` })
-			.from(evaluationRuns)
-			.where(gte(evaluationRuns.createdAt, sevenDaysAgo)),
-	]);
+			const [evalCount, traceCount, recentRuns] = await Promise.all([
+				db
+					.select({ count: sql<number>`count(*)` })
+					.from(evaluations)
+					.where(eq(evaluations.organizationId, organizationId)),
+				db
+					.select({ count: sql<number>`count(*)` })
+					.from(traces)
+					.where(eq(traces.organizationId, organizationId)),
+				db
+					.select({ count: sql<number>`count(*)` })
+					.from(evaluationRuns)
+					.where(gte(evaluationRuns.createdAt, sevenDaysAgo)),
+			]);
 
-	return {
-		totalEvaluations: evalCount[0]?.count || 0,
-		totalTraces: traceCount[0]?.count || 0,
-		recentRuns: recentRuns[0]?.count || 0,
-	};
-});
+			return {
+				totalEvaluations: evalCount[0]?.count || 0,
+				totalTraces: traceCount[0]?.count || 0,
+				recentRuns: recentRuns[0]?.count || 0,
+			};
+		},
+		{
+			tags: [`org:${organizationId}`, "evaluations", "traces"],
+			revalidateSeconds: 30,
+		},
+	);
+}
 
 async function getRecentEvaluationRuns(organizationId: number) {
 	return db

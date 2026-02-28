@@ -386,7 +386,15 @@ export async function runDueJobs(
 				typeof reg.schema === "object" &&
 				"safeParse" in reg.schema
 			) {
-				const parsed = (reg.schema as any).safeParse(job.payload);
+				const parsed = (
+					reg.schema as {
+						safeParse: (v: unknown) => {
+							success: boolean;
+							data?: unknown;
+							error?: { message: string };
+						};
+					}
+				).safeParse(job.payload);
 				if (!parsed.success) {
 					result.failed += 1;
 					result.deadLettered += 1;

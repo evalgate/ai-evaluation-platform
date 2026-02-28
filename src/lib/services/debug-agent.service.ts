@@ -157,7 +157,7 @@ class DebugAgentService {
 			const pattern = patterns.get(key);
 			if (!pattern) continue;
 			pattern.occurrences++;
-			pattern.affectedTestIds.push((result as any).id);
+			pattern.affectedTestIds.push((result as TestResultData).id);
 		}
 
 		return Array.from(patterns.values()).sort(

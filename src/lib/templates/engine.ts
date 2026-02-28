@@ -277,9 +277,9 @@ export class TemplateValidator {
 			}
 
 			if (/^\d+$/.test(part)) {
-				value = (value as any)[parseInt(part, 10)];
+				value = (value as Record<number, unknown>)[parseInt(part, 10)];
 			} else {
-				value = (value as any)[part];
+				value = (value as Record<string, unknown>)[part];
 			}
 		}
 
@@ -304,7 +304,10 @@ export class TemplateValidator {
 				!Array.isArray(context[key])
 			) {
 				keys.push(
-					...TemplateValidator.extractContextKeys(context[key] as any, fullKey),
+					...TemplateValidator.extractContextKeys(
+						context[key] as TemplateContext,
+						fullKey,
+					),
 				);
 			} else {
 				keys.push(fullKey);

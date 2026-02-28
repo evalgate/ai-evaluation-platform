@@ -265,7 +265,8 @@ export class ReportCardsService {
 			overallScore,
 			grade,
 			status,
-			lastUpdated: (reportCard.metadata as any).generatedAt as string,
+			lastUpdated:
+				(reportCard.metadata as { generatedAt?: string }).generatedAt ?? "",
 			keyMetrics: {
 				averageScore: reportCard.averageScore,
 				passRate: reportCard.passRate,

@@ -1,4 +1,6 @@
 // DB integration test setup - PGlite (in-process PostgreSQL, no Docker needed)
+process.env.BETTER_AUTH_SECRET ??= "test-secret-for-db-tests";
+
 import { readdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { PGlite } from "@electric-sql/pglite";
@@ -6,6 +8,16 @@ import { drizzle } from "drizzle-orm/pglite";
 import { beforeAll, vi } from "vitest";
 import * as schema from "@/db/schema";
 import { organizations, user } from "@/db/schema";
+
+// Bypass Redis/Next.js caching in DB tests — pass through to the real query
+vi.mock("@/lib/cache", () => ({
+	cachedHotPath: vi.fn((_key: string, fn: () => unknown) => fn()),
+	cachedDbQuery: vi.fn((_keys: string[], fn: () => unknown) => fn()),
+	deduplicatedQuery: vi.fn((fn: () => unknown) => fn),
+	invalidateTag: vi.fn(),
+	invalidateOrganization: vi.fn(),
+	CacheTTL: { SHORT: 60, MEDIUM: 300, LONG: 900, VERY_LONG: 3600, DAY: 86400 },
+}));
 
 // Create an in-memory PGlite instance per worker
 const workerId = process.env.VITEST_WORKER_ID ?? process.pid;

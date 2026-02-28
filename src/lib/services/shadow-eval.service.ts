@@ -1,6 +1,6 @@
 // src/lib/services/shadow-eval.service.ts
 
-import { and, desc, eq, gte, inArray, like, lte } from "drizzle-orm";
+import { and, desc, eq, gte, inArray, lte, sql } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db";
 import {
@@ -10,6 +10,7 @@ import {
 	testResults,
 	traces,
 } from "@/db/schema";
+import type { ModelSettings, TraceMetadata } from "@/db/types";
 import { logger } from "@/lib/logger";
 import { providerKeysService } from "@/lib/services/provider-keys.service";
 
@@ -236,10 +237,11 @@ export class ShadowEvalService {
 			logger.warn("Failed to parse trace log", { shadowRunId });
 		}
 
+		const parsedTraceLog = traceLog as import("@/db/types").TraceLog;
 		return {
 			id: run.evaluation_runs.id,
 			evaluationId: run.evaluation_runs.evaluationId,
-			originalEvaluationId: (traceLog as any).originalEvaluationId || 0,
+			originalEvaluationId: parsedTraceLog?.originalEvaluationId || 0,
 			status: run.evaluation_runs.status,
 			totalTraces: run.evaluation_runs.totalCases ?? 0,
 			processedTraces,
@@ -284,7 +286,11 @@ export class ShadowEvalService {
 		}
 
 		const tracesData = await db
-			.select({ traceId: traces.traceId, metadata: traces.metadata })
+			.select({
+				id: traces.id,
+				traceId: traces.traceId,
+				metadata: traces.metadata,
+			})
 			.from(traces)
 			.where(and(...conditions))
 			.orderBy(desc(traces.createdAt));
@@ -304,7 +310,7 @@ export class ShadowEvalService {
 					metadata: spans.metadata,
 				})
 				.from(spans)
-				.where(eq(spans.traceId, trace.traceId as any));
+				.where(eq(spans.traceId, trace.id));
 
 			traceReplayData.push({
 				traceId: trace.traceId,
@@ -433,7 +439,7 @@ export class ShadowEvalService {
 		} catch (error: unknown) {
 			logger.error("Shadow evaluation failed", {
 				shadowRunId,
-				error: (error as any).message,
+				error: error instanceof Error ? error.message : String(error),
 			});
 
 			await db
@@ -475,11 +481,15 @@ export class ShadowEvalService {
 			const originalOutput = mainSpan.output;
 			const _originalDuration = mainSpan.duration;
 
+			const evalData = evaluation as {
+				modelSettings?: ModelSettings;
+				organizationId?: number;
+			};
 			const systemPrompt =
-				(evaluation as any).modelSettings?.systemPrompt ||
+				evalData.modelSettings?.systemPrompt ||
 				"You are a helpful AI assistant.";
-			const model = (evaluation as any).modelSettings?.model || "gpt-4o-mini";
-			const organizationId = (evaluation as any).organizationId;
+			const model = evalData.modelSettings?.model || "gpt-4o-mini";
+			const organizationId = evalData.organizationId;
 
 			// Determine provider and get API key
 			const provider = this.getProviderFromModel(model);
@@ -571,7 +581,7 @@ export class ShadowEvalService {
 				passed: false,
 				score: 0,
 				output: "",
-				error: (error as any).message,
+				error: error instanceof Error ? error.message : String(error),
 				duration: 0,
 				messages: [],
 				toolCalls: [],
@@ -623,7 +633,8 @@ export class ShadowEvalService {
 
 	private extractOriginalScoreFromTrace(trace: TraceReplayData): number | null {
 		try {
-			return (trace.metadata as any)?.score || null;
+			const meta = trace.metadata as TraceMetadata | undefined;
+			return meta?.score ?? null;
 		} catch {
 			return null;
 		}
@@ -658,7 +669,7 @@ export class ShadowEvalService {
 				and(
 					eq(evaluations.organizationId, organizationId),
 					// Filter for shadow evals by checking trace log type
-					like(evaluationRuns.traceLog as any, "%shadow_eval%"),
+					sql`${evaluationRuns.traceLog}::text LIKE '%shadow_eval%'`,
 				),
 			)
 			.orderBy(desc(evaluationRuns.createdAt))

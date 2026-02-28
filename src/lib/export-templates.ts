@@ -256,7 +256,9 @@ function formatABTestExport(
 			additionalData.statisticalSignificance as ABTestExportData["statisticalSignificance"],
 		comparison: (additionalData.comparison || {
 			metric: "quality_score",
-			baseline_variant: (additionalData.variants?.[0] as any)?.name || "A",
+			baseline_variant:
+				(additionalData.variants?.[0] as { name?: string } | undefined)?.name ||
+				"A",
 		}) as ABTestExportData["comparison"],
 	};
 }

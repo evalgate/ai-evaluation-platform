@@ -55,6 +55,12 @@ vi.mock("@/lib/logger", () => ({
 	logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn() },
 }));
 
+vi.mock("@/lib/cache", () => ({
+	cachedHotPath: vi.fn((_key, fn) => fn()),
+	CacheTTL: { SHORT: 60, MEDIUM: 300, LONG: 900, VERY_LONG: 3600, DAY: 86400 },
+	invalidateTag: vi.fn(),
+}));
+
 vi.mock("@/lib/services/aggregate-metrics.service", () => ({
 	computeAndStoreQualityScore: vi.fn().mockResolvedValue({}),
 }));

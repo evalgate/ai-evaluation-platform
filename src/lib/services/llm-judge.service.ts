@@ -311,13 +311,13 @@ export class LLMJudgeService {
 	 * @private
 	 */
 	private buildEvaluationPrompt(
-		config: unknown,
+		config: JudgeConfig,
 		data: EvaluateRequestInput,
 	): string {
 		const parts = [
 			"You are an expert evaluator.",
 			"\n\n# Evaluation Template\n",
-			(config as any).promptTemplate,
+			(config as { promptTemplate?: string }).promptTemplate ?? "",
 			"\n\n# Input\n",
 			data.input,
 			"\n\n# Output to Evaluate\n",
@@ -730,9 +730,10 @@ export class LLMJudgeService {
 					passed: evaluation.passed,
 				});
 			} catch (error: unknown) {
+				const errorMsg = error instanceof Error ? error.message : String(error);
 				logger.error("Failed to judge test case", {
 					testCaseId: testResult.testCaseId,
-					error: (error as any).message,
+					error: errorMsg,
 				});
 
 				// Save failed judge result
@@ -743,13 +744,13 @@ export class LLMJudgeService {
 					input: testResult.input,
 					output: testResult.output,
 					score: 0,
-					reasoning: `Judge evaluation failed: ${error instanceof Error ? error.message : String(error)}`,
+					reasoning: `Judge evaluation failed: ${errorMsg}`,
 					metadata: JSON.stringify({
 						originalScore: testResult.score,
 						originalStatus: testResult.status,
 						passed: false,
 						evaluationRunId,
-						error: (error as any).message,
+						error: errorMsg,
 					}),
 					createdAt: new Date(),
 				});
@@ -757,7 +758,7 @@ export class LLMJudgeService {
 				judgeResults.push({
 					testCaseId: testResult.testCaseId,
 					judgeScore: 0,
-					judgeReasoning: `Judge evaluation failed: ${(error as any).message}`,
+					judgeReasoning: `Judge evaluation failed: ${errorMsg}`,
 					passed: false,
 				});
 			}

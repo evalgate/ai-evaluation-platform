@@ -71,6 +71,14 @@ vi.mock("drizzle-orm", () => ({
 		col,
 		pattern,
 	})),
+	sql: Object.assign(
+		(strings: TemplateStringsArray, ...values: unknown[]) => ({
+			type: "sql",
+			strings: Array.from(strings),
+			values,
+		}),
+		{ raw: vi.fn((s: string) => ({ type: "sql_raw", value: s })) },
+	),
 }));
 
 vi.mock("@/lib/logger", () => ({

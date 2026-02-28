@@ -7,6 +7,7 @@ import "@testing-library/jest-dom";
 // Set default environment variables (allow overrides)
 process.env.NODE_ENV = "test";
 process.env.DATABASE_URL ??= "postgresql://test:test@localhost:5432/test";
+process.env.BETTER_AUTH_SECRET ??= "test-secret-for-dom-tests";
 
 // Mock IntersectionObserver
 global.IntersectionObserver = vi.fn().mockImplementation(() => ({

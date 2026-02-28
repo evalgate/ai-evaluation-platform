@@ -10,6 +10,54 @@ import {
 	timestamp,
 	uniqueIndex,
 } from "drizzle-orm/pg-core";
+import type {
+	AgentConfig,
+	Annotation,
+	AnnotationLabels,
+	AnnotationSettings,
+	ApiKeyScopes,
+	ArenaResult,
+	ArenaScores,
+	AssertionsJson,
+	AuditLogMetadata,
+	BenchmarkCustomMetrics,
+	BenchmarkDataset,
+	BenchmarkMetrics,
+	CustomMetrics,
+	DecisionAlternative,
+	DecisionInputContext,
+	DriftAlertMetadata,
+	ExecutionSettings,
+	ExecutorConfig,
+	ExportData,
+	GoldenSetTestCaseIds,
+	HandoffContext,
+	HumanAnnotationMetadata,
+	JobPayload,
+	JudgeCriteria,
+	JudgeResultMetadata,
+	JudgeSettings,
+	ModelSettings,
+	ProviderKeyMetadata,
+	QualityBreakdown,
+	QualityFlags,
+	QualityInputsJson,
+	QualityScoringSpecJson,
+	ReportData,
+	SpanMetadata,
+	SubscriberContext,
+	SubscriberTags,
+	TestCaseMetadata,
+	TestResultMessage,
+	ToolCall,
+	TraceLog,
+	TraceMetadata,
+	VersionSnapshotJson,
+	WebhookEvents,
+	WebhookPayload,
+	WorkflowDefinition,
+	WorkflowRunMetadata,
+} from "./types";
 
 // Auth tables for better-auth
 export const user = pgTable("user", {
@@ -108,11 +156,11 @@ export const evaluations = pgTable(
 		createdBy: text("created_by")
 			.references(() => user.id)
 			.notNull(),
-		executionSettings: jsonb("execution_settings"),
-		modelSettings: jsonb("model_settings"),
-		customMetrics: jsonb("custom_metrics"),
+		executionSettings: jsonb("execution_settings").$type<ExecutionSettings>(),
+		modelSettings: jsonb("model_settings").$type<ModelSettings>(),
+		customMetrics: jsonb("custom_metrics").$type<CustomMetrics>(),
 		executorType: text("executor_type"),
-		executorConfig: jsonb("executor_config"),
+		executorConfig: jsonb("executor_config").$type<ExecutorConfig>(),
 		publishedRunId: integer("published_run_id"),
 		publishedVersion: integer("published_version"),
 		createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -137,7 +185,7 @@ export const evaluationTestCases = pgTable("evaluation_test_cases", {
 		.notNull(),
 	input: text("input").notNull(),
 	expectedOutput: text("expected_output"),
-	metadata: jsonb("metadata"),
+	metadata: jsonb("metadata").$type<TestCaseMetadata>(),
 	createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -157,7 +205,7 @@ export const evaluationRuns = pgTable(
 		passedCases: integer("passed_cases").default(0),
 		failedCases: integer("failed_cases").default(0),
 		processedCount: integer("processed_count").default(0), // Heartbeat counter for progress tracking
-		traceLog: jsonb("trace_log"), // Full journey JSON with messages array
+		traceLog: jsonb("trace_log").$type<TraceLog>(), // Full journey JSON with messages array
 		startedAt: timestamp("started_at"),
 		completedAt: timestamp("completed_at"),
 		environment: text("environment").default("dev"), // dev | staging | prod (for baseline=production)
@@ -187,7 +235,7 @@ export const traces = pgTable(
 			.notNull(),
 		status: text("status").notNull().default("pending"),
 		durationMs: integer("duration_ms"),
-		metadata: jsonb("metadata"),
+		metadata: jsonb("metadata").$type<TraceMetadata>(),
 		createdAt: timestamp("created_at").defaultNow().notNull(),
 	},
 	(table) => [
@@ -216,7 +264,9 @@ export const annotationTasks = pgTable(
 		createdBy: text("created_by")
 			.references(() => user.id)
 			.notNull(),
-		annotationSettings: jsonb("annotation_settings"),
+		annotationSettings: jsonb(
+			"annotation_settings",
+		).$type<AnnotationSettings>(),
 		createdAt: timestamp("created_at").defaultNow().notNull(),
 		updatedAt: timestamp("updated_at").defaultNow().notNull(),
 	},
@@ -229,7 +279,7 @@ export const annotationItems = pgTable("annotation_items", {
 		.references(() => annotationTasks.id)
 		.notNull(),
 	content: text("content").notNull(),
-	annotation: jsonb("annotation"),
+	annotation: jsonb("annotation").$type<Annotation>(),
 	annotatedBy: text("annotated_by").references(() => user.id),
 	annotatedAt: timestamp("annotated_at"),
 	createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -246,8 +296,8 @@ export const llmJudgeConfigs = pgTable(
 			.notNull(),
 		model: text("model").notNull(),
 		promptTemplate: text("prompt_template").notNull(),
-		criteria: jsonb("criteria"),
-		settings: jsonb("settings"),
+		criteria: jsonb("criteria").$type<JudgeCriteria>(),
+		settings: jsonb("settings").$type<JudgeSettings>(),
 		createdBy: text("created_by")
 			.references(() => user.id)
 			.notNull(),
@@ -272,7 +322,7 @@ export const llmJudgeResults = pgTable(
 		output: text("output").notNull(),
 		score: integer("score"),
 		reasoning: text("reasoning"),
-		metadata: jsonb("metadata"),
+		metadata: jsonb("metadata").$type<JudgeResultMetadata>(),
 		createdAt: timestamp("created_at").defaultNow().notNull(),
 	},
 	(table) => [index("idx_llm_judge_results_run").on(table.evaluationRunId)],
@@ -290,7 +340,7 @@ export const apiKeys = pgTable("api_keys", {
 	keyHash: text("key_hash").notNull(),
 	keyPrefix: text("key_prefix").notNull().unique(),
 	name: text("name").notNull(),
-	scopes: jsonb("scopes").notNull(),
+	scopes: jsonb("scopes").$type<ApiKeyScopes>().notNull(),
 	lastUsedAt: timestamp("last_used_at"),
 	expiresAt: timestamp("expires_at"),
 	revokedAt: timestamp("revoked_at"),
@@ -303,7 +353,7 @@ export const webhooks = pgTable("webhooks", {
 		.references(() => organizations.id)
 		.notNull(),
 	url: text("url").notNull(),
-	events: jsonb("events").notNull(),
+	events: jsonb("events").$type<WebhookEvents>().notNull(),
 	secret: text("secret").notNull(), // legacy placeholder column (kept for migration compatibility)
 	encryptedSecret: text("encrypted_secret"),
 	secretIv: text("secret_iv"),
@@ -327,7 +377,7 @@ export const providerKeys = pgTable("provider_keys", {
 	keyPrefix: text("key_prefix").notNull(), // First few characters for identification
 	iv: text("iv").notNull(), // Initialization vector for decryption
 	tag: text("tag").notNull(), // Authentication tag for integrity
-	metadata: jsonb("metadata"), // Additional key information
+	metadata: jsonb("metadata").$type<ProviderKeyMetadata>(), // Additional key information
 	isActive: boolean("is_active").default(true),
 	lastUsedAt: timestamp("last_used_at"),
 	expiresAt: timestamp("expires_at"),
@@ -346,7 +396,7 @@ export const webhookDeliveries = pgTable(
 			.references(() => webhooks.id)
 			.notNull(),
 		eventType: text("event_type").notNull(),
-		payload: jsonb("payload").notNull(),
+		payload: jsonb("payload").$type<WebhookPayload>().notNull(),
 		payloadHash: text("payload_hash"), // SHA-256 for deduplication
 		status: text("status").notNull().default("pending"),
 		responseStatus: integer("response_status"),
@@ -402,8 +452,8 @@ export const humanAnnotations = pgTable("human_annotations", {
 		.notNull(),
 	rating: integer("rating"),
 	feedback: text("feedback"),
-	labels: jsonb("labels"),
-	metadata: jsonb("metadata"),
+	labels: jsonb("labels").$type<AnnotationLabels>(),
+	metadata: jsonb("metadata").$type<HumanAnnotationMetadata>(),
 	createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -416,7 +466,7 @@ export const testCases = pgTable("test_cases", {
 	input: text("input").notNull(),
 	inputHash: text("input_hash"), // SHA-256 of normalized input for trace-linked matching
 	expectedOutput: text("expected_output"),
-	metadata: jsonb("metadata"),
+	metadata: jsonb("metadata").$type<TestCaseMetadata>(),
 	createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -437,12 +487,12 @@ export const testResults = pgTable(
 		output: text("output"),
 		score: integer("score"),
 		error: text("error"),
-		assertionsJson: jsonb("assertions_json"), // Structured assertion outcomes: { pii: false, toxicity: false, ... }
+		assertionsJson: jsonb("assertions_json").$type<AssertionsJson>(), // Structured assertion outcomes: { pii: false, toxicity: false, ... }
 		traceLinkedMatched: boolean("trace_linked_matched"), // true=matched, false=no span, null=not trace-linked
 		hasProvenance: boolean("has_provenance"), // true=model/provider from cost; null=unknown
 		durationMs: integer("duration_ms"),
-		messages: jsonb("messages"), // Raw LLM messages array for each turn
-		toolCalls: jsonb("tool_calls"), // Tool arguments and outputs per turn
+		messages: jsonb("messages").$type<TestResultMessage[]>(), // Raw LLM messages array for each turn
+		toolCalls: jsonb("tool_calls").$type<ToolCall[]>(), // Tool arguments and outputs per turn
 		createdAt: timestamp("created_at").defaultNow().notNull(),
 	},
 	(table) => [
@@ -471,7 +521,7 @@ export const spans = pgTable(
 		evaluationRunId: integer("evaluation_run_id").references(
 			() => evaluationRuns.id,
 		), // when consumed by trace-linked run
-		metadata: jsonb("metadata"),
+		metadata: jsonb("metadata").$type<SpanMetadata>(),
 		createdAt: timestamp("created_at").defaultNow().notNull(),
 	},
 	(table) => [
@@ -484,9 +534,9 @@ export const emailSubscribers = pgTable("email_subscribers", {
 	id: serial("id").primaryKey(),
 	email: text("email").notNull().unique(),
 	source: text("source").notNull(), // 'playground', 'homepage', 'blog', etc.
-	context: jsonb("context"), // Additional context like scenario, score, etc.
+	context: jsonb("context").$type<SubscriberContext>(), // Additional context like scenario, score, etc.
 	status: text("status").notNull().default("active"), // 'active', 'unsubscribed', 'bounced'
-	tags: jsonb("tags"), // ['playground-lead', 'high-intent', etc.]
+	tags: jsonb("tags").$type<SubscriberTags>(), // ['playground-lead', 'high-intent', etc.]
 	subscribedAt: timestamp("subscribed_at").defaultNow().notNull(),
 	unsubscribedAt: timestamp("unsubscribed_at"),
 	lastEmailSentAt: timestamp("last_email_sent_at"),
@@ -509,7 +559,7 @@ export const workflows = pgTable(
 		organizationId: integer("organization_id")
 			.references(() => organizations.id)
 			.notNull(),
-		definition: jsonb("definition").notNull(), // DAG structure with nodes and edges
+		definition: jsonb("definition").$type<WorkflowDefinition>().notNull(), // DAG structure with nodes and edges
 		version: integer("version").default(1),
 		status: text("status").notNull().default("draft"), // 'draft', 'active', 'archived'
 		// SLA Configuration
@@ -538,15 +588,15 @@ export const workflowRuns = pgTable(
 			.references(() => organizations.id)
 			.notNull(),
 		status: text("status").notNull().default("running"), // 'running', 'completed', 'failed', 'cancelled'
-		input: jsonb("input"),
-		output: jsonb("output"),
+		input: jsonb("input").$type<Record<string, unknown>>(),
+		output: jsonb("output").$type<Record<string, unknown>>(),
 		totalCost: text("total_cost"), // decimal as string for precision
 		totalDurationMs: integer("total_duration_ms"),
 		agentCount: integer("agent_count"),
 		handoffCount: integer("handoff_count"),
 		retryCount: integer("retry_count").default(0),
 		errorMessage: text("error_message"),
-		metadata: jsonb("metadata"),
+		metadata: jsonb("metadata").$type<WorkflowRunMetadata>(),
 		startedAt: timestamp("started_at").notNull(),
 		completedAt: timestamp("completed_at"),
 	},
@@ -572,7 +622,7 @@ export const agentHandoffs = pgTable("agent_handoffs", {
 	fromAgent: text("from_agent"),
 	toAgent: text("to_agent").notNull(),
 	handoffType: text("handoff_type").notNull(), // 'delegation', 'escalation', 'parallel', 'fallback'
-	context: jsonb("context"), // data passed between agents
+	context: jsonb("context").$type<HandoffContext>(), // data passed between agents
 	timestamp: timestamp("timestamp").notNull(),
 });
 
@@ -593,10 +643,10 @@ export const agentDecisions = pgTable("agent_decisions", {
 	agentName: text("agent_name").notNull(),
 	decisionType: text("decision_type").notNull(), // 'action', 'tool', 'delegate', 'respond'
 	chosen: text("chosen").notNull(), // the action/tool that was chosen
-	alternatives: jsonb("alternatives").notNull(), // array of alternative options considered
+	alternatives: jsonb("alternatives").$type<DecisionAlternative[]>().notNull(), // array of alternative options considered
 	reasoning: text("reasoning"), // why this choice was made
 	confidence: integer("confidence"), // 0-100 confidence score
-	inputContext: jsonb("input_context"), // context that influenced the decision
+	inputContext: jsonb("input_context").$type<DecisionInputContext>(), // context that influenced the decision
 	createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -666,8 +716,8 @@ export const benchmarks = pgTable("benchmarks", {
 		.references(() => organizations.id)
 		.notNull(),
 	taskType: text("task_type").notNull(), // 'qa', 'coding', 'reasoning', 'tool_use', 'multi_step'
-	dataset: jsonb("dataset"), // test cases for the benchmark
-	metrics: jsonb("metrics").notNull(), // which metrics to track
+	dataset: jsonb("dataset").$type<BenchmarkDataset>(), // test cases for the benchmark
+	metrics: jsonb("metrics").$type<BenchmarkMetrics>().notNull(), // which metrics to track
 	isPublic: boolean("is_public").default(false),
 	createdBy: text("created_by")
 		.references(() => user.id)
@@ -685,7 +735,7 @@ export const agentConfigs = pgTable("agent_configs", {
 		.notNull(),
 	architecture: text("architecture").notNull(), // 'react', 'cot', 'tot', 'custom'
 	model: text("model").notNull(),
-	config: jsonb("config"), // full agent configuration
+	config: jsonb("config").$type<AgentConfig>(), // full agent configuration
 	description: text("description"),
 	createdBy: text("created_by")
 		.references(() => user.id)
@@ -710,7 +760,7 @@ export const benchmarkResults = pgTable("benchmark_results", {
 	totalCost: text("total_cost"), // total cost in dollars
 	successRate: integer("success_rate"), // 0-100
 	toolUseEfficiency: integer("tool_use_efficiency"), // 0-100
-	customMetrics: jsonb("custom_metrics"),
+	customMetrics: jsonb("custom_metrics").$type<BenchmarkCustomMetrics>(),
 	runCount: integer("run_count").default(1),
 	createdAt: timestamp("created_at").defaultNow().notNull(),
 });
@@ -729,7 +779,7 @@ export const goldenSets = pgTable("golden_sets", {
 		.references(() => organizations.id)
 		.notNull(),
 	name: text("name").notNull().default("Default Golden Set"),
-	testCaseIds: jsonb("test_case_ids").notNull(), // number[] — the 5 most important
+	testCaseIds: jsonb("test_case_ids").$type<GoldenSetTestCaseIds>().notNull(), // number[] — the 5 most important
 	lastStatus: text("last_status").default("unknown"), // 'passed', 'failed', 'unknown'
 	lastRunAt: timestamp("last_run_at"),
 	passThreshold: integer("pass_threshold").default(70), // Minimum score to pass (0-100)
@@ -747,8 +797,8 @@ export const arenaMatches = pgTable("arena_matches", {
 	winnerId: text("winner_id").notNull(),
 	winnerLabel: text("winner_label").notNull(),
 	judgeReasoning: text("judge_reasoning"),
-	results: jsonb("results").notNull(), // ArenaResult[]
-	scores: jsonb("scores"), // { "GPT-4o": 87, "Claude": 92 }
+	results: jsonb("results").$type<ArenaResult[]>().notNull(), // ArenaResult[]
+	scores: jsonb("scores").$type<ArenaScores>(), // { "GPT-4o": 87, "Claude": 92 }
 	createdBy: text("created_by")
 		.references(() => user.id)
 		.notNull(),
@@ -771,7 +821,7 @@ export const reportCards = pgTable("report_cards", {
 	title: text("title").notNull(),
 	description: text("description"),
 	isPublic: boolean("is_public").default(true),
-	reportData: jsonb("report_data").notNull(), // Snapshot of scores/results
+	reportData: jsonb("report_data").$type<ReportData>().notNull(), // Snapshot of scores/results
 	expiresAt: timestamp("expires_at"),
 	viewCount: integer("view_count").default(0),
 	createdBy: text("created_by")
@@ -796,7 +846,7 @@ export const auditLogs = pgTable(
 		action: text("action").notNull(),
 		resourceType: text("resource_type"),
 		resourceId: text("resource_id"),
-		metadata: jsonb("metadata"),
+		metadata: jsonb("metadata").$type<AuditLogMetadata>(),
 		ipAddress: text("ip_address"),
 		userAgent: text("user_agent"),
 		createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -831,14 +881,14 @@ export const qualityScores = pgTable(
 		total: integer("total"), // test case count for minN gating
 		traceCoverageRate: text("trace_coverage_rate"), // nullable, for trace-linked runs: matched/total
 		provenanceCoverageRate: text("provenance_coverage_rate"), // 0..1, per-test-case fraction with model/provider
-		breakdown: jsonb("breakdown").notNull(),
-		flags: jsonb("flags").notNull(),
+		breakdown: jsonb("breakdown").$type<QualityBreakdown>().notNull(),
+		flags: jsonb("flags").$type<QualityFlags>().notNull(),
 		evidenceLevel: text("evidence_level"), // 'strong' | 'medium' | 'weak'
 		scoringVersion: text("scoring_version").notNull().default("v1"),
 		model: text("model"),
 		isBaseline: boolean("is_baseline").default(false),
-		inputsJson: jsonb("inputs_json"),
-		scoringSpecJson: jsonb("scoring_spec_json"),
+		inputsJson: jsonb("inputs_json").$type<QualityInputsJson>(),
+		scoringSpecJson: jsonb("scoring_spec_json").$type<QualityScoringSpecJson>(),
 		inputsHash: text("inputs_hash"),
 		scoringSpecHash: text("scoring_spec_hash"),
 		scoringCommit: text("scoring_commit"),
@@ -861,7 +911,7 @@ export const evaluationVersions = pgTable("evaluation_versions", {
 		.references(() => evaluations.id)
 		.notNull(),
 	version: integer("version").notNull(),
-	snapshotJson: jsonb("snapshot_json").notNull(),
+	snapshotJson: jsonb("snapshot_json").$type<VersionSnapshotJson>().notNull(),
 	diffSummary: text("diff_summary"),
 	createdBy: text("created_by")
 		.references(() => user.id)
@@ -887,7 +937,7 @@ export const driftAlerts = pgTable("drift_alerts", {
 	currentValue: text("current_value"),
 	baselineValue: text("baseline_value"),
 	zScoreValue: text("z_score_value"),
-	metadata: jsonb("metadata"),
+	metadata: jsonb("metadata").$type<DriftAlertMetadata>(),
 	acknowledgedAt: timestamp("acknowledged_at"),
 	createdAt: timestamp("created_at").defaultNow().notNull(),
 });
@@ -936,7 +986,7 @@ export const sharedExports = pgTable(
 			() => evaluationRuns.id,
 		),
 		shareScope: text("share_scope").notNull().default("evaluation"), // "evaluation" | "run"
-		exportData: jsonb("export_data").notNull(),
+		exportData: jsonb("export_data").$type<ExportData>().notNull(),
 		exportHash: text("export_hash").notNull(),
 		isPublic: boolean("is_public").default(true),
 		revokedAt: timestamp("revoked_at"),
@@ -969,7 +1019,7 @@ export const jobs = pgTable(
 	{
 		id: serial("id").primaryKey(),
 		type: text("type").notNull(), // 'webhook_delivery'
-		payload: jsonb("payload").notNull(),
+		payload: jsonb("payload").$type<JobPayload>().notNull(),
 		status: text("status").notNull().default("pending"), // pending | running | success | dead_letter
 		attempt: integer("attempt").notNull().default(0),
 		maxAttempts: integer("max_attempts").notNull().default(5),

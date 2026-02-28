@@ -8,6 +8,7 @@
 import { and, desc, eq } from "drizzle-orm";
 import { db } from "@/db";
 import { driftAlerts, evaluations, qualityScores } from "@/db/schema";
+import type { QualityBreakdown } from "@/db/types";
 import { meanAndStd, zScore } from "@/lib/drift/zscore";
 import { logger } from "@/lib/logger";
 
@@ -108,18 +109,18 @@ export class DriftService {
 			}
 
 			// Safety drift (check breakdown)
-			const latestBreakdown =
+			const latestBreakdown: QualityBreakdown =
 				typeof latest.breakdown === "string"
 					? JSON.parse(latest.breakdown)
-					: latest.breakdown;
+					: (latest.breakdown as QualityBreakdown);
 
-			if ((latestBreakdown as any)?.safety !== undefined) {
+			if (latestBreakdown?.safety !== undefined) {
 				const safetyValues = historical.map((s) => {
-					const bd =
+					const bd: QualityBreakdown =
 						typeof s.breakdown === "string"
 							? JSON.parse(s.breakdown)
-							: s.breakdown;
-					return (bd as any)?.safety ?? 1;
+							: (s.breakdown as QualityBreakdown);
+					return bd?.safety ?? 1;
 				});
 				const safetyStats = meanAndStd(safetyValues);
 				const safetyZ = zScore(
@@ -148,13 +149,13 @@ export class DriftService {
 			}
 
 			// Cost drift (check breakdown)
-			if ((latestBreakdown as any)?.cost !== undefined) {
+			if (latestBreakdown?.cost !== undefined) {
 				const costValues = historical.map((s) => {
-					const bd =
+					const bd: QualityBreakdown =
 						typeof s.breakdown === "string"
 							? JSON.parse(s.breakdown)
-							: s.breakdown;
-					return (bd as any)?.cost ?? 1;
+							: (s.breakdown as QualityBreakdown);
+					return bd?.cost ?? 1;
 				});
 				const costStats = meanAndStd(costValues);
 				const costZ = zScore(

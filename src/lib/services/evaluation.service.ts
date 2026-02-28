@@ -11,6 +11,7 @@ import {
 	testCases,
 	testResults,
 } from "@/db/schema";
+import { CacheTTL, cachedHotPath, invalidateTag } from "@/lib/cache";
 import { runAssertions } from "@/lib/eval/assertion-runners";
 import { validateAssertionsEnvelope } from "@/lib/eval/assertions";
 import { logger } from "@/lib/logger";
@@ -50,26 +51,35 @@ export class EvaluationService {
 			status: options?.status,
 		});
 
-		const whereConditions = [eq(evaluations.organizationId, organizationId)];
+		const cacheKey = `list:${limit}:${offset}:${options?.status || "all"}`;
+		return cachedHotPath(
+			cacheKey,
+			async () => {
+				const whereConditions = [
+					eq(evaluations.organizationId, organizationId),
+				];
 
-		if (options?.status) {
-			whereConditions.push(eq(evaluations.status, options.status));
-		}
+				if (options?.status) {
+					whereConditions.push(eq(evaluations.status, options.status));
+				}
 
-		const results = await db
-			.select()
-			.from(evaluations)
-			.where(and(...whereConditions))
-			.limit(limit)
-			.offset(offset)
-			.orderBy(desc(evaluations.createdAt));
+				const results = await db
+					.select()
+					.from(evaluations)
+					.where(and(...whereConditions))
+					.limit(limit)
+					.offset(offset)
+					.orderBy(desc(evaluations.createdAt));
 
-		logger.info("Evaluations listed", {
-			count: results.length,
-			organizationId,
-		});
+				logger.info("Evaluations listed", {
+					count: results.length,
+					organizationId,
+				});
 
-		return results;
+				return results;
+			},
+			{ ttlSeconds: CacheTTL.SHORT, organizationId, resource: "evaluations" },
+		);
 	}
 
 	/**
@@ -78,38 +88,43 @@ export class EvaluationService {
 	async getById(id: number, organizationId: number) {
 		logger.info("Getting evaluation by ID", { id, organizationId });
 
-		const [evaluation] = await db
-			.select()
-			.from(evaluations)
-			.where(
-				and(
-					eq(evaluations.id, id),
-					eq(evaluations.organizationId, organizationId),
-				),
-			)
-			.limit(1);
+		return cachedHotPath(
+			`byId:${id}`,
+			async () => {
+				const [evaluation] = await db
+					.select()
+					.from(evaluations)
+					.where(
+						and(
+							eq(evaluations.id, id),
+							eq(evaluations.organizationId, organizationId),
+						),
+					)
+					.limit(1);
 
-		if (!evaluation) {
-			logger.warn("Evaluation not found", { id, organizationId });
-			return null;
-		}
+				if (!evaluation) {
+					logger.warn("Evaluation not found", { id, organizationId });
+					return null;
+				}
 
-		// Fetch related test cases and runs manually (no Drizzle relations defined)
-		const evalTestCases = await db
-			.select()
-			.from(testCases)
-			.where(eq(testCases.evaluationId, id))
-			.limit(100);
+				const evalTestCases = await db
+					.select()
+					.from(testCases)
+					.where(eq(testCases.evaluationId, id))
+					.limit(100);
 
-		const evalRuns = await db
-			.select()
-			.from(evaluationRuns)
-			.where(eq(evaluationRuns.evaluationId, id))
-			.orderBy(desc(evaluationRuns.createdAt))
-			.limit(10);
+				const evalRuns = await db
+					.select()
+					.from(evaluationRuns)
+					.where(eq(evaluationRuns.evaluationId, id))
+					.orderBy(desc(evaluationRuns.createdAt))
+					.limit(10);
 
-		logger.info("Evaluation retrieved", { id, organizationId });
-		return { ...evaluation, testCases: evalTestCases, runs: evalRuns };
+				logger.info("Evaluation retrieved", { id, organizationId });
+				return { ...evaluation, testCases: evalTestCases, runs: evalRuns };
+			},
+			{ ttlSeconds: CacheTTL.SHORT, organizationId, resource: "evaluations" },
+		);
 	}
 
 	/**
@@ -166,6 +181,7 @@ export class EvaluationService {
 		}
 
 		logger.info("Evaluation created", { id: evaluation.id, organizationId });
+		await invalidateTag("evaluations", organizationId);
 
 		return evaluation;
 	}
@@ -207,6 +223,7 @@ export class EvaluationService {
 			.returning();
 
 		logger.info("Evaluation updated", { id, organizationId });
+		await invalidateTag("evaluations", organizationId);
 
 		return updated;
 	}
@@ -234,6 +251,7 @@ export class EvaluationService {
 			);
 
 		logger.info("Evaluation deleted", { id, organizationId });
+		await invalidateTag("evaluations", organizationId);
 
 		return true;
 	}

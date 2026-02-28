@@ -402,7 +402,7 @@ export class ArenaMatchesService {
 					modelId: model.id,
 					modelLabel: model.label,
 					score: 0,
-					output: `Error: ${(error as any).message}`,
+					output: `Error: ${error instanceof Error ? error.message : String(error)}`,
 					responseTime: 0,
 					tokenCount: 0,
 					cost: 0,
@@ -604,7 +604,7 @@ Provide a clear explanation for your choice.`,
 			"gemini-pro": 0.025,
 		};
 
-		const modelKey = (config as any).model || "gpt-4";
+		const modelKey = (config as { model?: string }).model || "gpt-4";
 		const pricePerToken = pricing[modelKey] || 0.03;
 
 		return (tokenCount / 1000) * pricePerToken;
