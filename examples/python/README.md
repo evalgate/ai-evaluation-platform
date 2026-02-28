@@ -1,51 +1,55 @@
 # Python Examples
 
-This directory contains practical examples for using the AI Evaluation Platform SDK in Python applications.
+Runnable examples and Jupyter notebooks for the [pauly4010-evalai-sdk](https://pypi.org/project/pauly4010-evalai-sdk/) Python SDK.
 
 ## Setup
 
-1. **Create a virtual environment:**
-   ```bash
-   python -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
-   ```
+```bash
+pip install "pauly4010-evalai-sdk[all]"
+```
 
-2. **Install dependencies:**
-   ```bash
-   pip install -r requirements.txt
-   ```
+For examples that call OpenAI/Anthropic, set your provider API key:
 
-3. **Configure environment:**
-   ```bash
-   cp .env.example .env
-   # Edit .env and add your API key
-   ```
+```bash
+export OPENAI_API_KEY="sk-..."
+# or
+export ANTHROPIC_API_KEY="sk-ant-..."
+```
 
-4. **Get your API key:**
-   - Go to [Developer Dashboard](https://v0-ai-evaluation-platform-nu.vercel.app/developer)
-   - Scroll to API Keys section
-   - Click "Create API Key"
-   - Copy the key to your `.env` file
+For examples that send traces to the platform, set your EvalAI key:
+
+```bash
+export EVALAI_API_KEY="sk-..."
+```
+
+Get your API key from the [Developer Dashboard](https://v0-ai-evaluation-platform-nu.vercel.app/developer).
 
 ## Examples
 
-### Demo Evaluation (`demo_eval.py`)
+### Scripts
 
-Runs a complete evaluation against a demo dataset and saves results.
+| File | Description | API Key? |
+|---|---|---|
+| [`demo_eval.py`](demo_eval.py) | Local assertions + test suites — zero config quickstart | No |
 
 ```bash
 python demo_eval.py
 ```
 
-**What it does:**
-- Creates an evaluation with factuality and toxicity metrics
-- Runs against the public demo chatbot dataset
-- Saves results to `demo-run.json`
-- Displays summary statistics
+### Jupyter Notebooks
 
-## Usage in CI/CD
+| Notebook | Description | API Key? |
+|---|---|---|
+| [`openai_eval.ipynb`](openai_eval.ipynb) | Trace and evaluate OpenAI chat completions | OpenAI (sections 2-4) |
+| [`rag_eval.ipynb`](rag_eval.ipynb) | Evaluate RAG pipelines — grounding, hallucination, regression gates | No |
+| [`agent_eval.ipynb`](agent_eval.ipynb) | Trace multi-agent workflows with handoffs, decisions, and cost | No |
 
-### GitHub Actions
+```bash
+pip install jupyter
+jupyter notebook
+```
+
+## CI/CD Integration
 
 ```yaml
 name: AI Quality Check (Python)
@@ -56,30 +60,24 @@ jobs:
   evaluate:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
-      
-      - name: Install dependencies
-        run: |
-          cd examples/python
-          pip install -r requirements.txt
-      
-      - name: Run evaluation
+          python-version: '3.12'
+
+      - name: Install SDK
+        run: pip install "pauly4010-evalai-sdk[all]"
+
+      - name: Run evaluations
         env:
           EVALAI_API_KEY: ${{ secrets.EVALAI_API_KEY }}
-        run: |
-          cd examples/python
-          python demo_eval.py
+        run: python examples/python/demo_eval.py
 ```
 
-## Learn More
+## Links
 
+- [SDK on PyPI](https://pypi.org/project/pauly4010-evalai-sdk/)
 - [SDK Documentation](https://v0-ai-evaluation-platform-nu.vercel.app/sdk)
-- [API Reference](https://v0-ai-evaluation-platform-nu.vercel.app/api-reference)
-- [Python SDK on PyPI](https://pypi.org/project/pauly4010-evalai-sdk/)
+- [GitHub](https://github.com/pauly7610/ai-evaluation-platform)
 
-## Support
-
-Need help? [Open an issue or PR](https://github.com/pauly7610/ai-evaluation-platform/issues) on GitHub.
+Need help? [Open an issue](https://github.com/pauly7610/ai-evaluation-platform/issues) on GitHub.

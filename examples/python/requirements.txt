@@ -1,2 +1,2 @@
-evalai-sdk>=1.0.0
-python-dotenv>=1.0.0
+pauly4010-evalai-sdk[all]>=1.0.0
+jupyter>=1.0

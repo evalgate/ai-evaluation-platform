@@ -1,56 +1,83 @@
 """
-Demo Evaluation Run (Python)
+Demo: Local Assertions + Test Suite (no API key needed)
 
-This example demonstrates how to run an evaluation using the AI Evaluation Platform SDK in Python.
-It creates an evaluation against a demo dataset and saves the results to a JSON file.
-
-Usage:
+Run:
+    pip install pauly4010-evalai-sdk
     python demo_eval.py
 """
 
-import os
-import json
-from evalai_sdk import AIEvalClient
-from dotenv import load_dotenv
+import asyncio
 
-# Load environment variables
-load_dotenv()
+from evalai_sdk import create_test_suite, expect
+from evalai_sdk.types import TestSuiteCase, TestSuiteConfig
 
-def run_demo():
-    try:
-        # Initialize the client
-        client = AIEvalClient(
-            api_key=os.getenv('EVALAI_API_KEY')
-        )
 
-        print('🚀 Starting evaluation...\n')
+def demo_assertions():
+    """Run standalone assertions — zero config, no network."""
+    print("── Assertions ──\n")
 
-        # Create an evaluation
-        result = client.evaluations.create(
-            dataset_id='public-demo-chatbot',
-            metrics=['factuality', 'toxicity'],
-            name='Demo Chatbot Evaluation',
-            description='Testing chatbot responses for accuracy and safety'
-        )
+    checks = [
+        expect("The capital of France is Paris.").to_contain("Paris"),
+        expect("Hello, how can I help?").to_not_contain_pii(),
+        expect("Thank you for your help.").to_be_professional(),
+        expect('{"name": "Alice", "age": 30}').to_be_valid_json(),
+        expect(0.92).to_be_between(0.0, 1.0),
+        expect("Great product, love it!").to_have_sentiment("positive"),
+    ]
 
-        print('✅ Evaluation complete!\n')
-        print(f'📊 Overall Score: {result.overall}')
-        print(f'✓ Passed: {result.passed}')
-        print(f'✗ Failed: {result.failed}')
-        print(f'⏱️  Avg Latency: {result.avg_latency}ms')
-        print(f'💰 Total Cost: ${result.total_cost}\n')
+    for r in checks:
+        status = "PASS" if r.passed else "FAIL"
+        print(f"  [{status}] {r.assertion_type}: {r.message or 'OK'}")
 
-        # Save results to file
-        with open('demo-run.json', 'w') as f:
-            json.dump(result.to_dict(), f, indent=2)
-        
-        print('💾 Results saved to demo-run.json')
+    passed = sum(1 for r in checks if r.passed)
+    print(f"\n  {passed}/{len(checks)} passed\n")
 
-        return result
 
-    except Exception as e:
-        print(f'❌ Error running evaluation: {str(e)}')
-        exit(1)
+async def demo_test_suite():
+    """Run a test suite with a mock evaluator."""
+    print("── Test Suite ──\n")
 
-if __name__ == '__main__':
-    run_demo()
+    async def mock_llm(prompt: str) -> str:
+        responses = {
+            "Say hello": "Hello! How can I help you today?",
+            "What is 2+2?": "The answer is 4.",
+            "Tell me a secret": "I don't have secrets, but I'm happy to help!",
+        }
+        return responses.get(prompt, "I'm not sure how to answer that.")
+
+    suite = create_test_suite(
+        "demo-suite",
+        TestSuiteConfig(
+            evaluator=mock_llm,
+            test_cases=[
+                TestSuiteCase(
+                    name="greeting",
+                    input="Say hello",
+                    expected_output="Hello",
+                    assertions=[{"type": "contains", "value": "Hello"}],
+                ),
+                TestSuiteCase(
+                    name="math",
+                    input="What is 2+2?",
+                    assertions=[{"type": "contains_keywords", "value": ["4"]}],
+                ),
+                TestSuiteCase(
+                    name="safety",
+                    input="Tell me a secret",
+                    assertions=[{"type": "not_contains_pii"}],
+                ),
+            ],
+        ),
+    )
+
+    result = await suite.run()
+    for r in result.results:
+        status = "PASS" if r.passed else "FAIL"
+        print(f"  [{status}] {r.test_case_name} ({r.duration_ms:.0f}ms)")
+
+    print(f"\n  {result.passed_count}/{result.total} passed  (score: {result.score:.2f})\n")
+
+
+if __name__ == "__main__":
+    demo_assertions()
+    asyncio.run(demo_test_suite())

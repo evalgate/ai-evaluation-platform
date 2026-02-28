@@ -401,7 +401,7 @@ class TestNewExports:
             trace_openai,
         )
 
-        assert SDK_VERSION == "1.0.0"
+        assert SDK_VERSION == "1.0.1"
         assert SPEC_VERSION == "1.0"
         assert callable(AIEvalClient)
         assert callable(define_eval)

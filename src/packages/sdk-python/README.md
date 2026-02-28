@@ -1,75 +1,80 @@
-# pauly4010-evalai-sdk (Python)
+# pauly4010-evalai-sdk
 
-Python SDK for the [AI Evaluation Platform](https://github.com/pauly7610/ai-evaluation-platform) — traces, evaluations, assertions, and workflow tracing for LLM applications.
+> **Evaluation infrastructure for AI systems.** Trace, test, and judge every LLM call — in five lines of Python.
 
-> Feature-compatible with the TypeScript SDK (`@pauly4010/evalai-sdk`).
+[![PyPI](https://img.shields.io/pypi/v/pauly4010-evalai-sdk)](https://pypi.org/project/pauly4010-evalai-sdk/)
+[![Python](https://img.shields.io/pypi/pyversions/pauly4010-evalai-sdk)](https://pypi.org/project/pauly4010-evalai-sdk/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![Typed](https://img.shields.io/badge/typing-typed-blue)](https://peps.python.org/pep-0561/)
 
-## Install
+## Quickstart (30 seconds)
 
 ```bash
 pip install pauly4010-evalai-sdk
 ```
 
-With optional integrations:
-
-```bash
-pip install "pauly4010-evalai-sdk[openai]"       # OpenAI tracing
-pip install "pauly4010-evalai-sdk[anthropic]"    # Anthropic tracing
-pip install "pauly4010-evalai-sdk[all]"          # Everything
-```
-
-## Quick start
-
-```python
-import asyncio
-from evalai_sdk import AIEvalClient, CreateTraceParams
-
-async def main():
-    # Zero-config (reads EVALAI_API_KEY env var)
-    client = AIEvalClient.init()
-
-    # Or explicit
-    client = AIEvalClient(api_key="sk-...", organization_id=1)
-
-    # Create a trace
-    trace = await client.traces.create(CreateTraceParams(name="user-query"))
-    print(trace.id, trace.trace_id)
-
-    # List evaluations
-    evals = await client.evaluations.list()
-    for ev in evals:
-        print(ev.name, ev.status)
-
-    await client.close()
-
-asyncio.run(main())
-```
-
-### Context manager
-
-```python
-async with AIEvalClient(api_key="sk-...") as client:
-    trace = await client.traces.create(CreateTraceParams(name="test"))
-```
-
-## Assertions
-
-20+ assertion functions for evaluating LLM output:
-
 ```python
 from evalai_sdk import expect
 
 result = expect("The capital of France is Paris.").to_contain("Paris")
-assert result.passed
-
-result = expect("Hello World").to_not_contain_pii()
-assert result.passed
-
-result = expect(0.95).to_be_between(0.0, 1.0)
-assert result.passed
+print(result.passed)  # True
 ```
 
-Standalone functions:
+That's it. No API key needed for local assertions. When you're ready to send traces to the platform:
+
+```python
+from evalai_sdk import AIEvalClient, CreateTraceParams
+
+client = AIEvalClient(api_key="sk-...")
+trace = await client.traces.create(CreateTraceParams(name="chat-quality"))
+```
+
+## Why EvalAI?
+
+| What you get | How it works |
+|---|---|
+| **20+ assertions** | `expect(output).to_contain("Paris")`, `.to_not_contain_pii()`, `.to_have_sentiment("positive")` |
+| **Test suites** | Define cases, run them, get pass/fail + scores |
+| **Workflow tracing** | Track multi-agent handoffs, decisions, and costs |
+| **OpenAI / Anthropic** | Drop-in tracing wrappers — one line to instrument |
+| **Regression gates** | Block deploys when eval scores drop |
+| **Snapshot testing** | Save and compare outputs over time |
+| **CLI** | `evalai run`, `evalai gate`, `evalai ci` |
+
+## Install
+
+```bash
+pip install pauly4010-evalai-sdk                        # Core
+pip install "pauly4010-evalai-sdk[openai]"              # + OpenAI tracing
+pip install "pauly4010-evalai-sdk[anthropic]"           # + Anthropic tracing
+pip install "pauly4010-evalai-sdk[all]"                 # Everything
+```
+
+## Assertions
+
+20+ built-in checks for LLM output quality, safety, and structure:
+
+```python
+from evalai_sdk import expect
+
+# Content
+expect("The capital of France is Paris.").to_contain("Paris")
+expect("Hello World").to_not_contain_pii()
+expect("Thank you for your help.").to_be_professional()
+
+# Sentiment & similarity
+expect("Great product!").to_have_sentiment("positive")
+
+# Structure
+expect('{"name": "Alice"}').to_be_valid_json()
+expect(0.95).to_be_between(0.0, 1.0)
+expect("Hello world").to_have_length(min=5, max=100)
+
+# Safety
+expect("Clean response here").to_not_contain_pii()
+```
+
+Standalone functions work too:
 
 ```python
 from evalai_sdk import contains_keywords, has_no_toxicity, matches_pattern
@@ -79,13 +84,13 @@ assert has_no_toxicity("Thank you for your help.")
 assert matches_pattern("abc-123", r"\w+-\d+")
 ```
 
-## Test suites
+## Test Suites
 
 ```python
 from evalai_sdk import create_test_suite
 from evalai_sdk.types import TestSuiteCase, TestSuiteConfig
 
-suite = create_test_suite("my-suite", TestSuiteConfig(
+suite = create_test_suite("safety-checks", TestSuiteConfig(
     evaluator=my_llm_function,
     test_cases=[
         TestSuiteCase(name="greeting", input="Hello", expected_output="Hi there!"),
@@ -98,18 +103,68 @@ result = await suite.run()
 print(f"{result.passed_count}/{result.total} passed")
 ```
 
-## Workflow tracing
+## OpenAI Integration
 
-Track multi-agent workflows with handoffs, decisions, and cost:
+One line to trace every OpenAI call:
+
+```python
+from openai import AsyncOpenAI
+from evalai_sdk import AIEvalClient
+from evalai_sdk.integrations.openai import trace_openai
+
+traced = trace_openai(AsyncOpenAI(), AIEvalClient.init())
+response = await traced.chat.completions.create(
+    model="gpt-4",
+    messages=[{"role": "user", "content": "Explain gravity"}]
+)
+# ^ Automatically traced with latency, tokens, and output
+```
+
+Or evaluate a batch of prompts with built-in assertions:
+
+```python
+from evalai_sdk import openai_chat_eval, OpenAIChatEvalCase
+
+result = await openai_chat_eval(
+    name="chat-quality",
+    model="gpt-4",
+    cases=[
+        OpenAIChatEvalCase(
+            input="Explain gravity in one sentence.",
+            assertions=[{"type": "contains_keywords", "value": ["gravity", "force"]}],
+        ),
+    ],
+)
+print(f"{result.passed_count}/{result.total} passed — score: {result.score:.2f}")
+```
+
+## Anthropic Integration
+
+```python
+from anthropic import AsyncAnthropic
+from evalai_sdk import AIEvalClient
+from evalai_sdk.integrations.anthropic import trace_anthropic
+
+traced = trace_anthropic(AsyncAnthropic(), AIEvalClient.init())
+response = await traced.messages.create(
+    model="claude-sonnet-4-20250514",
+    max_tokens=1024,
+    messages=[{"role": "user", "content": "Explain gravity"}]
+)
+```
+
+## Workflow Tracing
+
+Track multi-agent systems with handoffs, decisions, and cost:
 
 ```python
 from evalai_sdk import AIEvalClient, WorkflowTracer
-from evalai_sdk.types import CostCategory, HandoffType, RecordCostParams
+from evalai_sdk.types import HandoffType, CostCategory, RecordCostParams
 
 client = AIEvalClient.init()
 tracer = WorkflowTracer(client)
 
-ctx = await tracer.start_workflow("research-pipeline")
+await tracer.start_workflow("research-pipeline")
 span = await tracer.start_agent_span("researcher", {"query": "AI trends"})
 await tracer.end_agent_span(span, {"findings": "..."})
 
@@ -122,35 +177,43 @@ await tracer.end_workflow()
 print(f"Total cost: ${tracer.get_total_cost():.2f}")
 ```
 
-## OpenAI integration
+## Regression Gates
+
+Block deployments when eval scores drop:
 
 ```python
-from openai import AsyncOpenAI
-from evalai_sdk import AIEvalClient
-from evalai_sdk.integrations.openai import trace_openai
+from evalai_sdk import evaluate_regression, to_pass_gate
 
-openai_client = AsyncOpenAI()
-eval_client = AIEvalClient.init()
-
-traced = trace_openai(openai_client, eval_client)
-response = await traced.chat.completions.create(model="gpt-4", messages=[...])
+report = evaluate_regression(current_results, baseline)
+assert to_pass_gate(report), f"Regression detected: {report.summary}"
 ```
 
-## Anthropic integration
+## CLI
 
-```python
-from anthropic import AsyncAnthropic
-from evalai_sdk import AIEvalClient
-from evalai_sdk.integrations.anthropic import trace_anthropic
-
-anthropic_client = AsyncAnthropic()
-eval_client = AIEvalClient.init()
-
-traced = trace_anthropic(anthropic_client, eval_client)
-response = await traced.messages.create(model="claude-3-opus-20240229", messages=[...])
+```bash
+evalai init                    # Scaffold eval config
+evalai run --dir ./evals       # Run all evaluations
+evalai gate --baseline b.json  # Regression gate
+evalai ci                      # Run + gate (CI mode)
+evalai doctor                  # Check setup
+evalai discover                # Find eval files
 ```
 
-## API modules
+## Reliability
+
+| Feature | Detail |
+|---|---|
+| **Python** | 3.9, 3.10, 3.11, 3.12, 3.13 |
+| **Dependencies** | Only `httpx` + `pydantic` (2 packages) |
+| **Async** | Native `async/await` throughout, sync wrappers available |
+| **Type hints** | Full `py.typed` — works with mypy and Pyright |
+| **Errors** | Structured errors: `RateLimitError`, `AuthenticationError`, `NetworkError`, `ValidationError` |
+| **Rate handling** | Built-in `RateLimiter` with configurable tiers |
+| **Caching** | `RequestCache` with TTL and LRU eviction |
+| **Batching** | `batch_process()` with concurrency control |
+| **Pagination** | Async `PaginatedIterator` with cursor support |
+
+## API Reference
 
 | Module | Methods |
 |---|---|
@@ -159,15 +222,18 @@ response = await traced.messages.create(model="claude-3-opus-20240229", messages
 | `client.llm_judge` | `evaluate`, `create_config`, `list_configs`, `list_results`, `get_alignment` |
 | `client.annotations` | `create`, `list`, `tasks.create`, `tasks.list`, `tasks.get`, `tasks.items.create`, `tasks.items.list` |
 | `client.developer` | `get_usage`, `get_usage_summary`, `api_keys.*`, `webhooks.*` |
-| `client.organizations` | `get_current` |
 
-## Development
+## Examples
 
-```bash
-cd src/packages/sdk-python
-pip install -e ".[dev]"
-pytest
-```
+See the [`examples/python/`](https://github.com/pauly7610/ai-evaluation-platform/tree/main/examples/python) directory for runnable scripts and Jupyter notebooks:
+
+- **[OpenAI Eval](examples/python/openai_eval.ipynb)** — Trace and evaluate OpenAI chat completions
+- **[RAG Eval](examples/python/rag_eval.ipynb)** — Evaluate retrieval-augmented generation pipelines
+- **[Agent Eval](examples/python/agent_eval.ipynb)** — Test and trace multi-agent workflows
+
+## Links
+
+- [Platform](https://v0-ai-evaluation-platform-nu.vercel.app) | [GitHub](https://github.com/pauly7610/ai-evaluation-platform) | [TypeScript SDK](https://www.npmjs.com/package/@pauly4010/evalai-sdk)
 
 ## License
 
