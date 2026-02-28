@@ -2,7 +2,7 @@
 
 **Passes on first run. No account. No API keys. No external services.**
 
-This is the "boringly green" example — clone, init, gate, done.
+This is the "boringly green" example — clone, init, ci, done.
 
 ## Quick Start
 
@@ -10,32 +10,30 @@ This is the "boringly green" example — clone, init, gate, done.
 cd examples/minimal-green
 npm install            # no dependencies — just node:test
 npx evalai init        # creates baseline + CI workflow
-npx evalai doctor      # verify everything is wired
-npx evalai gate        # ✅ passes immediately
+npx evalai ci          # ✅ passes immediately
 ```
 
 ## What Happens
 
 1. `npm install` — nothing to install (zero dependencies)
-2. `npx evalai init` — detects the project, runs `npm test` to capture baseline (3 tests passing), creates `evals/baseline.json` + `evalai.config.json` + `.github/workflows/evalai-gate.yml`
-3. `npx evalai doctor` — verifies project, config, baseline, CI workflow all present
-4. `npx evalai gate` — runs `npm test` again, compares against baseline → **PASS**
+2. `npx evalai init` — detects the project, runs `npm test` to capture baseline (3 tests passing), creates `evalai/baseline.json` + `evalai.config.json` + `.github/workflows/evalai.yml`
+3. `npx evalai ci` — runs complete pipeline: discover → manifest → impact → run → diff → summary → **PASS**
 
 ## If Something Breaks
 
 ```bash
-npx evalai gate        # ❌ FAIL
+npx evalai ci          # ❌ FAIL
 npx evalai explain     # shows root cause + fix
 ```
 
-The `explain` command reads the report artifact and tells you exactly what changed and how to fix it.
+The `explain` command reads the run artifact and tells you exactly what changed and how to fix it.
 
 ## CI
 
 Push to GitHub and the auto-generated workflow runs:
 
 ```
-doctor (preflight) → gate → upload report artifact
+evalai ci --format github --write-results --base main
 ```
 
 No secrets needed. No environment variables. Just works.
@@ -45,12 +43,22 @@ No secrets needed. No environment variables. Just works.
 | File | Purpose |
 |------|---------|
 | `test.js` | 3 trivial `node:test` tests |
-| `package.json` | Scripts for init/doctor/gate/explain |
+| `package.json` | Scripts for init/doctor/ci/explain |
 
 After `evalai init` creates:
 
 | File | Purpose |
 |------|---------|
-| `evals/baseline.json` | Baseline from your test run |
+| `evalai/baseline.json` | Baseline from your test run |
 | `evalai.config.json` | Config file |
-| `.github/workflows/evalai-gate.yml` | CI workflow |
+| `.github/workflows/evalai.yml` | CI workflow with evalai ci |
+
+## Artifacts
+
+After `evalai ci` runs:
+
+| File | Purpose |
+|------|---------|
+| `.evalai/last-run.json` | Latest run results |
+| `.evalai/runs/run-*.json` | All run history |
+| `.evalai/runs/index.json` | Run metadata index |

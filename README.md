@@ -89,7 +89,36 @@ No account cancellation. No data export. Your tests keep working.
 
 **Live demo:** [https://v0-ai-evaluation-platform-nu.vercel.app](https://v0-ai-evaluation-platform-nu.vercel.app)
 
-**Docs:** [Quickstart](docs/quickstart.md) · [Architecture](docs/ARCHITECTURE.md) · [Regression Gate](docs/REGRESSION_GATE.md) · [CI Artifacts](docs/CI_ARTIFACTS.md) · [AI Assistant Integration](docs/AI_ASSISTANT_INTEGRATION.md) · [Contributor Map](docs/CONTRIBUTOR_MAP.md) · [Releasing](docs/RELEASING.md) · [All Docs](docs/INDEX.md)
+## 🚀 CI in One Command
+
+Add to your `.github/workflows/evalai.yml`:
+
+```yaml
+name: EvalAI CI
+on: [push, pull_request]
+jobs:
+  evalai:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+      - run: npm ci
+      - run: npx evalai ci --format github --write-results --base main
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: evalai-results
+          path: .evalai/
+```
+
+**That's it!** Your CI now:
+- ✅ Discovers evaluation specs automatically
+- ✅ Runs only impacted specs (smart caching)
+- ✅ Compares results against base branch
+- ✅ Posts rich summary in PR with regressions
+- ✅ Exits with proper codes (0=clean, 1=regressions, 2=config)
+
+**Docs:** [CI Quickstart](docs/CI_QUICKSTART.md) · [Quickstart](docs/quickstart.md) · [Architecture](docs/ARCHITECTURE.md) · [Regression Gate](docs/REGRESSION_GATE.md) · [CI Artifacts](docs/CI_ARTIFACTS.md) · [AI Assistant Integration](docs/AI_ASSISTANT_INTEGRATION.md) · [Contributor Map](docs/CONTRIBUTOR_MAP.md) · [Releasing](docs/RELEASING.md) · [All Docs](docs/INDEX.md)
 
 ---
 

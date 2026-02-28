@@ -5,6 +5,60 @@ All notable changes to the @pauly4010/evalai-sdk package will be documented in t
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.9.0] - 2026-02-27
+
+### ✨ Added
+
+#### CLI — One-Command CI Loop (`evalai ci`)
+
+- **`evalai ci`** — Single command teams put in GitHub workflows and never think about again
+- **Complete CI pipeline**: discover → manifest → impact → run → diff → PR summary → safe failure → "next step"
+- **Automatic manifest building**: Builds manifest if missing, no manual steps required
+- **Impact analysis integration**: `--impacted-only` flag for targeted testing
+- **Smart exit codes**: 0=clean, 1=regressions, 2=config/infra issues
+- **Self-documenting failures**: Always prints copy/paste next step for debugging
+- **GitHub Step Summary integration**: Automatic PR summaries with regressions and artifacts
+
+#### CLI — Durable Run History & Diff System
+
+- **Run artifact retention**: Timestamped artifacts in `.evalai/runs/run-<runId>.json`
+- **Run index file**: `.evalai/runs/index.json` tracks all runs with metadata
+- **Schema versioning**: `RunResult` and `DiffResult` include `schemaVersion` for compatibility
+- **Base/head shortcuts**: `--base baseline`, `--base last`, `--head last` for common cases
+- **Floating point normalization**: Consistent score/delta calculations across runs
+- **Comprehensive diff comparison**: Classifies regressions, improvements, added, removed specs
+
+#### CLI — Centralized Architecture
+
+- **Environment detection**: `isCI()`, `isGitHubActions()`, `getGitHubStepSummaryPath()` unified
+- **Workspace resolution**: `resolveEvalWorkspace()` provides all `.evalai` paths
+- **Git reference detection**: Comprehensive patterns for branches, tags, and ranges
+- **No more duplication**: All commands use shared utilities for consistency
+
+#### CLI — CI Friendliness
+
+- **Fail-safe base resolution**: Clear error messages when base artifacts missing in CI
+- **GitHub Step Summary**: Rich markdown summaries with metrics, regressions, and artifact links
+- **CI-specific error handling**: Exit code 2 for config issues with helpful guidance
+- **Artifact download instructions**: Exact commands for manual base artifact setup
+
+### 🔧 Changed
+
+- **Exit codes standardized**: 0=clean, 1=regressions, 2=config/infra issues across all commands
+- **Schema compatibility**: Added `schemaVersion` validation for future-proofing
+- **Path resolution**: All commands use centralized workspace helpers
+- **Error messages**: More actionable and context-aware guidance
+
+### 📊 New Features Summary
+
+- **One-command CI**: `evalai ci` replaces multi-step workflows
+- **Durable history**: Run artifacts preserved with smart indexing
+- **Smart diffing**: Automated regression detection with GitHub integration
+- **Centralized utilities**: Environment detection and workspace resolution unified
+- **Self-documenting**: Clear next steps for any failure scenario
+
+---
+
 ## [1.8.0] - 2026-02-26
 
 ### ✨ Added
