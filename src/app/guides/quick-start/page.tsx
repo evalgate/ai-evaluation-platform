@@ -143,6 +143,10 @@ git push                           # open a PR → CI blocks regressions`}</pre>
 								</li>
 								<li className="flex items-center gap-2">
 									<CheckCircle2 className="h-4 w-4 text-green-500" />
+									Python 3.8+ (for Python SDK)
+								</li>
+								<li className="flex items-center gap-2">
+									<CheckCircle2 className="h-4 w-4 text-green-500" />
 									An EvalAI account (sign up above)
 								</li>
 							</ul>
@@ -230,6 +234,15 @@ git push                           # open a PR → CI blocks regressions`}</pre>
 											</Button>
 										</div>
 									</div>
+									<p className="text-sm font-semibold mt-4 mb-2">Python</p>
+									<div className="bg-muted p-4 rounded-lg font-mono text-sm">
+										<div className="flex items-center justify-between">
+											<span>pip install pauly4010-evalai-sdk</span>
+											<Button size="sm" variant="ghost">
+												<Copy className="h-3 w-3" />
+											</Button>
+										</div>
+									</div>
 								</div>
 							</CardContent>
 						</Card>
@@ -300,6 +313,9 @@ EVALAI_ORGANIZATION_ID=your_org_id_here`}</pre>
 								<p className="text-muted-foreground mb-4">
 									Import and initialize the SDK in your code:
 								</p>
+								<p className="text-xs font-semibold text-muted-foreground mb-1">
+									TypeScript
+								</p>
 								<div className="bg-muted p-4 rounded-lg font-mono text-sm mb-4">
 									<pre>{`import { AIEvalClient } from '@pauly4010/evalai-sdk'
 
@@ -312,6 +328,22 @@ const client = new AIEvalClient({
   organizationId: parseInt(process.env.EVALAI_ORGANIZATION_ID!),
   debug: true // Enable debug logging
 })`}</pre>
+								</div>
+								<p className="text-xs font-semibold text-muted-foreground mb-1">
+									Python
+								</p>
+								<div className="bg-muted p-4 rounded-lg font-mono text-sm mb-4">
+									<pre>{`from evalai_sdk import AIEvalClient
+
+# Auto-loads from environment variables
+client = AIEvalClient.init()
+
+# Or with explicit configuration
+client = AIEvalClient(
+    api_key=os.environ["EVALAI_API_KEY"],
+    organization_id=int(os.environ["EVALAI_ORGANIZATION_ID"]),
+    debug=True
+)`}</pre>
 								</div>
 							</CardContent>
 						</Card>
@@ -330,7 +362,10 @@ const client = new AIEvalClient({
 								<p className="text-muted-foreground mb-4">
 									Track your first LLM call:
 								</p>
-								<div className="bg-muted p-4 rounded-lg font-mono text-sm">
+								<p className="text-xs font-semibold text-muted-foreground mb-1">
+									TypeScript
+								</p>
+								<div className="bg-muted p-4 rounded-lg font-mono text-sm mb-4">
 									<pre>{`// Create a trace
 const trace = await client.traces.create({
   name: 'Chat Completion',
@@ -360,6 +395,34 @@ const span = await client.traces.createSpan(trace.id, {
 
 console.log('Span created:', span.id)`}</pre>
 								</div>
+								<p className="text-xs font-semibold text-muted-foreground mb-1">
+									Python
+								</p>
+								<div className="bg-muted p-4 rounded-lg font-mono text-sm">
+									<pre>{`from evalai_sdk.types import CreateTraceParams, CreateSpanParams
+
+# Create a trace
+trace = await client.traces.create(CreateTraceParams(
+    name="Chat Completion",
+    trace_id=f"trace-{int(time.time() * 1000)}",
+    metadata={"userId": "user-123", "model": "gpt-4"}
+))
+
+print(f"Trace created: {trace.id}")
+
+# Add a span to track the LLM call
+span = await client.traces.create_span(trace.id, CreateSpanParams(
+    name="OpenAI API Call",
+    span_id=f"span-{int(time.time() * 1000)}",
+    type="llm",
+    start_time=datetime.now().isoformat(),
+    input="What is AI?",
+    output="AI is artificial intelligence...",
+    metadata={"model": "gpt-4", "tokens": 150, "latency": 1200}
+))
+
+print(f"Span created: {span.id}")`}</pre>
+								</div>
 							</CardContent>
 						</Card>
 					</div>
@@ -379,6 +442,9 @@ console.log('Span created:', span.id)`}</pre>
 									a test suite runner with 20+ built-in assertions designed for
 									LLM outputs.
 								</p>
+								<p className="text-xs font-semibold text-muted-foreground mb-1">
+									TypeScript
+								</p>
 								<div className="bg-muted p-4 rounded-lg font-mono text-sm mb-4">
 									<pre>{`import { createTestSuite, expect } from '@pauly4010/evalai-sdk';
 
@@ -396,6 +462,27 @@ const suite = createTestSuite('My First Eval', {
 
 const { total, passed, failed } = await suite.run();
 console.log(\`Results: \${passed}/\${total} passed\`);`}</pre>
+								</div>
+								<p className="text-xs font-semibold text-muted-foreground mb-1">
+									Python
+								</p>
+								<div className="bg-muted p-4 rounded-lg font-mono text-sm mb-4">
+									<pre>{`from evalai_sdk import create_test_suite, expect
+
+suite = create_test_suite("My First Eval",
+    executor=lambda input: my_llm(input),
+    cases=[{
+        "input": "Summarize this document...",
+        "assertions": [
+            lambda output: expect(output).to_have_length(min=50, max=500),
+            lambda output: expect(output).to_not_contain_pii(),
+            lambda output: expect(output).to_have_sentiment("neutral"),
+        ]
+    }]
+)
+
+results = await suite.run()
+print(f"Results: {results.passed}/{results.total} passed")`}</pre>
 								</div>
 								<div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
 									<p className="text-sm text-blue-600 dark:text-blue-400">

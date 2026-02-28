@@ -1,4 +1,6 @@
 # Backward compatibility — old SDK versions can be required and expose core exports
+# TypeScript: verifies npm published versions still export core symbols
+# Python: verifies the local Python SDK exports match the TypeScript SDK surface
 name: SDK Compatibility
 
 on:
@@ -52,4 +54,105 @@ jobs:
             }
 
             console.log('SDK v${{ matrix.sdk-version }} OK —', Object.keys(sdk).length, 'exports');
+          "
+
+  python-compat:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Python SDK
+        run: pip install -e src/packages/sdk-python
+
+      - name: Verify Python SDK exports match TypeScript surface
+        run: |
+          python -c "
+          import evalai_sdk
+
+          # Core exports that must exist (matching TypeScript SDK)
+          required = [
+              'AIEvalClient',
+              'EvalAIError',
+              'RateLimitError',
+              'AuthenticationError',
+              'NetworkError',
+              'ValidationError',
+              'create_error_from_response',
+              'create_test_suite',
+              'TestSuite',
+              'expect',
+              'run_assertions',
+              'WorkflowTracer',
+              'create_workflow_tracer',
+              'trace_workflow_step',
+              'contains_keywords',
+              'matches_pattern',
+              'has_length',
+              'has_sentiment',
+              'similar_to',
+              'contains_language',
+              'not_contains_pii',
+              'has_no_hallucinations',
+              'has_no_toxicity',
+              'create_context',
+              'get_current_context',
+              'with_context',
+              'WithContext',
+              'SnapshotManager',
+              'snapshot',
+              'compare_with_snapshot',
+              'export_data',
+              'import_data',
+              'PaginatedIterator',
+              'auto_paginate',
+              'RequestCache',
+              'CacheTTL',
+              'RequestBatcher',
+              'batch_process',
+              'RateLimiter',
+              'stream_evaluation',
+              'batch_read',
+              'GATE_EXIT',
+              'GATE_CATEGORY',
+              'evaluate_regression',
+              'to_pass_gate',
+              'Logger',
+              'create_logger',
+              'trace_openai',
+              'trace_anthropic',
+              'trace_langchain',
+              'trace_crewai',
+              'trace_autogen',
+              'openai_chat_eval',
+              'define_eval',
+              'define_suite',
+              'create_result',
+              'evalai',
+              'create_eval_runtime',
+              'dispose_active_runtime',
+              'LocalExecutor',
+              'create_local_executor',
+              'default_local_executor',
+              'SDK_VERSION',
+              'SPEC_VERSION',
+          ]
+
+          missing = [name for name in required if not hasattr(evalai_sdk, name)]
+          if missing:
+              print(f'FAIL: Missing exports: {missing}')
+              exit(1)
+
+          # Verify client is constructable
+          client = evalai_sdk.AIEvalClient(api_key='test-key', base_url='http://localhost')
+          assert client.organization_id is None
+
+          # Verify expect() returns an Expectation
+          result = evalai_sdk.expect('hello').to_contain('hello')
+          assert result.passed
+
+          print(f'Python SDK v{evalai_sdk.__version__} OK — {len(required)} core exports verified')
           "

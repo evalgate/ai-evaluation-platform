@@ -78,7 +78,7 @@ jobs:
 
 - [SDK Documentation](https://v0-ai-evaluation-platform-nu.vercel.app/sdk)
 - [API Reference](https://v0-ai-evaluation-platform-nu.vercel.app/api-reference)
-- [Python SDK on PyPI](https://pypi.org/project/evalai-sdk/)
+- [Python SDK on PyPI](https://pypi.org/project/pauly4010-evalai-sdk/)
 
 ## Support
 

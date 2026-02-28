@@ -20,7 +20,7 @@ export const metadata: Metadata = {
 	title:
 		"AI Evaluation Platform — Observability, Evaluation & Governance for AI Agents",
 	description:
-		"Open-source platform for multi-agent workflow tracing, LLM cost analytics, decision auditing, and governance. Published TypeScript SDK on npm (@pauly4010/evalai-sdk). REST API for Python/Go/Rust. Integrates with LangChain, CrewAI, AutoGen.",
+		"Open-source platform for multi-agent workflow tracing, LLM cost analytics, decision auditing, and governance. Published TypeScript SDK on npm (@pauly4010/evalai-sdk) and Python SDK on PyPI (pauly4010-evalai-sdk). Integrates with LangChain, CrewAI, AutoGen.",
 	generator: "EvalAI",
 	keywords: [
 		"ai evaluation",
@@ -32,6 +32,7 @@ export const metadata: Metadata = {
 		"governance",
 		"evalai",
 		"typescript sdk",
+		"python sdk",
 		"multi-agent",
 		"langchain",
 		"crewai",

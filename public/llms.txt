@@ -69,6 +69,7 @@ That's it! Your CI now discovers specs, runs only impacted code, diffs results, 
 ## Install (SDK only)
 
 npm install @pauly4010/evalai-sdk
+pip install pauly4010-evalai-sdk
 
 ## CLI Commands
 
@@ -114,7 +115,7 @@ EvalAI provides:
 - **Human Evaluation**: Annotation system for human evaluation tasks and collaborative review
 - **Arena Competition**: AI model comparison platform with leaderboards and competition tracking
 - **Interactive Playground**: Test your own AI outputs with assertions — no signup required
-- **Published SDK**: TypeScript/JavaScript SDK with zero-config init, auto-retry, caching, batching, and framework integrations
+- **Published SDKs**: TypeScript/JavaScript SDK and Python SDK with zero-config init, auto-retry, caching, batching, and framework integrations
 
 ## SDK Usage
 
@@ -385,6 +386,7 @@ For legacy WebMCP compatibility:
 ## Links
 
 - npm: https://www.npmjs.com/package/@pauly4010/evalai-sdk
+- PyPI: https://pypi.org/project/pauly4010-evalai-sdk/
 - GitHub: https://github.com/pauly7610/ai-evaluation-platform
 - Docs: https://v0-ai-evaluation-platform-nu.vercel.app/documentation
 - API Reference: https://v0-ai-evaluation-platform-nu.vercel.app/api-reference

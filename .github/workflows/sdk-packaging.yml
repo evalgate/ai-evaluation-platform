@@ -1,4 +1,4 @@
-# SDK packaging — build and pack for distribution
+# SDK packaging — build and pack for distribution (TypeScript + Python)
 name: SDK Packaging
 
 on:
@@ -6,11 +6,13 @@ on:
     branches: [main]
     paths:
       - 'src/packages/sdk/**'
+      - 'src/packages/sdk-python/**'
       - '.github/workflows/sdk-packaging.yml'
   pull_request:
     branches: [main]
     paths:
       - 'src/packages/sdk/**'
+      - 'src/packages/sdk-python/**'
       - '.github/workflows/sdk-packaging.yml'
   workflow_dispatch:
 
@@ -49,3 +51,33 @@ jobs:
         with:
           name: evalai-sdk-package
           path: src/packages/sdk/*.tgz
+
+  python-sdk-build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: src/packages/sdk-python
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install -e ".[dev]" build
+
+      - name: Test Python SDK
+        run: pytest tests/ --tb=short -q
+
+      - name: Build Python SDK
+        run: python -m build
+
+      - name: Publish dry-run
+        run: pip install twine && twine check dist/*
+
+      - name: Upload Python SDK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: evalai-sdk-python-package
+          path: src/packages/sdk-python/dist/*

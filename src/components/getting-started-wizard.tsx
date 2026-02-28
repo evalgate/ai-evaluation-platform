@@ -20,7 +20,7 @@ export function GettingStartedWizard({ apiKey, onComplete }: WizardProps) {
 			title: "Install SDK",
 			description: "Add our SDK to your project",
 			icon: Terminal,
-			code: "npm install @your-org/ai-eval-sdk",
+			code: "# TypeScript\nnpm install @pauly4010/evalai-sdk\n\n# Python\npip install pauly4010-evalai-sdk",
 		},
 		{
 			title: "Set Environment Variables",

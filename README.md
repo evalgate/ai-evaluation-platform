@@ -2,6 +2,7 @@
 
 [![Platform CI](https://github.com/pauly7610/ai-evaluation-platform/actions/workflows/platform-ci.yml/badge.svg)](https://github.com/pauly7610/ai-evaluation-platform/actions/workflows/platform-ci.yml)
 [![npm](https://img.shields.io/npm/v/@pauly4010/evalai-sdk?style=flat-square&logo=npm&color=cb3837)](https://www.npmjs.com/package/@pauly4010/evalai-sdk)
+[![PyPI](https://img.shields.io/pypi/v/pauly4010-evalai-sdk?style=flat-square&logo=python&color=3776ab)](https://pypi.org/project/pauly4010-evalai-sdk/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](https://opensource.org/licenses/MIT)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](https://github.com/pauly7610/ai-evaluation-platform/pulls)
 
@@ -94,7 +95,8 @@ No account cancellation. No data export. Your tests keep working.
 | Capability | Status |
 |---|---|
 | CI regression gate (`evalai ci`, `evalai gate`) | Production |
-| SDK ([`@pauly4010/evalai-sdk`](https://www.npmjs.com/package/@pauly4010/evalai-sdk)) | Production (v1.9.0) |
+| TypeScript SDK ([`@pauly4010/evalai-sdk`](https://www.npmjs.com/package/@pauly4010/evalai-sdk)) | Production (v1.9.0) |
+| Python SDK ([`pauly4010-evalai-sdk`](https://pypi.org/project/pauly4010-evalai-sdk/)) | Production |
 | Multi-tenant auth & RBAC | Production |
 | Evaluation engine (50+ templates, 4 types) | Production |
 | Audit logging & governance presets | Production |
@@ -152,6 +154,7 @@ jobs:
 
 ### Developer Experience
 - **Full TypeScript SDK** — [`@pauly4010/evalai-sdk`](https://www.npmjs.com/package/@pauly4010/evalai-sdk) with CLI, regression gate, traces, evaluations, LLM judge
+- **Python SDK** — [`pauly4010-evalai-sdk`](https://pypi.org/project/pauly4010-evalai-sdk/) with assertions, test workflows, OpenAI/Anthropic integrations
 - **CLI commands** — `evalai init`, `evalai gate`, `evalai baseline`, `evalai upgrade`, `evalai check`, `evalai doctor`, `evalai explain`, `evalai print-config`, `evalai share`
 - **Programmatic exports** — gate exit codes, categories, report types via `@pauly4010/evalai-sdk/regression`
 - **API keys** — scoped keys for CI/CD and production
@@ -179,7 +182,7 @@ pnpm dev
 
 The app will be available at [http://localhost:3000](http://localhost:3000).
 
-> **Note:** The SDK package (`@pauly4010/evalai-sdk`) is published to npm separately. For SDK consumers, `npm install @pauly4010/evalai-sdk` is the correct install command.
+> **Note:** The TypeScript SDK (`@pauly4010/evalai-sdk`) is published to npm separately. For SDK consumers, `npm install @pauly4010/evalai-sdk` is the correct install command. The Python SDK is available via `pip install pauly4010-evalai-sdk`.
 
 ## Architecture
 
@@ -192,6 +195,7 @@ ai-evaluation-platform/
 │   │   ├── traces/       # Distributed tracing + spans
 │   │   └── ...
 ├── src/packages/sdk/     # TypeScript SDK (@pauly4010/evalai-sdk)
+├── src/packages/sdk-python/  # Python SDK (evalai-sdk on PyPI)
 ├── src/lib/              # Core services, utilities, templates
 ├── src/db/               # Database layer (Drizzle ORM schema)
 └── drizzle/              # Database migrations

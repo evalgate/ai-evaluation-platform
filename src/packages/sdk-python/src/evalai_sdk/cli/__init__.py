@@ -1,0 +1,46 @@
+"""EvalAI CLI — command-line interface for the AI Evaluation Platform."""
+
+from __future__ import annotations
+
+
+def _ensure_typer() -> None:
+    try:
+        import typer  # noqa: F401
+    except ImportError:
+        raise SystemExit("CLI requires typer. Install with: pip install 'evalai-sdk[cli]'")
+
+
+_ensure_typer()
+
+import typer
+
+app = typer.Typer(
+    name="evalai",
+    help="AI Evaluation Platform CLI — run evals, manage baselines, gate regressions.",
+    no_args_is_help=True,
+)
+
+
+from evalai_sdk.cli.commands import (  # noqa: E402
+    baseline,
+    check,
+    ci,
+    diff,
+    discover,
+    doctor,
+    explain,
+    gate,
+    init,
+    run,
+)
+
+app.command("init")(init)
+app.command("run")(run)
+app.command("gate")(gate)
+app.command("check")(check)
+app.command("ci")(ci)
+app.command("doctor")(doctor)
+app.command("discover")(discover)
+app.command("diff")(diff)
+app.command("explain")(explain)
+app.command("baseline")(baseline)

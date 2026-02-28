@@ -39,6 +39,9 @@ export default function TracingSetupPage() {
 
 						<h2>Installation</h2>
 						<p>Install the AI Evaluation Platform SDK in your project:</p>
+						<p className="text-xs font-semibold text-muted-foreground mb-1">
+							TypeScript
+						</p>
 						<div className="bg-muted p-4 rounded-lg font-mono text-sm my-4">
 							npm install @pauly4010/evalai-sdk
 						</div>
@@ -47,6 +50,12 @@ export default function TracingSetupPage() {
 							yarn add @pauly4010/evalai-sdk
 							<br />
 							pnpm add @pauly4010/evalai-sdk
+						</div>
+						<p className="text-xs font-semibold text-muted-foreground mb-1">
+							Python
+						</p>
+						<div className="bg-muted p-4 rounded-lg font-mono text-sm my-4">
+							pip install pauly4010-evalai-sdk
 						</div>
 
 						<h2>Environment Setup</h2>
@@ -67,15 +76,30 @@ EVALAI_ORGANIZATION_ID=your_org_id_here`}
 
 						<h2>Basic Setup</h2>
 						<p>Initialize the SDK client and tracer:</p>
+						<p className="text-xs font-semibold text-muted-foreground mb-1">
+							TypeScript
+						</p>
 						<div className="bg-muted p-4 rounded-lg font-mono text-sm my-4 overflow-x-auto">
 							{`import { AIEvalClient, WorkflowTracer } from '@pauly4010/evalai-sdk'
 
 const client = new AIEvalClient({ apiKey: process.env.EVALAI_API_KEY })
 const tracer = new WorkflowTracer(client)`}
 						</div>
+						<p className="text-xs font-semibold text-muted-foreground mb-1">
+							Python
+						</p>
+						<div className="bg-muted p-4 rounded-lg font-mono text-sm my-4 overflow-x-auto">
+							{`from evalai_sdk import AIEvalClient, WorkflowTracer
+
+client = AIEvalClient(api_key=os.environ["EVALAI_API_KEY"])
+tracer = WorkflowTracer(client)`}
+						</div>
 
 						<h2>Creating Traces</h2>
 						<p>Create traces to track LLM calls and operations:</p>
+						<p className="text-xs font-semibold text-muted-foreground mb-1">
+							TypeScript
+						</p>
 						<div className="bg-muted p-4 rounded-lg font-mono text-sm my-4 overflow-x-auto">
 							{`// Create a trace
 const trace = await client.traces.create({
@@ -97,6 +121,30 @@ const span = await client.traces.createSpan(trace.id, {
   output: response,
   metadata: { model: 'gpt-4', tokens: 150 }
 })`}
+						</div>
+						<p className="text-xs font-semibold text-muted-foreground mb-1">
+							Python
+						</p>
+						<div className="bg-muted p-4 rounded-lg font-mono text-sm my-4 overflow-x-auto">
+							{`from evalai_sdk.types import CreateTraceParams, CreateSpanParams
+
+# Create a trace
+trace = await client.traces.create(CreateTraceParams(
+    name="Customer Support Query",
+    trace_id=f"trace-{int(time.time() * 1000)}",
+    metadata={"userId": "user_123", "sessionId": "session_456"}
+))
+
+# Add spans to track specific operations
+span = await client.traces.create_span(trace.id, CreateSpanParams(
+    name="LLM Call",
+    span_id=f"span-{int(time.time() * 1000)}",
+    type="llm",
+    start_time=datetime.now().isoformat(),
+    input=user_query,
+    output=response,
+    metadata={"model": "gpt-4", "tokens": 150}
+))`}
 						</div>
 
 						<h2>What Gets Tracked</h2>
@@ -126,6 +174,9 @@ const span = await client.traces.createSpan(trace.id, {
 						<p>
 							For complex workflows with multiple LLM calls, use nested spans:
 						</p>
+						<p className="text-xs font-semibold text-muted-foreground mb-1">
+							TypeScript
+						</p>
 						<div className="bg-muted p-4 rounded-lg font-mono text-sm my-4 overflow-x-auto">
 							{`import { traceWorkflowStep } from '@pauly4010/evalai-sdk'
 
@@ -145,9 +196,34 @@ const response = await traceWorkflowStep(tracer, 'generate-response', async () =
 
 await tracer.endWorkflow({ status: 'success' });`}
 						</div>
+						<p className="text-xs font-semibold text-muted-foreground mb-1">
+							Python
+						</p>
+						<div className="bg-muted p-4 rounded-lg font-mono text-sm my-4 overflow-x-auto">
+							{`from evalai_sdk.workflows import trace_workflow_step
+
+await tracer.start_workflow("RAG Pipeline")
+
+embedding = await trace_workflow_step(tracer, "embed-query",
+    lambda: openai.embeddings.create(...)
+)
+
+docs = await trace_workflow_step(tracer, "retrieve-docs",
+    lambda: vector_db.search(embedding)
+)
+
+response = await trace_workflow_step(tracer, "generate-response",
+    lambda: openai.chat.completions.create(...)
+)
+
+await tracer.end_workflow({"status": "success"})`}
+						</div>
 
 						<h2>Adding Custom Metadata</h2>
 						<p>Enrich traces with business context:</p>
+						<p className="text-xs font-semibold text-muted-foreground mb-1">
+							TypeScript
+						</p>
 						<div className="bg-muted p-4 rounded-lg font-mono text-sm my-4 overflow-x-auto">
 							{`await tracer.startWorkflow('content-generation', undefined, {
   userId: user.id,
@@ -160,6 +236,22 @@ const span = await tracer.startAgentSpan('ContentAgent', { input: '...' });
 // Your LLM call here
 await tracer.endAgentSpan(span, { result: '...' });
 await tracer.endWorkflow({ status: 'success' });`}
+						</div>
+						<p className="text-xs font-semibold text-muted-foreground mb-1">
+							Python
+						</p>
+						<div className="bg-muted p-4 rounded-lg font-mono text-sm my-4 overflow-x-auto">
+							{`await tracer.start_workflow("content-generation", metadata={
+    "userId": user.id,
+    "contentType": "blog-post",
+    "targetAudience": "developers",
+    "keywords": ["AI", "evaluation", "testing"]
+})
+
+span = await tracer.start_agent_span("ContentAgent", {"input": "..."})
+# Your LLM call here
+await tracer.end_agent_span(span, {"result": "..."})
+await tracer.end_workflow({"status": "success"})`}
 						</div>
 
 						<h2>Viewing Traces</h2>

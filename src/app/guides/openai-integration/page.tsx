@@ -34,11 +34,23 @@ export default function OpenAIIntegrationGuide() {
 
 				<div className="prose prose-sm sm:prose-base max-w-none">
 					<h2>Installation</h2>
+					<p className="text-xs font-semibold text-muted-foreground mb-1">
+						TypeScript
+					</p>
 					<div className="bg-muted p-4 rounded-lg font-mono text-sm my-4">
 						npm install openai @pauly4010/evalai-sdk
 					</div>
+					<p className="text-xs font-semibold text-muted-foreground mb-1">
+						Python
+					</p>
+					<div className="bg-muted p-4 rounded-lg font-mono text-sm my-4">
+						pip install openai pauly4010-evalai-sdk
+					</div>
 
 					<h2>Basic Setup</h2>
+					<p className="text-xs font-semibold text-muted-foreground mb-1">
+						TypeScript
+					</p>
 					<div className="bg-muted p-4 rounded-lg font-mono text-sm my-4 overflow-x-auto">
 						{`import OpenAI from 'openai'
 import { AIEvalClient, WorkflowTracer, traceOpenAI, traceWorkflowStep } from '@pauly4010/evalai-sdk'
@@ -48,6 +60,20 @@ const tracer = new WorkflowTracer(client)
 
 // Wrap OpenAI client for automatic tracing
 const openai = traceOpenAI(new OpenAI(), client)`}
+					</div>
+					<p className="text-xs font-semibold text-muted-foreground mb-1">
+						Python
+					</p>
+					<div className="bg-muted p-4 rounded-lg font-mono text-sm my-4 overflow-x-auto">
+						{`from openai import OpenAI
+from evalai_sdk import AIEvalClient, WorkflowTracer
+from evalai_sdk.integrations.openai import trace_openai
+
+client = AIEvalClient(api_key=os.environ["EVALAI_API_KEY"])
+tracer = WorkflowTracer(client)
+
+# Wrap OpenAI client for automatic tracing
+openai = trace_openai(OpenAI(), client)`}
 					</div>
 
 					<p className="text-sm text-muted-foreground my-4">
@@ -62,6 +88,9 @@ const openai = traceOpenAI(new OpenAI(), client)`}
 					<h2>Tracing OpenAI Calls</h2>
 
 					<h3>Chat Completions</h3>
+					<p className="text-xs font-semibold text-muted-foreground mb-1">
+						TypeScript
+					</p>
 					<div className="bg-muted p-4 rounded-lg font-mono text-sm my-4 overflow-x-auto">
 						{`// All OpenAI calls are automatically traced!
 const response = await openai.chat.completions.create({
@@ -82,8 +111,34 @@ console.log(response.choices[0].message.content)
 // ✓ Model and parameters
 // ✓ Cost estimation`}
 					</div>
+					<p className="text-xs font-semibold text-muted-foreground mb-1">
+						Python
+					</p>
+					<div className="bg-muted p-4 rounded-lg font-mono text-sm my-4 overflow-x-auto">
+						{`# All OpenAI calls are automatically traced!
+response = await openai.chat.completions.create(
+    model="gpt-4",
+    messages=[
+        {"role": "system", "content": "You are a helpful assistant."},
+        {"role": "user", "content": "What is the capital of France?"}
+    ],
+    temperature=0.7
+)
+
+print(response.choices[0].message.content)
+
+# Automatically tracked in EvalAI dashboard:
+# ✓ Full prompt and response
+# ✓ Token usage (input/output)
+# ✓ Latency
+# ✓ Model and parameters
+# ✓ Cost estimation`}
+					</div>
 
 					<h3>Streaming Responses</h3>
+					<p className="text-xs font-semibold text-muted-foreground mb-1">
+						TypeScript
+					</p>
 					<div className="bg-muted p-4 rounded-lg font-mono text-sm my-4 overflow-x-auto">
 						{`// Streaming is automatically traced too!
 const stream = await openai.chat.completions.create({
@@ -101,6 +156,26 @@ for await (const chunk of stream) {
 }
 
 // Full response is automatically captured in trace`}
+					</div>
+					<p className="text-xs font-semibold text-muted-foreground mb-1">
+						Python
+					</p>
+					<div className="bg-muted p-4 rounded-lg font-mono text-sm my-4 overflow-x-auto">
+						{`# Streaming is automatically traced too!
+stream = await openai.chat.completions.create(
+    model="gpt-4",
+    messages=messages,
+    stream=True
+)
+
+# Stream tokens to user
+full_response = ""
+async for chunk in stream:
+    content = chunk.choices[0].delta.content or ""
+    full_response += content
+    print(content, end="", flush=True)
+
+# Full response is automatically captured in trace`}
 					</div>
 
 					<h3>Function Calling</h3>

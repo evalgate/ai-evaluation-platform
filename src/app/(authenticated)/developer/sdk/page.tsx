@@ -9,7 +9,7 @@ import { Card } from "@/components/ui/card";
 export const metadata: Metadata = {
 	title: "SDK Quick Start - AI Evaluation Platform",
 	description:
-		"Production-ready TypeScript SDK for evaluating, tracing, and monitoring your LLM applications.",
+		"Production-ready TypeScript and Python SDKs for evaluating, tracing, and monitoring your LLM applications.",
 };
 
 const assertionGroups = [
@@ -71,13 +71,17 @@ const assertionGroups = [
 
 export default function SDKDashboardPage() {
 	const installCode =
-		"npm install @pauly4010/evalai-sdk\n# or\nyarn add @pauly4010/evalai-sdk";
+		"npm install @pauly4010/evalai-sdk\n# or\nyarn add @pauly4010/evalai-sdk\n\n# Python\npip install pauly4010-evalai-sdk";
 
 	const initCode = `import { AIEvalClient } from '@pauly4010/evalai-sdk';
 
 const client = AIEvalClient.init({ 
   apiKey: process.env.EVALAI_API_KEY 
 });`;
+
+	const initCodePython = `from evalai_sdk import AIEvalClient
+
+client = AIEvalClient.init()  # reads EVALAI_API_KEY env var`;
 
 	const testSuiteCode = `import { createTestSuite, expect } from '@pauly4010/evalai-sdk';
 
@@ -105,6 +109,25 @@ const suite = createTestSuite('Customer Support Bot', {
 const results = await suite.run();
 // { name: 'Customer Support Bot', total: 2, passed: 2, failed: 0, results: [...] }`;
 
+	const testSuiteCodePython = `from evalai_sdk import create_test_suite, expect
+from evalai_sdk.types import TestSuiteCase, TestSuiteConfig
+
+suite = create_test_suite('Customer Support Bot', TestSuiteConfig(
+    evaluator=call_my_llm,
+    test_cases=[
+        TestSuiteCase(
+            name='refund-policy',
+            input='What is your refund policy?',
+            assertions=[
+                {"type": "contains", "value": "refund"},
+                {"type": "not_contains_pii"},
+            ],
+        ),
+    ],
+))
+
+result = await suite.run()`;
+
 	const traceCode = `const trace = await client.traces.create({
   name: 'Chat Completion',
   traceId: 'trace-' + Date.now(),
@@ -119,6 +142,21 @@ await client.traces.createSpan(trace.id, {
   metadata: { tokens: 150, latency_ms: 1200 }
 });`;
 
+	const traceCodePython = `from evalai_sdk.types import CreateTraceParams, CreateSpanParams
+
+trace = await client.traces.create(CreateTraceParams(
+    name='Chat Completion',
+    metadata={'model': 'gpt-4'}
+))
+
+await client.traces.create_span(trace.id, CreateSpanParams(
+    name='OpenAI API Call',
+    type='llm',
+    input='What is AI?',
+    output='AI stands for Artificial Intelligence...',
+    metadata={'tokens': 150, 'latency_ms': 1200}
+))`;
+
 	const ciCode = `const { passed, failed, total } = await suite.run();
 
 if (failed > 0) {
@@ -132,7 +170,7 @@ console.log(\`All \${total} tests passed\`);`;
 			{/* Hero */}
 			<div className="space-y-4">
 				<div className="flex items-center gap-2">
-					<Badge variant="secondary">TypeScript SDK</Badge>
+					<Badge variant="secondary">TypeScript & Python SDKs</Badge>
 					<Badge variant="outline">20+ Assertions</Badge>
 				</div>
 				<h1 className="text-4xl font-bold tracking-tight">SDK Quick Start</h1>
@@ -158,12 +196,26 @@ console.log(\`All \${total} tests passed\`);`;
 			{/* Initialize */}
 			<section className="space-y-3">
 				<h2 className="text-2xl font-semibold">2. Initialize</h2>
+				<p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+					TypeScript
+				</p>
 				<div className="bg-muted p-4 rounded-lg font-mono text-sm overflow-x-auto relative group">
 					<pre>
 						<code>{initCode}</code>
 					</pre>
 					<div className="absolute top-2 right-2">
 						<CopyButton code={initCode} />
+					</div>
+				</div>
+				<p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mt-4">
+					Python
+				</p>
+				<div className="bg-muted p-4 rounded-lg font-mono text-sm overflow-x-auto relative group">
+					<pre>
+						<code>{initCodePython}</code>
+					</pre>
+					<div className="absolute top-2 right-2">
+						<CopyButton code={initCodePython} />
 					</div>
 				</div>
 			</section>
@@ -181,12 +233,26 @@ console.log(\`All \${total} tests passed\`);`;
 					correctness, safety, and quality. The test suite runner handles
 					execution, parallelism, and reporting.
 				</p>
+				<p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+					TypeScript
+				</p>
 				<div className="bg-muted p-4 rounded-lg font-mono text-sm overflow-x-auto relative group">
 					<pre>
 						<code>{testSuiteCode}</code>
 					</pre>
 					<div className="absolute top-2 right-2">
 						<CopyButton code={testSuiteCode} />
+					</div>
+				</div>
+				<p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mt-4">
+					Python
+				</p>
+				<div className="bg-muted p-4 rounded-lg font-mono text-sm overflow-x-auto relative group">
+					<pre>
+						<code>{testSuiteCodePython}</code>
+					</pre>
+					<div className="absolute top-2 right-2">
+						<CopyButton code={testSuiteCodePython} />
 					</div>
 				</div>
 			</section>
@@ -233,12 +299,26 @@ console.log(\`All \${total} tests passed\`);`;
 					Instrument your application with traces and spans for full
 					observability
 				</p>
+				<p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+					TypeScript
+				</p>
 				<div className="bg-muted p-4 rounded-lg font-mono text-sm overflow-x-auto relative group">
 					<pre>
 						<code>{traceCode}</code>
 					</pre>
 					<div className="absolute top-2 right-2">
 						<CopyButton code={traceCode} />
+					</div>
+				</div>
+				<p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mt-4">
+					Python
+				</p>
+				<div className="bg-muted p-4 rounded-lg font-mono text-sm overflow-x-auto relative group">
+					<pre>
+						<code>{traceCodePython}</code>
+					</pre>
+					<div className="absolute top-2 right-2">
+						<CopyButton code={traceCodePython} />
 					</div>
 				</div>
 			</section>

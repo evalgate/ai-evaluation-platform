@@ -86,11 +86,17 @@ export default function SDKPage() {
 	const installCode =
 		"npm install @pauly4010/evalai-sdk\n# or\nyarn add @pauly4010/evalai-sdk";
 
+	const installCodePython = "pip install pauly4010-evalai-sdk";
+
 	const initCode = `import { AIEvalClient } from '@pauly4010/evalai-sdk';
 
 const client = AIEvalClient.init({ 
   apiKey: process.env.EVALAI_API_KEY 
 });`;
+
+	const initCodePython = `from evalai_sdk import AIEvalClient
+
+client = AIEvalClient.init()  # reads EVALAI_API_KEY env var`;
 
 	const testSuiteCode = `import { createTestSuite, expect } from '@pauly4010/evalai-sdk';
 
@@ -118,6 +124,26 @@ const suite = createTestSuite('Customer Support Bot', {
 const results = await suite.run();
 // { name: 'Customer Support Bot', total: 2, passed: 2, failed: 0, results: [...] }`;
 
+	const testSuiteCodePython = `from evalai_sdk import create_test_suite, expect
+from evalai_sdk.types import TestSuiteCase, TestSuiteConfig
+
+suite = create_test_suite('Customer Support Bot', TestSuiteConfig(
+    evaluator=call_my_llm,
+    test_cases=[
+        TestSuiteCase(
+            name='refund-policy',
+            input='What is your refund policy?',
+            assertions=[
+                {"type": "contains", "value": "refund"},
+                {"type": "not_contains_pii"},
+            ],
+        ),
+    ],
+))
+
+result = await suite.run()
+# TestSuiteResult(passed=True, total=1, passed_count=1, ...)`;
+
 	const traceCode = `const trace = await client.traces.create({
   name: 'Chat Completion',
   traceId: 'trace-' + Date.now(),
@@ -131,6 +157,21 @@ await client.traces.createSpan(trace.id, {
   output: 'AI stands for Artificial Intelligence...',
   metadata: { tokens: 150, latency_ms: 1200 }
 });`;
+
+	const traceCodePython = `from evalai_sdk.types import CreateTraceParams, CreateSpanParams
+
+trace = await client.traces.create(CreateTraceParams(
+    name='Chat Completion',
+    metadata={'model': 'gpt-4'}
+))
+
+await client.traces.create_span(trace.id, CreateSpanParams(
+    name='OpenAI API Call',
+    type='llm',
+    input='What is AI?',
+    output='AI stands for Artificial Intelligence...',
+    metadata={'tokens': 150, 'latency_ms': 1200}
+))`;
 
 	const ciCode = `# In your CI workflow (or run locally):
 npx evalai gate                    # compare against baseline
@@ -166,7 +207,7 @@ npx evalai check --format github --onFail import`;
 					{/* Hero */}
 					<div className="space-y-4">
 						<div className="flex items-center gap-2">
-							<Badge variant="secondary">TypeScript SDK</Badge>
+							<Badge variant="secondary">TypeScript & Python SDKs</Badge>
 							<Badge variant="outline">20+ Assertions</Badge>
 							<Badge variant="outline">CLI Tools</Badge>
 							<Badge variant="default">EvalAI 1.9.0</Badge>
@@ -278,12 +319,28 @@ jobs:
 					{/* Install */}
 					<section className="space-y-3">
 						<h2 className="text-2xl font-semibold">1. Install (SDK only)</h2>
-						<div className="bg-muted p-4 rounded-lg font-mono text-sm overflow-x-auto relative group">
-							<pre>
-								<code>{installCode}</code>
-							</pre>
-							<div className="absolute top-2 right-2">
-								<CopyButton code={installCode} />
+						<div className="space-y-2">
+							<p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+								TypeScript
+							</p>
+							<div className="bg-muted p-4 rounded-lg font-mono text-sm overflow-x-auto relative group">
+								<pre>
+									<code>{installCode}</code>
+								</pre>
+								<div className="absolute top-2 right-2">
+									<CopyButton code={installCode} />
+								</div>
+							</div>
+							<p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mt-3">
+								Python
+							</p>
+							<div className="bg-muted p-4 rounded-lg font-mono text-sm overflow-x-auto relative group">
+								<pre>
+									<code>{installCodePython}</code>
+								</pre>
+								<div className="absolute top-2 right-2">
+									<CopyButton code={installCodePython} />
+								</div>
 							</div>
 						</div>
 					</section>
@@ -291,12 +348,28 @@ jobs:
 					{/* Initialize */}
 					<section className="space-y-3">
 						<h2 className="text-2xl font-semibold">2. Initialize</h2>
-						<div className="bg-muted p-4 rounded-lg font-mono text-sm overflow-x-auto relative group">
-							<pre>
-								<code>{initCode}</code>
-							</pre>
-							<div className="absolute top-2 right-2">
-								<CopyButton code={initCode} />
+						<div className="space-y-2">
+							<p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+								TypeScript
+							</p>
+							<div className="bg-muted p-4 rounded-lg font-mono text-sm overflow-x-auto relative group">
+								<pre>
+									<code>{initCode}</code>
+								</pre>
+								<div className="absolute top-2 right-2">
+									<CopyButton code={initCode} />
+								</div>
+							</div>
+							<p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mt-3">
+								Python
+							</p>
+							<div className="bg-muted p-4 rounded-lg font-mono text-sm overflow-x-auto relative group">
+								<pre>
+									<code>{initCodePython}</code>
+								</pre>
+								<div className="absolute top-2 right-2">
+									<CopyButton code={initCodePython} />
+								</div>
 							</div>
 						</div>
 					</section>
@@ -316,12 +389,28 @@ jobs:
 							for correctness, safety, and quality. The test suite runner
 							handles execution, parallelism, and reporting.
 						</p>
-						<div className="bg-muted p-4 rounded-lg font-mono text-sm overflow-x-auto relative group">
-							<pre>
-								<code>{testSuiteCode}</code>
-							</pre>
-							<div className="absolute top-2 right-2">
-								<CopyButton code={testSuiteCode} />
+						<div className="space-y-2">
+							<p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+								TypeScript
+							</p>
+							<div className="bg-muted p-4 rounded-lg font-mono text-sm overflow-x-auto relative group">
+								<pre>
+									<code>{testSuiteCode}</code>
+								</pre>
+								<div className="absolute top-2 right-2">
+									<CopyButton code={testSuiteCode} />
+								</div>
+							</div>
+							<p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mt-3">
+								Python
+							</p>
+							<div className="bg-muted p-4 rounded-lg font-mono text-sm overflow-x-auto relative group">
+								<pre>
+									<code>{testSuiteCodePython}</code>
+								</pre>
+								<div className="absolute top-2 right-2">
+									<CopyButton code={testSuiteCodePython} />
+								</div>
 							</div>
 						</div>
 					</section>
@@ -368,12 +457,28 @@ jobs:
 							Instrument your application with traces and spans for full
 							observability
 						</p>
-						<div className="bg-muted p-4 rounded-lg font-mono text-sm overflow-x-auto relative group">
-							<pre>
-								<code>{traceCode}</code>
-							</pre>
-							<div className="absolute top-2 right-2">
-								<CopyButton code={traceCode} />
+						<div className="space-y-2">
+							<p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+								TypeScript
+							</p>
+							<div className="bg-muted p-4 rounded-lg font-mono text-sm overflow-x-auto relative group">
+								<pre>
+									<code>{traceCode}</code>
+								</pre>
+								<div className="absolute top-2 right-2">
+									<CopyButton code={traceCode} />
+								</div>
+							</div>
+							<p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mt-3">
+								Python
+							</p>
+							<div className="bg-muted p-4 rounded-lg font-mono text-sm overflow-x-auto relative group">
+								<pre>
+									<code>{traceCodePython}</code>
+								</pre>
+								<div className="absolute top-2 right-2">
+									<CopyButton code={traceCodePython} />
+								</div>
 							</div>
 						</div>
 					</section>

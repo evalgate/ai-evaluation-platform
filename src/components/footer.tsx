@@ -160,6 +160,20 @@ export function Footer() {
 									className="h-5"
 								/>
 							</a>
+							<a
+								href="https://pypi.org/project/pauly4010-evalai-sdk/"
+								target="_blank"
+								rel="noopener noreferrer"
+								className="opacity-70 hover:opacity-100 transition-opacity"
+							>
+								<Image
+									src="https://img.shields.io/pypi/v/pauly4010-evalai-sdk.svg"
+									alt="PyPI version"
+									width={20}
+									height={20}
+									className="h-5"
+								/>
+							</a>
 						</div>
 					</div>
 				</div>
