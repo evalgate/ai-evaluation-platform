@@ -1,149 +1,153 @@
 # EvalAI Quickstart
 
-Get from zero to a gated evaluation run in CI in under 5 minutes.
+Get from zero to a complete CI evaluation pipeline in under 60 seconds.
 
-## Step 1: Init (30 seconds)
+## Step 1: One-Command CI (30 seconds)
 
-```bash
-npx @pauly4010/evalai-sdk init
+Add this to your `.github/workflows/evalai.yml`:
+
+```yaml
+name: EvalAI CI
+on: [push, pull_request]
+jobs:
+  evalai:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+      - run: npm ci
+      - run: npx @pauly4010/evalai-sdk ci --format github --write-results --base main
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: evalai-results
+          path: .evalai/
 ```
 
-This detects your Node project, runs your tests to create a baseline, installs a GitHub Actions workflow, and creates `evalai.config.json`. No manual config needed.
+That's it! Your CI now:
+- ✅ Discovers evaluation specs automatically
+- ✅ Runs only impacted specs (smart caching)
+- ✅ Compares results against base branch
+- ✅ Posts rich summary in PR with regressions
+- ✅ Exits with proper codes (0=clean, 1=regressions, 2=config)
 
-## Step 2: Commit and Push
+## Step 2: Create Evaluation Specs (30 seconds)
+
+Create `eval/your-spec.spec.ts`:
+
+```typescript
+import { defineEval } from "@pauly4010/evalai-sdk";
+
+defineEval({
+  name: "Basic Math Operations",
+  description: "Test fundamental arithmetic",
+  prompt: "Test: 1+1=2, string concatenation, array includes",
+  expected: "All tests should pass",
+  tags: ["basic", "math"],
+  category: "unit-test"
+});
+```
+
+## Step 3: Commit and Push
 
 ```bash
-git add evals/ .github/workflows/evalai-gate.yml evalai.config.json
-git commit -m "chore: add EvalAI regression gate"
+git add .github/workflows/evalai.yml eval/
+git commit -m "feat: add EvalAI CI pipeline"
 git push
 ```
 
-Open a PR and CI blocks regressions automatically.
+Open a PR and watch the magic happen!
 
-## Step 3: Run the gate locally (optional)
+## Advanced Options
 
-```bash
-npx evalai gate                    # run gate locally
-npx evalai gate --format json       # machine-readable output
-npx evalai baseline update          # update baseline after intentional changes
+### Impact Analysis Only
+```yaml
+- run: npx @pauly4010/evalai-sdk ci --base main --impacted-only
 ```
 
-## Step 4: Upgrade to Tier 2 (optional)
-
-For full metric comparison (golden eval, confidence, latency, cost):
-
-```bash
-npx evalai upgrade --full
+### No Diff (Run Only)
+```yaml
+- run: npx @pauly4010/evalai-sdk ci --format github --write-results
 ```
 
-This creates `scripts/regression-gate.ts`, adds npm scripts, installs baseline governance, and upgrades the CI workflow to project mode.
+### Custom Base Branch
+```yaml
+- run: npx @pauly4010/evalai-sdk ci --base develop --format github --write-results
+```
 
-## Step 5: Connect to Platform (optional)
+### JSON Output for Automation
+```yaml
+- run: npx @pauly4010/evalai-sdk ci --format json --write-results > evalai-results.json
+```
+
+## Local Development
+
+```bash
+# Run complete CI pipeline locally
+npx @pauly4010/evalai-sdk ci --base main
+
+# Run only impacted specs
+npx @pauly4010/evalai-sdk ci --base main --impacted-only
+
+# Explain any failure
+npx @pauly4010/evalai-sdk explain --report .evalai/last-run.json
+
+# Check setup
+npx @pauly4010/evalai-sdk doctor
+```
+
+## Exit Codes
+
+- **0** - Clean: No regressions detected
+- **1** - Regressions: Tests failed or scores dropped  
+- **2** - Config issue: Missing artifacts, API key, etc.
+
+## Debugging CI Failures
+
+### Missing Base Artifact
+```bash
+# Download base artifact from base branch workflow
+# Save as .evalai/base-run.json
+npx @pauly4010/evalai-sdk diff --base .evalai/base-run.json --head .evalai/last-run.json
+```
+
+### Local Debugging
+```bash
+# Same as CI
+npx @pauly4010/evalai-sdk ci --base main
+
+# Impact analysis only
+npx @pauly4010/evalai-sdk impact-analysis --base main
+
+# Explain failures
+npx @pauly4010/evalai-sdk explain --report .evalai/last-run.json
+```
+
+## Legacy Mode (Optional)
+
+For existing projects with `evalai.config.json`:
+
+```bash
+npx @pauly4010/evalai-sdk init        # Setup legacy config
+npx @pauly4010/evalai-sdk gate        # Run regression gate
+npx @pauly4010/evalai-sdk baseline update  # Update baseline
+```
+
+## Platform Integration (Optional)
 
 For dashboard, history, and LLM judge:
 
 1. Create an evaluation in the [dashboard](https://v0-ai-evaluation-platform-nu.vercel.app)
-2. Paste its ID into `evalai.config.json`:
-   ```json
-   { "evaluationId": "42" }
-   ```
-3. Add to your CI workflow:
+2. Add to your CI workflow:
    ```yaml
-   - name: EvalAI gate
-     env:
-       EVALAI_API_KEY: ${{ secrets.EVALAI_API_KEY }}
-     run: npx -y @pauly4010/evalai-sdk@^1 check --format github --onFail import
+   env:
+     EVALAI_API_KEY: ${{ secrets.EVALAI_API_KEY }}
    ```
 
-`--format github` gives annotations + step summary; `--onFail import` uploads failing runs to the dashboard for debugging.
+---
 
-## Run a standalone eval (no CI, no account)
-
-```bash
-npm install @pauly4010/evalai-sdk openai
-```
-
-```typescript
-import { openAIChatEval } from '@pauly4010/evalai-sdk';
-
-await openAIChatEval({
-  name: 'chat-regression',
-  cases: [
-    { input: 'Hello', expectedOutput: 'greeting' },
-    { input: '2 + 2 = ?', expectedOutput: '4' }
-  ]
-});
-```
-
-You'll see: `PASS 2/2 (score: 100)`. No account required. Just a score.
-
-## Complete GitHub Actions Workflow (copy-paste)
-
-```yaml
-name: EvalAI CI Gate
-on:
-  pull_request:
-    branches: [main]
-
-jobs:
-  eval-gate:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      pull-requests: write
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      # Option A: SDK gate (requires API key + dashboard)
-      - name: EvalAI gate
-        env:
-          EVALAI_API_KEY: ${{ secrets.EVALAI_API_KEY }}
-        run: npx -y @pauly4010/evalai-sdk@^1 check --format github --onFail import
-
-      # Option B: Local regression gate (no API key needed)
-      # - run: pnpm install --frozen-lockfile
-      # - run: pnpm eval:regression-gate
-```
-
-## Removal
-
-Delete `evalai.config.json`. That's it.
-
-## Environment Variables (for CI)
-
-| Variable | Description |
-|----------|-------------|
-| `EVALAI_API_KEY` | Your API key (required for `evalai check`) |
-| `EVALAI_BASE_URL` | API base URL (default: production) |
-
-## CLI Reference
-
-```bash
-npx evalai init                # Full scaffolder — creates baseline, workflow, config
-npx evalai gate                # Run regression gate (built-in or project mode)
-npx evalai gate --format json  # Machine-readable JSON output
-npx evalai gate --format github # GitHub Step Summary markdown
-npx evalai baseline init       # Create starter evals/baseline.json
-npx evalai baseline update     # Re-run tests and update baseline
-npx evalai upgrade --full      # Upgrade from Tier 1 to Tier 2 (full gate)
-npx evalai check               # Gate on quality score (requires API key)
-npx evalai doctor              # Verify CI/CD setup
-npx evalai share               # Create share link for a run
-```
-
-**check options:** `--evaluationId`, `--minScore`, `--minN`, `--allowWeakEvidence`, `--maxDrop`, `--policy`, `--format github|json|human`, `--onFail import`, `--explain`
-
-## Local Regression Gate Commands (this repo)
-
-```bash
-pnpm eval:regression-gate     # Compare current vs baseline, fail on regression
-pnpm eval:baseline-update     # Update baseline with current scores
-pnpm test:confidence          # Run all confidence tests (unit + DB)
-```
-
-## CI Integration
-
-See `examples/quickstart-ci/` for a minimal project that runs in GitHub Actions.
+**📚 More Documentation:**
+- [CI Quickstart](CI_QUICKSTART.md) - Detailed CI setup guide
+- [Architecture](ARCHITECTURE.md) - System design deep dive
+- [Regression Gate](REGRESSION_GATE.md) - Advanced gate configuration
+- [AI Assistant Integration](AI_ASSISTANT_INTEGRATION.md) - IDE integration

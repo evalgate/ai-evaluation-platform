@@ -7,41 +7,150 @@
 [![Contract Version](https://img.shields.io/badge/report%20schema-v1-blue.svg)](#)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-**Stop LLM regressions in CI in minutes.**
+**One-command CI for AI evaluation. Complete pipeline: discover → manifest → impact → run → diff → PR summary.**
 
-Zero to gate in under 5 minutes. No infra. No lock-in. Remove anytime.
+Zero to production CI in 60 seconds. No infra. No lock-in. Remove anytime.
 
 ---
 
-## Quick Start (2 minutes)
+## Quick Start (60 seconds)
+
+Add this to your `.github/workflows/evalai.yml`:
+
+```yaml
+name: EvalAI CI
+on: [push, pull_request]
+jobs:
+  evalai:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+      - run: npm ci
+      - run: npx @pauly4010/evalai-sdk ci --format github --write-results --base main
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: evalai-results
+          path: .evalai/
+```
+
+Create `eval/your-spec.spec.ts`:
+
+```typescript
+import { defineEval } from "@pauly4010/evalai-sdk";
+
+defineEval({
+  name: "Basic Math Operations",
+  description: "Test fundamental arithmetic",
+  prompt: "Test: 1+1=2, string concatenation, array includes",
+  expected: "All tests should pass",
+  tags: ["basic", "math"],
+  category: "unit-test"
+});
+```
 
 ```bash
-npx @pauly4010/evalai-sdk init
-git add evals/ .github/workflows/evalai-gate.yml evalai.config.json
-git commit -m "chore: add EvalAI regression gate"
+git add .github/workflows/evalai.yml eval/
+git commit -m "feat: add EvalAI CI pipeline"
 git push
 ```
 
-That's it. Open a PR and CI blocks regressions automatically.
-
-`evalai init` detects your project, creates a baseline from your current tests, and installs a GitHub Actions workflow. No manual config needed.
+That's it! Your CI now:
+- ✅ Discovers evaluation specs automatically
+- ✅ Runs only impacted specs (smart caching)
+- ✅ Compares results against base branch
+- ✅ Posts rich summary in PR with regressions
+- ✅ Exits with proper codes (0=clean, 1=regressions, 2=config)
 
 ---
 
-## What `evalai init` does
+## 🚀 New in v1.9.0: One-Command CI
 
-1. **Detects** your Node repo and package manager (npm/yarn/pnpm)
-2. **Runs your tests** to capture a real baseline (pass/fail + test count)
-3. **Creates `evals/baseline.json`** with provenance metadata
-4. **Installs `.github/workflows/evalai-gate.yml`** (package-manager aware)
-5. **Creates `evalai.config.json`**
-6. **Prints next steps** — just commit and push
+### `evalai ci` - Complete CI Pipeline
+
+```bash
+npx @pauly4010/evalai-sdk ci --format github --write-results --base main
+```
+
+**What it does:**
+1. **Discover** - Finds all evaluation specs automatically
+2. **Manifest** - Builds stable manifest if missing
+3. **Impact Analysis** - Runs only specs impacted by changes (optional)
+4. **Run** - Executes evaluations with artifact retention
+5. **Diff** - Compares results against base branch
+6. **PR Summary** - Posts rich markdown summary to GitHub
+7. **Debug Flow** - Prints copy/paste next step on failure
+
+**Advanced Options:**
+```bash
+npx @pauly4010/evalai-sdk ci --base main --impacted-only    # Run only impacted specs
+npx @pauly4010/evalai-sdk ci --format json --write-results   # JSON output for automation
+npx @pauly4010/evalai-sdk ci --base develop                  # Custom base branch
+```
+
+### Smart Diffing & GitHub Integration
+
+```bash
+npx @pauly4010/evalai-sdk diff --base main --head last --format github
+```
+
+**Features:**
+- 📊 Pass rate delta and score changes
+- 🚨 Regression detection with classifications
+- 📈 Improvements and new specs
+- 📁 Artifact links and technical details
+- 🎯 Exit codes: 0=clean, 1=regressions, 2=config
+
+### Self-Documenting Failures
+
+Every failure prints a clear next step:
+
+```
+🔧 Next step for debugging:
+   Download base artifact and run: evalai diff --base .evalai/base-run.json --head .evalai/last-run.json
+   Artifacts: .evalai/runs/
+```
 
 ---
 
 ## CLI Commands
 
-### Regression Gate (local, no account needed)
+### 🚀 One-Command CI (v1.9.0)
+
+| Command | Description |
+|---------|-------------|
+| `npx evalai ci` | Complete CI pipeline: discover → manifest → impact → run → diff → PR summary |
+| `npx evalai ci --base main` | Run CI with diff against main branch |
+| `npx evalai ci --impacted-only` | Run only specs impacted by changes |
+| `npx evalai ci --format github` | GitHub Step Summary with rich markdown |
+| `npx evalai ci --format json` | JSON output for automation |
+
+### Discovery & Manifest
+
+| Command | Description |
+|---------|-------------|
+| `npx evalai discover` | Find and analyze evaluation specs |
+| `npx evalai discover --manifest` | Generate stable manifest for incremental analysis |
+
+### Impact Analysis
+
+| Command | Description |
+|---------|-------------|
+| `npx evalai impact-analysis --base main` | Analyze impact of changes |
+| `npx evalai impact-analysis --changed-files file1.ts,file2.ts` | Analyze specific changed files |
+
+### Run & Diff
+
+| Command | Description |
+|---------|-------------|
+| `npx evalai run` | Run evaluation specifications |
+| `npx evalai run --write-results` | Run with artifact retention |
+| `npx evalai diff --base main` | Compare results against base branch |
+| `npx evalai diff --base last --head last` | Compare last two runs |
+| `npx evalai diff --format github` | GitHub Step Summary with regressions |
+
+### Legacy Regression Gate (local, no account needed)
 
 | Command | Description |
 |---------|-------------|
@@ -68,25 +177,29 @@ That's it. Open a PR and CI blocks regressions automatically.
 | `npx evalai explain` | Offline report explainer — top failures, root cause classification, suggested fixes |
 | `npx evalai print-config` | Show resolved config with source-of-truth annotations (file/env/default/arg) |
 
+### Migration Tools
+
+| Command | Description |
+|---------|-------------|
+| `npx evalai migrate config --in evalai.config.json --out eval/migrated.spec.ts` | Convert legacy config to DSL |
+
 **Guided failure flow:**
 
 ```
-evalai check  →  fails  →  "Next: evalai explain"
+evalai ci  →  fails  →  "Next: evalai explain --report .evalai/last-run.json"
                               ↓
                    evalai explain  →  root causes + fixes
 ```
 
-**GitHub Actions step summary** — gate result at a glance:
+**GitHub Actions step summary** — CI result at a glance with regressions and artifacts:
 
-![GitHub Actions step summary showing gate pass/fail with delta table](../../docs/images/evalai-gate-step-summary.svg)
+![GitHub Actions step summary showing CI pass/fail with delta table](../../docs/images/evalai-gate-step-summary.svg)
 
 **`evalai explain` terminal output** — root causes + fix commands:
 
 ![Terminal output of evalai explain showing top failures and suggested fixes](../../docs/images/evalai-explain-terminal.svg)
 
-`check` automatically writes `.evalai/last-report.json` so `explain` works with zero flags.
-
-`doctor` uses exit codes: **0** = ready, **2** = not ready, **3** = infra error. Use `--report` for a JSON diagnostic bundle.
+All commands automatically write artifacts so `explain` works with zero flags.
 
 ### Gate Exit Codes
 
