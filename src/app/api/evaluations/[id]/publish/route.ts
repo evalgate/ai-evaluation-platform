@@ -60,9 +60,16 @@ export const POST = secureRoute(
 		let sanitized: Record<string, unknown>;
 		try {
 			sanitized = prepareExportForShare(exportData);
-		} catch (err) {
+		} catch (error) {
+			logger.error("Failed to prepare export for share", {
+				error,
+				route: "/api/evaluations/[id]/publish",
+				method: "POST",
+			});
 			const msg =
-				err instanceof Error ? err.message : "Export data validation failed";
+				error instanceof Error
+					? error.message
+					: "Export data validation failed";
 			return validationError(msg);
 		}
 

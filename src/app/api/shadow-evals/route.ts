@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { internalError, zodValidationError } from "@/lib/api/errors";
 import { type AuthContext, secureRoute } from "@/lib/api/secure-route";
+import { logger } from "@/lib/logger";
 import { shadowEvalService } from "@/lib/services/shadow-eval.service";
 
 const createShadowEvalSchema = z.object({
@@ -42,6 +43,11 @@ export const POST = secureRoute(async (req: NextRequest, ctx: AuthContext) => {
 		if (error instanceof z.ZodError) {
 			return zodValidationError(error);
 		}
+		logger.error("Failed to create shadow eval", {
+			error,
+			route: "/api/shadow-evals",
+			method: "POST",
+		});
 		return internalError(error instanceof Error ? error.message : undefined);
 	}
 });

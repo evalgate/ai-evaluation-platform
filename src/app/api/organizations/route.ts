@@ -16,7 +16,12 @@ import {
 	type AuthOnlyContext,
 	secureRoute,
 } from "@/lib/api/secure-route";
-import { parsePaginationParams, sanitizeSearchInput } from "@/lib/validation";
+import { logger } from "@/lib/logger";
+import {
+	parseIdParam,
+	parsePaginationParams,
+	sanitizeSearchInput,
+} from "@/lib/validation";
 
 export const GET = secureRoute(async (req: NextRequest, ctx: AuthContext) => {
 	try {
@@ -24,11 +29,10 @@ export const GET = secureRoute(async (req: NextRequest, ctx: AuthContext) => {
 		const id = searchParams.get("id");
 
 		if (id) {
-			if (!id || Number.isNaN(parseInt(id, 10))) {
-				return validationError("Valid ID is required");
-			}
+			const orgId = parseIdParam(id);
+			if (!orgId) return validationError("Valid ID is required");
 
-			if (parseInt(id, 10) !== ctx.organizationId) {
+			if (orgId !== ctx.organizationId) {
 				return notFound("Organization not found");
 			}
 
@@ -61,7 +65,12 @@ export const GET = secureRoute(async (req: NextRequest, ctx: AuthContext) => {
 			.offset(offset);
 
 		return NextResponse.json(results, { status: 200 });
-	} catch (_error: unknown) {
+	} catch (error) {
+		logger.error("Failed to fetch organizations", {
+			error,
+			route: "/api/organizations",
+			method: "GET",
+		});
 		return internalError();
 	}
 });
@@ -107,7 +116,12 @@ export const POST = secureRoute(
 			}
 
 			return NextResponse.json(newOrganization[0], { status: 201 });
-		} catch (_error: unknown) {
+		} catch (error) {
+			logger.error("Failed to create organization", {
+				error,
+				route: "/api/organizations",
+				method: "POST",
+			});
 			return internalError();
 		}
 	},
@@ -119,11 +133,10 @@ export const PUT = secureRoute(async (req: NextRequest, ctx: AuthContext) => {
 		const searchParams = req.nextUrl.searchParams;
 		const id = searchParams.get("id");
 
-		if (!id || Number.isNaN(parseInt(id, 10))) {
-			return validationError("Valid ID is required");
-		}
+		const orgId = parseIdParam(id);
+		if (!orgId) return validationError("Valid ID is required");
 
-		if (parseInt(id, 10) !== ctx.organizationId) {
+		if (orgId !== ctx.organizationId) {
 			return notFound("Organization not found");
 		}
 
@@ -160,7 +173,12 @@ export const PUT = secureRoute(async (req: NextRequest, ctx: AuthContext) => {
 			.returning();
 
 		return NextResponse.json(updated[0], { status: 200 });
-	} catch (_error: unknown) {
+	} catch (error) {
+		logger.error("Failed to update organization", {
+			error,
+			route: "/api/organizations",
+			method: "PUT",
+		});
 		return internalError();
 	}
 });
@@ -171,11 +189,8 @@ export const DELETE = secureRoute(
 			const searchParams = req.nextUrl.searchParams;
 			const id = searchParams.get("id");
 
-			if (!id || Number.isNaN(parseInt(id, 10))) {
-				return validationError("Valid ID is required");
-			}
-
-			const orgId = parseInt(id, 10);
+			const orgId = parseIdParam(id);
+			if (!orgId) return validationError("Valid ID is required");
 
 			if (orgId !== ctx.organizationId) {
 				return notFound("Organization not found");
@@ -213,7 +228,12 @@ export const DELETE = secureRoute(
 				},
 				{ status: 200 },
 			);
-		} catch (_error: unknown) {
+		} catch (error) {
+			logger.error("Failed to delete organization", {
+				error,
+				route: "/api/organizations",
+				method: "DELETE",
+			});
 			return internalError();
 		}
 	},

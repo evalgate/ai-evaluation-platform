@@ -4,7 +4,7 @@ import { db } from "@/db";
 import { annotationItems, annotationTasks } from "@/db/schema";
 import { forbidden, notFound, validationError } from "@/lib/api/errors";
 import { type AuthContext, secureRoute } from "@/lib/api/secure-route";
-import { parsePaginationParams } from "@/lib/validation";
+import { parseIdParam, parsePaginationParams } from "@/lib/validation";
 
 type VerifyTaskResult =
 	| { error: NextResponse }
@@ -129,8 +129,8 @@ export const POST = secureRoute(
 export const PUT = secureRoute(async (req: NextRequest, ctx: AuthContext) => {
 	const { searchParams } = new URL(req.url);
 	const itemId = searchParams.get("itemId");
-
-	if (!itemId || Number.isNaN(parseInt(itemId, 10))) {
+	const parsedItemId = parseIdParam(itemId);
+	if (!parsedItemId) {
 		return validationError("Valid item ID is required");
 	}
 
@@ -138,7 +138,7 @@ export const PUT = secureRoute(async (req: NextRequest, ctx: AuthContext) => {
 	const existingItem = await db
 		.select()
 		.from(annotationItems)
-		.where(eq(annotationItems.id, parseInt(itemId, 10)))
+		.where(eq(annotationItems.id, parsedItemId))
 		.limit(1);
 
 	if (existingItem.length === 0) {
@@ -170,7 +170,7 @@ export const PUT = secureRoute(async (req: NextRequest, ctx: AuthContext) => {
 	const updatedItem = await db
 		.update(annotationItems)
 		.set(updateData)
-		.where(eq(annotationItems.id, parseInt(itemId, 10)))
+		.where(eq(annotationItems.id, parsedItemId))
 		.returning();
 
 	return NextResponse.json(updatedItem[0]);

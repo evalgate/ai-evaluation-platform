@@ -8,6 +8,7 @@ import { logger } from "@/lib/logger";
 import { traceService } from "@/lib/services/trace.service";
 import {
 	createTraceBodySchema,
+	parseIdParam,
 	parsePaginationParams,
 	sanitizeSearchInput,
 } from "@/lib/validation";
@@ -116,15 +117,12 @@ export const DELETE = secureRoute(
 		try {
 			const { searchParams } = new URL(req.url);
 			const id = searchParams.get("id");
-
-			if (!id || Number.isNaN(parseInt(id, 10))) {
+			const parsedId = parseIdParam(id);
+			if (!parsedId) {
 				return validationError("Valid ID is required");
 			}
 
-			const removed = await traceService.remove(
-				ctx.organizationId,
-				parseInt(id, 10),
-			);
+			const removed = await traceService.remove(ctx.organizationId, parsedId);
 
 			if (!removed) {
 				return notFound("Trace not found");

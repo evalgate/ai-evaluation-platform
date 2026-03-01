@@ -7,6 +7,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { calculateQualityScore } from "@/lib/ai-quality-score";
 import { internalError, notFound, validationError } from "@/lib/api/errors";
+import { logger } from "@/lib/logger";
 
 interface DemoScenario {
 	id: string;
@@ -92,7 +93,12 @@ export async function POST(request: NextRequest) {
 			scenario: demoScenario,
 			message: "Evaluation complete! Sign up to save and share your results.",
 		});
-	} catch (error: unknown) {
+	} catch (error) {
+		logger.error("Failed to run demo playground", {
+			error,
+			route: "/api/demo/playground",
+			method: "POST",
+		});
 		return internalError(error instanceof Error ? error.message : undefined);
 	}
 }

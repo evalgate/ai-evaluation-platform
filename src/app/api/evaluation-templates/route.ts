@@ -13,6 +13,7 @@ import {
 	TEMPLATE_CATEGORIES,
 } from "@/lib/evaluation-templates";
 import { evaluationTemplates } from "@/lib/evaluation-templates-library";
+import { logger } from "@/lib/logger";
 
 interface SerializedTemplate {
 	id: string;
@@ -68,7 +69,12 @@ export const GET = secureRoute(
 					description: c.description,
 				})),
 			});
-		} catch (error: unknown) {
+		} catch (error) {
+			logger.error("Failed to fetch evaluation templates", {
+				error,
+				route: "/api/evaluation-templates",
+				method: "GET",
+			});
 			return internalError(error instanceof Error ? error.message : undefined);
 		}
 	},

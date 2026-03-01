@@ -5,7 +5,12 @@ import { annotationTasks } from "@/db/schema";
 import { internalError, notFound, validationError } from "@/lib/api/errors";
 import { type AuthContext, secureRoute } from "@/lib/api/secure-route";
 import { guardFeature, trackFeature } from "@/lib/autumn-server";
-import { parsePaginationParams, sanitizeSearchInput } from "@/lib/validation";
+import { logger } from "@/lib/logger";
+import {
+	parseIdParam,
+	parsePaginationParams,
+	sanitizeSearchInput,
+} from "@/lib/validation";
 
 export const GET = secureRoute(async (req: NextRequest, ctx: AuthContext) => {
 	try {
@@ -16,7 +21,8 @@ export const GET = secureRoute(async (req: NextRequest, ctx: AuthContext) => {
 		const status = searchParams.get("status");
 
 		if (id) {
-			if (Number.isNaN(parseInt(id, 10))) {
+			const parsedId = parseIdParam(id);
+			if (!parsedId) {
 				return validationError("Valid ID is required");
 			}
 
@@ -25,7 +31,7 @@ export const GET = secureRoute(async (req: NextRequest, ctx: AuthContext) => {
 				.from(annotationTasks)
 				.where(
 					and(
-						eq(annotationTasks.id, parseInt(id, 10)),
+						eq(annotationTasks.id, parsedId),
 						eq(annotationTasks.organizationId, ctx.organizationId),
 					),
 				)
@@ -60,7 +66,12 @@ export const GET = secureRoute(async (req: NextRequest, ctx: AuthContext) => {
 			.offset(offset);
 
 		return NextResponse.json(results);
-	} catch (_error: unknown) {
+	} catch (error) {
+		logger.error("Failed to fetch annotation tasks", {
+			error,
+			route: "/api/annotations/tasks",
+			method: "GET",
+		});
 		return internalError();
 	}
 });
@@ -167,7 +178,12 @@ export const POST = secureRoute(async (req: NextRequest, ctx: AuthContext) => {
 		}
 
 		return NextResponse.json(inserted[0], { status: 201 });
-	} catch (_error: unknown) {
+	} catch (error) {
+		logger.error("Failed to create annotation task", {
+			error,
+			route: "/api/annotations/tasks",
+			method: "POST",
+		});
 		return internalError("Failed to create annotation task");
 	}
 });
@@ -176,8 +192,8 @@ export const PUT = secureRoute(async (req: NextRequest, ctx: AuthContext) => {
 	try {
 		const { searchParams } = new URL(req.url);
 		const id = searchParams.get("id");
-
-		if (!id || Number.isNaN(parseInt(id, 10))) {
+		const parsedId = parseIdParam(id);
+		if (!parsedId) {
 			return validationError("Valid ID is required");
 		}
 
@@ -189,7 +205,7 @@ export const PUT = secureRoute(async (req: NextRequest, ctx: AuthContext) => {
 			.from(annotationTasks)
 			.where(
 				and(
-					eq(annotationTasks.id, parseInt(id, 10)),
+					eq(annotationTasks.id, parsedId),
 					eq(annotationTasks.organizationId, ctx.organizationId),
 				),
 			)
@@ -223,14 +239,19 @@ export const PUT = secureRoute(async (req: NextRequest, ctx: AuthContext) => {
 			.set(updateData)
 			.where(
 				and(
-					eq(annotationTasks.id, parseInt(id, 10)),
+					eq(annotationTasks.id, parsedId),
 					eq(annotationTasks.organizationId, ctx.organizationId),
 				),
 			)
 			.returning();
 
 		return NextResponse.json(updated[0]);
-	} catch (_error: unknown) {
+	} catch (error) {
+		logger.error("Failed to update annotation task", {
+			error,
+			route: "/api/annotations/tasks",
+			method: "PUT",
+		});
 		return internalError();
 	}
 });
@@ -240,8 +261,8 @@ export const DELETE = secureRoute(
 		try {
 			const { searchParams } = new URL(req.url);
 			const id = searchParams.get("id");
-
-			if (!id || Number.isNaN(parseInt(id, 10))) {
+			const parsedId = parseIdParam(id);
+			if (!parsedId) {
 				return validationError("Valid ID is required");
 			}
 
@@ -250,7 +271,7 @@ export const DELETE = secureRoute(
 				.from(annotationTasks)
 				.where(
 					and(
-						eq(annotationTasks.id, parseInt(id, 10)),
+						eq(annotationTasks.id, parsedId),
 						eq(annotationTasks.organizationId, ctx.organizationId),
 					),
 				)
@@ -264,7 +285,7 @@ export const DELETE = secureRoute(
 				.delete(annotationTasks)
 				.where(
 					and(
-						eq(annotationTasks.id, parseInt(id, 10)),
+						eq(annotationTasks.id, parsedId),
 						eq(annotationTasks.organizationId, ctx.organizationId),
 					),
 				);
@@ -272,7 +293,12 @@ export const DELETE = secureRoute(
 			return NextResponse.json({
 				message: "Annotation task deleted successfully",
 			});
-		} catch (_error: unknown) {
+		} catch (error) {
+			logger.error("Failed to delete annotation task", {
+				error,
+				route: "/api/annotations/tasks",
+				method: "DELETE",
+			});
 			return internalError();
 		}
 	},

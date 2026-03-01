@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { internalError } from "@/lib/api/errors";
 import { type AuthContext, secureRoute } from "@/lib/api/secure-route";
+import { logger } from "@/lib/logger";
 import { arenaMatchesService } from "@/lib/services/arena-matches.service";
 import { parsePaginationParams } from "@/lib/validation";
 
@@ -20,7 +21,12 @@ export const GET = secureRoute(async (req: NextRequest, ctx: AuthContext) => {
 			options,
 		);
 		return NextResponse.json(leaderboard);
-	} catch (error: unknown) {
+	} catch (error) {
+		logger.error("Failed to get arena-matches leaderboard", {
+			error,
+			route: "/api/arena-matches/leaderboard",
+			method: "GET",
+		});
 		return internalError(error instanceof Error ? error.message : undefined);
 	}
 });

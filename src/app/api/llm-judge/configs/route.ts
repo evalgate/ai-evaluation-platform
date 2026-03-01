@@ -5,7 +5,11 @@ import { llmJudgeConfigs } from "@/db/schema";
 import { internalError, notFound, validationError } from "@/lib/api/errors";
 import { type AuthContext, secureRoute } from "@/lib/api/secure-route";
 import { logger } from "@/lib/logger";
-import { parsePaginationParams, sanitizeSearchInput } from "@/lib/validation";
+import {
+	parseIdParam,
+	parsePaginationParams,
+	sanitizeSearchInput,
+} from "@/lib/validation";
 
 export const GET = secureRoute(
 	async (req: NextRequest, ctx: AuthContext) => {
@@ -14,16 +18,15 @@ export const GET = secureRoute(
 			const id = searchParams.get("id");
 
 			if (id) {
-				if (Number.isNaN(parseInt(id, 10))) {
-					return validationError("Valid ID is required");
-				}
+				const configId = parseIdParam(id);
+				if (!configId) return validationError("Valid ID is required");
 
 				const config = await db
 					.select()
 					.from(llmJudgeConfigs)
 					.where(
 						and(
-							eq(llmJudgeConfigs.id, parseInt(id, 10)),
+							eq(llmJudgeConfigs.id, configId),
 							eq(llmJudgeConfigs.organizationId, ctx.organizationId),
 						),
 					)
@@ -137,10 +140,8 @@ export const PUT = secureRoute(async (req: NextRequest, ctx: AuthContext) => {
 	try {
 		const searchParams = req.nextUrl.searchParams;
 		const id = searchParams.get("id");
-
-		if (!id || Number.isNaN(parseInt(id, 10))) {
-			return validationError("Valid ID is required");
-		}
+		const configId = parseIdParam(id);
+		if (!configId) return validationError("Valid ID is required");
 
 		const body = await req.json();
 
@@ -153,7 +154,7 @@ export const PUT = secureRoute(async (req: NextRequest, ctx: AuthContext) => {
 			.from(llmJudgeConfigs)
 			.where(
 				and(
-					eq(llmJudgeConfigs.id, parseInt(id, 10)),
+					eq(llmJudgeConfigs.id, configId),
 					eq(llmJudgeConfigs.organizationId, ctx.organizationId),
 				),
 			)
@@ -199,7 +200,7 @@ export const PUT = secureRoute(async (req: NextRequest, ctx: AuthContext) => {
 			.set(updates)
 			.where(
 				and(
-					eq(llmJudgeConfigs.id, parseInt(id, 10)),
+					eq(llmJudgeConfigs.id, configId),
 					eq(llmJudgeConfigs.organizationId, ctx.organizationId),
 				),
 			)
@@ -224,17 +225,15 @@ export const DELETE = secureRoute(
 		try {
 			const searchParams = req.nextUrl.searchParams;
 			const id = searchParams.get("id");
-
-			if (!id || Number.isNaN(parseInt(id, 10))) {
-				return validationError("Valid ID is required");
-			}
+			const configId = parseIdParam(id);
+			if (!configId) return validationError("Valid ID is required");
 
 			const existing = await db
 				.select()
 				.from(llmJudgeConfigs)
 				.where(
 					and(
-						eq(llmJudgeConfigs.id, parseInt(id, 10)),
+						eq(llmJudgeConfigs.id, configId),
 						eq(llmJudgeConfigs.organizationId, ctx.organizationId),
 					),
 				)
@@ -248,7 +247,7 @@ export const DELETE = secureRoute(
 				.delete(llmJudgeConfigs)
 				.where(
 					and(
-						eq(llmJudgeConfigs.id, parseInt(id, 10)),
+						eq(llmJudgeConfigs.id, configId),
 						eq(llmJudgeConfigs.organizationId, ctx.organizationId),
 					),
 				)

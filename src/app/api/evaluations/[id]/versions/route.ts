@@ -13,13 +13,12 @@ import { notFound, validationError } from "@/lib/api/errors";
 import { type AuthContext, secureRoute } from "@/lib/api/secure-route";
 import { SCOPES } from "@/lib/auth/scopes";
 import { versioningService } from "@/lib/services/versioning.service";
-import { parsePaginationParams } from "@/lib/validation";
+import { parseIdParam, parsePaginationParams } from "@/lib/validation";
 
 export const GET = secureRoute(
 	async (req: NextRequest, ctx: AuthContext, params) => {
-		const evaluationId = parseInt(params.id, 10);
-		if (Number.isNaN(evaluationId))
-			return validationError("Valid evaluation ID required");
+		const evaluationId = parseIdParam(params.id);
+		if (!evaluationId) return validationError("Valid evaluation ID required");
 
 		// Verify ownership
 		const [evaluation] = await db
@@ -51,9 +50,8 @@ export const GET = secureRoute(
 
 export const POST = secureRoute(
 	async (_req: NextRequest, ctx: AuthContext, params) => {
-		const evaluationId = parseInt(params.id, 10);
-		if (Number.isNaN(evaluationId))
-			return validationError("Valid evaluation ID required");
+		const evaluationId = parseIdParam(params.id);
+		if (!evaluationId) return validationError("Valid evaluation ID required");
 
 		// Verify ownership
 		const [evaluation] = await db

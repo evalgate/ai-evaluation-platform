@@ -9,6 +9,7 @@ import { logger } from "@/lib/logger";
 import { evaluationService } from "@/lib/services/evaluation.service";
 import {
 	createEvaluationBodySchema,
+	parseIdParam,
 	parsePaginationParams,
 	putEvaluationBodySchema,
 } from "@/lib/validation";
@@ -21,8 +22,8 @@ export const GET = secureRoute(
 			const organizationId = ctx.organizationId;
 
 			if (id) {
-				const evaluationId = parseInt(id, 10);
-				if (Number.isNaN(evaluationId)) {
+				const evaluationId = parseIdParam(id);
+				if (!evaluationId) {
 					return validationError("Valid ID is required");
 				}
 
@@ -233,8 +234,8 @@ export const PUT = secureRoute(async (req: NextRequest, ctx: AuthContext) => {
 	try {
 		const { searchParams } = new URL(req.url);
 		const id = searchParams.get("id");
-
-		if (!id || Number.isNaN(parseInt(id, 10))) {
+		const evaluationId = parseIdParam(id);
+		if (!evaluationId) {
 			return validationError("Valid ID is required");
 		}
 
@@ -242,7 +243,7 @@ export const PUT = secureRoute(async (req: NextRequest, ctx: AuthContext) => {
 		if (!parsed.ok) return parsed.response;
 
 		const updated = await evaluationService.update(
-			parseInt(id, 10),
+			evaluationId,
 			ctx.organizationId,
 			parsed.data,
 		);
@@ -266,13 +267,13 @@ export const DELETE = secureRoute(
 		try {
 			const { searchParams } = new URL(req.url);
 			const id = searchParams.get("id");
-
-			if (!id || Number.isNaN(parseInt(id, 10))) {
+			const evaluationId = parseIdParam(id);
+			if (!evaluationId) {
 				return validationError("Valid ID is required");
 			}
 
 			const deleted = await evaluationService.delete(
-				parseInt(id, 10),
+				evaluationId,
 				ctx.organizationId,
 			);
 

@@ -342,6 +342,18 @@ export function sanitizeSearchInput(
 }
 
 /**
+ * Parse a string ID param (from URL query or route params) into a validated
+ * positive integer. Returns the parsed number on success, or `null` if the
+ * value is missing or not a valid positive integer.
+ */
+export function parseIdParam(value: string | null | undefined): number | null {
+	if (!value) return null;
+	const parsed = parseInt(value, 10);
+	if (Number.isNaN(parsed) || parsed <= 0) return null;
+	return parsed;
+}
+
+/**
  * Safe parseInt with NaN guard. Returns the default value if parsing fails.
  */
 export function safeParseInt(

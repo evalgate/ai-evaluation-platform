@@ -10,14 +10,16 @@ import {
 } from "@/lib/api/errors";
 import { parseBody } from "@/lib/api/parse";
 import { type AuthContext, secureRoute } from "@/lib/api/secure-route";
+import { logger } from "@/lib/logger";
 import { auditService } from "@/lib/services/audit.service";
-import { updateAPIKeyBodySchema } from "@/lib/validation";
+import { parseIdParam, updateAPIKeyBodySchema } from "@/lib/validation";
 
 export const PATCH = secureRoute(
 	async (req: NextRequest, ctx: AuthContext, params) => {
 		try {
 			const { id } = params;
-			if (!id || Number.isNaN(parseInt(id, 10))) {
+			const parsedId = parseIdParam(id);
+			if (!parsedId) {
 				return validationError("Valid ID is required");
 			}
 
@@ -31,7 +33,7 @@ export const PATCH = secureRoute(
 				.from(apiKeys)
 				.where(
 					and(
-						eq(apiKeys.id, parseInt(id, 10)),
+						eq(apiKeys.id, parsedId),
 						eq(apiKeys.userId, ctx.userId),
 						eq(apiKeys.organizationId, ctx.organizationId),
 					),
@@ -57,9 +59,7 @@ export const PATCH = secureRoute(
 			const updated = await db
 				.update(apiKeys)
 				.set(updateData)
-				.where(
-					and(eq(apiKeys.id, parseInt(id, 10)), eq(apiKeys.userId, ctx.userId)),
-				)
+				.where(and(eq(apiKeys.id, parsedId), eq(apiKeys.userId, ctx.userId)))
 				.returning();
 
 			if (updated.length === 0) {
@@ -77,7 +77,12 @@ export const PATCH = secureRoute(
 			};
 
 			return NextResponse.json(response, { status: 200 });
-		} catch (_error: unknown) {
+		} catch (error) {
+			logger.error("Failed to update API key", {
+				error,
+				route: "/api/developer/api-keys/[id]",
+				method: "PATCH",
+			});
 			return internalError();
 		}
 	},
@@ -88,16 +93,15 @@ export const DELETE = secureRoute(
 	async (_req: NextRequest, ctx: AuthContext, params) => {
 		try {
 			const { id } = params;
-			if (!id || Number.isNaN(parseInt(id, 10))) {
+			const parsedId = parseIdParam(id);
+			if (!parsedId) {
 				return validationError("Valid ID is required");
 			}
 
 			const existingKey = await db
 				.select()
 				.from(apiKeys)
-				.where(
-					and(eq(apiKeys.id, parseInt(id, 10)), eq(apiKeys.userId, ctx.userId)),
-				)
+				.where(and(eq(apiKeys.id, parsedId), eq(apiKeys.userId, ctx.userId)))
 				.limit(1);
 
 			if (existingKey.length === 0) {
@@ -112,9 +116,7 @@ export const DELETE = secureRoute(
 			const revoked = await db
 				.update(apiKeys)
 				.set({ revokedAt })
-				.where(
-					and(eq(apiKeys.id, parseInt(id, 10)), eq(apiKeys.userId, ctx.userId)),
-				)
+				.where(and(eq(apiKeys.id, parsedId), eq(apiKeys.userId, ctx.userId)))
 				.returning();
 
 			if (revoked.length === 0) {
@@ -127,7 +129,7 @@ export const DELETE = secureRoute(
 				action: "api_key_revoked",
 				resourceType: "api_key",
 				resourceId: id,
-				metadata: { apiKeyId: parseInt(id, 10) },
+				metadata: { apiKeyId: parsedId },
 			});
 
 			return NextResponse.json(
@@ -137,7 +139,12 @@ export const DELETE = secureRoute(
 				},
 				{ status: 200 },
 			);
-		} catch (_error: unknown) {
+		} catch (error) {
+			logger.error("Failed to revoke API key", {
+				error,
+				route: "/api/developer/api-keys/[id]",
+				method: "DELETE",
+			});
 			return internalError();
 		}
 	},

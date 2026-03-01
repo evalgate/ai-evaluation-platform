@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { internalError, validationError } from "@/lib/api/errors";
 import { type AuthContext, secureRoute } from "@/lib/api/secure-route";
+import { logger } from "@/lib/logger";
 import { regressionService } from "@/lib/services/regression.service";
 
 export const POST = secureRoute(
@@ -14,7 +15,12 @@ export const POST = secureRoute(
 				ctx.organizationId,
 			);
 			return NextResponse.json(result);
-		} catch (error: unknown) {
+		} catch (error) {
+			logger.error("Failed to run regression", {
+				error,
+				route: "/api/evaluations/[id]/regression",
+				method: "POST",
+			});
 			return validationError(
 				error instanceof Error ? error.message : "Regression failed",
 			);
@@ -39,7 +45,12 @@ export const PUT = secureRoute(
 				body.testCaseIds,
 			);
 			return NextResponse.json({ goldenSetId });
-		} catch (error: unknown) {
+		} catch (error) {
+			logger.error("Failed to set golden cases", {
+				error,
+				route: "/api/evaluations/[id]/regression",
+				method: "PUT",
+			});
 			return internalError(error instanceof Error ? error.message : undefined);
 		}
 	},

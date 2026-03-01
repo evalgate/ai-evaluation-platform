@@ -6,14 +6,14 @@ import { SCOPES } from "@/lib/auth/scopes";
 import { testCaseService } from "@/lib/services/test-case.service";
 import {
 	createTestCaseBodySchema,
+	parseIdParam,
 	parsePaginationParams,
 } from "@/lib/validation";
 
 export const GET = secureRoute(
 	async (req: NextRequest, ctx: AuthContext, params) => {
-		const evaluationId = parseInt(params.id, 10);
-
-		if (Number.isNaN(evaluationId)) {
+		const evaluationId = parseIdParam(params.id);
+		if (!evaluationId) {
 			return validationError("Valid evaluation ID is required");
 		}
 
@@ -36,9 +36,8 @@ export const GET = secureRoute(
 
 export const POST = secureRoute(
 	async (req: NextRequest, ctx: AuthContext, params) => {
-		const evaluationId = parseInt(params.id, 10);
-
-		if (Number.isNaN(evaluationId)) {
+		const evaluationId = parseIdParam(params.id);
+		if (!evaluationId) {
 			return validationError("Valid evaluation ID is required");
 		}
 
@@ -69,23 +68,22 @@ export const POST = secureRoute(
 
 export const DELETE = secureRoute(
 	async (req: NextRequest, ctx: AuthContext, params) => {
-		const evaluationId = parseInt(params.id, 10);
-
-		if (Number.isNaN(evaluationId)) {
+		const evaluationId = parseIdParam(params.id);
+		if (!evaluationId) {
 			return validationError("Valid evaluation ID is required");
 		}
 
 		const { searchParams } = new URL(req.url);
 		const testCaseId = searchParams.get("testCaseId");
-
-		if (!testCaseId || Number.isNaN(parseInt(testCaseId, 10))) {
+		const parsedTestCaseId = parseIdParam(testCaseId);
+		if (!parsedTestCaseId) {
 			return validationError("Valid test case ID is required");
 		}
 
 		const removed = await testCaseService.remove(
 			ctx.organizationId,
 			evaluationId,
-			parseInt(testCaseId, 10),
+			parsedTestCaseId,
 		);
 
 		if (!removed) {

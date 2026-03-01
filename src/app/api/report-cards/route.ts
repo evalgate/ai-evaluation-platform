@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { internalError } from "@/lib/api/errors";
 import { type AuthContext, secureRoute } from "@/lib/api/secure-route";
+import { logger } from "@/lib/logger";
 import { reportCardsService } from "@/lib/services/report-cards.service";
 import { parsePaginationParams } from "@/lib/validation";
 
@@ -18,7 +19,12 @@ export const GET = secureRoute(async (req: NextRequest, ctx: AuthContext) => {
 			options,
 		);
 		return NextResponse.json(cards);
-	} catch (error: unknown) {
+	} catch (error) {
+		logger.error("Failed to fetch report cards", {
+			error,
+			route: "/api/report-cards",
+			method: "GET",
+		});
 		return internalError(error instanceof Error ? error.message : undefined);
 	}
 });

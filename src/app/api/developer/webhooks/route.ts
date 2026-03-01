@@ -6,6 +6,7 @@ import { webhooks } from "@/db/schema";
 import { forbidden, internalError, validationError } from "@/lib/api/errors";
 import { parseBody } from "@/lib/api/parse";
 import { type AuthContext, secureRoute } from "@/lib/api/secure-route";
+import { logger } from "@/lib/logger";
 import { encryptWebhookSecret } from "@/lib/security/webhook-secrets";
 import {
 	createWebhookBodySchema,
@@ -65,7 +66,12 @@ export const POST = secureRoute(
 				},
 				{ status: 201 },
 			);
-		} catch (_error: unknown) {
+		} catch (error) {
+			logger.error("Failed to create webhook", {
+				error,
+				route: "/api/developer/webhooks",
+				method: "POST",
+			});
 			return internalError();
 		}
 	},
@@ -136,7 +142,12 @@ export const GET = secureRoute(async (req: NextRequest, ctx: AuthContext) => {
 		}));
 
 		return NextResponse.json(webhooksWithParsedEvents, { status: 200 });
-	} catch (_error: unknown) {
+	} catch (error) {
+		logger.error("Failed to list webhooks", {
+			error,
+			route: "/api/developer/webhooks",
+			method: "GET",
+		});
 		return internalError();
 	}
 });

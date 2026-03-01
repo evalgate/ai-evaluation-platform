@@ -27,16 +27,14 @@ import { SCOPES } from "@/lib/auth/scopes";
 import { logger } from "@/lib/logger";
 import { computeAndStoreQualityScore } from "@/lib/services/aggregate-metrics.service";
 import { auditService } from "@/lib/services/audit.service";
-import { importRunBodySchema } from "@/lib/validation";
+import { importRunBodySchema, parseIdParam } from "@/lib/validation";
 
 export const POST = secureRoute(
 	async (req: NextRequest, ctx: AuthContext, params) => {
 		const { id } = params;
-		const evaluationId = parseInt(id, 10);
-
-		if (Number.isNaN(evaluationId)) {
+		const evaluationId = parseIdParam(id);
+		if (!evaluationId)
 			return validationError("Valid evaluation ID is required");
-		}
 
 		const parsed = await parseBody(req, importRunBodySchema);
 		if (!parsed.ok) return parsed.response;

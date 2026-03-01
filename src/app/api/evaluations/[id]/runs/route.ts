@@ -6,16 +6,18 @@ import { forbidden, notFound, validationError } from "@/lib/api/errors";
 import { parseBody } from "@/lib/api/parse";
 import { type AuthContext, secureRoute } from "@/lib/api/secure-route";
 import { evaluationService } from "@/lib/services/evaluation.service";
-import { createRunBodySchema, parsePaginationParams } from "@/lib/validation";
+import {
+	createRunBodySchema,
+	parseIdParam,
+	parsePaginationParams,
+} from "@/lib/validation";
 
 export const GET = secureRoute(
 	async (req: NextRequest, ctx: AuthContext, params) => {
 		const { id } = params;
-		const evaluationId = parseInt(id, 10);
-
-		if (Number.isNaN(evaluationId)) {
+		const evaluationId = parseIdParam(id);
+		if (!evaluationId)
 			return validationError("Valid evaluation ID is required");
-		}
 
 		const evalCheck = await db
 			.select({ id: evaluations.id })
@@ -58,11 +60,9 @@ export const GET = secureRoute(
 export const POST = secureRoute(
 	async (req: NextRequest, ctx: AuthContext, params) => {
 		const { id } = params;
-		const evaluationId = parseInt(id, 10);
-
-		if (Number.isNaN(evaluationId)) {
+		const evaluationId = parseIdParam(id);
+		if (!evaluationId)
 			return validationError("Valid evaluation ID is required");
-		}
 
 		const parsed = await parseBody(req, createRunBodySchema, {
 			allowEmpty: true,

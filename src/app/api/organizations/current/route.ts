@@ -4,6 +4,7 @@ import { db } from "@/db";
 import { organizationMembers, organizations } from "@/db/schema";
 import { internalError, notFound } from "@/lib/api/errors";
 import { type AuthOnlyContext, secureRoute } from "@/lib/api/secure-route";
+import { logger } from "@/lib/logger";
 
 export const GET = secureRoute(
 	async (_req: NextRequest, ctx: AuthOnlyContext) => {
@@ -33,7 +34,12 @@ export const GET = secureRoute(
 					role: memberships[0].role,
 				},
 			});
-		} catch (_error: unknown) {
+		} catch (error) {
+			logger.error("Failed to fetch current organization", {
+				error,
+				route: "/api/organizations/current",
+				method: "GET",
+			});
 			return internalError();
 		}
 	},

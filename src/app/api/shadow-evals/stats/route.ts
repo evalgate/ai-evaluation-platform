@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { internalError } from "@/lib/api/errors";
 import { type AuthContext, secureRoute } from "@/lib/api/secure-route";
+import { logger } from "@/lib/logger";
 import { shadowEvalService } from "@/lib/services/shadow-eval.service";
 
 export const GET = secureRoute(async (_req: NextRequest, ctx: AuthContext) => {
@@ -10,6 +11,11 @@ export const GET = secureRoute(async (_req: NextRequest, ctx: AuthContext) => {
 		);
 		return NextResponse.json(stats);
 	} catch (error: unknown) {
+		logger.error("Failed to get shadow eval stats", {
+			error,
+			route: "/api/shadow-evals/stats",
+			method: "GET",
+		});
 		return internalError(error instanceof Error ? error.message : undefined);
 	}
 });

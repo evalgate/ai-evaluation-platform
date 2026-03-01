@@ -4,17 +4,17 @@ import { db } from "@/db";
 import { apiKeys, apiUsageLogs } from "@/db/schema";
 import { internalError, notFound, validationError } from "@/lib/api/errors";
 import { type AuthContext, secureRoute } from "@/lib/api/secure-route";
-import { parsePaginationParams } from "@/lib/validation";
+import { logger } from "@/lib/logger";
+import { parseIdParam, parsePaginationParams } from "@/lib/validation";
 
 export const GET = secureRoute(
 	async (req: NextRequest, ctx: AuthContext, params) => {
 		try {
 			const { id } = params;
-			if (!id || Number.isNaN(parseInt(id, 10))) {
+			const apiKeyId = parseIdParam(id);
+			if (!apiKeyId) {
 				return validationError("Valid API key ID is required");
 			}
-
-			const apiKeyId = parseInt(id, 10);
 
 			const apiKey = await db
 				.select()
@@ -115,7 +115,12 @@ export const GET = secureRoute(
 				},
 				logs: recentLogs,
 			});
-		} catch (_error: unknown) {
+		} catch (error) {
+			logger.error("Failed to fetch API key usage", {
+				error,
+				route: "/api/developer/api-keys/[id]/usage",
+				method: "GET",
+			});
 			return internalError();
 		}
 	},

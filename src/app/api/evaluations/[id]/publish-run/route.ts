@@ -13,15 +13,14 @@ import { parseBody } from "@/lib/api/parse";
 import { type AuthContext, secureRoute } from "@/lib/api/secure-route";
 import { logger } from "@/lib/logger";
 import { auditService } from "@/lib/services/audit.service";
-import { publishRunBodySchema } from "@/lib/validation";
+import { parseIdParam, publishRunBodySchema } from "@/lib/validation";
 
 export const POST = secureRoute(
 	async (req: NextRequest, ctx: AuthContext, params) => {
 		const { id } = params;
-		const evaluationId = parseInt(id, 10);
-		if (Number.isNaN(evaluationId)) {
+		const evaluationId = parseIdParam(id);
+		if (!evaluationId)
 			return validationError("Valid evaluation ID is required");
-		}
 
 		const parsed = await parseBody(req, publishRunBodySchema);
 		if (!parsed.ok) return parsed.response;

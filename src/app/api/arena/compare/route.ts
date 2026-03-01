@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from "next/server";
 import { internalError, validationError } from "@/lib/api/errors";
 import { type AuthContext, secureRoute } from "@/lib/api/secure-route";
 import { comparisonEngine } from "@/lib/arena/comparison-engine";
+import { logger } from "@/lib/logger";
 import { arenaMatchesService } from "@/lib/services/arena-matches.service";
 
 export const POST = secureRoute(async (req: NextRequest, ctx: AuthContext) => {
@@ -36,7 +37,12 @@ export const POST = secureRoute(async (req: NextRequest, ctx: AuthContext) => {
 			},
 			{ status: 201 },
 		);
-	} catch (error: unknown) {
+	} catch (error) {
+		logger.error("Failed to compare arena models", {
+			error,
+			route: "/api/arena/compare",
+			method: "POST",
+		});
 		return internalError(error instanceof Error ? error.message : undefined);
 	}
 });
