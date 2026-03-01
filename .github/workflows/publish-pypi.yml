@@ -1,0 +1,28 @@
+# Manual PyPI publish — run from Actions tab when you want to push docs/cosmetics
+name: Publish Python SDK to PyPI
+
+on:
+  workflow_dispatch:
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install build twine
+
+      - name: Build
+        run: python -m build
+        working-directory: src/packages/sdk-python
+
+      - name: Publish to PyPI
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+        run: twine upload src/packages/sdk-python/dist/* --non-interactive

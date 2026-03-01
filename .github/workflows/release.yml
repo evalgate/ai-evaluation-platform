@@ -1,6 +1,7 @@
 # Tag-based release — creates GitHub Release with changelog snippet
 # Tag format: sdk/v1.2.3 or v1.2.3
 # Optional: add NPM_TOKEN secret to publish @pauly4010/evalai-sdk to npm
+# Optional: add PYPI_API_TOKEN secret to publish pauly4010-evalai-sdk to PyPI
 name: Release
 
 on:
@@ -83,6 +84,14 @@ jobs:
           fi
           echo "✓ Root CHANGELOG.md has entry for $VERSION"
 
+          # 5. Python SDK pyproject.toml, _version.py must match tag
+          PY_VERSION=$(grep -E '^version\s*=' src/packages/sdk-python/pyproject.toml | sed 's/.*=\s*"\([^"]*\)".*/\1/')
+          if [ "$PY_VERSION" != "$VERSION" ]; then
+            echo "::error::Tag version ($VERSION) does not match Python pyproject.toml ($PY_VERSION)"
+            exit 1
+          fi
+          echo "✓ Python pyproject.toml matches tag: $PY_VERSION"
+
           echo "All release consistency checks passed for v$VERSION"
 
       - name: Build SDK
@@ -106,7 +115,8 @@ jobs:
 
             ${{ steps.changelog.outputs.snippet }}
 
-            **Install:** `npm install @pauly4010/evalai-sdk@${{ steps.version.outputs.version }}`
+            **Install (TypeScript):** `npm install @pauly4010/evalai-sdk@${{ steps.version.outputs.version }}`
+            **Install (Python):** `pip install pauly4010-evalai-sdk==${{ steps.version.outputs.version }}`
           tag_name: ${{ steps.version.outputs.tag }}
           name: Release ${{ steps.version.outputs.tag }} — @pauly4010/evalai-sdk ${{ steps.version.outputs.version }}
         env:
@@ -120,4 +130,18 @@ jobs:
           cd src/packages/sdk
           echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > .npmrc
           npm publish --access public --no-git-tag-version
+        continue-on-error: true
+
+      - name: Build Python SDK
+        run: |
+          pip install build
+          cd src/packages/sdk-python && python -m build
+
+      - name: Publish to PyPI (optional)
+        if: env.PYPI_API_TOKEN != ''
+        env:
+          PYPI_API_TOKEN: ${{ secrets.PYPI_API_TOKEN }}
+        run: |
+          pip install twine
+          twine upload src/packages/sdk-python/dist/* --username __token__ --password "$PYPI_API_TOKEN" --non-interactive
         continue-on-error: true
