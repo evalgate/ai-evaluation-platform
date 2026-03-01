@@ -8,13 +8,7 @@ import { NextResponse } from "next/server";
  * read session cookies after OAuth redirects (cookie timing/visibility issues).
  */
 export function middleware(_request: NextRequest) {
-	// Generate a per-request nonce for CSP script-src
-	const nonce = crypto.randomUUID();
-
-	const requestHeaders = new Headers(_request.headers);
-	requestHeaders.set("x-nonce", nonce);
-
-	const response = NextResponse.next({ request: { headers: requestHeaders } });
+	const response = NextResponse.next();
 	const isProd =
 		process.env.NODE_ENV === "production" ||
 		process.env.VERCEL_ENV === "production";
@@ -24,15 +18,13 @@ export function middleware(_request: NextRequest) {
 	response.headers.set("X-Frame-Options", "DENY");
 	response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
 
-	// Content-Security-Policy with nonce-based script-src
-	// - Nonce replaces 'unsafe-inline' for scripts, blocking injected inline scripts.
-	// - 'unsafe-inline' is kept for style-src only (Radix/shadcn emit inline styles).
-	// - 'unsafe-eval' is allowed in dev only (HMR / React Fast Refresh needs it).
+	// CSP: 'unsafe-inline' is required for Next.js hydration scripts and
+	// Radix/shadcn inline styles. 'unsafe-eval' is dev-only (HMR).
 	const scriptSrc = [
 		"'self'",
-		`'nonce-${nonce}'`,
-		"'strict-dynamic'",
+		"'unsafe-inline'",
 		"https://slelguoygbfzlpylpxfs.supabase.co",
+		"https://va.vercel-scripts.com",
 		...(isProd ? [] : ["'unsafe-eval'"]),
 	].join(" ");
 	response.headers.set(
