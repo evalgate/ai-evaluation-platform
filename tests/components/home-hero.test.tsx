@@ -23,9 +23,12 @@ describe("HomeHero", () => {
 		expect(screen.getByText("2 Minutes")).toBeDefined();
 	});
 
-	it("should render the subtitle", () => {
+	it("should render the subtitle and who-it-is-for", () => {
 		render(<HomeHero />);
 		expect(screen.getByText(/No infra\. No lock-in/)).toBeDefined();
+		expect(
+			screen.getByText(/Built for teams shipping LLM features weekly/),
+		).toBeDefined();
 	});
 
 	it("should show 'Get Started Free' when logged out", () => {

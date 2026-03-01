@@ -16,8 +16,8 @@ export function HomeHero() {
 	return (
 		<section className="py-20 sm:py-32 text-center">
 			<div className="container mx-auto px-4 max-w-5xl">
-				<p className="text-sm font-medium text-primary mb-3 uppercase tracking-wider">
-					EvalAI = CI for AI behavior
+				<p className="text-sm font-medium text-muted-foreground mb-3">
+					Built for teams shipping LLM features weekly
 				</p>
 				<h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight mb-6">
 					Stop LLM Regressions in CI in{" "}

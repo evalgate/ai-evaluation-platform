@@ -4,6 +4,7 @@ import Image from "next/image";
 import { memo, useState } from "react";
 import { cn } from "@/lib/utils";
 
+// 4 strongest screens — Dashboard, Evaluations, Traces, Cost Analytics
 const SCREENSHOTS = [
 	{
 		id: "dashboard",
@@ -18,40 +19,16 @@ const SCREENSHOTS = [
 		description: "Manage test suites with type filters and pass rates",
 	},
 	{
-		id: "evaluation-detail",
-		label: "Quality Score",
-		src: "/screenshots/evaluation-detail.png",
-		description: "AI quality grade, test cases, and metric breakdowns",
-	},
-	{
 		id: "traces",
 		label: "Traces",
 		src: "/screenshots/traces.png",
 		description: "Waterfall timeline for every LLM call and tool span",
 	},
 	{
-		id: "workflows",
-		label: "Workflows",
-		src: "/screenshots/workflows.png",
-		description: "Multi-agent workflow cards with DAG previews",
-	},
-	{
-		id: "workflow-dag",
-		label: "DAG Editor",
-		src: "/screenshots/workflow-dag.png",
-		description: "Visual agent graph with governance badges",
-	},
-	{
 		id: "costs",
 		label: "Cost Analytics",
 		src: "/screenshots/costs.png",
 		description: "Spend trends, model breakdown, and spike detection",
-	},
-	{
-		id: "benchmarks",
-		label: "Benchmarks",
-		src: "/screenshots/benchmarks.png",
-		description: "Leaderboard and radar comparison across architectures",
 	},
 ] as const;
 
