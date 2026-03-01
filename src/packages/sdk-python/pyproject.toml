@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "pauly4010-evalai-sdk"
 version = "1.9.1"
-description = "AI Evaluation Platform SDK — traces, evaluations, assertions, and workflow tracing for LLM apps"
+description = "EvalAI Python SDK — CI for AI behavior. Traces, evaluations, assertions, and regression gates for LLM apps."
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.9"
@@ -13,9 +13,10 @@ authors = [{ name = "pauly4010" }]
 keywords = [
     "ai", "evaluation", "llm", "testing", "observability",
     "tracing", "monitoring", "openai", "anthropic",
+    "regression", "ci", "assertions", "workflow",
 ]
 classifiers = [
-    "Development Status :: 4 - Beta",
+    "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
@@ -53,8 +54,10 @@ evalai = "evalai_sdk.cli:app"
 
 [project.urls]
 Homepage = "https://v0-ai-evaluation-platform-nu.vercel.app"
+Documentation = "https://github.com/pauly7610/ai-evaluation-platform#readme"
 Repository = "https://github.com/pauly7610/ai-evaluation-platform"
 Issues = "https://github.com/pauly7610/ai-evaluation-platform/issues"
+Changelog = "https://github.com/pauly7610/ai-evaluation-platform/blob/main/src/packages/sdk-python/CHANGELOG.md"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/evalai_sdk"]

@@ -1,0 +1,57 @@
+# Changelog
+
+All notable changes to the EvalAI Python SDK will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+Version numbering is aligned with the TypeScript SDK (`@pauly4010/evalai-sdk`) and the platform API.
+
+## [1.9.1] - 2026-03-01
+
+### Fixed
+
+- Align `SPEC_VERSION` with OpenAPI spec 1.9.1
+- Ruff lint and format fixes (SIM102, E501, SIM105, I001, SIM300)
+
+### Changed
+
+- Package metadata: Production/Stable status, improved description and keywords
+- README: Added PyPI downloads badge, GitHub stars, status section, changelog link
+
+## [1.9.0] - 2026-02-27
+
+### Added
+
+- Full parity with TypeScript SDK 1.9.0
+- `evalai ci` CLI command — one-command CI loop
+- Run artifact retention and diff system
+- Impact analysis integration
+- Schema versioning for run reports
+
+### Changed
+
+- Exit codes standardized: 0=clean, 1=regressions, 2=config/infra
+- CLI output improvements for CI environments
+
+## [1.0.1] - 2026-02-26
+
+### Fixed
+
+- CLI init template and credential resolution
+- Run output formatting
+
+## [1.0.0] - 2026-02-25
+
+### Added
+
+- Initial Python SDK release
+- `AIEvalClient` — async HTTP client for EvalAI API
+- 20+ assertions: `expect()`, `to_contain`, `to_not_contain_pii`, `to_be_professional`, etc.
+- Test suites: `create_test_suite`, `TestSuiteConfig`, `TestSuiteCase`
+- Integrations: OpenAI, Anthropic, LangChain, CrewAI, AutoGen tracing
+- Workflow tracing: `WorkflowTracer`, handoffs, cost tracking
+- Regression gates: `evaluate_regression`, `to_pass_gate`
+- CLI: `evalai init`, `evalai run`, `evalai gate`, `evalai ci`, `evalai doctor`
+- Batch processing, caching, pagination, structured errors
+- Full type hints (`py.typed`), mypy and Pyright compatible
