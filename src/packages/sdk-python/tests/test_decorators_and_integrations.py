@@ -389,6 +389,7 @@ class TestNewExports:
         from evalai_sdk import (
             SDK_VERSION,
             SPEC_VERSION,
+            __version__,
             # Client
             AIEvalClient,
             LocalExecutor,
@@ -401,8 +402,8 @@ class TestNewExports:
             trace_openai,
         )
 
-        assert SDK_VERSION == "1.9.0"
-        assert SPEC_VERSION == "1.0.0"
+        assert SDK_VERSION == __version__
+        assert SPEC_VERSION == "1.0.1"
         assert callable(AIEvalClient)
         assert callable(define_eval)
         assert callable(trace_openai)
