@@ -19,6 +19,7 @@ vi.mock("@/lib/services/trace.service", () => ({
 vi.mock("@/lib/autumn-server", () => ({
 	checkFeature: vi.fn().mockResolvedValue({ allowed: true, remaining: 10 }),
 	trackFeature: vi.fn().mockResolvedValue({ success: true }),
+	guardFeature: vi.fn().mockResolvedValue(null),
 	requireAuthWithOrg: vi.fn().mockResolvedValue({
 		authenticated: true,
 		userId: "test-user",

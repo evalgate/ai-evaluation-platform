@@ -6,6 +6,7 @@ import { evaluations } from "@/db/schema";
 import { parseBody } from "@/lib/api/parse";
 import {
 	checkFeature,
+	guardFeature,
 	requireAuthWithOrg,
 	trackFeature,
 } from "@/lib/autumn-server";
@@ -32,6 +33,7 @@ vi.mock("@/lib/api/parse", () => ({
 vi.mock("@/lib/autumn-server", () => ({
 	checkFeature: vi.fn(),
 	trackFeature: vi.fn(),
+	guardFeature: vi.fn().mockResolvedValue(null),
 	requireAuthWithOrg: vi.fn().mockResolvedValue({
 		authenticated: true,
 		userId: "test-user",
@@ -184,10 +186,15 @@ describe("POST /api/evaluations", () => {
 	});
 
 	it("returns quota failure when the projects feature is denied", async () => {
-		vi.mocked(checkFeature).mockResolvedValueOnce({
-			allowed: false,
-			remaining: 0,
-		});
+		const { NextResponse } = await import("next/server");
+		vi.mocked(guardFeature).mockResolvedValueOnce(
+			NextResponse.json(
+				{
+					error: { code: "QUOTA_EXCEEDED", message: "Projects limit reached." },
+				},
+				{ status: 403 },
+			),
+		);
 
 		const req = new (NextRequest as unknown as typeof Request)(
 			"http://localhost:3000/api/evaluations",

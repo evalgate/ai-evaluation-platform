@@ -29,6 +29,7 @@ vi.mock("@/lib/api/secure-route", () => ({
 vi.mock("@/lib/autumn-server", () => ({
 	checkFeature: vi.fn().mockResolvedValue({ allowed: true }),
 	trackFeature: vi.fn(),
+	guardFeature: vi.fn().mockResolvedValue(null),
 }));
 
 vi.mock("@/lib/logger", () => ({

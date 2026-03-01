@@ -53,6 +53,7 @@ vi.mock("@/lib/autumn-server", () => ({
 	// route.ts imports these (even if GET doesn’t use them)
 	checkFeature: vi.fn(),
 	trackFeature: vi.fn(),
+	guardFeature: vi.fn().mockResolvedValue(null),
 }));
 
 vi.mock("@/lib/services/evaluation.service", () => ({
