@@ -12,10 +12,9 @@ import {
 	COMPREHENSIVE_TEMPLATES,
 	TEMPLATE_CATEGORIES,
 } from "@/lib/evaluation-templates";
+import type { EvaluationTemplate } from "@/lib/evaluation-templates/types";
 import { evaluationTemplates } from "@/lib/evaluation-templates-library";
 import { logger } from "@/lib/logger";
-
-import type { EvaluationTemplate } from "@/lib/evaluation-templates/types";
 
 type SerializedTemplate = Omit<EvaluationTemplate, "icon"> & {
 	source: "featured" | "catalog";
