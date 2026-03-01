@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/nextjs";
 import { type NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import {
@@ -70,6 +71,7 @@ export const GET = secureRoute(
 				route: "/api/workflows",
 				method: "GET",
 			});
+			Sentry.captureException(error);
 			return internalError();
 		}
 	},
@@ -151,6 +153,7 @@ export const POST = secureRoute(
 				route: "/api/workflows",
 				method: "POST",
 			});
+			Sentry.captureException(error);
 			return internalError();
 		}
 	},

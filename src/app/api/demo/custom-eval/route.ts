@@ -296,7 +296,7 @@ export async function POST(request: NextRequest) {
 					qualityScore,
 				});
 			} catch (error: unknown) {
-				logger.error("Custom eval error", error);
+				logger.error("Custom eval error", { error });
 				return internalError();
 			}
 		},

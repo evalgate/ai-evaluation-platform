@@ -1,6 +1,33 @@
 import { NextRequest } from "next/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+// Inline mock required: vi.hoisted runs before imports. See tests/helpers/mock-auth.ts for canonical structure.
+const autumnServerMock = vi.hoisted(() => {
+	const v = (globalThis as { vi?: typeof vi }).vi!;
+	const ctx = {
+		authenticated: true,
+		userId: "test-user",
+		organizationId: 1,
+		role: "member",
+		scopes: [
+			"eval:read",
+			"eval:write",
+			"traces:read",
+			"traces:write",
+			"runs:read",
+			"runs:write",
+		],
+		authType: "session",
+	};
+	return {
+		checkFeature: v.fn().mockResolvedValue({ allowed: true, remaining: 10 }),
+		trackFeature: v.fn().mockResolvedValue({ success: true }),
+		guardFeature: v.fn().mockResolvedValue(null),
+		requireAuthWithOrg: v.fn().mockResolvedValue(ctx),
+		requireAuth: v.fn().mockResolvedValue(ctx),
+	};
+});
+
 const h = vi.hoisted(() => ({
 	listMock: vi.fn(),
 	createMock: vi.fn(),
@@ -26,11 +53,7 @@ vi.mock("@/lib/api/secure-route", () => ({
 	},
 }));
 
-vi.mock("@/lib/autumn-server", () => ({
-	checkFeature: vi.fn().mockResolvedValue({ allowed: true }),
-	trackFeature: vi.fn(),
-	guardFeature: vi.fn().mockResolvedValue(null),
-}));
+vi.mock("@/lib/autumn-server", () => autumnServerMock);
 
 vi.mock("@/lib/logger", () => ({
 	logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn() },

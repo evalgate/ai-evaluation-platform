@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/nextjs";
 import { and, eq } from "drizzle-orm";
 import { type NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
@@ -60,6 +61,7 @@ export const GET = secureRoute(
 				route: "/api/evaluations/[id]",
 				method: "GET",
 			});
+			Sentry.captureException(error);
 			return internalError("Internal server error");
 		}
 	},
@@ -102,6 +104,7 @@ export const PATCH = secureRoute(
 				route: "/api/evaluations/[id]",
 				method: "PATCH",
 			});
+			Sentry.captureException(error);
 			return internalError("Internal server error");
 		}
 	},
@@ -158,6 +161,7 @@ export const DELETE = secureRoute(
 				route: "/api/evaluations/[id]",
 				method: "DELETE",
 			});
+			Sentry.captureException(error);
 			return internalError("Internal server error");
 		}
 	},

@@ -125,7 +125,7 @@ export default function PricingTable({
 												}
 											}
 										} catch (e) {
-											logger.error("Pricing table portal error", e);
+											logger.error("Pricing table portal error", { error: e });
 										}
 										return;
 									}
@@ -434,7 +434,7 @@ export const PricingCardButton = React.forwardRef<
 		try {
 			await onClick?.(e);
 		} catch (error) {
-			logger.error("Pricing table button click error", error);
+			logger.error("Pricing table button click error", { error });
 		} finally {
 			setLoading(false);
 		}

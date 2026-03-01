@@ -396,7 +396,7 @@ export class ArenaMatchesService {
 					cost,
 				});
 			} catch (error: unknown) {
-				logger.error(`Arena match failed for model ${model.label}`, error);
+				logger.error(`Arena match failed for model ${model.label}`, { error });
 
 				results.push({
 					modelId: model.id,

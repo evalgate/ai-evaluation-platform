@@ -2,6 +2,26 @@ import { NextRequest } from "next/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { GET } from "@/app/api/evaluations/route";
 
+// Inline mock required: vi.hoisted runs before imports. See tests/helpers/mock-auth.ts for canonical structure.
+const autumnServerMock = vi.hoisted(() => {
+	const v = (globalThis as { vi?: typeof vi }).vi!;
+	const ctx = {
+		authenticated: true,
+		userId: "test-user",
+		organizationId: 1,
+		role: "member",
+		scopes: ["eval:read", "eval:write"],
+		authType: "session",
+	};
+	return {
+		checkFeature: v.fn(),
+		trackFeature: v.fn(),
+		guardFeature: v.fn().mockResolvedValue(null),
+		requireAuthWithOrg: v.fn().mockResolvedValue(ctx),
+		requireAuth: v.fn().mockResolvedValue(ctx),
+	};
+});
+
 /**
  * IMPORTANT:
  * vi.mock() is hoisted. Use vi.hoisted() for unknown variables referenced inside mock factories.
@@ -39,22 +59,7 @@ vi.mock("@/lib/api-rate-limit", () => ({
 	withRateLimit: vi.fn((req, handler) => handler(req)),
 }));
 
-vi.mock("@/lib/autumn-server", () => ({
-	// secureRoute likely calls this internally
-	requireAuthWithOrg: vi.fn().mockResolvedValue({
-		authenticated: true,
-		userId: "test-user",
-		organizationId: 1,
-		role: "member",
-		scopes: ["eval:read", "eval:write"],
-		authType: "session",
-	}),
-
-	// route.ts imports these (even if GET doesn’t use them)
-	checkFeature: vi.fn(),
-	trackFeature: vi.fn(),
-	guardFeature: vi.fn().mockResolvedValue(null),
-}));
+vi.mock("@/lib/autumn-server", () => autumnServerMock);
 
 vi.mock("@/lib/services/evaluation.service", () => ({
 	evaluationService: {

@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
 			{ status: 201 },
 		);
 	} catch (error: unknown) {
-		logger.error("Onboarding setup error", error);
+		logger.error("Onboarding setup error", { error });
 		return internalError("Failed to setup organization");
 	}
 }

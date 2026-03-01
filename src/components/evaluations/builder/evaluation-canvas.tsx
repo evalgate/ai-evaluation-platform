@@ -166,6 +166,7 @@ export function EvaluationCanvas({ onDeploy }: EvaluationBuilderProps) {
 															<Button
 																variant="ghost"
 																size="sm"
+																aria-label="Configure template"
 																onClick={(e) => {
 																	e.stopPropagation();
 																	handleOpenSettings(selected.id);
@@ -177,6 +178,7 @@ export function EvaluationCanvas({ onDeploy }: EvaluationBuilderProps) {
 															<Button
 																variant="ghost"
 																size="sm"
+																aria-label="Remove template"
 																onClick={(e) => {
 																	e.stopPropagation();
 																	handleRemoveTemplate(selected.id);

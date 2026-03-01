@@ -117,7 +117,7 @@ export const POST = secureRoute(
 				message: `Message sent to ${sentCount} clients`,
 			});
 		} catch (error: unknown) {
-			logger.error("SSE POST error:", error);
+			logger.error("SSE POST error", { error });
 			return internalError();
 		}
 	},

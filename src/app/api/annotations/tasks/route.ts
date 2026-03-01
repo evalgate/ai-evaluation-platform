@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/nextjs";
 import { and, desc, eq, like } from "drizzle-orm";
 import { type NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
@@ -72,6 +73,7 @@ export const GET = secureRoute(async (req: NextRequest, ctx: AuthContext) => {
 			route: "/api/annotations/tasks",
 			method: "GET",
 		});
+		Sentry.captureException(error);
 		return internalError();
 	}
 });
@@ -184,6 +186,7 @@ export const POST = secureRoute(async (req: NextRequest, ctx: AuthContext) => {
 			route: "/api/annotations/tasks",
 			method: "POST",
 		});
+		Sentry.captureException(error);
 		return internalError("Failed to create annotation task");
 	}
 });
@@ -252,6 +255,7 @@ export const PUT = secureRoute(async (req: NextRequest, ctx: AuthContext) => {
 			route: "/api/annotations/tasks",
 			method: "PUT",
 		});
+		Sentry.captureException(error);
 		return internalError();
 	}
 });
@@ -299,6 +303,7 @@ export const DELETE = secureRoute(
 				route: "/api/annotations/tasks",
 				method: "DELETE",
 			});
+			Sentry.captureException(error);
 			return internalError();
 		}
 	},

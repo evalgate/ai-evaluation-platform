@@ -54,7 +54,7 @@ export async function getDefaultDemo(): Promise<DemoEvaluation | null> {
 
 		return await res.json();
 	} catch (error) {
-		logger.error("Error loading default demo", error);
+		logger.error("Error loading default demo", { error });
 		return null;
 	}
 }
@@ -116,7 +116,7 @@ export async function getPublicDemos(): Promise<DemoEvaluation[]> {
 		const index = await res.json();
 		return index.demos || [];
 	} catch (error) {
-		logger.error("Error loading public demos", error);
+		logger.error("Error loading public demos", { error });
 		return [];
 	}
 }

@@ -36,7 +36,7 @@ export async function POST(request: Request) {
 
 		return NextResponse.json({ url }, { status: 200 });
 	} catch (err: unknown) {
-		logger.error("Billing portal error", err);
+		logger.error("Billing portal error", { error: err });
 		return internalError("Failed to generate billing portal URL");
 	}
 }

@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/nextjs";
 import { type NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
 import { evaluations, testCases } from "@/db/schema";
@@ -66,6 +67,7 @@ export const GET = secureRoute(
 				route: "/api/evaluations",
 				method: "GET",
 			});
+			Sentry.captureException(error);
 			return internalError("Internal server error");
 		}
 	},
@@ -226,6 +228,7 @@ export const POST = secureRoute(async (req: NextRequest, ctx: AuthContext) => {
 			route: "/api/evaluations",
 			method: "POST",
 		});
+		Sentry.captureException(error);
 		return internalError("Failed to create evaluation");
 	}
 });
@@ -258,6 +261,7 @@ export const PUT = secureRoute(async (req: NextRequest, ctx: AuthContext) => {
 			route: "/api/evaluations",
 			method: "PUT",
 		});
+		Sentry.captureException(error);
 		return internalError("Internal server error");
 	}
 });
@@ -290,6 +294,7 @@ export const DELETE = secureRoute(
 				route: "/api/evaluations",
 				method: "DELETE",
 			});
+			Sentry.captureException(error);
 			return internalError("Internal server error");
 		}
 	},

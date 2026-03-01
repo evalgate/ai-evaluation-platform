@@ -334,13 +334,13 @@ const PrepaidItem = ({
 			});
 
 			if (error) {
-				logger.error("Checkout error", error);
+				logger.error("Checkout error", { error });
 				return;
 			}
 			// biome-ignore lint/style/noNonNullAssertion: safe assertion
 			setCheckoutResult(data!);
 		} catch (error) {
-			logger.error("Checkout submission error", error);
+			logger.error("Checkout submission error", { error });
 		} finally {
 			setLoading(false);
 			setOpen(false);

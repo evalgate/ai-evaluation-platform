@@ -163,7 +163,7 @@ jobs:
 
 ### Prerequisites
 
-- Node.js >= 18
+- Node.js >= 20
 - pnpm >= 10 (`npm install -g pnpm`)
 
 ### Setup
@@ -176,7 +176,7 @@ pnpm install
 cp .env.example .env.local
 # Edit .env.local with your PostgreSQL, OAuth, and auth secrets
 
-pnpm drizzle-kit push
+pnpm db:migrate
 pnpm dev
 ```
 

@@ -2,6 +2,33 @@ import { NextRequest } from "next/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { GET, POST } from "@/app/api/traces/route";
 
+// Inline mock required: vi.hoisted runs before imports. See tests/helpers/mock-auth.ts for canonical structure.
+const autumnServerMock = vi.hoisted(() => {
+	const v = (globalThis as { vi?: typeof vi }).vi!;
+	const ctx = {
+		authenticated: true,
+		userId: "test-user",
+		organizationId: 1,
+		role: "member",
+		scopes: [
+			"eval:read",
+			"eval:write",
+			"traces:read",
+			"traces:write",
+			"runs:read",
+			"runs:write",
+		],
+		authType: "session",
+	};
+	return {
+		checkFeature: v.fn().mockResolvedValue({ allowed: true, remaining: 10 }),
+		trackFeature: v.fn().mockResolvedValue({ success: true }),
+		guardFeature: v.fn().mockResolvedValue(null),
+		requireAuthWithOrg: v.fn().mockResolvedValue(ctx),
+		requireAuth: v.fn().mockResolvedValue(ctx),
+	};
+});
+
 const routeContext = { params: Promise.resolve({}) };
 
 vi.mock("@/lib/services/trace.service", () => ({
@@ -16,19 +43,7 @@ vi.mock("@/lib/services/trace.service", () => ({
 	},
 }));
 
-vi.mock("@/lib/autumn-server", () => ({
-	checkFeature: vi.fn().mockResolvedValue({ allowed: true, remaining: 10 }),
-	trackFeature: vi.fn().mockResolvedValue({ success: true }),
-	guardFeature: vi.fn().mockResolvedValue(null),
-	requireAuthWithOrg: vi.fn().mockResolvedValue({
-		authenticated: true,
-		userId: "test-user",
-		organizationId: 1,
-		role: "member",
-		scopes: ["traces:read", "traces:write"],
-		authType: "session",
-	}),
-}));
+vi.mock("@/lib/autumn-server", () => autumnServerMock);
 
 vi.mock("@/lib/api-rate-limit", () => ({
 	withRateLimit: vi.fn(

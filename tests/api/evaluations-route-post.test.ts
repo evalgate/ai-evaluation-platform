@@ -12,6 +12,33 @@ import {
 } from "@/lib/autumn-server";
 import { logger } from "@/lib/logger";
 
+// Inline mock required: vi.hoisted runs before imports. See tests/helpers/mock-auth.ts for canonical structure.
+const autumnServerMock = vi.hoisted(() => {
+	const v = (globalThis as { vi?: typeof vi }).vi!;
+	const ctx = {
+		authenticated: true,
+		userId: "test-user",
+		organizationId: 1,
+		role: "member",
+		scopes: [
+			"eval:read",
+			"eval:write",
+			"traces:read",
+			"traces:write",
+			"runs:read",
+			"runs:write",
+		],
+		authType: "session",
+	};
+	return {
+		checkFeature: v.fn().mockResolvedValue({ allowed: true, remaining: 10 }),
+		trackFeature: v.fn().mockResolvedValue({ success: true }),
+		guardFeature: v.fn().mockResolvedValue(null),
+		requireAuthWithOrg: v.fn().mockResolvedValue(ctx),
+		requireAuth: v.fn().mockResolvedValue(ctx),
+	};
+});
+
 const evaluationInsert = {
 	values: vi.fn().mockReturnThis(),
 	returning: vi.fn(),
@@ -30,19 +57,7 @@ vi.mock("@/lib/api/parse", () => ({
 	parseBody: vi.fn(),
 }));
 
-vi.mock("@/lib/autumn-server", () => ({
-	checkFeature: vi.fn(),
-	trackFeature: vi.fn(),
-	guardFeature: vi.fn().mockResolvedValue(null),
-	requireAuthWithOrg: vi.fn().mockResolvedValue({
-		authenticated: true,
-		userId: "test-user",
-		organizationId: 1,
-		role: "member",
-		scopes: ["eval:read", "eval:write"],
-		authType: "session",
-	}),
-}));
+vi.mock("@/lib/autumn-server", () => autumnServerMock);
 
 vi.mock("@/lib/api-rate-limit", () => ({
 	withRateLimit: vi.fn(

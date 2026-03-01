@@ -26,7 +26,7 @@ export function useSafeStorage<T = string>(
 				setValue(defaultValue);
 			}
 		} catch (error) {
-			logger.error(`Failed to read from localStorage: ${key}`, error);
+			logger.error(`Failed to read from localStorage: ${key}`, { error });
 		} finally {
 			setIsLoading(false);
 		}
@@ -44,7 +44,7 @@ export function useSafeStorage<T = string>(
 				localStorage.setItem(key, stringValue);
 			}
 		} catch (error) {
-			logger.error(`Failed to write to localStorage: ${key}`, error);
+			logger.error(`Failed to write to localStorage: ${key}`, { error });
 		}
 	};
 
