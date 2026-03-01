@@ -28,8 +28,7 @@ export async function GET(req: NextRequest) {
 	const ts = new Date().toISOString();
 
 	try {
-		// Minimal DB ping — single scalar query
-		await db.run(sql`SELECT 1`);
+		await db.execute(sql`SELECT 1`);
 
 		logger.info("Cron health check passed", { ts });
 		return NextResponse.json({ ok: true, db: "ok", ts });

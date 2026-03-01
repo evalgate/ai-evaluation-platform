@@ -4,15 +4,16 @@ import { runDueJobs } from "@/lib/jobs/runner";
 import { logger } from "@/lib/logger";
 
 /**
- * POST /api/jobs/run
+ * GET /api/jobs/run
  *
  * Cron endpoint — processes up to 10 due jobs per invocation.
  * Authenticated via CRON_SECRET header (not secureRoute — no session needed).
+ * Must be GET because Vercel Cron always sends GET requests.
  *
  * Vercel Cron config (vercel.json):
  *   { "path": "/api/jobs/run", "schedule": "* * * * *" }
  */
-export async function POST(req: NextRequest) {
+export async function GET(req: NextRequest) {
 	const secret = process.env.CRON_SECRET;
 	const auth = req.headers.get("authorization");
 
