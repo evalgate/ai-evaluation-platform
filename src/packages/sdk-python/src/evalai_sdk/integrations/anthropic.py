@@ -85,6 +85,9 @@ def trace_anthropic(anthropic_client: Any, eval_client: Any, **kwargs: Any) -> A
                 metadata={"model": kw.get("model"), **kwargs},
             )
 
+        def __getattr__(self, name: str) -> Any:
+            return getattr(self._original, name)
+
     class _TracedAnthropic:
         def __init__(self, original: Any) -> None:
             self.messages = _TracedMessages(original.messages)

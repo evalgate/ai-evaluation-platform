@@ -7,12 +7,13 @@ import { logger } from "@/lib/logger";
 
 interface TestResultData {
 	id: number;
+	testCaseId: number;
 	actualOutput?: string;
 	output?: string;
 }
 
 interface JudgeResultData {
-	testResultId: number;
+	testCaseId: number | null;
 	reasoning?: string;
 }
 
@@ -174,7 +175,7 @@ class DebugAgentService {
 	): FailurePattern["category"] {
 		const output = (result.actualOutput || result.output || "").toLowerCase();
 		const judgeResult = judgeResults.find(
-			(jr) => jr.testResultId === result.id,
+			(jr) => jr.testCaseId != null && jr.testCaseId === result.testCaseId,
 		);
 		const reasoning = (judgeResult?.reasoning || "").toLowerCase();
 

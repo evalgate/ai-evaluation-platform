@@ -35,21 +35,20 @@ vi.mock("@/lib/api/parse", () => ({
 	})),
 }));
 
-const { POST } = await import("@/app/api/jobs/run/route");
+const { GET } = await import("@/app/api/jobs/run/route");
 
-describe("POST /api/jobs/run (more)", () => {
+describe("GET /api/jobs/run (more)", () => {
 	beforeEach(() => vi.clearAllMocks());
 
 	it("returns 401 when authentication fails", async () => {
 		const req = new NextRequest("http://localhost/api/jobs/run", {
-			method: "POST",
-			body: JSON.stringify({}),
+			method: "GET",
 		});
 
-		const res = await (POST as (req: unknown) => Promise<Response>)(
+		const res = await (GET as (req: unknown) => Promise<Response>)(
 			req as unknown,
 		);
-		expect(res.status).toBe(401); // Route returns 401 for auth failure, not 400 for validation
+		expect(res.status).toBe(401);
 
 		const body = await res.json();
 		expect(body.error?.code).toBeTruthy();

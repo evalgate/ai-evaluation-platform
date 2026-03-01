@@ -137,7 +137,9 @@ export const Traces: React.FC = () => {
 									}}
 								>
 									<div>
-										<div style={{ fontSize: 15, fontWeight: 600 }}>{t.name}</div>
+										<div style={{ fontSize: 15, fontWeight: 600 }}>
+											{t.name}
+										</div>
 										<div
 											style={{
 												fontSize: 12,
@@ -159,7 +161,9 @@ export const Traces: React.FC = () => {
 										<span style={{ color: colors.textMuted }}>
 											{t.spans} spans
 										</span>
-										<span style={{ color: colors.textMuted }}>{t.duration}</span>
+										<span style={{ color: colors.textMuted }}>
+											{t.duration}
+										</span>
 										<span
 											style={badge(
 												t.status === "ok" ? "default" : "destructive",

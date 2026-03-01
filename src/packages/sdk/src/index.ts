@@ -223,6 +223,8 @@ export type {
 	CreateLLMJudgeConfigParams,
 	CreateWebhookParams,
 	Evaluation as EvaluationData,
+	EvaluationRun,
+	EvaluationRunDetail,
 	ExportOptions,
 	GenericMetadata as AnnotationData,
 	GetLLMJudgeAlignmentParams,
@@ -239,6 +241,7 @@ export type {
 	LLMJudgeAlignment,
 	// LLM Judge Extended
 	LLMJudgeConfig,
+	LLMJudgeEvaluateResult,
 	LLMJudgeResult as LLMJudgeData,
 	// Organizations
 	Organization,
@@ -249,6 +252,7 @@ export type {
 	TestCase,
 	TestResult,
 	Trace as TraceData,
+	TraceDetail,
 	TracedResponse,
 	UpdateAPIKeyParams,
 	UpdateWebhookParams,

@@ -19,12 +19,16 @@ export const GET = secureRoute(async (req: NextRequest, ctx: AuthContext) => {
 	// Build conditions array — always scope by org via evaluationRuns
 	const conditions = [];
 	if (evaluationRunId) {
-		conditions.push(
-			eq(humanAnnotations.evaluationRunId, parseInt(evaluationRunId, 10)),
-		);
+		const parsed = parseInt(evaluationRunId, 10);
+		if (Number.isNaN(parsed))
+			return validationError("Valid evaluationRunId is required");
+		conditions.push(eq(humanAnnotations.evaluationRunId, parsed));
 	}
 	if (testCaseId) {
-		conditions.push(eq(humanAnnotations.testCaseId, parseInt(testCaseId, 10)));
+		const parsed = parseInt(testCaseId, 10);
+		if (Number.isNaN(parsed))
+			return validationError("Valid testCaseId is required");
+		conditions.push(eq(humanAnnotations.testCaseId, parsed));
 	}
 	// Org-scoping: join through evaluationRuns.organizationId
 	conditions.push(eq(evaluationRuns.organizationId, ctx.organizationId));

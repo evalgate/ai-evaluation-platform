@@ -192,6 +192,7 @@ class WorkflowTracer {
         await this.client.traces.createSpan(this.currentWorkflow.traceId, {
             name: `Agent: ${agentName}`,
             spanId,
+            type: "agent",
             parentSpanId,
             startTime,
             metadata: (0, context_1.mergeWithContext)({
@@ -215,6 +216,7 @@ class WorkflowTracer {
         await this.client.traces.createSpan(this.currentWorkflow.traceId, {
             name: `Agent: ${span.agentName}`,
             spanId: `${span.spanId}-end`,
+            type: "agent",
             parentSpanId: span.spanId,
             startTime: span.startTime,
             endTime,
@@ -265,6 +267,7 @@ class WorkflowTracer {
         await this.client.traces.createSpan(this.currentWorkflow.traceId, {
             name: `Handoff: ${fromAgent || "start"} → ${toAgent}`,
             spanId,
+            type: "handoff",
             startTime: handoff.timestamp,
             endTime: handoff.timestamp,
             durationMs: 0,
@@ -310,6 +313,7 @@ class WorkflowTracer {
         await this.client.traces.createSpan(this.currentWorkflow.traceId, {
             name: `Decision: ${params.agent} chose ${params.chosen}`,
             spanId,
+            type: "decision",
             startTime: timestamp,
             endTime: timestamp,
             durationMs: 0,
@@ -373,6 +377,7 @@ class WorkflowTracer {
             await this.client.traces.createSpan(this.currentWorkflow.traceId, {
                 name: `Cost: ${params.provider}/${params.model}`,
                 spanId,
+                type: "cost",
                 startTime: timestamp,
                 endTime: timestamp,
                 durationMs: 0,

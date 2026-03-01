@@ -61,21 +61,21 @@ async def export_data(client: Any, options: ExportOptions | None = None) -> Expo
         if opts.organization_id:
             params.organization_id = opts.organization_id
         traces = await client.traces.list(params)
-        data.traces = [t.model_dump(mode="json") for t in traces]
+        data.traces = [t.model_dump(mode="json", by_alias=True) for t in traces]
 
     if opts.include_evaluations:
         evals = await client.evaluations.list()
-        data.evaluations = [e.model_dump(mode="json") for e in evals]
+        data.evaluations = [e.model_dump(mode="json", by_alias=True) for e in evals]
 
         if opts.include_test_cases:
             for ev in evals:
                 tcs = await client.evaluations.list_test_cases(ev.id)
-                data.test_cases.extend(tc.model_dump(mode="json") for tc in tcs)
+                data.test_cases.extend(tc.model_dump(mode="json", by_alias=True) for tc in tcs)
 
         if opts.include_runs:
             for ev in evals:
                 runs = await client.evaluations.list_runs(ev.id)
-                data.runs.extend(r.model_dump(mode="json") for r in runs)
+                data.runs.extend(r.model_dump(mode="json", by_alias=True) for r in runs)
 
     data.metadata = {"exported_at": _now_iso(), "total_items": len(data.traces) + len(data.evaluations)}
     return data

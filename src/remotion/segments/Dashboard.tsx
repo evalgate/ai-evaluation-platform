@@ -96,7 +96,11 @@ export const Dashboard: React.FC = () => {
 							}}
 						>
 							<div
-								style={{ fontSize: 14, color: colors.textMuted, marginBottom: 8 }}
+								style={{
+									fontSize: 14,
+									color: colors.textMuted,
+									marginBottom: 8,
+								}}
 							>
 								{s.label}
 							</div>
@@ -145,12 +149,16 @@ export const Dashboard: React.FC = () => {
 									}}
 								>
 									<div>
-										<div style={{ fontSize: 15, fontWeight: 500 }}>{r.name}</div>
+										<div style={{ fontSize: 15, fontWeight: 500 }}>
+											{r.name}
+										</div>
 										<div style={{ fontSize: 13, color: colors.textDim }}>
 											{r.time}
 										</div>
 									</div>
-									<div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+									<div
+										style={{ display: "flex", gap: 12, alignItems: "center" }}
+									>
 										<span style={{ fontSize: 16, fontWeight: 600 }}>
 											{r.score}
 										</span>

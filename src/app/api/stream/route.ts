@@ -19,58 +19,63 @@ export const GET = secureRoute(
 			searchParams.get("clientId") || `client_${Date.now()}_${Math.random()}`;
 		const channels = searchParams.get("channels")?.split(",") || [];
 
-		const response = new Response(
-			new ReadableStream({
-				start(controller) {
-					// Send initial connection message
-					const welcomeMessage = createSSEMessage(
-						SSE_MESSAGE_TYPES.CONNECTION_ESTABLISHED,
-						{
-							clientId,
-							organizationId,
-							userId,
-							channels,
-							timestamp: new Date().toISOString(),
-						},
-					);
+		let resolveResponse: (r: Response) => void;
+		const responseReady = new Promise<Response>((r) => {
+			resolveResponse = r;
+		});
 
-					controller.enqueue(
-						new TextEncoder().encode(
-							`id: ${welcomeMessage.id}\nevent: ${welcomeMessage.type}\ndata: ${JSON.stringify(welcomeMessage.data)}\ntimestamp: ${welcomeMessage.timestamp}\n\n`,
-						),
-					);
-
-					// Add client to SSE server
-					sseServer.addClient(
+		const stream = new ReadableStream({
+			start(controller) {
+				const welcomeMessage = createSSEMessage(
+					SSE_MESSAGE_TYPES.CONNECTION_ESTABLISHED,
+					{
 						clientId,
-						response as unknown as Response,
 						organizationId,
 						userId,
 						channels,
-					);
+						timestamp: new Date().toISOString(),
+					},
+				);
 
-					logger.info("SSE connection established", {
+				controller.enqueue(
+					new TextEncoder().encode(
+						`id: ${welcomeMessage.id}\nevent: ${welcomeMessage.type}\ndata: ${JSON.stringify(welcomeMessage.data)}\ntimestamp: ${welcomeMessage.timestamp}\n\n`,
+					),
+				);
+
+				responseReady.then((resp) => {
+					sseServer.addClient(
 						clientId,
+						resp,
 						organizationId,
+						userId,
 						channels,
-					});
-				},
-				cancel() {
-					// Clean up on disconnect
-					sseServer.removeClient(clientId);
-					logger.info("SSE connection closed", { clientId });
-				},
-			}),
-			{
-				headers: {
-					"Content-Type": "text/event-stream",
-					"Cache-Control": "no-cache",
-					Connection: "keep-alive",
-					...getCorsHeaders(request.headers.get("origin")),
-				},
-			},
-		);
+						controller,
+					);
+				});
 
+				logger.info("SSE connection established", {
+					clientId,
+					organizationId,
+					channels,
+				});
+			},
+			cancel() {
+				sseServer.removeClient(clientId);
+				logger.info("SSE connection closed", { clientId });
+			},
+		});
+
+		const response = new Response(stream, {
+			headers: {
+				"Content-Type": "text/event-stream",
+				"Cache-Control": "no-cache",
+				Connection: "keep-alive",
+				...getCorsHeaders(request.headers.get("origin")),
+			},
+		});
+
+		resolveResponse?.(response);
 		return response;
 	},
 );

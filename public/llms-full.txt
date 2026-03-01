@@ -95,7 +95,7 @@ npx evalai share                       # Create share link for a run
 ```
 client.traces.create(params)        → Promise<Trace>
 client.traces.list(params)          → Promise<Trace[]>
-client.traces.get(id)               → Promise<Trace>
+client.traces.get(id)               → Promise<TraceDetail>  // { trace, spans }
 client.traces.delete(id)            → Promise<{ message: string }>
 client.traces.createSpan(traceId, params) → Promise<Span>
 client.traces.listSpans(traceId)    → Promise<Span[]>
@@ -114,7 +114,7 @@ client.llmJudge.evaluate(params)    → Promise<{ result: LLMJudgeResult; config
 client.llmJudge.createConfig(params) → Promise<LLMJudgeConfig>
 client.llmJudge.listConfigs(params) → Promise<LLMJudgeConfig[]>
 client.llmJudge.listResults(params) → Promise<LLMJudgeResult[]>
-client.llmJudge.getAlignment(params) → Promise<LLMJudgeAlignment>
+client.llmJudge.getAlignment({ evaluationRunId }) → Promise<LLMJudgeAlignment>
 
 client.annotations.create(params)   → Promise<Annotation>
 client.annotations.list(params)     → Promise<Annotation[]>
@@ -137,7 +137,6 @@ client.developer.webhooks.update(id, params) → Promise<Webhook>
 client.developer.webhooks.delete(id) → Promise<{ message: string }>
 
 client.organizations.getCurrent()   → Promise<Organization>
-client.getOrganizationLimits()      → Promise<OrganizationLimits>
 ```
 
 ## WorkflowTracer — Complete API

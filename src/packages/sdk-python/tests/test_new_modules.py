@@ -324,7 +324,7 @@ class TestRegression:
         assert GATE_EXIT.PASS == 0
         assert GATE_EXIT.REGRESSION == 1
         assert GATE_CATEGORY.PASS == "pass"
-        assert ".evalai/" in ARTIFACTS.BASELINE
+        assert "baseline.json" in ARTIFACTS.BASELINE
 
     def test_evaluate_regression_pass(self):
         from evalai_sdk.regression import Baseline, evaluate_regression

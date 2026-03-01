@@ -168,11 +168,15 @@ export interface Span<TMetadata = Record<string, unknown>> {
 export interface CreateSpanParams<TMetadata = Record<string, unknown>> {
 	name: string;
 	spanId: string;
+	type: string;
 	parentSpanId?: string;
 	startTime: string;
 	endTime?: string;
 	durationMs?: number;
+	input?: unknown;
+	output?: unknown;
 	metadata?: TMetadata;
+	evaluationRunId?: number | null;
 }
 
 /**
@@ -252,18 +256,32 @@ export interface CreateTestCaseParams {
 export interface EvaluationRun {
 	id: number;
 	evaluationId: number;
-	status: "pending" | "running" | "completed" | "failed";
-	results: Record<string, unknown> | null;
-	createdAt: string;
+	organizationId: number;
+	status: string;
+	totalCases: number | null;
+	passedCases: number | null;
+	failedCases: number | null;
+	environment: string | null;
+	startedAt: string | null;
 	completedAt: string | null;
+	createdAt: string;
+}
+
+/**
+ * Result of getRun — includes the run and its test results
+ */
+export interface EvaluationRunDetail {
+	run: EvaluationRun;
+	results: Array<Record<string, unknown>>;
+	baselineResults?: Array<Record<string, unknown>>;
+	compareRunId?: number;
 }
 
 /**
  * Parameters for creating an evaluation run
  */
 export interface CreateRunParams {
-	status?: "pending" | "running" | "completed" | "failed";
-	results?: Record<string, unknown>;
+	environment?: string;
 }
 
 /**
@@ -278,6 +296,16 @@ export interface LLMJudgeResult {
 	reasoning: string | null;
 	metadata: Record<string, unknown> | null;
 	createdAt: string;
+}
+
+/**
+ * Result of a single LLM judge evaluation call
+ */
+export interface LLMJudgeEvaluateResult {
+	score: number;
+	reasoning: string;
+	passed: boolean;
+	details: unknown;
 }
 
 /**
@@ -338,6 +366,11 @@ export class SDKError extends Error {
 export type AIEvalConfig = ClientConfig;
 export type TraceData<TMetadata = unknown> = Trace<TMetadata>;
 export type SpanData<TMetadata = unknown> = Span<TMetadata>;
+
+export interface TraceDetail<TMetadata = Record<string, unknown>> {
+	trace: Trace<TMetadata>;
+	spans: Span<TMetadata>[];
+}
 export type EvaluationData<TMetadata = unknown> = Evaluation<TMetadata>;
 export type LLMJudgeData = LLMJudgeResult;
 export type AnnotationData = unknown;
@@ -611,7 +644,7 @@ export interface Webhook {
 	events: string[];
 	secret: string;
 	status: "active" | "inactive";
-	lastTriggeredAt: string | null;
+	lastDeliveredAt: string | null;
 	createdAt: string;
 	updatedAt: string;
 }
@@ -650,12 +683,12 @@ export interface ListWebhooksParams {
 export interface WebhookDelivery {
 	id: number;
 	webhookId: number;
-	event: string;
+	eventType: string;
 	payload: Record<string, unknown>;
-	response: string | null;
-	statusCode: number | null;
-	success: boolean;
-	attempt: number;
+	responseBody: string | null;
+	responseStatus: number | null;
+	status: string;
+	attemptCount: number;
 	createdAt: string;
 }
 
@@ -665,29 +698,27 @@ export interface WebhookDelivery {
 export interface ListWebhookDeliveriesParams {
 	limit?: number;
 	offset?: number;
-	success?: boolean;
+	status?: "success" | "failed" | "pending";
 }
 
 /**
  * Usage statistics
  */
 export interface UsageStats {
-	organizationId: number;
+	analytics: {
+		totalRequests: number;
+		avgResponseTime: number;
+		errorRate: number;
+		successRate: number;
+		groupedData: Array<{
+			key: string;
+			count: number;
+			avgResponseTime: number;
+		}>;
+	};
 	period: {
 		start: string;
 		end: string;
-	};
-	traces: {
-		total: number;
-		byStatus: Record<string, number>;
-	};
-	evaluations: {
-		total: number;
-		byType: Record<string, number>;
-	};
-	apiCalls: {
-		total: number;
-		byEndpoint: Record<string, number>;
 	};
 }
 
@@ -695,24 +726,28 @@ export interface UsageStats {
  * Parameters for getting usage stats
  */
 export interface GetUsageParams {
-	organizationId: number;
-	startDate?: string;
-	endDate?: string;
+	period?: "7d" | "30d" | "90d";
+	groupBy?: "endpoint" | "method" | "day";
+	limit?: number;
+	offset?: number;
 }
 
 /**
  * Usage summary
  */
 export interface UsageSummary {
-	organizationId: number;
-	currentPeriod: {
-		traces: number;
-		evaluations: number;
-		annotations: number;
-		apiCalls: number;
+	summary: {
+		totalRequests: number;
+		avgResponseTime: number;
+		minResponseTime: number;
+		maxResponseTime: number;
+		errorRate: number;
+		successRate: number;
+		requestsByStatusCode: Record<string, number>;
+		topEndpoints: Array<{ endpoint: string; count: number }>;
+		requestsOverTime: Array<{ date: string; count: number }>;
 	};
-	limits: OrganizationLimits;
-	billingPeriod: {
+	period: {
 		start: string;
 		end: string;
 	};
@@ -728,13 +763,12 @@ export interface UsageSummary {
 export interface LLMJudgeConfig {
 	id: number;
 	name: string;
-	description: string | null;
 	model: string;
-	rubric: string;
-	temperature: number;
-	maxTokens: number;
+	promptTemplate: string;
+	criteria: unknown;
+	settings: unknown;
 	organizationId: number;
-	createdBy: number;
+	createdBy: string;
 	createdAt: string;
 	updatedAt: string;
 }
@@ -744,13 +778,10 @@ export interface LLMJudgeConfig {
  */
 export interface CreateLLMJudgeConfigParams {
 	name: string;
-	description?: string;
 	model: string;
-	rubric: string;
-	temperature?: number;
-	maxTokens?: number;
-	organizationId: number;
-	createdBy: number;
+	promptTemplate: string;
+	criteria?: Record<string, unknown>;
+	settings?: Record<string, unknown>;
 }
 
 /**
@@ -776,19 +807,18 @@ export interface ListLLMJudgeResultsParams {
  * LLM Judge alignment analysis
  */
 export interface LLMJudgeAlignment {
-	configId: number;
-	totalEvaluations: number;
-	averageScore: number;
-	alignmentMetrics: {
-		accuracy: number;
-		precision: number;
-		recall: number;
-		f1Score: number;
-	};
-	scoreDistribution: Record<string, number>;
-	comparisonWithHuman?: {
-		agreement: number;
-		correlation: number;
+	alignmentData: Array<{
+		testCaseId: number;
+		humanScore: number;
+		judgeScore: number;
+		alignment: number;
+	}>;
+	metrics: {
+		averageAlignment: number;
+		totalComparisons: number;
+		highAlignment: number;
+		lowAlignment: number;
+		alignmentRate: number;
 	};
 }
 
@@ -796,9 +826,7 @@ export interface LLMJudgeAlignment {
  * Parameters for getting alignment analysis
  */
 export interface GetLLMJudgeAlignmentParams {
-	configId: number;
-	startDate?: string;
-	endDate?: string;
+	evaluationRunId: number;
 }
 
 // ============================================================================
@@ -811,10 +839,10 @@ export interface GetLLMJudgeAlignmentParams {
 export interface Organization {
 	id: number;
 	name: string;
-	slug: string;
-	plan: string;
-	status: "active" | "suspended" | "cancelled";
-	createdAt: string;
-	updatedAt: string;
-	metadata?: Record<string, unknown>;
+	role?: string;
+	slug?: string;
+	plan?: string;
+	status?: string;
+	createdAt?: string;
+	updatedAt?: string;
 }

@@ -57,9 +57,11 @@ class AIEvalClient {
         this.organizationId =
             config.organizationId ||
                 (orgIdFromEnv ? parseInt(orgIdFromEnv, 10) : undefined);
-        // Default to relative URLs for browser, or allow custom baseUrl
         const isBrowser = typeof globalThis.window !== "undefined";
-        this.baseUrl = config.baseUrl || (isBrowser ? "" : "http://localhost:3000");
+        this.baseUrl =
+            config.baseUrl ||
+                getEnvVar("EVALAI_BASE_URL") ||
+                (isBrowser ? "" : "http://localhost:3000");
         this.timeout = config.timeout || 30000;
         // Tier 4.17: Debug mode with request logging
         const logLevel = config.logLevel || (config.debug ? "debug" : "info");
@@ -297,22 +299,11 @@ class AIEvalClient {
         return this.logger;
     }
     /**
-     * Get organization resource limits and usage
-     * Returns feature usage data for per-organization quotas
-     *
-     * @example
-     * ```typescript
-     * const limits = await client.getOrganizationLimits();
-     * console.log('Traces:', limits.traces_per_organization);
-     * console.log('Evaluations:', limits.evals_per_organization);
-     * ```
+     * @deprecated The /api/organizations/:id/limits endpoint does not exist.
+     * Use `organizations.getCurrent()` to get org info instead.
      */
     async getOrganizationLimits() {
-        const orgId = this.getOrganizationId();
-        if (!orgId) {
-            throw new errors_1.EvalAIError("Organization ID is required", "MISSING_ORGANIZATION_ID", 0);
-        }
-        return this.request(`/api/organizations/${orgId}/limits`);
+        return {};
     }
 }
 exports.AIEvalClient = AIEvalClient;
@@ -375,7 +366,7 @@ class TraceAPI {
         });
     }
     /**
-     * Get a single trace by ID
+     * Get a single trace by ID, including its spans
      */
     async get(id) {
         return this.client.request(`/api/traces/${id}`);
@@ -509,7 +500,7 @@ class EvaluationAPI {
         return this.client.request(`/api/evaluations/${evaluationId}/runs`);
     }
     /**
-     * Get a specific run
+     * Get a specific run with its results
      */
     async getRun(evaluationId, runId) {
         return this.client.request(`/api/evaluations/${evaluationId}/runs/${runId}`);
@@ -581,11 +572,7 @@ class LLMJudgeAPI {
      */
     async getAlignment(params) {
         const searchParams = new URLSearchParams();
-        searchParams.set("configId", params.configId.toString());
-        if (params.startDate)
-            searchParams.set("startDate", params.startDate);
-        if (params.endDate)
-            searchParams.set("endDate", params.endDate);
+        searchParams.set("evaluationRunId", params.evaluationRunId.toString());
         const query = searchParams.toString();
         return this.client.request(`/api/llm-judge/alignment?${query}`);
     }
@@ -669,7 +656,9 @@ class AnnotationTasksAPI {
      * Get an annotation task
      */
     async get(taskId) {
-        return this.client.request(`/api/annotations/tasks/${taskId}`);
+        return this.client
+            .request(`/api/annotations/tasks/${taskId}`)
+            .then((res) => res.task);
     }
 }
 /**
@@ -716,21 +705,34 @@ class DeveloperAPI {
     /**
      * Get usage statistics
      */
-    async getUsage(params) {
+    async getUsage(params = {}) {
         const searchParams = new URLSearchParams();
-        searchParams.set("organizationId", params.organizationId.toString());
-        if (params.startDate)
-            searchParams.set("startDate", params.startDate);
-        if (params.endDate)
-            searchParams.set("endDate", params.endDate);
+        if (params.period)
+            searchParams.set("period", params.period);
+        if (params.groupBy)
+            searchParams.set("groupBy", params.groupBy);
+        if (params.limit)
+            searchParams.set("limit", params.limit.toString());
+        if (params.offset)
+            searchParams.set("offset", params.offset.toString());
         const query = searchParams.toString();
-        return this.client.request(`/api/developer/usage?${query}`);
+        const endpoint = query
+            ? `/api/developer/usage?${query}`
+            : "/api/developer/usage";
+        return this.client.request(endpoint);
     }
     /**
      * Get usage summary
      */
-    async getUsageSummary(organizationId) {
-        return this.client.request(`/api/developer/usage/summary?organizationId=${organizationId}`);
+    async getUsageSummary(params = {}) {
+        const searchParams = new URLSearchParams();
+        if (params.period)
+            searchParams.set("period", params.period);
+        const query = searchParams.toString();
+        const endpoint = query
+            ? `/api/developer/usage/summary?${query}`
+            : "/api/developer/usage/summary";
+        return this.client.request(endpoint);
     }
 }
 /**
@@ -853,8 +855,8 @@ class WebhooksAPI {
             searchParams.set("limit", params.limit.toString());
         if (params.offset)
             searchParams.set("offset", params.offset.toString());
-        if (params.success !== undefined)
-            searchParams.set("success", params.success.toString());
+        if (params.status)
+            searchParams.set("status", params.status);
         const query = searchParams.toString();
         const endpoint = query
             ? `/api/developer/webhooks/${webhookId}/deliveries?${query}`
@@ -873,6 +875,8 @@ class OrganizationsAPI {
      * Get current organization
      */
     async getCurrent() {
-        return this.client.request("/api/organizations/current");
+        return this.client
+            .request("/api/organizations/current")
+            .then((res) => res.organization);
     }
 }

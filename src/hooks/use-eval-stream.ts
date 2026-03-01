@@ -38,11 +38,15 @@ export function useEvalStream({
 	const [connected, setConnected] = useState(false);
 	const [error, setError] = useState<Error | null>(null);
 	const esRef = useRef<EventSource | null>(null);
+	const onEventRef = useRef(onEvent);
+	const onErrorRef = useRef(onError);
+
+	onEventRef.current = onEvent;
+	onErrorRef.current = onError;
 
 	const connect = useCallback(() => {
 		if (!enabled || !evaluationId) return;
 
-		// Close existing connection
 		esRef.current?.close();
 		setError(null);
 
@@ -57,14 +61,13 @@ export function useEvalStream({
 		es.onmessage = (e) => {
 			try {
 				const event: StreamEvent = JSON.parse(e.data);
-				setEvents((prev) => [...prev.slice(-500), event]); // Keep last 500 events
-				onEvent?.(event);
+				setEvents((prev) => [...prev.slice(-500), event]);
+				onEventRef.current?.(event);
 			} catch {
 				// Ignore malformed events
 			}
 		};
 
-		// Listen to typed events
 		const eventTypes = [
 			"evaluation_started",
 			"evaluation_progress",
@@ -89,7 +92,7 @@ export function useEvalStream({
 						id: e.lastEventId,
 					};
 					setEvents((prev) => [...prev.slice(-500), event]);
-					onEvent?.(event);
+					onEventRef.current?.(event);
 				} catch {
 					// Ignore malformed events
 				}
@@ -100,10 +103,9 @@ export function useEvalStream({
 			setConnected(false);
 			const err = new Error("SSE connection lost");
 			setError(err);
-			onError?.(err);
-			// EventSource auto-reconnects by default
+			onErrorRef.current?.(err);
 		};
-	}, [evaluationId, enabled, onEvent, onError]);
+	}, [evaluationId, enabled]);
 
 	useEffect(() => {
 		connect();

@@ -739,10 +739,24 @@
 		},
 		"/api/llm-judge/alignment": {
 			"get": {
-				"summary": "alignment",
+				"summary": "Get LLM judge alignment for an evaluation run",
+				"parameters": [
+					{
+						"name": "evaluationRunId",
+						"in": "query",
+						"required": true,
+						"schema": {
+							"type": "integer"
+						},
+						"description": "The evaluation run ID to compute alignment for"
+					}
+				],
 				"responses": {
 					"200": {
 						"description": "Success"
+					},
+					"400": {
+						"description": "Evaluation run ID required"
 					},
 					"401": {
 						"$ref": "#/components/responses/Unauthorized"

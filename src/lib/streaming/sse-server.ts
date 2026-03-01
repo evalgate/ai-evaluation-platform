@@ -315,17 +315,17 @@ export class SSEServer {
 			const clientsToRemove: string[] = [];
 
 			for (const [clientId, client] of this.clients) {
-				// Remove clients that haven't responded to pings
-				if (now - client.lastPing > 30000) {
-					// 30 seconds timeout
+				if (now - client.lastPing > 60000) {
 					clientsToRemove.push(clientId);
 				} else {
-					// Send ping
-					this.sendToClient(clientId, {
+					const sent = this.sendToClient(clientId, {
 						type: "ping",
 						data: { timestamp: now },
 						timestamp: new Date(now).toISOString(),
 					});
+					if (sent) {
+						client.lastPing = now;
+					}
 				}
 			}
 

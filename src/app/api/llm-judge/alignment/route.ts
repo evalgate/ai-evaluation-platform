@@ -29,8 +29,10 @@ export const GET = secureRoute(async (req: NextRequest, ctx: AuthContext) => {
 	}
 
 	const runId = parseInt(evaluationRunId, 10);
+	if (Number.isNaN(runId)) {
+		return validationError("Valid evaluation run ID is required");
+	}
 
-	// Verify the evaluationRun belongs to this org
 	const run = await db
 		.select({ organizationId: evaluationRuns.organizationId })
 		.from(evaluationRuns)

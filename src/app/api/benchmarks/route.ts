@@ -73,6 +73,7 @@ export const POST = secureRoute(
 
 			const benchmark = await benchmarkService.createBenchmark({
 				...validation.data,
+				organizationId: ctx.organizationId,
 				createdBy: ctx.userId,
 			});
 

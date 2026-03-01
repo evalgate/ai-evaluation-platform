@@ -212,7 +212,20 @@ def create_error_from_response(status_code: int, data: Any) -> EvalAIError:
         message = str(data) if data else "Unknown error"
         request_id = None
 
-    err = EvalAIError(message, code, status_code, data)
+    err: EvalAIError
+    if status_code == 429:
+        retry_after = None
+        if isinstance(data, dict):
+            retry_after = data.get("retryAfter") or (
+                error_obj.get("retryAfter") if isinstance(error_obj, dict) else None
+            )
+        err = RateLimitError(message, retry_after=int(retry_after) if retry_after else None)
+    elif status_code == 401 or code == "UNAUTHORIZED":
+        err = AuthenticationError(message)
+    elif status_code == 400 or code == "VALIDATION_ERROR":
+        err = ValidationError(message, details=data)
+    else:
+        err = EvalAIError(message, code, status_code, data)
     if request_id:
         err.request_id = request_id
     return err

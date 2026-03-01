@@ -60,6 +60,7 @@ npx evalai explain             # what failed, why, and how to fix it
 ```
 
 `check` automatically saves a report artifact. `explain` reads it with zero flags and prints:
+
 - **Top failing test cases** with input/expected/actual
 - **What changed** from baseline (score, pass rate, safety)
 - **Root cause classification** (prompt drift, retrieval drift, safety regression, …)
@@ -92,17 +93,17 @@ No account cancellation. No data export. Your tests keep working.
 
 ## Platform Readiness
 
-| Capability | Status |
-|---|---|
-| CI regression gate (`evalai ci`, `evalai gate`) | Production |
+| Capability                                                                                      | Status              |
+| ----------------------------------------------------------------------------------------------- | ------------------- |
+| CI regression gate (`evalai ci`, `evalai gate`)                                                 | Production          |
 | TypeScript SDK ([`@pauly4010/evalai-sdk`](https://www.npmjs.com/package/@pauly4010/evalai-sdk)) | Production (v1.9.0) |
-| Python SDK ([`pauly4010-evalai-sdk`](https://pypi.org/project/pauly4010-evalai-sdk/)) | Production |
-| Multi-tenant auth & RBAC | Production |
-| Evaluation engine (50+ templates, 4 types) | Production |
-| Audit logging & governance presets | Production |
-| Observability (traces, spans, cost tracking) | Production |
-| Self-hosted Docker | Beta |
-| Advanced product analytics | Planned |
+| Python SDK ([`pauly4010-evalai-sdk`](https://pypi.org/project/pauly4010-evalai-sdk/))           | Production          |
+| Multi-tenant auth & RBAC                                                                        | Production          |
+| Evaluation engine (50+ templates, 4 types)                                                      | Production          |
+| Audit logging & governance presets                                                              | Production          |
+| Observability (traces, spans, cost tracking)                                                    | Production          |
+| Self-hosted Docker                                                                              | Beta                |
+| Advanced product analytics                                                                      | Planned             |
 
 ## CI in One Command
 
@@ -127,6 +128,7 @@ jobs:
 ```
 
 **That's it!** Your CI now:
+
 - ✅ Discovers evaluation specs automatically
 - ✅ Runs only impacted specs (smart caching)
 - ✅ Compares results against base branch
@@ -140,6 +142,7 @@ jobs:
 ## Key Features
 
 ### Regression Gate
+
 - **Zero-config scaffolder** — `npx evalai init` detects repo, creates baseline, installs CI workflow
 - **Built-in gate** — works with any `npm test` / `pnpm test` / `yarn test`
 - **Advanced gate** — golden eval scores, confidence tests, p95 latency, cost tracking
@@ -147,12 +150,14 @@ jobs:
 - **Baseline governance** — CODEOWNERS, label gates, anti-cheat guards
 
 ### Evaluation
+
 - **Four evaluation types:** Unit Tests, Human Evaluation, LLM Judge, A/B Testing
 - **50+ evaluation templates** across chatbots, RAG, code-gen, adversarial, multimodal, and industry domains
 - **Visual evaluation builder** — compose evals with drag-and-drop, no code required
 - **Quality score dashboard** — pass rates, trends, and drill-down into failures
 
 ### Developer Experience
+
 - **Full TypeScript SDK** — [`@pauly4010/evalai-sdk`](https://www.npmjs.com/package/@pauly4010/evalai-sdk) with CLI, regression gate, traces, evaluations, LLM judge
 - **Python SDK** — [`pauly4010-evalai-sdk`](https://pypi.org/project/pauly4010-evalai-sdk/) with assertions, test workflows, OpenAI/Anthropic integrations
 - **CLI commands** — `evalai init`, `evalai gate`, `evalai baseline`, `evalai upgrade`, `evalai check`, `evalai doctor`, `evalai explain`, `evalai print-config`, `evalai share`

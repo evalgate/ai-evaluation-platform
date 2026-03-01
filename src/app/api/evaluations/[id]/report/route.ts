@@ -1,16 +1,30 @@
 import { randomUUID } from "node:crypto";
 import { type NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 import { db } from "@/db";
 import { reportCards } from "@/db/schema";
-import { internalError } from "@/lib/api/errors";
+import { internalError, validationError } from "@/lib/api/errors";
 import { type AuthContext, secureRoute } from "@/lib/api/secure-route";
 import { reportCardsService } from "@/lib/services/report-cards.service";
+
+const reportBodySchema = z.object({
+	evaluationRunId: z.number().int().positive(),
+	title: z.string().optional(),
+	description: z.string().optional(),
+	isPublic: z.boolean().optional(),
+});
 
 export const POST = secureRoute(
 	async (req: NextRequest, ctx: AuthContext, params) => {
 		const { id } = params;
 		const evaluationId = parseInt(id, 10);
-		const body = await req.json();
+
+		let body: z.infer<typeof reportBodySchema>;
+		try {
+			body = reportBodySchema.parse(await req.json());
+		} catch {
+			return validationError("evaluationRunId (positive integer) is required");
+		}
 
 		try {
 			const reportData = await reportCardsService.generateReportCard(
@@ -24,7 +38,7 @@ export const POST = secureRoute(
 				.insert(reportCards)
 				.values({
 					evaluationId,
-					evaluationRunId: body.evaluationRunId ?? 0,
+					evaluationRunId: body.evaluationRunId,
 					organizationId: ctx.organizationId,
 					title: body.title || reportData.evaluationName,
 					description:

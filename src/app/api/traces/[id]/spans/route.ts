@@ -70,7 +70,12 @@ export const POST = secureRoute(
 			evaluationRunId,
 		});
 
-		if (typeof result === "object" && "ok" in result && result.ok === false) {
+		if (
+			result &&
+			typeof result === "object" &&
+			"ok" in result &&
+			result.ok === false
+		) {
 			if (result.reason === "run_not_in_org")
 				return forbidden("Run not in organization");
 			return forbidden("Trace not in organization");

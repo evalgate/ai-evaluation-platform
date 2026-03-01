@@ -20,14 +20,20 @@ export const auth = betterAuth({
 		enabled: false,
 	},
 	socialProviders: {
-		github: {
-			clientId: process.env.GITHUB_CLIENT_ID!,
-			clientSecret: process.env.GITHUB_CLIENT_SECRET!,
-		},
-		google: {
-			clientId: process.env.GOOGLE_CLIENT_ID!,
-			clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-		},
+		...(process.env.GITHUB_CLIENT_ID &&
+			process.env.GITHUB_CLIENT_SECRET && {
+				github: {
+					clientId: process.env.GITHUB_CLIENT_ID,
+					clientSecret: process.env.GITHUB_CLIENT_SECRET,
+				},
+			}),
+		...(process.env.GOOGLE_CLIENT_ID &&
+			process.env.GOOGLE_CLIENT_SECRET && {
+				google: {
+					clientId: process.env.GOOGLE_CLIENT_ID,
+					clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+				},
+			}),
 	},
 	trustedOrigins: [
 		"http://localhost:3000",
@@ -37,8 +43,7 @@ export const auth = betterAuth({
 	advanced: {
 		useSecureCookies: process.env.NODE_ENV === "production",
 		defaultCookieAttributes: {
-			// SameSite=None needed for OAuth redirect from Google/GitHub back to app
-			sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+			sameSite: "lax",
 			secure: process.env.NODE_ENV === "production",
 		},
 	},

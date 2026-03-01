@@ -72,14 +72,20 @@ export const EvaluationDetail: React.FC = () => {
 						}),
 					}}
 				>
-					<div style={{ fontSize: 14, color: colors.textMuted, marginBottom: 6 }}>
+					<div
+						style={{ fontSize: 14, color: colors.textMuted, marginBottom: 6 }}
+					>
 						AI Quality Score
 					</div>
 					<div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
-						<span style={{ fontSize: 48, fontWeight: 700, color: colors.green }}>
+						<span
+							style={{ fontSize: 48, fontWeight: 700, color: colors.green }}
+						>
 							A
 						</span>
-						<span style={{ fontSize: 22, fontWeight: 600, color: colors.green }}>
+						<span
+							style={{ fontSize: 22, fontWeight: 600, color: colors.green }}
+						>
 							92/100
 						</span>
 					</div>
@@ -104,7 +110,11 @@ export const EvaluationDetail: React.FC = () => {
 							style={{ ...card, flex: 1, padding: 24, opacity: o }}
 						>
 							<div
-								style={{ fontSize: 14, color: colors.textMuted, marginBottom: 6 }}
+								style={{
+									fontSize: 14,
+									color: colors.textMuted,
+									marginBottom: 6,
+								}}
 							>
 								{s.label}
 							</div>

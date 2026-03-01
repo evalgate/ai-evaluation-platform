@@ -356,7 +356,7 @@ export function secureRoute(
 					error: message,
 					path: request.nextUrl.pathname,
 				});
-				return internalError(message);
+				return internalError();
 			}
 		};
 

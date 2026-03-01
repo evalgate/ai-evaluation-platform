@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server";
-import { forbidden, notFound, validationError } from "@/lib/api/errors";
+import { notFound, validationError } from "@/lib/api/errors";
 import { type AuthContext, secureRoute } from "@/lib/api/secure-route";
 import { benchmarkService } from "@/lib/services/benchmark.service";
 
@@ -20,9 +20,8 @@ export const GET = secureRoute(
 			return notFound("Benchmark not found");
 		}
 
-		// Verify org ownership
 		if (benchmark.organizationId !== ctx.organizationId) {
-			return forbidden("Benchmark does not belong to your organization");
+			return notFound("Benchmark not found");
 		}
 
 		const stats = await benchmarkService.getBenchmarkStats(benchmarkId);

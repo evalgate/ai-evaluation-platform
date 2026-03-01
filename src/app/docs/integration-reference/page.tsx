@@ -250,9 +250,12 @@ client.organizations   → OrganizationsAPI`}</pre>
 									<h3 className="font-semibold mb-2">Get single trace</h3>
 									<div className="bg-muted rounded-lg p-3 font-mono text-sm">
 										<code>
-											client.traces.get(id: number) → Promise&lt;Trace&gt;
+											client.traces.get(id: number) → Promise&lt;TraceDetail&gt;
 										</code>
 									</div>
+									<p className="text-xs text-muted-foreground mt-1">
+										TraceDetail = {"{ trace: Trace, spans: Span[] }"}
+									</p>
 								</div>
 								<div>
 									<h3 className="font-semibold mb-2">Delete trace</h3>

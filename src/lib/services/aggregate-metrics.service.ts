@@ -319,8 +319,8 @@ export async function computeAndStoreQualityScore(
 			metrics.provenanceCoverageRate != null
 				? String(metrics.provenanceCoverageRate)
 				: null,
-		breakdown: JSON.stringify(result.breakdown),
-		flags: JSON.stringify(result.flags),
+		breakdown: result.breakdown,
+		flags: result.flags,
 		evidenceLevel: result.evidenceLevel,
 		scoringVersion: SCORING_SPEC_VERSION,
 		model: model ?? null,

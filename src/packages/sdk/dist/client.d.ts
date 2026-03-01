@@ -1,5 +1,5 @@
 import { type Logger } from "./logger";
-import type { Annotation, AnnotationItem, AnnotationTask, APIKey, APIKeyUsage, APIKeyWithSecret, ClientConfig, CreateAnnotationItemParams, CreateAnnotationParams, CreateAnnotationTaskParams, CreateAPIKeyParams, CreateEvaluationParams, CreateLLMJudgeConfigParams, CreateRunParams, CreateSpanParams, CreateTestCaseParams, CreateTraceParams, CreateWebhookParams, Evaluation, EvaluationRun, GetLLMJudgeAlignmentParams, GetUsageParams, ListAnnotationItemsParams, ListAnnotationsParams, ListAnnotationTasksParams, ListAPIKeysParams, ListEvaluationsParams, ListLLMJudgeConfigsParams, ListLLMJudgeResultsParams, ListTracesParams, ListWebhookDeliveriesParams, ListWebhooksParams, LLMJudgeAlignment, LLMJudgeConfig, LLMJudgeResult, Organization, OrganizationLimits, RunLLMJudgeParams, Span, TestCase, Trace, UpdateAPIKeyParams, UpdateEvaluationParams, UpdateTraceParams, UpdateWebhookParams, UsageStats, UsageSummary, Webhook, WebhookDelivery } from "./types";
+import type { Annotation, AnnotationItem, AnnotationTask, APIKey, APIKeyUsage, APIKeyWithSecret, ClientConfig, CreateAnnotationItemParams, CreateAnnotationParams, CreateAnnotationTaskParams, CreateAPIKeyParams, CreateEvaluationParams, CreateLLMJudgeConfigParams, CreateRunParams, CreateSpanParams, CreateTestCaseParams, CreateTraceParams, CreateWebhookParams, Evaluation, EvaluationRun, EvaluationRunDetail, GetLLMJudgeAlignmentParams, GetUsageParams, ListAnnotationItemsParams, ListAnnotationsParams, ListAnnotationTasksParams, ListAPIKeysParams, ListEvaluationsParams, ListLLMJudgeConfigsParams, ListLLMJudgeResultsParams, ListTracesParams, ListWebhookDeliveriesParams, ListWebhooksParams, LLMJudgeAlignment, LLMJudgeConfig, LLMJudgeEvaluateResult, LLMJudgeResult, Organization, OrganizationLimits, RunLLMJudgeParams, Span, TestCase, Trace, TraceDetail, UpdateAPIKeyParams, UpdateEvaluationParams, UpdateTraceParams, UpdateWebhookParams, UsageStats, UsageSummary, Webhook, WebhookDelivery } from "./types";
 /**
  * AI Evaluation Platform SDK Client
  *
@@ -81,15 +81,8 @@ export declare class AIEvalClient {
      */
     getLogger(): Logger;
     /**
-     * Get organization resource limits and usage
-     * Returns feature usage data for per-organization quotas
-     *
-     * @example
-     * ```typescript
-     * const limits = await client.getOrganizationLimits();
-     * console.log('Traces:', limits.traces_per_organization);
-     * console.log('Evaluations:', limits.evals_per_organization);
-     * ```
+     * @deprecated The /api/organizations/:id/limits endpoint does not exist.
+     * Use `organizations.getCurrent()` to get org info instead.
      */
     getOrganizationLimits(): Promise<OrganizationLimits>;
 }
@@ -123,9 +116,9 @@ declare class TraceAPI {
         message: string;
     }>;
     /**
-     * Get a single trace by ID
+     * Get a single trace by ID, including its spans
      */
-    get(id: number): Promise<Trace>;
+    get(id: number): Promise<TraceDetail>;
     /**
      * Update an existing trace (e.g. set status, duration, metadata on completion)
      *
@@ -193,9 +186,9 @@ declare class EvaluationAPI {
      */
     listRuns(evaluationId: number): Promise<EvaluationRun[]>;
     /**
-     * Get a specific run
+     * Get a specific run with its results
      */
-    getRun(evaluationId: number, runId: number): Promise<EvaluationRun>;
+    getRun(evaluationId: number, runId: number): Promise<EvaluationRunDetail>;
 }
 /**
  * LLM Judge API methods
@@ -207,8 +200,7 @@ declare class LLMJudgeAPI {
      * Run an LLM judge evaluation
      */
     evaluate(params: RunLLMJudgeParams): Promise<{
-        result: LLMJudgeResult;
-        config: unknown;
+        result: LLMJudgeEvaluateResult;
     }>;
     /**
      * Create an LLM judge configuration
@@ -289,11 +281,13 @@ declare class DeveloperAPI {
     /**
      * Get usage statistics
      */
-    getUsage(params: GetUsageParams): Promise<UsageStats>;
+    getUsage(params?: GetUsageParams): Promise<UsageStats>;
     /**
      * Get usage summary
      */
-    getUsageSummary(organizationId: number): Promise<UsageSummary>;
+    getUsageSummary(params?: {
+        period?: "7d" | "30d" | "90d" | "all";
+    }): Promise<UsageSummary>;
 }
 /**
  * API Keys API methods
@@ -355,7 +349,10 @@ declare class WebhooksAPI {
     /**
      * Get webhook deliveries
      */
-    getDeliveries(webhookId: number, params?: ListWebhookDeliveriesParams): Promise<WebhookDelivery[]>;
+    getDeliveries(webhookId: number, params?: ListWebhookDeliveriesParams): Promise<{
+        deliveries: WebhookDelivery[];
+        total: number;
+    }>;
 }
 /**
  * Organizations API methods

@@ -34,11 +34,16 @@ export const GET = secureRoute(
 			return notFound("Evaluation not found");
 		}
 
-		// Fetch run
 		const runData = await db
 			.select()
 			.from(evaluationRuns)
-			.where(eq(evaluationRuns.id, runId))
+			.where(
+				and(
+					eq(evaluationRuns.id, runId),
+					eq(evaluationRuns.evaluationId, evaluationId),
+					eq(evaluationRuns.organizationId, ctx.organizationId),
+				),
+			)
 			.limit(1);
 
 		if (runData.length === 0) {

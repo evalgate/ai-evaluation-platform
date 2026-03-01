@@ -11,8 +11,10 @@ import { updateTraceBodySchema } from "@/lib/validation";
 export const GET = secureRoute(
 	async (_req: NextRequest, ctx: AuthContext, params) => {
 		const traceId = parseInt(params.id, 10);
+		if (Number.isNaN(traceId)) {
+			return validationError("Valid trace ID is required");
+		}
 
-		// Fetch trace
 		const traceData = await db
 			.select()
 			.from(traces)

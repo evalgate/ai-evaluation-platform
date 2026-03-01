@@ -145,15 +145,9 @@ export class EvaluationService {
 				name: data.name,
 				description: data.description || "",
 				type: data.type || "standard",
-				executionSettings: data.executionSettings
-					? JSON.stringify(data.executionSettings)
-					: null,
-				modelSettings: data.modelSettings
-					? JSON.stringify(data.modelSettings)
-					: null,
-				customMetrics: data.customMetrics
-					? JSON.stringify(data.customMetrics)
-					: null,
+				executionSettings: data.executionSettings ?? null,
+				modelSettings: data.modelSettings ?? null,
+				customMetrics: data.customMetrics ?? null,
 				status: "draft",
 				createdAt: new Date(),
 				updatedAt: new Date(),
@@ -174,7 +168,7 @@ export class EvaluationService {
 							: tc.expectedOutput != null
 								? JSON.stringify(tc.expectedOutput)
 								: "",
-					metadata: JSON.stringify(tc.metadata || {}),
+					metadata: tc.metadata || {},
 					createdAt: new Date(),
 				})),
 			);

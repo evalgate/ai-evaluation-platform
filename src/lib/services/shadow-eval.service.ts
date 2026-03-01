@@ -7,6 +7,7 @@ import {
 	evaluationRuns,
 	evaluations,
 	spans,
+	testCases,
 	testResults,
 	traces,
 } from "@/db/schema";
@@ -371,28 +372,36 @@ export class ShadowEvalService {
 		let failedCount = 0;
 
 		try {
-			// Update status to running
 			await db
 				.update(evaluationRuns)
 				.set({ status: "running" })
 				.where(eq(evaluationRuns.id, shadowRunId));
 
-			// Process each production trace
+			const [sentinelTestCase] = await db
+				.insert(testCases)
+				.values({
+					evaluationId,
+					name: `shadow-run-${shadowRunId}`,
+					input: JSON.stringify({ type: "shadow-eval" }),
+					expectedOutput: "",
+					createdAt: new Date(),
+				})
+				.returning();
+
 			for (const trace of productionTraces) {
 				const result = await this.replayTrace(trace, evaluation);
 
-				// Save result
 				await db.insert(testResults).values({
 					evaluationRunId: shadowRunId,
-					testCaseId: 0, // Shadow evals don't have test cases
+					testCaseId: sentinelTestCase.id,
 					organizationId,
 					status: result.passed ? "passed" : "failed",
 					output: result.output,
 					score: result.score,
 					error: result.error,
 					durationMs: result.duration,
-					messages: JSON.stringify(result.messages || []),
-					toolCalls: JSON.stringify(result.toolCalls || []),
+					messages: result.messages || [],
+					toolCalls: result.toolCalls || [],
 					createdAt: new Date(),
 				});
 

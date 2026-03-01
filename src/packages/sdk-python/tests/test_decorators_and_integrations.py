@@ -135,16 +135,16 @@ class _MockTracer:
 
 class TestTraceLangChain:
     @pytest.mark.asyncio
-    async def test_invoke_traced(self):
+    async def test_ainvoke_traced(self):
         from evalai_sdk.integrations.langchain import trace_langchain
 
         class FakeExecutor:
-            async def invoke(self, input, config=None):
+            async def ainvoke(self, input, config=None):
                 return {"output": f"processed {input}"}
 
         tracer = _MockTracer()
         traced = trace_langchain(FakeExecutor(), tracer, agent_name="ResearchAgent")
-        result = await traced.invoke({"query": "hello"})
+        result = await traced.ainvoke({"query": "hello"})
 
         assert result["output"] == "processed {'query': 'hello'}"
         assert len(tracer.spans) == 1
@@ -153,18 +153,18 @@ class TestTraceLangChain:
         assert tracer.ended_spans[0]["error"] is None
 
     @pytest.mark.asyncio
-    async def test_invoke_error_traced(self):
+    async def test_ainvoke_error_traced(self):
         from evalai_sdk.integrations.langchain import trace_langchain
 
         class FailingExecutor:
-            async def invoke(self, input, config=None):
+            async def ainvoke(self, input, config=None):
                 raise ValueError("LangChain error")
 
         tracer = _MockTracer()
         traced = trace_langchain(FailingExecutor(), tracer)
 
         with pytest.raises(ValueError, match="LangChain error"):
-            await traced.invoke("test")
+            await traced.ainvoke("test")
 
         assert len(tracer.ended_spans) == 1
         assert tracer.ended_spans[0]["error"] == "LangChain error"
@@ -401,8 +401,8 @@ class TestNewExports:
             trace_openai,
         )
 
-        assert SDK_VERSION == "1.0.1"
-        assert SPEC_VERSION == "1.0"
+        assert SDK_VERSION == "1.9.0"
+        assert SPEC_VERSION == "1.0.0"
         assert callable(AIEvalClient)
         assert callable(define_eval)
         assert callable(trace_openai)

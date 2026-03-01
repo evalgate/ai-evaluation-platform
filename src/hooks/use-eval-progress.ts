@@ -1,7 +1,7 @@
 // src/hooks/use-eval-progress.ts
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 interface ProgressData {
 	runId: number;
@@ -44,8 +44,15 @@ export function useEvalProgress(
 	const [data, setData] = useState<ProgressData | null>(null);
 	const [isLoading, setIsLoading] = useState(true);
 	const [error, setError] = useState<Error | null>(null);
+	const onErrorRef = useRef(onError);
+	const onSuccessRef = useRef(onSuccess);
+	const completedRef = useRef(false);
+
+	onErrorRef.current = onError;
+	onSuccessRef.current = onSuccess;
 
 	const fetchProgress = useCallback(async () => {
+		if (completedRef.current) return;
 		try {
 			const response = await fetch(
 				`/api/evaluations/${evaluationId}/runs/${runId}/progress`,
@@ -65,22 +72,34 @@ export function useEvalProgress(
 			const progressData = await response.json();
 			setData(progressData);
 			setError(null);
-			onSuccess?.(progressData);
+			onSuccessRef.current?.(progressData);
+
+			const status = progressData?.status;
+			if (
+				status === "completed" ||
+				status === "completed_with_failures" ||
+				status === "failed" ||
+				status === "cancelled"
+			) {
+				completedRef.current = true;
+			}
 		} catch (err) {
 			const error = err as Error;
 			setError(error);
-			onError?.(error);
+			onErrorRef.current?.(error);
 		} finally {
 			setIsLoading(false);
 		}
-	}, [evaluationId, runId, onError, onSuccess]);
+	}, [evaluationId, runId]);
 
 	const refresh = useCallback(() => {
+		completedRef.current = false;
 		setIsLoading(true);
 		fetchProgress();
 	}, [fetchProgress]);
 
 	useEffect(() => {
+		completedRef.current = false;
 		fetchProgress();
 
 		const interval = setInterval(() => {
@@ -157,11 +176,24 @@ export function useMultiEvalProgress(
 	const [data, setData] = useState<ProgressData[]>([]);
 	const [isLoading, setIsLoading] = useState(true);
 	const [error, setError] = useState<Error | null>(null);
+	const onErrorRef = useRef(onError);
+	const onSuccessRef = useRef(onSuccess);
+	const runsRef = useRef(evaluationRuns);
+
+	onErrorRef.current = onError;
+	onSuccessRef.current = onSuccess;
+	runsRef.current = evaluationRuns;
+
+	const _runsKey = JSON.stringify(
+		evaluationRuns.map((r) => `${r.evaluationId}:${r.runId}`),
+	);
 
 	const fetchProgress = useCallback(async () => {
+		const runs = runsRef.current;
+		if (runs.length === 0) return;
 		try {
 			const responses = await Promise.all(
-				evaluationRuns.map(async ({ evaluationId, runId }) => {
+				runs.map(async ({ evaluationId, runId }) => {
 					const response = await fetch(
 						`/api/evaluations/${evaluationId}/runs/${runId}/progress`,
 						{
@@ -183,15 +215,16 @@ export function useMultiEvalProgress(
 
 			setData(responses as ProgressData[]);
 			setError(null);
-			onSuccess?.(responses as ProgressData[]);
+			onSuccessRef.current?.(responses as ProgressData[]);
 		} catch (err) {
 			const error = err as Error;
 			setError(error);
-			onError?.(error);
+			onErrorRef.current?.(error);
 		} finally {
 			setIsLoading(false);
 		}
-	}, [evaluationRuns, onError, onSuccess]);
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, []);
 
 	const refresh = useCallback(() => {
 		setIsLoading(true);
@@ -213,18 +246,24 @@ export function useMultiEvalProgress(
 		isLoading,
 		error,
 		refresh,
-		runs: data?.map((progress: ProgressData, index: number) => ({
-			...progress,
-			evaluationId: evaluationRuns[index].evaluationId,
-			runId: evaluationRuns[index].runId,
-			isComplete:
-				progress.status === "completed" ||
-				progress.status === "completed_with_failures",
-			isRunning: progress.status === "running",
-			hasFailed:
-				progress.status === "failed" || progress.status === "cancelled",
-			progress: progress.percentage || 0,
-		})),
+		runs: data
+			?.map((progress: ProgressData, index: number) => {
+				const run = runsRef.current[index];
+				if (!run) return null;
+				return {
+					...progress,
+					evaluationId: run.evaluationId,
+					runId: run.runId,
+					isComplete:
+						progress.status === "completed" ||
+						progress.status === "completed_with_failures",
+					isRunning: progress.status === "running",
+					hasFailed:
+						progress.status === "failed" || progress.status === "cancelled",
+					progress: progress.percentage || 0,
+				};
+			})
+			.filter(Boolean),
 	};
 }
 

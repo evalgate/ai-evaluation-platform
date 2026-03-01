@@ -45,7 +45,10 @@ const evaluations = [
 	},
 ];
 
-const typeBadge: Record<string, { label: string; variant: "default" | "outline" | "destructive" | "amber" }> = {
+const typeBadge: Record<
+	string,
+	{ label: string; variant: "default" | "outline" | "destructive" | "amber" }
+> = {
 	unit_test: { label: "Unit Test", variant: "default" },
 	model_eval: { label: "Model Eval", variant: "amber" },
 	human_eval: { label: "Human Eval", variant: "outline" },
@@ -104,8 +107,7 @@ export const EvaluationsList: React.FC = () => {
 								fontWeight: 500,
 								backgroundColor: i === 0 ? colors.primary : colors.bgMuted,
 								color: i === 0 ? "#fff" : colors.textMuted,
-								border:
-									i === 0 ? "none" : `1px solid ${colors.border}`,
+								border: i === 0 ? "none" : `1px solid ${colors.border}`,
 							}}
 						>
 							{tab}

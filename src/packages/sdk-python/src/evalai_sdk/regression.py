@@ -73,8 +73,20 @@ class RegressionReport:
 def evaluate_regression(
     baseline: Baseline,
     current_scores: dict[str, float],
+    *,
+    min_score: float | None = None,
+    max_drop: float | None = None,
 ) -> RegressionReport:
-    """Compare current scores against a baseline and produce a regression report."""
+    """Compare current scores against a baseline and produce a regression report.
+
+    Args:
+        baseline: Baseline scores and tolerance configuration.
+        current_scores: Current run scores keyed by test ID.
+        min_score: Optional absolute floor — any score below this is a failure.
+        max_drop: Optional override for baseline.tolerance.score_drop.
+    """
+    effective_drop = max_drop if max_drop is not None else baseline.tolerance.score_drop
+
     deltas: list[RegressionDelta] = []
     gate_exit = GATE_EXIT.PASS
     gate_category = GATE_CATEGORY.PASS
@@ -86,7 +98,15 @@ def evaluate_regression(
         delta = current - baseline_score
         delta_pct = (delta / baseline_score * 100) if baseline_score != 0 else 0
 
-        if delta < -baseline.tolerance.score_drop:
+        failed = False
+
+        if delta < -effective_drop:
+            failed = True
+
+        if min_score is not None and current < min_score:
+            failed = True
+
+        if failed:
             severity: Literal["low", "medium", "high", "critical"] = "high" if abs(delta_pct) > 20 else "medium"
             deltas.append(
                 RegressionDelta(
@@ -113,6 +133,27 @@ def evaluate_regression(
                     delta_pct=delta_pct,
                 )
             )
+
+    # Check min_score for tests not in the baseline
+    if min_score is not None:
+        for test_id, current in current_scores.items():
+            if test_id in baseline.scores:
+                continue
+            if current < min_score:
+                deltas.append(
+                    RegressionDelta(
+                        test_id=test_id,
+                        metric="score",
+                        baseline_value=0.0,
+                        current_value=current,
+                        delta=current,
+                        delta_pct=0.0,
+                        category=GATE_CATEGORY.REGRESSION,
+                        severity="medium",
+                    )
+                )
+                gate_exit = GATE_EXIT.REGRESSION
+                gate_category = GATE_CATEGORY.REGRESSION
 
     return RegressionReport(
         gate_exit=gate_exit,

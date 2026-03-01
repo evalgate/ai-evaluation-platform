@@ -25,6 +25,7 @@ from evalai_sdk.cli.commands import (  # noqa: E402
     baseline,
     check,
     ci,
+    configure,
     diff,
     discover,
     doctor,
@@ -51,6 +52,7 @@ app.command("explain")(explain)
 app.command("baseline")(baseline)
 app.command("print-config")(print_config)
 app.command("share")(share)
+app.command("configure")(configure)
 app.command("upgrade")(upgrade)
 app.command("impact-analysis")(impact_analysis)
 app.command("migrate")(migrate)

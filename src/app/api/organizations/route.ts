@@ -1,4 +1,4 @@
-import { desc, eq, like } from "drizzle-orm";
+import { and, desc, eq, like } from "drizzle-orm";
 import { type NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
 import {
@@ -52,19 +52,29 @@ export const GET = secureRoute(async (req: NextRequest, ctx: AuthContext) => {
 		const { limit, offset } = parsePaginationParams(searchParams);
 		const search = searchParams.get("search");
 
+		const conditions = [eq(organizationMembers.userId, ctx.userId)];
+		if (search) {
+			conditions.push(
+				like(organizations.name, `%${sanitizeSearchInput(search)}%`),
+			);
+		}
+
 		const results = await db
-			.select()
+			.select({ organization: organizations })
 			.from(organizations)
-			.where(
-				search
-					? like(organizations.name, `%${sanitizeSearchInput(search)}%`)
-					: undefined,
+			.innerJoin(
+				organizationMembers,
+				eq(organizations.id, organizationMembers.organizationId),
 			)
+			.where(and(...conditions))
 			.orderBy(desc(organizations.createdAt))
 			.limit(limit)
 			.offset(offset);
 
-		return NextResponse.json(results, { status: 200 });
+		return NextResponse.json(
+			results.map((r) => r.organization),
+			{ status: 200 },
+		);
 	} catch (error) {
 		logger.error("Failed to fetch organizations", {
 			error,
@@ -206,21 +216,21 @@ export const DELETE = secureRoute(
 				return notFound("Organization not found");
 			}
 
-			await db.delete(webhooks).where(eq(webhooks.organizationId, orgId));
-			await db
-				.delete(annotationTasks)
-				.where(eq(annotationTasks.organizationId, orgId));
-			await db.delete(traces).where(eq(traces.organizationId, orgId));
-			await db.delete(workflows).where(eq(workflows.organizationId, orgId));
-			await db.delete(evaluations).where(eq(evaluations.organizationId, orgId));
-			await db
-				.delete(organizationMembers)
-				.where(eq(organizationMembers.organizationId, orgId));
-
-			const _deleted = await db
-				.delete(organizations)
-				.where(eq(organizations.id, orgId))
-				.returning();
+			await db.transaction(async (tx) => {
+				await tx.delete(webhooks).where(eq(webhooks.organizationId, orgId));
+				await tx
+					.delete(annotationTasks)
+					.where(eq(annotationTasks.organizationId, orgId));
+				await tx.delete(traces).where(eq(traces.organizationId, orgId));
+				await tx.delete(workflows).where(eq(workflows.organizationId, orgId));
+				await tx
+					.delete(evaluations)
+					.where(eq(evaluations.organizationId, orgId));
+				await tx
+					.delete(organizationMembers)
+					.where(eq(organizationMembers.organizationId, orgId));
+				await tx.delete(organizations).where(eq(organizations.id, orgId));
+			});
 
 			return NextResponse.json(
 				{

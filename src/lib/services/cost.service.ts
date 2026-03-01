@@ -5,7 +5,7 @@
 
 import { and, desc, eq, gte, inArray, lte, sql } from "drizzle-orm";
 import { db } from "@/db";
-import { costRecords, providerPricing, spans } from "@/db/schema";
+import { costRecords, providerPricing, spans, traces } from "@/db/schema";
 
 // ============================================================================
 // TYPES
@@ -188,22 +188,34 @@ class CostService {
 	/**
 	 * List cost records for a workflow run
 	 */
-	async listByWorkflowRun(workflowRunId: number, limit = 100) {
+	async listByWorkflowRun(
+		workflowRunId: number,
+		limit = 100,
+		organizationId?: number,
+	) {
+		const conditions = [eq(costRecords.workflowRunId, workflowRunId)];
+		if (organizationId) {
+			conditions.push(eq(costRecords.organizationId, organizationId));
+		}
 		const results = await db
 			.select()
 			.from(costRecords)
-			.where(eq(costRecords.workflowRunId, workflowRunId))
+			.where(and(...conditions))
 			.orderBy(desc(costRecords.createdAt))
 			.limit(limit);
 
 		return results;
 	}
 
-	/**
-	 * Aggregate workflow cost
-	 */
-	async aggregateWorkflowCost(workflowRunId: number): Promise<CostBreakdown> {
-		const records = await this.listByWorkflowRun(workflowRunId);
+	async aggregateWorkflowCost(
+		workflowRunId: number,
+		organizationId?: number,
+	): Promise<CostBreakdown> {
+		const records = await this.listByWorkflowRun(
+			workflowRunId,
+			100,
+			organizationId,
+		);
 
 		const breakdown: CostBreakdown = {
 			totalCost: 0,
@@ -250,12 +262,28 @@ class CostService {
 	/**
 	 * Get cost breakdown for a trace
 	 */
-	async getCostBreakdownByTrace(traceId: number): Promise<CostBreakdown> {
-		// Get all spans for the trace
-		const traceSpans = await db
-			.select({ id: spans.id })
-			.from(spans)
-			.where(eq(spans.traceId, traceId));
+	async getCostBreakdownByTrace(
+		traceId: number,
+		organizationId?: number,
+	): Promise<CostBreakdown> {
+		let traceSpans: { id: number }[];
+		if (organizationId) {
+			traceSpans = await db
+				.select({ id: spans.id })
+				.from(spans)
+				.innerJoin(traces, eq(spans.traceId, traces.id))
+				.where(
+					and(
+						eq(spans.traceId, traceId),
+						eq(traces.organizationId, organizationId),
+					),
+				);
+		} else {
+			traceSpans = await db
+				.select({ id: spans.id })
+				.from(spans)
+				.where(eq(spans.traceId, traceId));
+		}
 
 		if (traceSpans.length === 0) {
 			return {
@@ -320,31 +348,30 @@ class CostService {
 	 * Get cost trends over time for an organization
 	 */
 	async getCostTrends(
-		_organizationId: number,
+		organizationId: number,
 		startDate: string,
 		endDate: string,
 	): Promise<CostTrend[]> {
-		// This would need to join with traces to filter by organization
-		// For now, aggregate by date from all cost records
 		const startDateObj = new Date(startDate);
 		const endDateObj = new Date(`${endDate}T23:59:59Z`);
 
 		const results = await db
 			.select({
-				date: sql<string>`date(${costRecords.createdAt}, 'unixepoch')`,
-				totalCost: sql<string>`sum(cast(${costRecords.totalCost} as real))`,
+				date: sql<string>`${costRecords.createdAt}::date::text`,
+				totalCost: sql<string>`sum(${costRecords.totalCost}::numeric)`,
 				tokenCount: sql<number>`sum(${costRecords.totalTokens})`,
 				requestCount: sql<number>`count(*)`,
 			})
 			.from(costRecords)
 			.where(
 				and(
+					eq(costRecords.organizationId, organizationId),
 					gte(costRecords.createdAt, startDateObj),
 					lte(costRecords.createdAt, endDateObj),
 				),
 			)
-			.groupBy(sql`date(${costRecords.createdAt}, 'unixepoch')`)
-			.orderBy(sql`date(${costRecords.createdAt}, 'unixepoch')`);
+			.groupBy(sql`${costRecords.createdAt}::date`)
+			.orderBy(sql`${costRecords.createdAt}::date`);
 
 		return results.map((r) => ({
 			date: r.date,
@@ -357,44 +384,55 @@ class CostService {
 	/**
 	 * Get cost summary for an organization
 	 */
-	async getOrganizationCostSummary(_organizationId: number) {
-		// Get all workflow runs for the organization's workflows
+	async getOrganizationCostSummary(organizationId: number) {
 		const now = new Date();
 		const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
 		const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
 
-		// Total cost (last 30 days)
 		const last30Days = await db
 			.select({
-				totalCost: sql<string>`sum(cast(${costRecords.totalCost} as real))`,
+				totalCost: sql<string>`sum(${costRecords.totalCost}::numeric)`,
 				totalTokens: sql<number>`sum(${costRecords.totalTokens})`,
 				requestCount: sql<number>`count(*)`,
 			})
 			.from(costRecords)
-			.where(gte(costRecords.createdAt, thirtyDaysAgo));
+			.where(
+				and(
+					eq(costRecords.organizationId, organizationId),
+					gte(costRecords.createdAt, thirtyDaysAgo),
+				),
+			);
 
-		// Last 7 days
 		const last7Days = await db
 			.select({
-				totalCost: sql<string>`sum(cast(${costRecords.totalCost} as real))`,
+				totalCost: sql<string>`sum(${costRecords.totalCost}::numeric)`,
 				totalTokens: sql<number>`sum(${costRecords.totalTokens})`,
 				requestCount: sql<number>`count(*)`,
 			})
 			.from(costRecords)
-			.where(gte(costRecords.createdAt, sevenDaysAgo));
+			.where(
+				and(
+					eq(costRecords.organizationId, organizationId),
+					gte(costRecords.createdAt, sevenDaysAgo),
+				),
+			);
 
-		// Top models by cost
 		const topModels = await db
 			.select({
 				provider: costRecords.provider,
 				model: costRecords.model,
-				totalCost: sql<string>`sum(cast(${costRecords.totalCost} as real))`,
+				totalCost: sql<string>`sum(${costRecords.totalCost}::numeric)`,
 				requestCount: sql<number>`count(*)`,
 			})
 			.from(costRecords)
-			.where(gte(costRecords.createdAt, thirtyDaysAgo))
+			.where(
+				and(
+					eq(costRecords.organizationId, organizationId),
+					gte(costRecords.createdAt, thirtyDaysAgo),
+				),
+			)
 			.groupBy(costRecords.provider, costRecords.model)
-			.orderBy(desc(sql`sum(cast(${costRecords.totalCost} as real))`))
+			.orderBy(desc(sql`sum(${costRecords.totalCost}::numeric)`))
 			.limit(5);
 
 		return {

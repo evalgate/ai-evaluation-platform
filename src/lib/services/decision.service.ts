@@ -127,11 +127,15 @@ class DecisionService {
 	/**
 	 * List decisions for a span
 	 */
-	async listBySpan(spanId: number) {
+	async listBySpan(spanId: number, organizationId?: number) {
+		const conditions = [eq(agentDecisions.spanId, spanId)];
+		if (organizationId) {
+			conditions.push(eq(agentDecisions.organizationId, organizationId));
+		}
 		const results = await db
 			.select()
 			.from(agentDecisions)
-			.where(eq(agentDecisions.spanId, spanId))
+			.where(and(...conditions))
 			.orderBy(agentDecisions.createdAt);
 
 		return results;

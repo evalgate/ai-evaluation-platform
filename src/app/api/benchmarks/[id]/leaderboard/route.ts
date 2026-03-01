@@ -6,7 +6,7 @@ import { benchmarkService } from "@/lib/services/benchmark.service";
 import { parsePaginationParams } from "@/lib/validation";
 
 export const GET = secureRoute(
-	async (req: NextRequest, _ctx: AuthContext, params) => {
+	async (req: NextRequest, ctx: AuthContext, params) => {
 		try {
 			const { id } = params;
 			const benchmarkId = parseInt(id, 10);
@@ -25,7 +25,7 @@ export const GET = secureRoute(
 			const { limit } = parsePaginationParams(searchParams);
 
 			const benchmark = await benchmarkService.getBenchmarkById(benchmarkId);
-			if (!benchmark) {
+			if (!benchmark || benchmark.organizationId !== ctx.organizationId) {
 				return notFound("Benchmark not found");
 			}
 

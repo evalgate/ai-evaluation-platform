@@ -130,11 +130,14 @@ export async function checkRateLimit(
 		return inMemoryFallback(identifier, tier, routeRisk, metadata);
 	}
 
-	// Get the appropriate rate limiter for the tier
 	const rateLimiter = rateLimiters[tier] || rateLimiters.anonymous;
 
-	// Check rate limit
-	const result = await rateLimiter.limit(identifier);
+	let result: Awaited<ReturnType<typeof rateLimiter.limit>>;
+	try {
+		result = await rateLimiter.limit(identifier);
+	} catch {
+		return inMemoryFallback(identifier, tier, routeRisk, metadata);
+	}
 
 	const headers: Record<string, string> = {
 		"X-RateLimit-Limit": result.limit.toString(),

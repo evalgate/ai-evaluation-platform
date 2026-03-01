@@ -173,12 +173,14 @@ if (subcommand === "init") {
 	const format =
 		formatIndex !== -1 ? (args[formatIndex + 1] as "human" | "json") : "human";
 
-	runImpactAnalysisCLI({ baseBranch, changedFiles, format }).catch((err) => {
-		console.error(
-			`EvalAI ERROR: ${err instanceof Error ? err.message : String(err)}`,
-		);
-		process.exit(2);
-	});
+	runImpactAnalysisCLI({ baseBranch, changedFiles, format })
+		.then(() => process.exit(0))
+		.catch((err) => {
+			console.error(
+				`EvalAI ERROR: ${err instanceof Error ? err.message : String(err)}`,
+			);
+			process.exit(2);
+		});
 } else if (subcommand === "run") {
 	// Parse arguments for run command
 	const args = argv.slice(1);
@@ -202,12 +204,14 @@ if (subcommand === "init") {
 		baseBranch,
 		format,
 		writeResults,
-	}).catch((err) => {
-		console.error(
-			`EvalAI ERROR: ${err instanceof Error ? err.message : String(err)}`,
-		);
-		process.exit(2);
-	});
+	})
+		.then(() => process.exit(0))
+		.catch((err) => {
+			console.error(
+				`EvalAI ERROR: ${err instanceof Error ? err.message : String(err)}`,
+			);
+			process.exit(2);
+		});
 } else if (subcommand === "diff") {
 	// Parse arguments for diff command
 	const args = argv.slice(1);
@@ -220,12 +224,14 @@ if (subcommand === "init") {
 	const format =
 		formatIndex !== -1 ? (args[formatIndex + 1] as "human" | "json") : "human";
 
-	runDiffCLI({ base, head, format }).catch((err) => {
-		console.error(
-			`EvalAI ERROR: ${err instanceof Error ? err.message : String(err)}`,
-		);
-		process.exit(2);
-	});
+	runDiffCLI({ base, head, format })
+		.then(() => process.exit(0))
+		.catch((err) => {
+			console.error(
+				`EvalAI ERROR: ${err instanceof Error ? err.message : String(err)}`,
+			);
+			process.exit(2);
+		});
 } else if (subcommand === "ci") {
 	// Parse arguments for ci command
 	const args = argv.slice(1);
@@ -242,12 +248,14 @@ if (subcommand === "init") {
 			: "human";
 	const writeResults = writeResultsIndex !== -1;
 
-	runCICLI({ base, impactedOnly, format, writeResults }).catch((err) => {
-		console.error(
-			`EvalAI ERROR: ${err instanceof Error ? err.message : String(err)}`,
-		);
-		process.exit(2);
-	});
+	runCICLI({ base, impactedOnly, format, writeResults })
+		.then(() => process.exit(0))
+		.catch((err) => {
+			console.error(
+				`EvalAI ERROR: ${err instanceof Error ? err.message : String(err)}`,
+			);
+			process.exit(2);
+		});
 } else {
 	console.log(`EvalAI CLI
 

@@ -6,16 +6,15 @@ import { logger } from "@/lib/logger";
 import { arenaMatchesService } from "@/lib/services/arena-matches.service";
 
 export const POST = secureRoute(async (req: NextRequest, ctx: AuthContext) => {
-	const body = await req.json();
-	const { prompt, models, judgeConfigId } = body;
-
-	if (!prompt || !models || !Array.isArray(models) || models.length < 2) {
-		return validationError(
-			"prompt (string) and models (array of ≥2 model IDs) are required",
-		);
-	}
-
 	try {
+		const body = await req.json();
+		const { prompt, models, judgeConfigId } = body;
+
+		if (!prompt || !models || !Array.isArray(models) || models.length < 2) {
+			return validationError(
+				"prompt (string) and models (array of ≥2 model IDs) are required",
+			);
+		}
 		const comparison = await comparisonEngine.compare({
 			prompt,
 			models,

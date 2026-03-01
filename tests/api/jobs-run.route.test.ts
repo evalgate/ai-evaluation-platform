@@ -15,9 +15,9 @@ vi.mock("@/lib/jobs/runner", () => ({
 }));
 
 const { runDueJobs } = await import("@/lib/jobs/runner");
-const { POST } = await import("@/app/api/jobs/run/route");
+const { GET } = await import("@/app/api/jobs/run/route");
 
-describe("POST /api/jobs/run", () => {
+describe("GET /api/jobs/run", () => {
 	const secret = "cron-secret";
 
 	beforeEach(() => {
@@ -30,7 +30,7 @@ describe("POST /api/jobs/run", () => {
 			headers: { authorization: "Bearer bad" },
 		});
 
-		const res = await POST(request);
+		const res = await GET(request);
 
 		expect(res.status).toBe(401);
 		const body = await res.json();
@@ -43,7 +43,7 @@ describe("POST /api/jobs/run", () => {
 			headers: { authorization: `Bearer ${secret}` },
 		});
 
-		const res = await POST(request);
+		const res = await GET(request);
 
 		expect(res.status).toBe(200);
 		const body = await res.json();

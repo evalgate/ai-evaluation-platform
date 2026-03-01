@@ -349,7 +349,13 @@ export function sanitizeSearchInput(
 export function parseIdParam(value: string | null | undefined): number | null {
 	if (!value) return null;
 	const parsed = parseInt(value, 10);
-	if (Number.isNaN(parsed) || parsed <= 0) return null;
+	if (
+		Number.isNaN(parsed) ||
+		parsed <= 0 ||
+		!Number.isSafeInteger(parsed) ||
+		parsed > 2147483647
+	)
+		return null;
 	return parsed;
 }
 

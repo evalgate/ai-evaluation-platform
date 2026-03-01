@@ -88,20 +88,24 @@ export default function CheckoutDialog(params: CheckoutDialogProps) {
 						size="sm"
 						onClick={async () => {
 							setLoading(true);
+							try {
+								const options = checkoutResult.options.map((option) => {
+									return {
+										featureId: option.feature_id,
+										quantity: option.quantity,
+									};
+								});
 
-							const options = checkoutResult.options.map((option) => {
-								return {
-									featureId: option.feature_id,
-									quantity: option.quantity,
-								};
-							});
-
-							await attach({
-								productId: checkoutResult.product.id,
-								options,
-							});
-							setOpen(false);
-							setLoading(false);
+								await attach({
+									productId: checkoutResult.product.id,
+									options,
+								});
+								setOpen(false);
+							} catch (err) {
+								console.error("Checkout failed", err);
+							} finally {
+								setLoading(false);
+							}
 						}}
 						disabled={loading}
 						className="min-w-16 flex items-center gap-2"

@@ -11,6 +11,7 @@ import "./globals.css";
 import Script from "next/script";
 import { AnalyticsProvider } from "@/components/analytics-provider";
 import ErrorReporter from "@/components/ErrorReporter";
+import { ErrorBoundary } from "@/components/error-boundary";
 import { KeyboardShortcutsHelp } from "@/components/ui/keyboard-shortcuts-help";
 import { SkipToContent } from "@/components/ui/skip-to-content";
 import { WebMCPProvider } from "@/components/webmcp-provider";
@@ -96,9 +97,11 @@ export default function RootLayout({
 							disableTransitionOnChange
 						>
 							<CustomAutumnProvider>
-								<main id="main-content" tabIndex={-1}>
-									{children}
-								</main>
+								<ErrorBoundary>
+									<main id="main-content" tabIndex={-1}>
+										{children}
+									</main>
+								</ErrorBoundary>
 							</CustomAutumnProvider>
 							<Toaster />
 							<KeyboardShortcutsHelp />

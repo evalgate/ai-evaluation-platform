@@ -28,20 +28,19 @@ vi.mock("@/lib/jobs/enqueue", () => ({
 	enqueueJob: (...args: unknown[]) => enqueueMock(...args),
 }));
 
-const { POST } = await import("@/app/api/jobs/run/route");
+const { GET } = await import("@/app/api/jobs/run/route");
 
-describe("POST /api/jobs/run - permission", () => {
+describe("GET /api/jobs/run - permission", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 	});
 
-	it("returns 403 when scopes/role insufficient", async () => {
+	it("returns 401/403 when scopes/role insufficient", async () => {
 		const req = new NextRequest("http://localhost/api/jobs/run", {
-			method: "POST",
-			body: JSON.stringify({ type: "webhook_delivery", payload: { id: 1 } }),
+			method: "GET",
 		});
 
-		const res = await (POST as (req: unknown) => Promise<Response>)(
+		const res = await (GET as (req: unknown) => Promise<Response>)(
 			req as unknown,
 		);
 		expect([401, 403]).toContain(res.status);

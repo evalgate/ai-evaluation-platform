@@ -56,7 +56,11 @@ export const GET = secureRoute(
 
 		if (includeDetails) {
 			const result = await workflowService.getRunWithDetails(runIdNum);
-			if (!result) {
+			if (
+				!result ||
+				result.run.workflowId !== workflowId ||
+				result.run.organizationId !== ctx.organizationId
+			) {
 				return notFound("Workflow run not found");
 			}
 			return NextResponse.json(result);
@@ -64,7 +68,11 @@ export const GET = secureRoute(
 
 		const run = await workflowService.getRunById(runIdNum);
 
-		if (!run) {
+		if (
+			!run ||
+			run.workflowId !== workflowId ||
+			run.organizationId !== ctx.organizationId
+		) {
 			return notFound("Workflow run not found");
 		}
 

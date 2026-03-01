@@ -101,7 +101,13 @@ export const DELETE = secureRoute(
 			const existingKey = await db
 				.select()
 				.from(apiKeys)
-				.where(and(eq(apiKeys.id, parsedId), eq(apiKeys.userId, ctx.userId)))
+				.where(
+					and(
+						eq(apiKeys.id, parsedId),
+						eq(apiKeys.userId, ctx.userId),
+						eq(apiKeys.organizationId, ctx.organizationId),
+					),
+				)
 				.limit(1);
 
 			if (existingKey.length === 0) {
@@ -116,7 +122,13 @@ export const DELETE = secureRoute(
 			const revoked = await db
 				.update(apiKeys)
 				.set({ revokedAt })
-				.where(and(eq(apiKeys.id, parsedId), eq(apiKeys.userId, ctx.userId)))
+				.where(
+					and(
+						eq(apiKeys.id, parsedId),
+						eq(apiKeys.userId, ctx.userId),
+						eq(apiKeys.organizationId, ctx.organizationId),
+					),
+				)
 				.returning();
 
 			if (revoked.length === 0) {

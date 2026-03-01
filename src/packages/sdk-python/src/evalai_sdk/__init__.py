@@ -144,6 +144,7 @@ from evalai_sdk.streaming import (
     stream_evaluation,
 )
 from evalai_sdk.testing import TestSuite, create_test_suite
+from evalai_sdk.types import CamelModel, QualityBreakdown, QualityScore
 from evalai_sdk.workflows import WorkflowTracer, create_workflow_tracer, trace_workflow_step
 
 __all__ = [
@@ -311,4 +312,8 @@ __all__ = [
     "SpecExecutionError",
     "EvalSDKRuntimeError",
     "EvalExecutionError",
+    # Types
+    "CamelModel",
+    "QualityScore",
+    "QualityBreakdown",
 ]

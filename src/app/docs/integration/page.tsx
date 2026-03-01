@@ -268,7 +268,7 @@ await tracer.endWorkflow({ status: 'success' });`}</CodeBlock>
 											],
 											[
 												"client.llmJudge",
-												"evaluate, createConfig, listConfigs, listResults, getAlignment",
+												"evaluate, createConfig, listConfigs, listResults, getAlignment({ evaluationRunId })",
 											],
 											[
 												"client.annotations",

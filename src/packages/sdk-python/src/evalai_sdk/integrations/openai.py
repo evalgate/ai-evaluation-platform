@@ -79,6 +79,10 @@ def trace_openai(openai_client: Any, eval_client: Any, **kwargs: Any) -> Any:
         A proxy object with the same interface.
     """
 
+    import inspect
+
+    is_async = hasattr(openai_client, "chat") and hasattr(openai_client.chat, "completions") and inspect.iscoroutinefunction(getattr(openai_client.chat.completions, "create", None))
+
     class _TracedCompletions:
         def __init__(self, original: Any) -> None:
             self._original = original
@@ -92,13 +96,52 @@ def trace_openai(openai_client: Any, eval_client: Any, **kwargs: Any) -> Any:
                 metadata={"model": kw.get("model"), **kwargs},
             )
 
-    class _TracedChat:
+        def __getattr__(self, name: str) -> Any:
+            return getattr(self._original, name)
+
+    class _SyncTracedCompletions:
         def __init__(self, original: Any) -> None:
-            self.completions = _TracedCompletions(original.completions)
+            self._original = original
+
+        def create(self, **kw: Any) -> Any:
+            import asyncio
+
+            name = kw.get("model", "openai-chat")
+            coro = trace_openai_call(
+                eval_client,
+                name,
+                self._make_async_fn(kw),
+                metadata={"model": kw.get("model"), **kwargs},
+            )
+            try:
+                loop = asyncio.get_running_loop()
+            except RuntimeError:
+                return asyncio.run(coro)
+            return loop.run_until_complete(coro)
+
+        def _make_async_fn(self, kw: dict[str, Any]) -> Any:
+            orig = self._original
+
+            async def _fn() -> Any:
+                return orig.create(**kw)
+
+            return _fn
+
+        def __getattr__(self, name: str) -> Any:
+            return getattr(self._original, name)
+
+    class _TracedChat:
+        def __init__(self, original: Any, *, use_async: bool) -> None:
+            CompletionsCls = _TracedCompletions if use_async else _SyncTracedCompletions
+            self.completions = CompletionsCls(original.completions)
+            self._original = original
+
+        def __getattr__(self, name: str) -> Any:
+            return getattr(self._original, name)
 
     class _TracedOpenAI:
         def __init__(self, original: Any) -> None:
-            self.chat = _TracedChat(original.chat)
+            self.chat = _TracedChat(original.chat, use_async=is_async)
             self._original = original
 
         def __getattr__(self, name: str) -> Any:

@@ -7,6 +7,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { calculateQualityScore } from "@/lib/ai-quality-score";
 import { internalError, notFound, validationError } from "@/lib/api/errors";
+import { withRateLimit } from "@/lib/api-rate-limit";
 import { logger } from "@/lib/logger";
 
 interface DemoScenario {
@@ -22,85 +23,100 @@ interface DemoScenario {
  * GET /api/demo/playground
  * Returns available demo scenarios
  */
-export async function GET(request: NextRequest) {
-	const { searchParams } = new URL(request.url);
-	const scenarioId = searchParams.get("scenario");
+export function GET(request: NextRequest) {
+	return withRateLimit(
+		request,
+		async () => {
+			const { searchParams } = new URL(request.url);
+			const scenarioId = searchParams.get("scenario");
 
-	if (scenarioId) {
-		const scenario = getDemoScenario(scenarioId);
-		if (!scenario) {
-			return notFound("Scenario not found");
-		}
-		return NextResponse.json(scenario);
-	}
+			if (scenarioId) {
+				const scenario = getDemoScenario(scenarioId);
+				if (!scenario) {
+					return notFound("Scenario not found");
+				}
+				return NextResponse.json(scenario);
+			}
 
-	// Return list of available scenarios
-	const scenarios = [
-		{
-			id: "chatbot-accuracy",
-			name: "Chatbot Accuracy Test",
-			description:
-				"See how well a customer service chatbot handles common questions",
-			icon: "💬",
-			estimatedTime: "30 seconds",
-			difficulty: "Beginner",
-		},
-		{
-			id: "rag-hallucination",
-			name: "RAG Hallucination Detection",
-			description:
-				"Detect when AI makes up information not in the source documents",
-			icon: "🔍",
-			estimatedTime: "45 seconds",
-			difficulty: "Intermediate",
-		},
-		{
-			id: "code-quality",
-			name: "Code Generation Quality",
-			description:
-				"Evaluate if generated code actually works and follows best practices",
-			icon: "💻",
-			estimatedTime: "1 minute",
-			difficulty: "Advanced",
-		},
-	];
+			// Return list of available scenarios
+			const scenarios = [
+				{
+					id: "chatbot-accuracy",
+					name: "Chatbot Accuracy Test",
+					description:
+						"See how well a customer service chatbot handles common questions",
+					icon: "💬",
+					estimatedTime: "30 seconds",
+					difficulty: "Beginner",
+				},
+				{
+					id: "rag-hallucination",
+					name: "RAG Hallucination Detection",
+					description:
+						"Detect when AI makes up information not in the source documents",
+					icon: "🔍",
+					estimatedTime: "45 seconds",
+					difficulty: "Intermediate",
+				},
+				{
+					id: "code-quality",
+					name: "Code Generation Quality",
+					description:
+						"Evaluate if generated code actually works and follows best practices",
+					icon: "💻",
+					estimatedTime: "1 minute",
+					difficulty: "Advanced",
+				},
+			];
 
-	return NextResponse.json({ scenarios });
+			return NextResponse.json({ scenarios });
+		},
+		{ customTier: "anonymous" as const },
+	);
 }
 
 /**
  * POST /api/demo/playground
  * Runs a demo evaluation and returns results
  */
-export async function POST(request: NextRequest) {
-	try {
-		const { scenario } = await request.json();
+export function POST(request: NextRequest) {
+	return withRateLimit(
+		request,
+		async () => {
+			try {
+				const { scenario } = await request.json();
 
-		if (!scenario) {
-			return validationError("Scenario is required");
-		}
+				if (!scenario) {
+					return validationError("Scenario is required");
+				}
 
-		const demoScenario = getDemoScenario(scenario);
-		if (!demoScenario) {
-			return validationError("Invalid scenario");
-		}
+				const demoScenario = getDemoScenario(scenario);
+				if (!demoScenario) {
+					return validationError("Invalid scenario");
+				}
 
-		// Simulate processing time
-		await new Promise((resolve) => setTimeout(resolve, 1500));
+				// Simulate processing time
+				await new Promise((resolve) => setTimeout(resolve, 1500));
 
-		return NextResponse.json({
-			success: true,
-			scenario: demoScenario,
-			message: "Evaluation complete! Sign up to save and share your results.",
-		});
-	} catch (error) {
-		logger.error("Failed to run demo playground", {
-			error,
-			route: "/api/demo/playground",
-			method: "POST",
-		});
-		return internalError(error instanceof Error ? error.message : undefined);
-	}
+				return NextResponse.json({
+					success: true,
+					scenario: demoScenario,
+					message:
+						"Evaluation complete! Sign up to save and share your results.",
+				});
+			} catch (error) {
+				logger.error("Failed to run demo playground", {
+					error,
+					route: "/api/demo/playground",
+					method: "POST",
+				});
+				return internalError(
+					error instanceof Error ? error.message : undefined,
+				);
+			}
+		},
+		{ customTier: "anonymous" as const },
+	);
 }
 
 /**

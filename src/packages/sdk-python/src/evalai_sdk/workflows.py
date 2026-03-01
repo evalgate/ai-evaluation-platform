@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import uuid
 from datetime import datetime, timezone
 from typing import Any, Callable, TypeVar
@@ -118,7 +119,7 @@ class WorkflowTracer:
                     name=agent_name,
                     span_id=span_id,
                     type="agent",
-                    input=str(input) if input else None,
+                    input=json.dumps(input) if input else None,
                     metadata={"parent_span_id": parent_span_id},
                 ),
             )
@@ -139,8 +140,24 @@ class WorkflowTracer:
         output: dict[str, Any] | None = None,
         error: str | None = None,
     ) -> None:
-        # Span completion is tracked via the trace API if needed
-        pass
+        span.ended_at = datetime.now(timezone.utc)
+        if span.trace_id is not None:
+            from evalai_sdk.types import UpdateTraceParams
+
+            metadata: dict[str, Any] = {}
+            if output:
+                metadata["span_output"] = output
+            if error:
+                metadata["span_error"] = error
+            metadata["span_id"] = span.span_id
+            metadata["ended_at"] = span.ended_at.isoformat()
+            try:
+                await self._client.traces.update(
+                    span.trace_id,
+                    UpdateTraceParams(metadata=metadata),
+                )
+            except Exception:
+                pass
 
     # ── Handoffs ─────────────────────────────────────────────────
 

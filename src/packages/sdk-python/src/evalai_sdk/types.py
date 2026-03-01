@@ -6,9 +6,24 @@ from datetime import datetime
 from enum import Enum
 from typing import Any, Literal, TypeVar
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 TMetadata = TypeVar("TMetadata", bound=dict[str, Any])
+
+
+def to_camel(s: str) -> str:
+    """Convert snake_case to camelCase for API serialization."""
+    parts = s.split("_")
+    return parts[0] + "".join(p.capitalize() for p in parts[1:])
+
+
+class CamelModel(BaseModel):
+    """Base model that serializes to/from camelCase for API compatibility."""
+
+    model_config = ConfigDict(
+        alias_generator=to_camel,
+        populate_by_name=True,
+    )
 
 # ── Client config ────────────────────────────────────────────────────
 
@@ -56,7 +71,7 @@ class EvaluationTemplates(str, Enum):
 # ── Feature usage ────────────────────────────────────────────────────
 
 
-class FeatureUsage(BaseModel):
+class FeatureUsage(CamelModel):
     feature_id: str
     unlimited: bool
     interval: str
@@ -65,13 +80,13 @@ class FeatureUsage(BaseModel):
     used: int | None = None
 
 
-class OrganizationLimits(BaseModel):
+class OrganizationLimits(CamelModel):
     organization_id: int
     plan: str
     features: list[FeatureUsage]
 
 
-class Organization(BaseModel):
+class Organization(CamelModel):
     id: int
     name: str
     slug: str | None = None
@@ -81,7 +96,7 @@ class Organization(BaseModel):
 # ── Traces & Spans ───────────────────────────────────────────────────
 
 
-class Trace(BaseModel):
+class Trace(CamelModel):
     id: int
     trace_id: str
     name: str | None = None
@@ -92,12 +107,12 @@ class Trace(BaseModel):
     metadata: dict[str, Any] | None = None
     start_time: datetime | None = None
     end_time: datetime | None = None
-    duration: int | None = None
+    duration_ms: int | None = None
     created_at: datetime | None = None
     updated_at: datetime | None = None
 
 
-class CreateTraceParams(BaseModel):
+class CreateTraceParams(CamelModel):
     name: str
     trace_id: str | None = None
     input: str | None = None
@@ -106,21 +121,21 @@ class CreateTraceParams(BaseModel):
     organization_id: int | None = None
 
 
-class UpdateTraceParams(BaseModel):
+class UpdateTraceParams(CamelModel):
     name: str | None = None
     output: str | None = None
     status: str | None = None
     metadata: dict[str, Any] | None = None
 
 
-class ListTracesParams(BaseModel):
+class ListTracesParams(CamelModel):
     limit: int = 20
     offset: int = 0
     organization_id: int | None = None
     status: str | None = None
 
 
-class Span(BaseModel):
+class Span(CamelModel):
     id: int
     span_id: str
     trace_id: int
@@ -134,7 +149,7 @@ class Span(BaseModel):
     duration: int | None = None
 
 
-class CreateSpanParams(BaseModel):
+class CreateSpanParams(CamelModel):
     name: str
     span_id: str | None = None
     type: str | None = None
@@ -146,7 +161,7 @@ class CreateSpanParams(BaseModel):
 # ── Evaluations ──────────────────────────────────────────────────────
 
 
-class Evaluation(BaseModel):
+class Evaluation(CamelModel):
     id: int
     name: str
     description: str | None = None
@@ -161,7 +176,7 @@ class Evaluation(BaseModel):
     updated_at: datetime | None = None
 
 
-class CreateEvaluationParams(BaseModel):
+class CreateEvaluationParams(CamelModel):
     name: str
     description: str | None = None
     type: str | None = None
@@ -172,7 +187,7 @@ class CreateEvaluationParams(BaseModel):
     test_cases: list[dict[str, Any]] | None = None
 
 
-class UpdateEvaluationParams(BaseModel):
+class UpdateEvaluationParams(CamelModel):
     name: str | None = None
     description: str | None = None
     status: str | None = None
@@ -180,7 +195,7 @@ class UpdateEvaluationParams(BaseModel):
     execution_settings: dict[str, Any] | None = None
 
 
-class ListEvaluationsParams(BaseModel):
+class ListEvaluationsParams(CamelModel):
     limit: int = 20
     offset: int = 0
     status: str | None = None
@@ -189,7 +204,7 @@ class ListEvaluationsParams(BaseModel):
 # ── Test Cases ───────────────────────────────────────────────────────
 
 
-class TestCase(BaseModel):
+class TestCase(CamelModel):
     id: int
     evaluation_id: int
     name: str | None = None
@@ -198,7 +213,7 @@ class TestCase(BaseModel):
     metadata: dict[str, Any] | None = None
 
 
-class CreateTestCaseParams(BaseModel):
+class CreateTestCaseParams(CamelModel):
     name: str | None = None
     input: str
     expected_output: str | None = None
@@ -208,10 +223,13 @@ class CreateTestCaseParams(BaseModel):
 # ── Evaluation Runs ──────────────────────────────────────────────────
 
 
-class EvaluationRun(BaseModel):
+class EvaluationRun(CamelModel):
     id: int
     evaluation_id: int
     status: str | None = None
+    total_cases: int | None = None
+    passed_cases: int | None = None
+    failed_cases: int | None = None
     score: float | None = None
     trace_log: dict[str, Any] | None = None
     started_at: datetime | None = None
@@ -219,7 +237,7 @@ class EvaluationRun(BaseModel):
     created_at: datetime | None = None
 
 
-class CreateRunParams(BaseModel):
+class CreateRunParams(CamelModel):
     model_settings: dict[str, Any] | None = None
     execution_settings: dict[str, Any] | None = None
 
@@ -227,7 +245,7 @@ class CreateRunParams(BaseModel):
 # ── LLM Judge ────────────────────────────────────────────────────────
 
 
-class LLMJudgeConfig(BaseModel):
+class LLMJudgeConfig(CamelModel):
     id: int
     name: str
     model: str | None = None
@@ -235,7 +253,7 @@ class LLMJudgeConfig(BaseModel):
     settings: dict[str, Any] | None = None
 
 
-class CreateLLMJudgeConfigParams(BaseModel):
+class CreateLLMJudgeConfigParams(CamelModel):
     name: str
     model: str = "gpt-4"
     criteria: dict[str, Any] | None = None
@@ -243,7 +261,7 @@ class CreateLLMJudgeConfigParams(BaseModel):
     organization_id: int | None = None
 
 
-class LLMJudgeResult(BaseModel):
+class LLMJudgeResult(CamelModel):
     id: int
     config_id: int | None = None
     score: float | None = None
@@ -252,7 +270,7 @@ class LLMJudgeResult(BaseModel):
     created_at: datetime | None = None
 
 
-class RunLLMJudgeParams(BaseModel):
+class RunLLMJudgeParams(CamelModel):
     config_id: int
     input: str
     output: str
@@ -260,30 +278,30 @@ class RunLLMJudgeParams(BaseModel):
     context: str | None = None
 
 
-class ListLLMJudgeConfigsParams(BaseModel):
+class ListLLMJudgeConfigsParams(CamelModel):
     limit: int = 20
     offset: int = 0
 
 
-class ListLLMJudgeResultsParams(BaseModel):
+class ListLLMJudgeResultsParams(CamelModel):
     config_id: int | None = None
     limit: int = 20
     offset: int = 0
 
 
-class LLMJudgeAlignment(BaseModel):
+class LLMJudgeAlignment(CamelModel):
     alignment_score: float | None = None
     details: dict[str, Any] | None = None
 
 
-class GetLLMJudgeAlignmentParams(BaseModel):
+class GetLLMJudgeAlignmentParams(CamelModel):
     config_id: int
 
 
 # ── Annotations ──────────────────────────────────────────────────────
 
 
-class Annotation(BaseModel):
+class Annotation(CamelModel):
     id: int
     evaluation_run_id: int | None = None
     test_case_id: int | None = None
@@ -295,7 +313,7 @@ class Annotation(BaseModel):
     created_at: datetime | None = None
 
 
-class CreateAnnotationParams(BaseModel):
+class CreateAnnotationParams(CamelModel):
     evaluation_run_id: int
     test_case_id: int
     rating: int | None = None
@@ -304,14 +322,14 @@ class CreateAnnotationParams(BaseModel):
     metadata: dict[str, Any] | None = None
 
 
-class ListAnnotationsParams(BaseModel):
+class ListAnnotationsParams(CamelModel):
     evaluation_run_id: int | None = None
     test_case_id: int | None = None
     limit: int = 20
     offset: int = 0
 
 
-class AnnotationTask(BaseModel):
+class AnnotationTask(CamelModel):
     id: int
     name: str | None = None
     status: str | None = None
@@ -319,30 +337,30 @@ class AnnotationTask(BaseModel):
     created_at: datetime | None = None
 
 
-class CreateAnnotationTaskParams(BaseModel):
+class CreateAnnotationTaskParams(CamelModel):
     name: str
     evaluation_id: int
     settings: dict[str, Any] | None = None
     organization_id: int | None = None
 
 
-class ListAnnotationTasksParams(BaseModel):
+class ListAnnotationTasksParams(CamelModel):
     limit: int = 20
     offset: int = 0
 
 
-class AnnotationItem(BaseModel):
+class AnnotationItem(CamelModel):
     id: int
     task_id: int
     content: dict[str, Any] | None = None
     status: str | None = None
 
 
-class CreateAnnotationItemParams(BaseModel):
+class CreateAnnotationItemParams(CamelModel):
     content: dict[str, Any]
 
 
-class ListAnnotationItemsParams(BaseModel):
+class ListAnnotationItemsParams(CamelModel):
     status: str | None = None
     limit: int = 20
     offset: int = 0
@@ -351,7 +369,7 @@ class ListAnnotationItemsParams(BaseModel):
 # ── API Keys ─────────────────────────────────────────────────────────
 
 
-class APIKey(BaseModel):
+class APIKey(CamelModel):
     id: int
     name: str
     key_prefix: str | None = None
@@ -365,23 +383,23 @@ class APIKeyWithSecret(APIKey):
     key: str
 
 
-class CreateAPIKeyParams(BaseModel):
+class CreateAPIKeyParams(CamelModel):
     name: str
     scopes: list[str] | None = None
     expires_at: str | None = None
     organization_id: int | None = None
 
 
-class UpdateAPIKeyParams(BaseModel):
+class UpdateAPIKeyParams(CamelModel):
     name: str | None = None
     scopes: list[str] | None = None
 
 
-class ListAPIKeysParams(BaseModel):
+class ListAPIKeysParams(CamelModel):
     organization_id: int | None = None
 
 
-class APIKeyUsage(BaseModel):
+class APIKeyUsage(CamelModel):
     total_requests: int = 0
     requests_today: int = 0
     last_used_at: datetime | None = None
@@ -390,7 +408,7 @@ class APIKeyUsage(BaseModel):
 # ── Webhooks ─────────────────────────────────────────────────────────
 
 
-class Webhook(BaseModel):
+class Webhook(CamelModel):
     id: int
     url: str
     events: list[str] | None = None
@@ -398,23 +416,23 @@ class Webhook(BaseModel):
     created_at: datetime | None = None
 
 
-class CreateWebhookParams(BaseModel):
+class CreateWebhookParams(CamelModel):
     url: str
     events: list[str]
     organization_id: int | None = None
 
 
-class UpdateWebhookParams(BaseModel):
+class UpdateWebhookParams(CamelModel):
     url: str | None = None
     events: list[str] | None = None
     active: bool | None = None
 
 
-class ListWebhooksParams(BaseModel):
+class ListWebhooksParams(CamelModel):
     organization_id: int | None = None
 
 
-class WebhookDelivery(BaseModel):
+class WebhookDelivery(CamelModel):
     id: int
     webhook_id: int
     event: str | None = None
@@ -423,7 +441,7 @@ class WebhookDelivery(BaseModel):
     created_at: datetime | None = None
 
 
-class ListWebhookDeliveriesParams(BaseModel):
+class ListWebhookDeliveriesParams(CamelModel):
     limit: int = 20
     offset: int = 0
 
@@ -431,7 +449,7 @@ class ListWebhookDeliveriesParams(BaseModel):
 # ── Usage ────────────────────────────────────────────────────────────
 
 
-class UsageStats(BaseModel):
+class UsageStats(CamelModel):
     total_requests: int = 0
     total_evaluations: int = 0
     total_traces: int = 0
@@ -439,17 +457,43 @@ class UsageStats(BaseModel):
     period_end: datetime | None = None
 
 
-class GetUsageParams(BaseModel):
+class GetUsageParams(CamelModel):
     organization_id: int
     start_date: str | None = None
     end_date: str | None = None
 
 
-class UsageSummary(BaseModel):
+class UsageSummary(CamelModel):
     evaluations: int = 0
     traces: int = 0
     test_cases: int = 0
     api_calls: int = 0
+
+
+# ── Quality Score ────────────────────────────────────────────────────
+
+
+class QualityBreakdown(CamelModel):
+    pass_rate: float | None = None
+    safety: float | None = None
+    judge: float | None = None
+
+
+class QualityScore(CamelModel):
+    score: float | None = None
+    total: int | None = None
+    evidence_level: str | None = None
+    baseline_score: float | None = None
+    regression_delta: float | None = None
+    baseline_missing: bool | None = None
+    breakdown: QualityBreakdown | None = None
+    flags: list[str] | None = None
+    evaluation_run_id: int | None = None
+    evaluation_id: int | None = None
+    avg_latency_ms: float | None = None
+    cost_usd: float | None = None
+    baseline_cost_usd: float | None = None
+    baseline_run_id: int | None = None
 
 
 # ── Test Suite ───────────────────────────────────────────────────────
@@ -501,23 +545,21 @@ class TestSuiteResult(BaseModel):
 # ── Workflow types ───────────────────────────────────────────────────
 
 
-class WorkflowNode(BaseModel):
+class WorkflowNode(CamelModel):
     id: str
     type: str
     name: str | None = None
     config: dict[str, Any] | None = None
 
 
-class WorkflowEdge(BaseModel):
+class WorkflowEdge(CamelModel):
     source: str = Field(alias="from")
     target: str = Field(alias="to")
     condition: str | None = None
     label: str | None = None
 
-    model_config = {"populate_by_name": True}
 
-
-class WorkflowDefinition(BaseModel):
+class WorkflowDefinition(CamelModel):
     nodes: list[WorkflowNode]
     edges: list[WorkflowEdge]
     entrypoint: str | None = None
@@ -538,7 +580,7 @@ class HandoffType(str, Enum):
     FALLBACK = "fallback"
 
 
-class AgentHandoff(BaseModel):
+class AgentHandoff(CamelModel):
     from_agent: str | None = None
     to_agent: str
     context: dict[str, Any] | None = None
@@ -553,13 +595,13 @@ class DecisionType(str, Enum):
     PRIORITIZATION = "prioritization"
 
 
-class DecisionAlternative(BaseModel):
+class DecisionAlternative(CamelModel):
     name: str
     score: float | None = None
     reasoning: str | None = None
 
 
-class RecordDecisionParams(BaseModel):
+class RecordDecisionParams(CamelModel):
     agent_name: str
     decision_type: DecisionType = DecisionType.ROUTING
     chosen: str
@@ -577,7 +619,7 @@ class CostCategory(str, Enum):
     OTHER = "other"
 
 
-class RecordCostParams(BaseModel):
+class RecordCostParams(CamelModel):
     agent_name: str
     category: CostCategory
     amount: float
@@ -587,7 +629,7 @@ class RecordCostParams(BaseModel):
     metadata: dict[str, Any] | None = None
 
 
-class CostRecord(BaseModel):
+class CostRecord(CamelModel):
     agent_name: str
     category: CostCategory
     amount: float
@@ -598,7 +640,7 @@ class CostRecord(BaseModel):
     timestamp: datetime | None = None
 
 
-class WorkflowContext(BaseModel):
+class WorkflowContext(CamelModel):
     workflow_id: str | None = None
     trace_id: int | None = None
     name: str
@@ -608,9 +650,10 @@ class WorkflowContext(BaseModel):
     started_at: datetime | None = None
 
 
-class AgentSpanContext(BaseModel):
+class AgentSpanContext(CamelModel):
     span_id: str | None = None
     agent_name: str
     trace_id: int | None = None
     parent_span_id: str | None = None
     started_at: datetime | None = None
+    ended_at: datetime | None = None

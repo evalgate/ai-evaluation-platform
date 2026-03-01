@@ -8,6 +8,9 @@ export const POST = secureRoute(
 	async (_req: NextRequest, ctx: AuthContext, params) => {
 		const { id } = params;
 		const evaluationId = parseInt(id, 10);
+		if (Number.isNaN(evaluationId)) {
+			return validationError("Valid evaluation ID is required");
+		}
 
 		try {
 			const result = await regressionService.runQuick(
@@ -32,10 +35,23 @@ export const PUT = secureRoute(
 	async (req: NextRequest, ctx: AuthContext, params) => {
 		const { id } = params;
 		const evaluationId = parseInt(id, 10);
+		if (Number.isNaN(evaluationId)) {
+			return validationError("Valid evaluation ID is required");
+		}
 		const body = await req.json();
 
-		if (!body.testCaseIds || !Array.isArray(body.testCaseIds)) {
-			return validationError("testCaseIds array is required");
+		if (
+			!body.testCaseIds ||
+			!Array.isArray(body.testCaseIds) ||
+			body.testCaseIds.length === 0 ||
+			!body.testCaseIds.every(
+				(id: unknown) =>
+					typeof id === "number" && Number.isInteger(id) && id > 0,
+			)
+		) {
+			return validationError(
+				"testCaseIds must be a non-empty array of positive integers",
+			);
 		}
 
 		try {

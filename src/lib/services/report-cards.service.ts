@@ -187,7 +187,7 @@ export class ReportCardsService {
 		// Map database results to TestResult interface
 		const mappedTestResults: TestResult[] = testResultsData.map((tr) => ({
 			...tr,
-			metadata: {},
+			metadata: (tr.metadata as Record<string, unknown>) ?? {},
 			evaluationId: tr.evaluationRunId,
 			updatedAt: tr.createdAt,
 		}));

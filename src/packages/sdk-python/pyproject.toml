@@ -36,8 +36,9 @@ dependencies = [
 [project.optional-dependencies]
 openai = ["openai>=1.0"]
 anthropic = ["anthropic>=0.20"]
+langchain = ["langchain-core>=0.2"]
 cli = ["typer>=0.12", "rich>=13"]
-all = ["pauly4010-evalai-sdk[openai,anthropic,cli]"]
+all = ["pauly4010-evalai-sdk[openai,anthropic,langchain,cli]"]
 dev = [
     "pytest>=8",
     "pytest-asyncio>=0.24",

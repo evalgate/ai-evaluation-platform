@@ -36,11 +36,18 @@ export const GET = secureRoute(
 				}
 
 				if (breakdown) {
-					const result = await costService.aggregateWorkflowCost(id);
+					const result = await costService.aggregateWorkflowCost(
+						id,
+						ctx.organizationId,
+					);
 					return NextResponse.json(result);
 				}
 
-				const records = await costService.listByWorkflowRun(id);
+				const records = await costService.listByWorkflowRun(
+					id,
+					100,
+					ctx.organizationId,
+				);
 				return NextResponse.json(records);
 			}
 
@@ -50,7 +57,10 @@ export const GET = secureRoute(
 					return validationError("Valid trace ID is required");
 				}
 
-				const result = await costService.getCostBreakdownByTrace(id);
+				const result = await costService.getCostBreakdownByTrace(
+					id,
+					ctx.organizationId,
+				);
 				return NextResponse.json(result);
 			}
 

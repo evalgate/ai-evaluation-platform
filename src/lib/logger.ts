@@ -61,7 +61,13 @@ class Logger {
 			...meta,
 		};
 
-		const output = JSON.stringify(logEntry);
+		let output: string;
+		try {
+			output = JSON.stringify(logEntry);
+		} catch {
+			const safe = { timestamp, level, message, _serializationError: true };
+			output = JSON.stringify(safe);
+		}
 
 		switch (level) {
 			case "error":

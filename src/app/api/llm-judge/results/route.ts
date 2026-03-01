@@ -2,6 +2,7 @@ import { and, desc, eq, gte, lte } from "drizzle-orm";
 import { type NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
 import { llmJudgeConfigs, llmJudgeResults } from "@/db/schema";
+import { validationError } from "@/lib/api/errors";
 import { type AuthContext, secureRoute } from "@/lib/api/secure-route";
 import { parsePaginationParams } from "@/lib/validation";
 
@@ -20,15 +21,22 @@ export const GET = secureRoute(
 		const conditions = [eq(llmJudgeConfigs.organizationId, ctx.organizationId)];
 
 		if (configId) {
-			conditions.push(eq(llmJudgeResults.configId, parseInt(configId, 10)));
+			const parsedConfigId = parseInt(configId, 10);
+			if (Number.isNaN(parsedConfigId))
+				return validationError("Valid configId is required");
+			conditions.push(eq(llmJudgeResults.configId, parsedConfigId));
 		}
 
 		if (minScore) {
-			conditions.push(gte(llmJudgeResults.score, parseInt(minScore, 10)));
+			const parsedMin = parseInt(minScore, 10);
+			if (!Number.isNaN(parsedMin))
+				conditions.push(gte(llmJudgeResults.score, parsedMin));
 		}
 
 		if (maxScore) {
-			conditions.push(lte(llmJudgeResults.score, parseInt(maxScore, 10)));
+			const parsedMax = parseInt(maxScore, 10);
+			if (!Number.isNaN(parsedMax))
+				conditions.push(lte(llmJudgeResults.score, parsedMax));
 		}
 
 		// Join through llmJudgeConfigs to enforce org-scoping

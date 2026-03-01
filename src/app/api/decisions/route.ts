@@ -31,7 +31,7 @@ const createDecisionSchema = z.object({
 });
 
 export const GET = secureRoute(
-	async (req: NextRequest, _ctx: AuthContext) => {
+	async (req: NextRequest, ctx: AuthContext) => {
 		try {
 			const { searchParams } = new URL(req.url);
 			const workflowRunId = searchParams.get("workflowRunId");
@@ -60,7 +60,7 @@ export const GET = secureRoute(
 				}
 
 				const decision = await decisionService.getById(id);
-				if (!decision) {
+				if (!decision || decision.organizationId !== ctx.organizationId) {
 					return notFound("Decision not found");
 				}
 				return NextResponse.json(decision);
@@ -71,7 +71,10 @@ export const GET = secureRoute(
 				if (Number.isNaN(id)) {
 					return validationError("Valid span ID is required");
 				}
-				const decisions = await decisionService.listBySpan(id);
+				const decisions = await decisionService.listBySpan(
+					id,
+					ctx.organizationId,
+				);
 				return NextResponse.json(decisions);
 			}
 

@@ -17,6 +17,32 @@ from evalai_sdk._version import __version__
 console = Console()
 
 
+def _load_saved_config() -> dict[str, Any]:
+    """Load api_key/base_url from .evalai/config.json if present."""
+    config_path = Path.cwd() / ".evalai" / "config.json"
+    if config_path.exists():
+        try:
+            data = json.loads(config_path.read_text())
+            return data if isinstance(data, dict) else {}
+        except Exception:
+            pass
+    return {}
+
+
+def _resolve_credentials(
+    api_key: str | None,
+    base_url: str | None,
+) -> tuple[str | None, str | None]:
+    """Resolve credentials from flag -> config file (env vars handled by typer envvar=)."""
+    if not api_key or not base_url:
+        saved = _load_saved_config()
+        if not api_key:
+            api_key = saved.get("api_key")
+        if not base_url:
+            base_url = saved.get("base_url")
+    return api_key, base_url
+
+
 def _run_async(coro: Any) -> Any:
     """Run an async function from sync CLI context."""
     try:
@@ -73,14 +99,29 @@ def init(
     example = evals_dir / "example_eval.py"
     if not example.exists():
         example.write_text(
-            '"""Example evaluation spec."""\n\n'
+            '"""Example evaluation spec — replace with your LLM call."""\n\n'
             "from evalai_sdk.runtime import define_eval, create_result, EvalContext\n\n\n"
             "def my_first_eval(ctx: EvalContext):\n"
-            "    output = ctx.input  # replace with your LLM call\n"
+            "    # Replace this with your actual LLM call\n"
+            "    output = ctx.input or 'hello world'\n"
             "    return create_result(passed=len(output) > 0, score=1.0)\n\n\n"
             'define_eval("example-eval", my_first_eval)\n'
         )
         console.print(f"[green]✓[/green] Created {example.relative_to(cwd)}")
+
+    gitignore = cwd / ".gitignore"
+    evalai_pattern = ".evalai/"
+    if gitignore.exists():
+        content = gitignore.read_text()
+        if evalai_pattern not in content:
+            with gitignore.open("a") as f:
+                if not content.endswith("\n"):
+                    f.write("\n")
+                f.write(f"{evalai_pattern}\n")
+            console.print(f"[green]✓[/green] Added {evalai_pattern} to .gitignore")
+    else:
+        gitignore.write_text(f"{evalai_pattern}\n")
+        console.print(f"[green]✓[/green] Created .gitignore with {evalai_pattern}")
 
     console.print("\n[bold green]Project initialized![/bold green]")
     console.print("  Next: [cyan]evalai run[/cyan] to execute evaluations")
@@ -110,65 +151,83 @@ def run(
     handle = create_eval_runtime(str(cwd))
     executor = create_local_executor()
 
-    # Discover and load specs
-    spec_files = list(eval_path.glob("**/*.py"))
-    if not spec_files:
-        console.print(f"[yellow]No eval specs found in {eval_dir}/[/yellow]")
-        raise typer.Exit(0)
+    try:
+        # Discover and load specs
+        spec_files = list(eval_path.glob("**/*.py"))
+        if not spec_files:
+            console.print(f"[yellow]No eval specs found in {eval_dir}/[/yellow]")
+            raise typer.Exit(0)
 
-    for spec_file in spec_files:
-        if spec_file.name.startswith("_"):
-            continue
-        try:
-            import importlib.util
+        for spec_file in spec_files:
+            if spec_file.name.startswith("_"):
+                continue
+            try:
+                import importlib.util
 
-            spec_module = importlib.util.spec_from_file_location(spec_file.stem, spec_file)
-            if spec_module and spec_module.loader:
-                mod = importlib.util.module_from_spec(spec_module)
-                spec_module.loader.exec_module(mod)
-        except Exception as exc:
-            console.print(f"[red]Error loading {spec_file.name}:[/red] {exc}")
+                spec_module = importlib.util.spec_from_file_location(spec_file.stem, spec_file)
+                if spec_module and spec_module.loader:
+                    mod = importlib.util.module_from_spec(spec_module)
+                    spec_module.loader.exec_module(mod)
+            except Exception as exc:
+                console.print(f"[red]Error loading {spec_file.name}:[/red] {exc}")
+                if verbose:
+                    import traceback
+                    console.print(f"[dim]{traceback.format_exc()}[/dim]")
 
-    specs = handle.runtime.list()
-    if spec_ids:
-        filter_ids = set(spec_ids.split(","))
-        specs = [s for s in specs if s.id in filter_ids or s.name in filter_ids]
+        specs = handle.runtime.list()
+        if spec_ids:
+            filter_ids = set(spec_ids.split(","))
+            specs = [s for s in specs if s.id in filter_ids or s.name in filter_ids]
 
-    if not specs:
-        console.print("[yellow]No matching specs found[/yellow]")
-        raise typer.Exit(0)
+        if not specs:
+            console.print("[yellow]No matching specs found[/yellow]")
+            raise typer.Exit(0)
 
-    console.print(f"\n[bold]Running {len(specs)} eval(s)...[/bold]\n")
+        console.print(f"\n[bold]Running {len(specs)} eval(s)...[/bold]\n")
 
-    from evalai_sdk.runtime.types import EvalContext
+        from evalai_sdk.runtime.types import EvalContext
 
-    results = []
-    for spec in specs:
-        ctx = EvalContext(input="", metadata={})
-        result = _run_async(executor.execute(spec, ctx))
-        status = "[green]✓ PASS[/green]" if result.passed else "[red]✗ FAIL[/red]"
-        console.print(f"  {status} {spec.name} ({result.duration_ms:.0f}ms, score={result.score:.2f})")
-        results.append(
-            {
-                "spec": spec.name,
-                "passed": result.passed,
-                "score": result.score,
-                "duration_ms": result.duration_ms,
-            }
-        )
+        results = []
+        for spec in specs:
+            ctx = EvalContext(input="", metadata={})
+            try:
+                result = _run_async(executor.execute(spec, ctx))
+                status = "[green]✓ PASS[/green]" if result.passed else "[red]✗ FAIL[/red]"
+                console.print(f"  {status} {spec.name} ({result.duration_ms:.0f}ms, score={result.score:.2f})")
+                entry: dict[str, Any] = {
+                    "spec": spec.name,
+                    "passed": result.passed,
+                    "score": result.score,
+                    "duration_ms": result.duration_ms,
+                }
+                if result.error:
+                    entry["error"] = result.error
+                if result.status != "passed":
+                    entry["status"] = result.status
+                results.append(entry)
+            except Exception as exc:
+                console.print(f"  [red]✗ ERROR[/red] {spec.name}: {exc}")
+                results.append({
+                    "spec": spec.name,
+                    "passed": False,
+                    "score": 0.0,
+                    "duration_ms": 0.0,
+                    "error": str(exc),
+                    "status": "error",
+                })
 
-    passed = sum(1 for r in results if r["passed"])
-    total = len(results)
-    console.print(f"\n[bold]{passed}/{total} passed[/bold]")
+        passed = sum(1 for r in results if r["passed"])
+        total = len(results)
+        console.print(f"\n[bold]{passed}/{total} passed[/bold]")
 
-    if output:
-        Path(output).write_text(json.dumps({"results": results}, indent=2))
-        console.print(f"Results written to {output}")
+        if output:
+            Path(output).write_text(json.dumps({"results": results}, indent=2))
+            console.print(f"Results written to {output}")
 
-    handle.dispose()
-
-    if passed < total:
-        raise typer.Exit(1)
+        if passed < total:
+            raise typer.Exit(1)
+    finally:
+        handle.dispose()
 
 
 # ── gate ─────────────────────────────────────────────────────────────
@@ -181,7 +240,7 @@ def gate(
     max_drop: float = typer.Option(0.05, "--max-drop", help="Max allowed score drop"),
 ) -> None:
     """Run regression gate against a baseline."""
-    from evalai_sdk.regression import GATE_EXIT, Baseline, evaluate_regression
+    from evalai_sdk.regression import GATE_EXIT, Baseline, BaselineTolerance, evaluate_regression
 
     bp = Path(baseline_path)
     if not bp.exists():
@@ -190,9 +249,10 @@ def gate(
         raise typer.Exit(GATE_EXIT.INFRA_ERROR)
 
     raw = json.loads(bp.read_text())
+    tol_raw = raw.get("tolerance")
     baseline = Baseline(
         scores=raw.get("scores", {}),
-        tolerance=raw.get("tolerance", {}),
+        tolerance=BaselineTolerance(**tol_raw) if isinstance(tol_raw, dict) else BaselineTolerance(),
     )
 
     current_scores: dict[str, float] = {}
@@ -203,7 +263,12 @@ def gate(
             for r in report.get("results", []):
                 current_scores[r["spec"]] = r["score"]
 
-    report = evaluate_regression(baseline, current_scores)
+    report = evaluate_regression(
+        baseline,
+        current_scores,
+        min_score=min_score if min_score > 0 else None,
+        max_drop=max_drop if max_drop > 0 else None,
+    )
 
     table = Table(title="Regression Gate")
     table.add_column("Test", style="cyan")
@@ -229,36 +294,80 @@ def check(
     api_key: str | None = typer.Option(None, "--api-key", envvar="EVALAI_API_KEY"),
     base_url: str | None = typer.Option(None, "--base-url", envvar="EVALAI_BASE_URL"),
     evaluation_id: int | None = typer.Option(None, "--evaluation-id", help="Evaluation to check"),
-    min_score: float = typer.Option(0.8, "--min-score"),
+    min_score: float = typer.Option(0.0, "--min-score", help="Minimum passing score (0-100)"),
+    max_drop: float | None = typer.Option(None, "--max-drop", help="Max allowed regression delta"),
+    baseline: str = typer.Option("published", "--baseline", help="Baseline mode: published|previous|production|auto"),
+    fmt: str = typer.Option("human", "--format", "-f", help="Output format: human|json"),
 ) -> None:
-    """CI/CD gate — check evaluation scores via the API."""
+    """CI/CD gate — check evaluation quality score via the API."""
     from evalai_sdk.client import AIEvalClient
+    from evalai_sdk.errors import EvalAIError
+
+    EXIT_PASS = 0
+    EXIT_SCORE_FAIL = 1
+    EXIT_REGRESSION = 2
+    EXIT_API_ERROR = 4
+    EXIT_BAD_ARGS = 5
+
+    api_key, base_url = _resolve_credentials(api_key, base_url)
+
+    if not evaluation_id:
+        console.print("[red]--evaluation-id is required[/red]")
+        raise typer.Exit(EXIT_BAD_ARGS)
+
+    if not api_key:
+        console.print("[red]--api-key or EVALAI_API_KEY is required (or run evalai configure)[/red]")
+        raise typer.Exit(EXIT_BAD_ARGS)
 
     async def _check() -> int:
         client = AIEvalClient(api_key=api_key, base_url=base_url)
         try:
-            if evaluation_id:
-                ev = await client.evaluations.get(evaluation_id)
-                console.print(f"Evaluation: [bold]{ev.name}[/bold] (id={ev.id})")
-                runs = await client.evaluations.list_runs(evaluation_id)
-                if runs:
-                    latest = runs[-1]
-                    score = latest.score or 0.0
-                    console.print(f"Latest run score: {score:.3f}")
-                    if score >= min_score:
-                        console.print("[green]✓ PASS[/green]")
-                        return 0
-                    else:
-                        console.print(f"[red]✗ FAIL[/red] (min: {min_score})")
-                        return 1
-                else:
-                    console.print("[yellow]No runs found[/yellow]")
-                    return 2
-            else:
-                console.print("[red]--evaluation-id required[/red]")
-                return 2
+            quality = await client.get_quality(evaluation_id, baseline=baseline)
+        except EvalAIError as exc:
+            console.print(f"[red]API error:[/red] {exc}")
+            return EXIT_API_ERROR
         finally:
             await client.close()
+
+        score = quality.score
+        if score is None:
+            console.print("[yellow]No quality score available[/yellow]")
+            return EXIT_API_ERROR
+
+        if fmt == "json":
+            console.print(json.dumps(quality.model_dump(by_alias=True, exclude_none=True), indent=2))
+        else:
+            table = Table(title="Quality Gate")
+            table.add_column("Metric", style="cyan")
+            table.add_column("Value", justify="right")
+
+            table.add_row("Score", f"{score:.1f}")
+            table.add_row("Min Score", f"{min_score:.1f}")
+            if quality.evidence_level:
+                table.add_row("Evidence", quality.evidence_level)
+            if quality.total is not None:
+                table.add_row("Total Tests", str(quality.total))
+            if quality.regression_delta is not None:
+                table.add_row("Regression Δ", f"{quality.regression_delta:+.1f}")
+            if quality.avg_latency_ms is not None:
+                table.add_row("Avg Latency", f"{quality.avg_latency_ms:.0f}ms")
+            if quality.cost_usd is not None:
+                table.add_row("Cost", f"${quality.cost_usd:.4f}")
+            if quality.flags:
+                table.add_row("Flags", ", ".join(quality.flags))
+            console.print(table)
+
+        if max_drop is not None and quality.regression_delta is not None:
+            if quality.regression_delta <= -max_drop:
+                console.print(f"[red]✗ FAIL — regression {quality.regression_delta:+.1f} exceeds max drop {max_drop}[/red]")
+                return EXIT_REGRESSION
+
+        if score < min_score:
+            console.print(f"[red]✗ FAIL — score {score:.1f} < min {min_score:.1f}[/red]")
+            return EXIT_SCORE_FAIL
+
+        console.print("[green]✓ PASS[/green]")
+        return EXIT_PASS
 
     exit_code = _run_async(_check())
     raise typer.Exit(exit_code)
@@ -271,20 +380,22 @@ def ci(
     eval_dir: str = typer.Option("evals", "--dir", "-d"),
     baseline_path: str = typer.Option(".evalai/baseline.json", "--baseline", "-b"),
     output: str = typer.Option(".evalai/last-run.json", "--output", "-o"),
+    min_score: float = typer.Option(0.8, "--min-score", help="Minimum passing score"),
+    max_drop: float = typer.Option(0.05, "--max-drop", help="Max allowed score drop"),
 ) -> None:
     """CI loop — run evals then gate against baseline (one command for CI)."""
     console.print("[bold]EvalAI CI Pipeline[/bold]\n")
 
     console.print("[bold]Step 1/2:[/bold] Running evaluations...")
     try:
-        run(eval_dir=eval_dir, output=output, verbose=False)
+        run(eval_dir=eval_dir, spec_ids=None, output=output, verbose=False)
     except SystemExit as e:
         if e.code != 0:
             console.print("[red]Evaluations failed — skipping gate[/red]")
             raise typer.Exit(e.code or 1) from e
 
     console.print("\n[bold]Step 2/2:[/bold] Running regression gate...")
-    gate(baseline_path=baseline_path, report_path=output)
+    gate(baseline_path=baseline_path, report_path=output, min_score=min_score, max_drop=max_drop)
 
 
 # ── doctor ───────────────────────────────────────────────────────────
@@ -306,8 +417,10 @@ def doctor() -> None:
     checks.append(("evalai-sdk installed", True, __version__))
 
     # API key
-    has_key = bool(os.environ.get("EVALAI_API_KEY"))
-    checks.append(("EVALAI_API_KEY set", has_key, "set" if has_key else "missing"))
+    saved_cfg = _load_saved_config()
+    has_key = bool(os.environ.get("EVALAI_API_KEY") or saved_cfg.get("api_key"))
+    key_source = "env" if os.environ.get("EVALAI_API_KEY") else ("config" if saved_cfg.get("api_key") else "missing")
+    checks.append(("API key configured", has_key, key_source))
 
     # Config file
     config_exists = Path(".evalai/config.json").exists()
@@ -358,6 +471,7 @@ def doctor() -> None:
 def discover(
     eval_dir: str = typer.Option("evals", "--dir", "-d"),
     manifest: bool = typer.Option(False, "--manifest", help="Output JSON manifest"),
+    verbose: bool = typer.Option(False, "--verbose", "-v", help="Show load errors"),
 ) -> None:
     """Discover eval specs in the project."""
     from evalai_sdk.runtime import create_eval_runtime
@@ -367,23 +481,28 @@ def discover(
     handle = create_eval_runtime(str(cwd))
 
     if not eval_path.exists():
+        handle.dispose()
         console.print(f"[yellow]No eval directory at {eval_dir}/[/yellow]")
         raise typer.Exit(0)
 
-    for spec_file in sorted(eval_path.glob("**/*.py")):
-        if spec_file.name.startswith("_"):
-            continue
-        try:
-            import importlib.util
+    try:
+        for spec_file in sorted(eval_path.glob("**/*.py")):
+            if spec_file.name.startswith("_"):
+                continue
+            try:
+                import importlib.util
 
-            spec_module = importlib.util.spec_from_file_location(spec_file.stem, spec_file)
-            if spec_module and spec_module.loader:
-                mod = importlib.util.module_from_spec(spec_module)
-                spec_module.loader.exec_module(mod)
-        except Exception:
-            pass
+                spec_module = importlib.util.spec_from_file_location(spec_file.stem, spec_file)
+                if spec_module and spec_module.loader:
+                    mod = importlib.util.module_from_spec(spec_module)
+                    spec_module.loader.exec_module(mod)
+            except Exception as exc:
+                if verbose:
+                    console.print(f"[yellow]Warning: failed to load {spec_file.name}:[/yellow] {exc}")
 
-    specs = handle.runtime.list()
+        specs = handle.runtime.list()
+    finally:
+        handle.dispose()
 
     if manifest:
         out = {"specs": [{"id": s.id, "name": s.name, "suite": s.suite, "tags": s.options.tags} for s in specs]}
@@ -398,8 +517,6 @@ def discover(
             table.add_row(s.id[:12], s.name, s.suite or "-", ", ".join(s.options.tags) or "-")
         console.print(table)
 
-    handle.dispose()
-
 
 # ── diff ─────────────────────────────────────────────────────────────
 
@@ -409,8 +526,16 @@ def diff(
     report_b: str = typer.Argument(..., help="Second run report"),
 ) -> None:
     """Compare two run reports."""
-    a = json.loads(Path(report_a).read_text())
-    b = json.loads(Path(report_b).read_text())
+    pa, pb = Path(report_a), Path(report_b)
+    if not pa.exists():
+        console.print(f"[red]Report not found:[/red] {report_a}")
+        raise typer.Exit(1)
+    if not pb.exists():
+        console.print(f"[red]Report not found:[/red] {report_b}")
+        raise typer.Exit(1)
+
+    a = json.loads(pa.read_text())
+    b = json.loads(pb.read_text())
 
     results_a = {r["spec"]: r for r in a.get("results", [])}
     results_b = {r["spec"]: r for r in b.get("results", [])}
@@ -546,40 +671,121 @@ def print_config(
 
 
 def share(
-    report_path: str = typer.Argument(".evalai/last-run.json", help="Run report to share"),
+    evaluation_id: int = typer.Option(..., "--evaluation-id", help="Evaluation ID"),
+    run_id: int = typer.Option(..., "--run-id", help="Evaluation run ID"),
+    expires: str = typer.Option("7d", "--expires", help="Expiry e.g. 7d, 24h"),
     api_key: str | None = typer.Option(None, "--api-key", envvar="EVALAI_API_KEY"),
     base_url: str | None = typer.Option(None, "--base-url", envvar="EVALAI_BASE_URL"),
 ) -> None:
-    """Upload a run report and get a shareable link."""
-    rp = Path(report_path)
-    if not rp.exists():
-        console.print(f"[red]Report not found:[/red] {report_path}")
-        raise typer.Exit(1)
+    """Create a shareable link for an evaluation run."""
+    from evalai_sdk.client import AIEvalClient
+    from evalai_sdk.errors import EvalAIError
 
-    report = json.loads(rp.read_text())
+    api_key, base_url = _resolve_credentials(api_key, base_url)
 
     if not api_key:
-        console.print("[red]--api-key or EVALAI_API_KEY required to share[/red]")
+        console.print("[red]--api-key or EVALAI_API_KEY required (or run evalai configure)[/red]")
         raise typer.Exit(1)
 
-    url = base_url or "https://v0-ai-evaluation-platform-nu.vercel.app"
+    def _parse_expires(spec: str) -> int | None:
+        import re
 
-    import httpx
+        m = re.match(r"^(\d+)(d|h|m|s)$", spec, re.IGNORECASE)
+        if not m:
+            return None
+        n = int(m.group(1))
+        unit = m.group(2).lower()
+        if unit == "d":
+            return n
+        if unit == "h":
+            return max(1, n // 24)
+        return 1
 
-    resp = httpx.post(
-        f"{url}/api/reports",
-        json=report,
-        headers={"Authorization": f"Bearer {api_key}"},
-        timeout=30,
-    )
-
-    if resp.status_code == 200 or resp.status_code == 201:
-        data = resp.json()
-        link = data.get("url", f"{url}/reports/{data.get('id', 'unknown')}")
-        console.print(f"[green]✓[/green] Report shared: {link}")
-    else:
-        console.print(f"[red]Upload failed:[/red] {resp.status_code} — {resp.text}")
+    expires_days = _parse_expires(expires)
+    if expires_days is None:
+        console.print("[red]Invalid --expires format. Use e.g. 7d, 24h[/red]")
         raise typer.Exit(1)
+
+    async def _share() -> int:
+        client = AIEvalClient(api_key=api_key, base_url=base_url)
+        try:
+            console.print("Fetching run export...")
+            export_data = await client.get_run_export(evaluation_id, run_id)
+
+            console.print("Publishing share link...")
+            result = await client.publish_share(
+                evaluation_id,
+                export_data,
+                run_id,
+                expires_in_days=expires_days,
+            )
+
+            share_url = result.get("shareUrl", "")
+            console.print(f"[green]✓[/green] Share link (expires in {expires}): {share_url}")
+            return 0
+        except EvalAIError as exc:
+            console.print(f"[red]API error:[/red] {exc}")
+            return 1
+        finally:
+            await client.close()
+
+    exit_code = _run_async(_share())
+    raise typer.Exit(exit_code)
+
+
+# ── configure ─────────────────────────────────────────────────────
+
+
+def configure(
+    api_key: str | None = typer.Option(None, "--api-key", help="API key (prompted if not given)"),
+    base_url: str = typer.Option(
+        "https://v0-ai-evaluation-platform-nu.vercel.app",
+        "--base-url",
+        help="Platform base URL",
+    ),
+) -> None:
+    """Set up API key and validate connection."""
+    from evalai_sdk.client import AIEvalClient
+    from evalai_sdk.errors import EvalAIError
+
+    if not api_key:
+        api_key = typer.prompt("Enter your API key", hide_input=True)
+
+    if not api_key:
+        console.print("[red]API key is required[/red]")
+        raise typer.Exit(1)
+
+    console.print("Validating API key...")
+
+    async def _validate() -> bool:
+        client = AIEvalClient(api_key=api_key, base_url=base_url)
+        try:
+            org = await client.organizations.get_current()
+            console.print(f"[green]✓[/green] Connected — org [bold]{org.name}[/bold] (id={org.id})")
+            return True
+        except EvalAIError as exc:
+            console.print(f"[red]✗ Validation failed:[/red] {exc}")
+            return False
+        finally:
+            await client.close()
+
+    if not _run_async(_validate()):
+        raise typer.Exit(1)
+
+    config_dir = Path.cwd() / ".evalai"
+    config_dir.mkdir(exist_ok=True)
+    config_path = config_dir / "config.json"
+
+    config: dict[str, Any] = {}
+    if config_path.exists():
+        config = json.loads(config_path.read_text())
+
+    config["api_key"] = api_key
+    config["base_url"] = base_url
+
+    config_path.write_text(json.dumps(config, indent=2))
+    console.print(f"[green]✓[/green] Saved to {config_path.relative_to(Path.cwd())}")
+    console.print("\n[dim]Tip: add .evalai/ to .gitignore to avoid committing credentials[/dim]")
 
 
 # ── upgrade ───────────────────────────────────────────────────────

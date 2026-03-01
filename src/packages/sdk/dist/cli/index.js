@@ -164,7 +164,9 @@ else if (subcommand === "impact-analysis") {
         ? args[changedFilesIndex + 1]?.split(",")
         : undefined;
     const format = formatIndex !== -1 ? args[formatIndex + 1] : "human";
-    (0, impact_analysis_1.runImpactAnalysisCLI)({ baseBranch, changedFiles, format }).catch((err) => {
+    (0, impact_analysis_1.runImpactAnalysisCLI)({ baseBranch, changedFiles, format })
+        .then(() => process.exit(0))
+        .catch((err) => {
         console.error(`EvalAI ERROR: ${err instanceof Error ? err.message : String(err)}`);
         process.exit(2);
     });
@@ -188,7 +190,9 @@ else if (subcommand === "run") {
         baseBranch,
         format,
         writeResults,
-    }).catch((err) => {
+    })
+        .then(() => process.exit(0))
+        .catch((err) => {
         console.error(`EvalAI ERROR: ${err instanceof Error ? err.message : String(err)}`);
         process.exit(2);
     });
@@ -202,7 +206,9 @@ else if (subcommand === "diff") {
     const base = baseIndex !== -1 ? args[baseIndex + 1] : undefined;
     const head = headIndex !== -1 ? args[headIndex + 1] : undefined;
     const format = formatIndex !== -1 ? args[formatIndex + 1] : "human";
-    (0, diff_1.runDiffCLI)({ base, head, format }).catch((err) => {
+    (0, diff_1.runDiffCLI)({ base, head, format })
+        .then(() => process.exit(0))
+        .catch((err) => {
         console.error(`EvalAI ERROR: ${err instanceof Error ? err.message : String(err)}`);
         process.exit(2);
     });
@@ -220,7 +226,9 @@ else if (subcommand === "ci") {
         ? args[formatIndex + 1]
         : "human";
     const writeResults = writeResultsIndex !== -1;
-    (0, ci_1.runCICLI)({ base, impactedOnly, format, writeResults }).catch((err) => {
+    (0, ci_1.runCICLI)({ base, impactedOnly, format, writeResults })
+        .then(() => process.exit(0))
+        .catch((err) => {
         console.error(`EvalAI ERROR: ${err instanceof Error ? err.message : String(err)}`);
         process.exit(2);
     });

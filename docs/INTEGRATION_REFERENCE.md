@@ -92,8 +92,9 @@ client.traces.list({
   search?: string,
 }) → Promise<Trace[]>
 
-// Get single trace
-client.traces.get(id: number) → Promise<Trace>
+// Get single trace (returns trace with its spans)
+client.traces.get(id: number) → Promise<TraceDetail>
+// TraceDetail = { trace: Trace, spans: Span[] }
 
 // Delete trace
 client.traces.delete(id: number) → Promise<{ message: string }>

@@ -70,13 +70,13 @@ async function traceExample() {
 		console.log(`   Type: ${span2.type}`);
 		console.log(`   Latency: ${span2.metadata.latency_ms}ms\n`);
 
-		// Get trace details
+		// Get trace details (returns { trace, spans })
 		const traceDetails = await client.traces.get(trace.id);
 
 		console.log("📊 Trace Summary:");
+		console.log(`   Trace ID: ${traceDetails.trace.traceId}`);
 		console.log(`   Total Spans: ${traceDetails.spans.length}`);
-		console.log(`   Total Latency: ${traceDetails.totalLatency}ms`);
-		console.log(`   Total Cost: $${traceDetails.totalCost}`);
+		console.log(`   Status: ${traceDetails.trace.status}`);
 		console.log(
 			`\n🔗 View in dashboard: ${process.env.EVALAI_DASHBOARD_URL}/traces/${trace.id}`,
 		);

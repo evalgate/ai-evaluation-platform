@@ -26,6 +26,7 @@ import type {
 	CreateWebhookParams,
 	Evaluation,
 	EvaluationRun,
+	EvaluationRunDetail,
 	GetLLMJudgeAlignmentParams,
 	GetUsageParams,
 	ListAnnotationItemsParams,
@@ -41,6 +42,7 @@ import type {
 	LLMJudgeAlignment,
 	// LLM Judge Extended
 	LLMJudgeConfig,
+	LLMJudgeEvaluateResult,
 	LLMJudgeResult,
 	// Organizations
 	Organization,
@@ -49,6 +51,7 @@ import type {
 	Span,
 	TestCase,
 	Trace,
+	TraceDetail,
 	UpdateAPIKeyParams,
 	UpdateEvaluationParams,
 	UpdateTraceParams,
@@ -141,9 +144,11 @@ export class AIEvalClient {
 			config.organizationId ||
 			(orgIdFromEnv ? parseInt(orgIdFromEnv, 10) : undefined);
 
-		// Default to relative URLs for browser, or allow custom baseUrl
 		const isBrowser = typeof (globalThis as any).window !== "undefined";
-		this.baseUrl = config.baseUrl || (isBrowser ? "" : "http://localhost:3000");
+		this.baseUrl =
+			config.baseUrl ||
+			getEnvVar("EVALAI_BASE_URL") ||
+			(isBrowser ? "" : "http://localhost:3000");
 		this.timeout = config.timeout || 30000;
 
 		// Tier 4.17: Debug mode with request logging
@@ -426,29 +431,11 @@ export class AIEvalClient {
 	}
 
 	/**
-	 * Get organization resource limits and usage
-	 * Returns feature usage data for per-organization quotas
-	 *
-	 * @example
-	 * ```typescript
-	 * const limits = await client.getOrganizationLimits();
-	 * console.log('Traces:', limits.traces_per_organization);
-	 * console.log('Evaluations:', limits.evals_per_organization);
-	 * ```
+	 * @deprecated The /api/organizations/:id/limits endpoint does not exist.
+	 * Use `organizations.getCurrent()` to get org info instead.
 	 */
 	async getOrganizationLimits(): Promise<OrganizationLimits> {
-		const orgId = this.getOrganizationId();
-		if (!orgId) {
-			throw new EvalAIError(
-				"Organization ID is required",
-				"MISSING_ORGANIZATION_ID",
-				0,
-			);
-		}
-
-		return this.request<OrganizationLimits>(
-			`/api/organizations/${orgId}/limits`,
-		);
+		return {} as OrganizationLimits;
 	}
 }
 
@@ -520,10 +507,10 @@ class TraceAPI {
 	}
 
 	/**
-	 * Get a single trace by ID
+	 * Get a single trace by ID, including its spans
 	 */
-	async get(id: number): Promise<Trace> {
-		return this.client.request<Trace>(`/api/traces/${id}`);
+	async get(id: number): Promise<TraceDetail> {
+		return this.client.request<TraceDetail>(`/api/traces/${id}`);
 	}
 
 	/**
@@ -694,10 +681,13 @@ class EvaluationAPI {
 	}
 
 	/**
-	 * Get a specific run
+	 * Get a specific run with its results
 	 */
-	async getRun(evaluationId: number, runId: number): Promise<EvaluationRun> {
-		return this.client.request<EvaluationRun>(
+	async getRun(
+		evaluationId: number,
+		runId: number,
+	): Promise<EvaluationRunDetail> {
+		return this.client.request<EvaluationRunDetail>(
 			`/api/evaluations/${evaluationId}/runs/${runId}`,
 		);
 	}
@@ -712,11 +702,10 @@ class LLMJudgeAPI {
 	/**
 	 * Run an LLM judge evaluation
 	 */
-	async evaluate(params: RunLLMJudgeParams): Promise<{
-		result: LLMJudgeResult;
-		config: unknown;
-	}> {
-		return this.client.request<{ result: LLMJudgeResult; config: unknown }>(
+	async evaluate(
+		params: RunLLMJudgeParams,
+	): Promise<{ result: LLMJudgeEvaluateResult }> {
+		return this.client.request<{ result: LLMJudgeEvaluateResult }>(
 			"/api/llm-judge/evaluate",
 			{
 				method: "POST",
@@ -786,9 +775,7 @@ class LLMJudgeAPI {
 		params: GetLLMJudgeAlignmentParams,
 	): Promise<LLMJudgeAlignment> {
 		const searchParams = new URLSearchParams();
-		searchParams.set("configId", params.configId.toString());
-		if (params.startDate) searchParams.set("startDate", params.startDate);
-		if (params.endDate) searchParams.set("endDate", params.endDate);
+		searchParams.set("evaluationRunId", params.evaluationRunId.toString());
 
 		const query = searchParams.toString();
 		return this.client.request<LLMJudgeAlignment>(
@@ -885,9 +872,9 @@ class AnnotationTasksAPI {
 	 * Get an annotation task
 	 */
 	async get(taskId: number): Promise<AnnotationTask> {
-		return this.client.request<AnnotationTask>(
-			`/api/annotations/tasks/${taskId}`,
-		);
+		return this.client
+			.request<{ task: AnnotationTask }>(`/api/annotations/tasks/${taskId}`)
+			.then((res) => res.task);
 	}
 }
 
@@ -948,23 +935,34 @@ class DeveloperAPI {
 	/**
 	 * Get usage statistics
 	 */
-	async getUsage(params: GetUsageParams): Promise<UsageStats> {
+	async getUsage(params: GetUsageParams = {}): Promise<UsageStats> {
 		const searchParams = new URLSearchParams();
-		searchParams.set("organizationId", params.organizationId.toString());
-		if (params.startDate) searchParams.set("startDate", params.startDate);
-		if (params.endDate) searchParams.set("endDate", params.endDate);
+		if (params.period) searchParams.set("period", params.period);
+		if (params.groupBy) searchParams.set("groupBy", params.groupBy);
+		if (params.limit) searchParams.set("limit", params.limit.toString());
+		if (params.offset) searchParams.set("offset", params.offset.toString());
 
 		const query = searchParams.toString();
-		return this.client.request<UsageStats>(`/api/developer/usage?${query}`);
+		const endpoint = query
+			? `/api/developer/usage?${query}`
+			: "/api/developer/usage";
+		return this.client.request<UsageStats>(endpoint);
 	}
 
 	/**
 	 * Get usage summary
 	 */
-	async getUsageSummary(organizationId: number): Promise<UsageSummary> {
-		return this.client.request<UsageSummary>(
-			`/api/developer/usage/summary?organizationId=${organizationId}`,
-		);
+	async getUsageSummary(
+		params: { period?: "7d" | "30d" | "90d" | "all" } = {},
+	): Promise<UsageSummary> {
+		const searchParams = new URLSearchParams();
+		if (params.period) searchParams.set("period", params.period);
+
+		const query = searchParams.toString();
+		const endpoint = query
+			? `/api/developer/usage/summary?${query}`
+			: "/api/developer/usage/summary";
+		return this.client.request<UsageSummary>(endpoint);
 	}
 }
 
@@ -1105,19 +1103,21 @@ class WebhooksAPI {
 	async getDeliveries(
 		webhookId: number,
 		params: ListWebhookDeliveriesParams = {},
-	): Promise<WebhookDelivery[]> {
+	): Promise<{ deliveries: WebhookDelivery[]; total: number }> {
 		const searchParams = new URLSearchParams();
 		if (params.limit) searchParams.set("limit", params.limit.toString());
 		if (params.offset) searchParams.set("offset", params.offset.toString());
-		if (params.success !== undefined)
-			searchParams.set("success", params.success.toString());
+		if (params.status) searchParams.set("status", params.status);
 
 		const query = searchParams.toString();
 		const endpoint = query
 			? `/api/developer/webhooks/${webhookId}/deliveries?${query}`
 			: `/api/developer/webhooks/${webhookId}/deliveries`;
 
-		return this.client.request<WebhookDelivery[]>(endpoint);
+		return this.client.request<{
+			deliveries: WebhookDelivery[];
+			total: number;
+		}>(endpoint);
 	}
 }
 
@@ -1131,6 +1131,8 @@ class OrganizationsAPI {
 	 * Get current organization
 	 */
 	async getCurrent(): Promise<Organization> {
-		return this.client.request<Organization>("/api/organizations/current");
+		return this.client
+			.request<{ organization: Organization }>("/api/organizations/current")
+			.then((res) => res.organization);
 	}
 }
