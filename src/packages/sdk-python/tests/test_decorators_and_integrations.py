@@ -400,7 +400,7 @@ class TestNewExports:
         )
 
         assert __version__ == SDK_VERSION
-        assert SPEC_VERSION == __version__
+        assert __version__ == SPEC_VERSION
         assert callable(AIEvalClient)
         assert callable(define_eval)
         assert callable(trace_openai)
