@@ -108,8 +108,8 @@ describe("/api/traces", () => {
 			const req = new NextRequest("http://localhost:3000/api/traces", {
 				method: "POST",
 				body: JSON.stringify({
-					name: "Test Trace",
-					// Missing traceId
+					// Missing name (required); traceId is optional and auto-generated
+					traceId: "trace-xyz",
 				}),
 			});
 

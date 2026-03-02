@@ -16,9 +16,9 @@ CI acceptance criteria: this test MUST pass before any trace schema change ships
 """
 
 import json
-import os
-import pytest
 from pathlib import Path
+
+import pytest
 
 # ── Fixture path ──────────────────────────────────────────────────────────────
 
@@ -28,7 +28,7 @@ FIXTURES_DIR = Path(__file__).parent.parent.parent.parent.parent / "tests" / "co
 def load_fixture(name: str) -> dict:
     """Load a canonical contract fixture, stripping internal doc fields."""
     path = FIXTURES_DIR / name
-    with open(path, "r", encoding="utf-8") as f:
+    with open(path, encoding="utf-8") as f:
         raw = json.load(f)
     # Strip documentation-only fields
     return {k: v for k, v in raw.items() if not k.startswith("_")}
