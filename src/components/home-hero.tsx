@@ -23,7 +23,29 @@ export function HomeHero() {
 					Stop LLM Regressions in CI in{" "}
 					<span className="text-primary">2 Minutes</span>
 				</h1>
-				<p className="text-lg sm:text-xl text-muted-foreground mb-4 max-w-3xl mx-auto">
+				<p className="text-lg sm:text-xl font-medium mb-4 max-w-3xl mx-auto">
+					One-command CI for AI evaluation.
+				</p>
+				<div className="flex flex-wrap items-center justify-center gap-1.5 mb-6 font-mono text-sm">
+					{[
+						"discover",
+						"manifest",
+						"impact",
+						"run",
+						"diff",
+						"PR summary",
+					].map((step, i, arr) => (
+						<span key={step} className="flex items-center gap-1.5">
+							<span className="px-2.5 py-1 rounded-md bg-muted text-muted-foreground border border-border">
+								{step}
+							</span>
+							{i < arr.length - 1 && (
+								<span className="text-muted-foreground">→</span>
+							)}
+						</span>
+					))}
+				</div>
+				<p className="text-base text-muted-foreground mb-4 max-w-3xl mx-auto">
 					No infra. No lock-in. Remove anytime.
 				</p>
 				<p className="text-base text-muted-foreground mb-8 max-w-2xl mx-auto">
