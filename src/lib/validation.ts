@@ -202,7 +202,7 @@ export const createTestCaseBodySchema = z.object({
 /** Client-provided body for POST /api/traces (org added server-side). */
 export const createTraceBodySchema = z.object({
 	name: z.string().min(1).max(255),
-	traceId: z.string().min(1).max(255),
+	traceId: z.string().min(1).max(255).optional(),
 	status: z.enum(["pending", "success", "error"]).optional(),
 	durationMs: z.number().int().min(0).optional().nullable(),
 	metadata: z.record(z.unknown()).optional().nullable(),
@@ -217,9 +217,9 @@ export const updateTraceBodySchema = z.object({
 
 /** Body for POST /api/traces/:id/spans */
 export const createSpanBodySchema = z.object({
-	spanId: z.string().min(1),
+	spanId: z.string().min(1).optional(),
 	name: z.string().min(1),
-	type: z.string().min(1),
+	type: z.string().min(1).optional(),
 	parentSpanId: z.string().optional(),
 	input: z.unknown().optional(),
 	output: z.unknown().optional(),

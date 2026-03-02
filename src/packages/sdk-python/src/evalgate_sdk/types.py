@@ -146,7 +146,7 @@ class Span(CamelModel):
     metadata: dict[str, Any] | None = None
     start_time: datetime | None = None
     end_time: datetime | None = None
-    duration: int | None = None
+    duration_ms: int | None = None
 
 
 class CreateSpanParams(CamelModel):

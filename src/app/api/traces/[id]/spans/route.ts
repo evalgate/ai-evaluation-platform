@@ -43,7 +43,7 @@ export const POST = secureRoute(
 		if (!parsed.ok) return parsed.response;
 
 		const {
-			spanId,
+			spanId: rawSpanId,
 			name,
 			type,
 			parentSpanId,
@@ -55,6 +55,8 @@ export const POST = secureRoute(
 			metadata,
 			evaluationRunId,
 		} = parsed.data;
+
+		const spanId = rawSpanId ?? crypto.randomUUID();
 
 		const result = await spanService.create(ctx.organizationId, traceId, {
 			spanId,

@@ -71,7 +71,7 @@ export const POST = secureRoute(
 
 			const newTrace = await traceService.create(ctx.organizationId, {
 				name,
-				traceId,
+				traceId: traceId ?? crypto.randomUUID(),
 				status,
 				durationMs: durationMs ?? undefined,
 				metadata,
