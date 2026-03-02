@@ -321,13 +321,101 @@ Key exports:
 
 ---
 
+## Gap Audit Resolutions (Session 2)
+
+### Gap G — Quarantine → Promote Lifecycle
+| File | Description |
+|------|-------------|
+| `src/lib/testcases/quarantine.ts` | Full test-case state machine: `generated → quarantined → promoted / rejected` |
+
+Key exports: `createGeneratedTestCase`, `quarantineTestCase`, `promoteTestCase`, `rejectTestCase`, `getGatingCases`, `getPendingReviewCases`, `summarizeQuarantineStatus`
+
+- All transitions append audited events (actor / reason / ISO timestamp)
+- `getGatingCases()` returns only promoted cases — the merge gate filter
+- `promoteTestCase()` enforces optional `minQualityScore`
+
+**Tests:** `tests/unit/testcases/quarantine.test.ts` (30 tests)
+
+---
+
+### Gap D — ReliabilityObject Version Resolution
+| File | Description |
+|------|-------------|
+| `src/lib/reliability/reliability-object.ts` | Added `resolveAtVersion`, `resolveAtTime`, `buildVersionHistory` |
+
+- `resolveAtVersion(history, n)` — fetch entity at exact version
+- `resolveAtTime(history, iso)` — latest version at or before timestamp (point-in-time audit)
+- `buildVersionHistory(objects)` — sort + validate monotonic version sequence
+
+**Tests:** `tests/unit/reliability/reliability-object.test.ts` (23 tests total, +14 new)
+
+---
+
+### Gap C — Trace Redaction Wired Inline
+| File | Description |
+|------|-------------|
+| `src/lib/traces/trace-freezer.ts` | Redaction now on by default in `freezeTrace`; opt out with `applyRedaction: false` |
+
+---
+
+### Gap B — Contract Payload Suite
+| File | Description |
+|------|-------------|
+| `tests/contract/fixtures/trace_v1.json` | Canonical trace payload fixture (shared TS + Python) |
+| `tests/contract/fixtures/span_v1.json` | Canonical span payload with full behavioral block |
+| `tests/contract/fixture-payload-matrix.test.ts` | Loads fixtures from disk, validates schema + round-trip + cross-fixture consistency |
+| `src/packages/sdk-python/tests/test_contract_payloads.py` | Python SDK contract tests consuming the same fixtures |
+
+**Tests:** 15 TS + 28 Python (43 total)
+
+---
+
+### Gap F — Feature Extraction Caching
+| File | Description |
+|------|-------------|
+| `src/lib/scoring/feature-cache.ts` | Caching contract wrapping the feature extractor |
+
+Key exports: `featureCacheKey`, `InMemoryFeatureCache`, `extractOrGetCached`, `extractBatch`, `computeCacheStats`, re-exports `FEATURE_VERSION`
+
+- `extractOrGetCached()` guarantees at-most-one extraction per `(traceId, featureVersion)`
+- `InMemoryFeatureCache` for tests and local dev; DB-backed store injected by callers
+
+**Tests:** `tests/unit/scoring/feature-cache.test.ts` (25 tests)
+
+---
+
+### Gap E — Embedding-Based Coverage Model
+| File | Description |
+|------|-------------|
+| `src/lib/dataset/coverage-model.ts` | Optional cosine-similarity clustering behind `useEmbeddings` feature flag |
+
+Key additions:
+- `EmbeddingFn` type — caller-injected, no external deps
+- `EmbeddingVersionInfo` + `computeEmbeddingVersionHash()` — stable cache keying
+- `buildCoverageModel()` now accepts `embeddingFn` + `useEmbeddings`; falls back to BoW Jaccard when flag is false or fn absent
+
+**Tests:** `tests/unit/dataset/embedding-coverage.test.ts` (16 tests)
+
+---
+
+### Gap A — End-to-End Golden Path Demo
+| File | Description |
+|------|-------------|
+| `scripts/golden-path-demo.ts` | 7-step executable demo: `pnpm tsx scripts/golden-path-demo.ts` |
+| `docs/GOLDEN_PATH.md` | Step breakdown, ASCII flow diagram, module map, run commands |
+
+**Zero mocks, zero DB, zero network.** Exercises: validate → freeze+redact → detect → quarantine/promote → PR annotation → replay plan → dataset health.
+
+---
+
 ## Test Count Summary
 
 | Lane | Files | Tests |
 |------|-------|-------|
-| Unit | 40+ files | 700+ tests |
-| DOM | 5 files | 40 tests |
-| **Total** | **45+ files** | **740+ tests** |
+| Unit (TS) | 49 files | 948 tests |
+| DOM (TS) | 5 files | 40 tests |
+| Python SDK | 5 files | 28 contract tests |
+| **Total** | **59 files** | **1016 tests** |
 
 All tests passing across all lanes.
 
