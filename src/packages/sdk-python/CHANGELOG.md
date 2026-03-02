@@ -9,6 +9,12 @@ Version numbering is aligned with the TypeScript SDK (`@evalgate/sdk`) and the p
 
 **Version history note:** The Python SDK jumped from 1.0.0 → 1.9.x → 2.0.0 to stay in sync with the TypeScript SDK. The TypeScript SDK had many releases (1.1–1.9) before the Python SDK existed. We now align both SDKs on the same major.minor version.
 
+## [2.1.2] - 2026-03-02
+
+### Fixed
+
+- **Type safety** — aligned with platform 2.1.2; all CI checks passing
+
 ## [2.1.1] - 2026-03-02
 
 ### Fixed
