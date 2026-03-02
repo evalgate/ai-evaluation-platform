@@ -113,7 +113,7 @@ The regression gate runs in `platform-ci.yml` after `unit-confidence` and `db-co
 quality → unit-confidence + db-confidence → regression-gate
 ```
 
-A standalone `evalai.yml` drop-in workflow is also available for external repos.
+A standalone `evalgate.yml` drop-in workflow is also available for external repos.
 
 ## Sanity Checks
 

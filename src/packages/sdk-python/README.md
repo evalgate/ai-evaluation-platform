@@ -2,7 +2,7 @@
 
 > Evaluation infrastructure for AI systems. Trace, test, and judge every LLM call — in five lines of Python.
 
-**Versioning:** This package uses the same version as the TypeScript SDK (`@pauly4010/evalai-sdk`). The Python SDK jumped from 1.0.0 → 1.9.x → 2.0.0 to align with TypeScript; both SDKs now share the same major.minor version going forward. Current version: **2.1.1**.
+**Versioning:** This package uses the same version as the TypeScript SDK (`@evalgate/sdk`). The Python SDK jumped from 1.0.0 → 1.9.x → 2.0.0 to align with TypeScript; both SDKs now share the same major.minor version going forward. Current version: **2.1.1**.
 
 [![PyPI](https://img.shields.io/pypi/v/pauly4010-evalgate-sdk)](https://pypi.org/project/pauly4010-evalgate-sdk/)
 [![PyPI version](https://img.shields.io/pypi/v/pauly4010-evalgate-sdk)](https://pypi.org/project/pauly4010-evalgate-sdk/)

@@ -376,7 +376,7 @@ import { traceLangChainAgent } from '@evalgate/sdk/workflows';
 
 const agent = await initializeAgent(tools, model, {
   callbacks: [traceLangChainAgent({
-    apiKey: process.env.EVALAI_API_KEY,
+    apiKey: process.env.EVALGATE_API_KEY,
     workflowName: 'customer_support_agent'
   })]
 });

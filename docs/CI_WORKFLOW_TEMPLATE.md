@@ -1,6 +1,6 @@
 # GitHub Actions Workflow Template
 
-Copy this to `.github/workflows/evalai.yml`:
+Copy this to `.github/workflows/evalgate.yml`:
 
 ```yaml
 name: EvalAI CI
@@ -35,7 +35,7 @@ jobs:
       - name: Run EvalAI CI
         run: npx evalgate ci --format github --write-results --base ${{ github.base_ref || 'main' }}
         env:
-          EVALAI_API_KEY: ${{ secrets.EVALAI_API_KEY }}
+          EVALGATE_API_KEY: ${{ secrets.EVALGATE_API_KEY }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
       
@@ -103,7 +103,7 @@ with:
 ### **Additional Environment Variables**
 ```yaml
 env:
-  EVALAI_API_KEY: ${{ secrets.EVALAI_API_KEY }}
+  EVALGATE_API_KEY: ${{ secrets.EVALGATE_API_KEY }}
   OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
   AZURE_OPENAI_ENDPOINT: ${{ secrets.AZURE_OPENAI_ENDPOINT }}
   AZURE_OPENAI_KEY: ${{ secrets.AZURE_OPENAI_KEY }}
@@ -111,8 +111,8 @@ env:
 
 ## 🚀 Quick Setup
 
-1. **Create the workflow file**: `.github/workflows/evalai.yml`
-2. **Add secrets** (if needed): `EVALAI_API_KEY`, `OPENAI_API_KEY`, etc.
+1. **Create the workflow file**: `.github/workflows/evalgate.yml`
+2. **Add secrets** (if needed): `EVALGATE_API_KEY`, `OPENAI_API_KEY`, etc.
 3. **Push to GitHub**: CI will start automatically
 
 ## 📊 What You'll See

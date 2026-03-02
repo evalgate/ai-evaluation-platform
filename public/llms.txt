@@ -73,7 +73,7 @@ pip install pauly4010-evalgate-sdk
 
 ## CLI Commands
 
-### 🚀 One-Command CI (v2.0.0)
+### 🚀 One-Command CI (v2.1.1)
 
 ```bash
 npx evalgate ci --format github --write-results --base main    # Complete CI pipeline
@@ -122,7 +122,7 @@ EvalGate provides:
 ```typescript
 import { AIEvalClient, WorkflowTracer } from '@evalgate/sdk';
 
-const client = AIEvalClient.init(); // reads EVALAI_API_KEY env var
+const client = AIEvalClient.init(); // reads EVALGATE_API_KEY env var
 const tracer = new WorkflowTracer(client);
 
 await tracer.startWorkflow('My Pipeline', {
@@ -178,7 +178,7 @@ const { total, passed, failed } = await suite.run();
 import requests, os
 
 BASE = "https://evalgate.com"
-HEADERS = {"Authorization": f"Bearer {os.environ['EVALAI_API_KEY']}", "Content-Type": "application/json"}
+HEADERS = {"Authorization": f"Bearer {os.environ['EVALGATE_API_KEY']}", "Content-Type": "application/json"}
 
 # Create trace
 trace = requests.post(f"{BASE}/api/traces", headers=HEADERS, json={

@@ -170,7 +170,7 @@ For dashboard, history, and LLM judge:
 2. Add to your CI workflow:
    ```yaml
    env:
-     EVALAI_API_KEY: ${{ secrets.EVALAI_API_KEY }}
+     EVALGATE_API_KEY: ${{ secrets.EVALGATE_API_KEY }}
    ```
 
 ---

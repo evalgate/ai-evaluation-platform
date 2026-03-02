@@ -15,13 +15,13 @@ Zero to production CI in 60 seconds. No infra. No lock-in. Remove anytime.
 
 ## Quick Start (60 seconds)
 
-Add this to your `.github/workflows/evalai.yml`:
+Add this to your `.github/workflows/evalgate.yml`:
 
 ```yaml
 name: EvalGate CI
 on: [push, pull_request]
 jobs:
-  evalai:
+  evalgate:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -31,8 +31,8 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: evalai-results
-          path: .evalai/
+          name: evalgate-results
+          path: .evalgate/
 ```
 
 Create `eval/your-spec.spec.ts`:
@@ -51,7 +51,7 @@ defineEval({
 ```
 
 ```bash
-git add .github/workflows/evalai.yml eval/
+git add .github/workflows/evalgate.yml eval/
 git commit -m "feat: add EvalGate CI pipeline"
 git push
 ```
@@ -67,7 +67,7 @@ That's it! Your CI now:
 
 ## 🚀 New in v2.0.0: One-Command CI
 
-### `evalai ci` - Complete CI Pipeline
+### `evalgate ci` - Complete CI Pipeline
 
 ```bash
 npx @evalgate/sdk ci --format github --write-results --base main
@@ -108,8 +108,8 @@ Every failure prints a clear next step:
 
 ```
 🔧 Next step for debugging:
-   Download base artifact and run: evalai diff --base .evalai/base-run.json --head .evalai/last-run.json
-   Artifacts: .evalai/runs/
+   Download base artifact and run: evalgate diff --base .evalgate/base-run.json --head .evalgate/last-run.json
+   Artifacts: .evalgate/runs/
 ```
 
 ---
@@ -181,23 +181,23 @@ Every failure prints a clear next step:
 
 | Command | Description |
 |---------|-------------|
-| `npx evalgate migrate config --in evalai.config.json --out eval/migrated.spec.ts` | Convert legacy config to DSL |
+| `npx evalgate migrate config --in evalgate.config.json --out eval/migrated.spec.ts` | Convert legacy config to DSL |
 
 **Guided failure flow:**
 
 ```
-evalai ci  →  fails  →  "Next: evalai explain --report .evalai/last-run.json"
+evalgate ci  →  fails  →  "Next: evalgate explain --report .evalgate/last-run.json"
                               ↓
-                   evalai explain  →  root causes + fixes
+                   evalgate explain  →  root causes + fixes
 ```
 
 **GitHub Actions step summary** — CI result at a glance with regressions and artifacts:
 
-![GitHub Actions step summary showing CI pass/fail with delta table](../../docs/images/evalai-gate-step-summary.svg)
+![GitHub Actions step summary showing CI pass/fail with delta table](../../docs/images/evalgate-gate-step-summary.svg)
 
-**`evalai explain` terminal output** — root causes + fix commands:
+**`evalgate explain` terminal output** — root causes + fix commands:
 
-![Terminal output of evalai explain showing top failures and suggested fixes](../../docs/images/evalai-explain-terminal.svg)
+![Terminal output of evalgate explain showing top failures and suggested fixes](../../docs/images/evalgate-explain-terminal.svg)
 
 All commands automatically write artifacts so `explain` works with zero flags.
 
@@ -324,7 +324,7 @@ import type {
 ```typescript
 import { AIEvalClient } from "@evalgate/sdk";
 
-const client = AIEvalClient.init(); // from EVALAI_API_KEY env
+const client = AIEvalClient.init(); // from EVALGATE_API_KEY env
 // or
 const client = new AIEvalClient({ apiKey: "...", organizationId: 123 });
 ```
@@ -367,7 +367,7 @@ npm install openai
 ## No Lock-in
 
 ```bash
-rm evalai.config.json
+rm evalgate.config.json
 ```
 
 Your local `openAIChatEval` runs continue to work. No account cancellation. No data export required.
@@ -376,17 +376,17 @@ Your local `openAIChatEval` runs continue to work. No account cancellation. No d
 
 See [CHANGELOG.md](CHANGELOG.md) for the full release history.
 
-**v1.8.0** — `evalai doctor` rewrite (9-check checklist), `evalai explain` command, guided failure flow, CI template with doctor preflight
+**v1.8.0** — `evalgate doctor` rewrite (9-check checklist), `evalgate explain` command, guided failure flow, CI template with doctor preflight
 
-**v1.7.0** — `evalai init` scaffolder, `evalai upgrade --full`, `detectRunner()`, machine-readable gate output, init test matrix
+**v1.7.0** — `evalgate init` scaffolder, `evalgate upgrade --full`, `detectRunner()`, machine-readable gate output, init test matrix
 
-**v1.6.0** — `evalai gate`, `evalai baseline`, regression gate constants & types
+**v1.6.0** — `evalgate gate`, `evalgate baseline`, regression gate constants & types
 
 **v1.5.8** — secureRoute fix, test infra fixes, 304 handling fix
 
 **v1.5.5** — PASS/WARN/FAIL semantics, flake intelligence, golden regression suite
 
-**v1.5.0** — GitHub annotations, `--onFail import`, `evalai doctor`
+**v1.5.0** — GitHub annotations, `--onFail import`, `evalgate doctor`
 
 ## License
 

@@ -1,11 +1,11 @@
-# CI Quickstart: Adopt EvalAI in 60 Seconds
+# CI Quickstart: Adopt EvalGate in 60 Seconds
 
 ## 🚀 One-Command CI Setup
 
 Add this to your `.github/workflows/evalgate.yml`:
 
 ```yaml
-name: EvalAI CI
+name: EvalGate CI
 on: [push, pull_request]
 jobs:
   evalgate:

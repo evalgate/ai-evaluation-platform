@@ -28,11 +28,11 @@ jobs:
 
       - name: EvalGate gate
         env:
-          EVALAI_API_KEY: ${{ secrets.EVALAI_API_KEY }}
+          EVALGATE_API_KEY: ${{ secrets.EVALGATE_API_KEY }}
         run: npx -y @evalgate/sdk@^2 check --format github --onFail import
 ```
 
-**Required:** Add `EVALAI_API_KEY` to your repo secrets (Settings → Secrets and variables → Actions). Create an API key in the [EvalGate dashboard](https://evalgate.com) with `runs:read` scope.
+**Required:** Add `EVALGATE_API_KEY` to your repo secrets (Settings → Secrets and variables → Actions). Create an API key in the [EvalGate dashboard](https://evalgate.com) with `runs:read` scope.
 
 ## Setup
 
@@ -93,6 +93,6 @@ See [examples/quickstart-ci](../../examples/quickstart-ci) for a minimal project
 
 ## Troubleshooting
 
-- **Missing EVALAI_API_KEY** — Add the secret in repo Settings → Secrets
+- **Missing EVALGATE_API_KEY** — Add the secret in repo Settings → Secrets
 - **Evaluation not found** — Ensure `evalgate.config.json` has the correct `evaluationId`
 - **No baseline** — Run the evaluation at least once and publish a baseline in the dashboard

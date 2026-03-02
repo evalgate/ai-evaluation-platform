@@ -34,7 +34,7 @@
          └────────────┬───────────┘                       │
                       │                                   │
               No account needed                   Requires account
-              No API key needed                   EVALAI_API_KEY
+              No API key needed                   EVALGATE_API_KEY
               Works offline                       Dashboard + history
 ```
 
@@ -58,7 +58,7 @@
 
 ```
 npx evalgate init          →  npx evalgate upgrade --full  →  Add evaluationId +
-(Tier 1 in 2 min)            (Tier 2 in 1 min)            EVALAI_API_KEY
+(Tier 1 in 2 min)            (Tier 2 in 1 min)            EVALGATE_API_KEY
                                                            (Platform in 5 min)
 ```
 

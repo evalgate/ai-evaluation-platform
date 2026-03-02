@@ -25,7 +25,7 @@ Paste the JSON output to your assistant with:
 ### Step 2: Get the gate report
 
 ```bash
-npx evalgate check --format json --evaluationId <id> --apiKey $EVALAI_API_KEY
+npx evalgate check --format json --evaluationId <id> --apiKey $EVALGATE_API_KEY
 ```
 
 Or if CI already ran, download the artifact:

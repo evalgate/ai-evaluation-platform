@@ -26,7 +26,7 @@
 | **Exports** | `.` (main), `./assertions`, `./testing`, `./integrations/openai`, `./integrations/anthropic` |
 | **Peer deps** | `openai ^4.0.0` (optional), `@anthropic-ai/sdk ^0.20.0` (optional) |
 | **Node** | `>=16.0.0` |
-| **CLI** | `npx evalai` → `./dist/cli/index.js` |
+| **CLI** | `npx evalgate` → `./dist/cli/index.js` |
 
 ### 1.1 AIEvalClient — Constructor & Auth
 
@@ -34,13 +34,13 @@
 import { AIEvalClient } from '@evalgate/sdk';
 
 // Option A: Zero-config (reads env vars)
-// Env: EVALAI_API_KEY, EVALAI_ORGANIZATION_ID, EVALAI_BASE_URL
+// Env: EVALGATE_API_KEY, EVALGATE_ORGANIZATION_ID, EVALGATE_BASE_URL
 const client = AIEvalClient.init();
 
 // Option B: Explicit config
 const client = new AIEvalClient({
-  apiKey: 'your-api-key',           // required (or EVALAI_API_KEY env)
-  organizationId: 123,              // optional (or EVALAI_ORGANIZATION_ID env)
+  apiKey: 'your-api-key',           // required (or EVALGATE_API_KEY env)
+  organizationId: 123,              // optional (or EVALGATE_ORGANIZATION_ID env)
   baseUrl: 'https://your-app.vercel.app', // defaults to '' in browser, 'http://localhost:3000' in Node
   timeout: 30000,                   // ms, default 30s
   debug: false,                     // enables verbose logging
@@ -640,10 +640,10 @@ There is a **full Python EvalGate tracer** implementation in the codebase. It is
 ### 4.1 Python EvalGateTracer
 
 ```python
-from evalai_tracer import EvalGateTracer, Decision, DecisionAlternative, CostRecord
+from evalgate_tracer import EvalGateTracer, Decision, DecisionAlternative, CostRecord
 
 tracer = EvalGateTracer(
-    api_key=os.environ['EVALAI_API_KEY'],
+    api_key=os.environ['EVALGATE_API_KEY'],
     organization_id=123,
     base_url='https://evalgate.com',
     debug=True
@@ -684,7 +684,7 @@ tracer.end_workflow(output={'result': 'done'}, status='completed')
 ### 4.2 CrewAI Decorator
 
 ```python
-from evalai_tracer import trace_crewai
+from evalgate_tracer import trace_crewai
 
 @trace_crewai(workflow_name='market_research')
 class MarketResearchCrew:
@@ -704,7 +704,7 @@ result = crew.kickoff()
 ### 4.3 Python Governance
 
 ```python
-from evalai_tracer import GovernanceConfig, check_governance
+from evalgate_tracer import GovernanceConfig, check_governance
 
 config = GovernanceConfig(
     confidence_threshold=0.7,
@@ -728,7 +728,7 @@ import requests
 
 BASE_URL = "https://evalgate.com"
 HEADERS = {
-    "Authorization": f"Bearer {os.environ['EVALAI_API_KEY']}",
+    "Authorization": f"Bearer {os.environ['EVALGATE_API_KEY']}",
     "Content-Type": "application/json"
 }
 
@@ -829,11 +829,11 @@ workflow = requests.post(f"{BASE_URL}/api/workflows", headers=HEADERS, json={
 import requests, os, time
 
 def trace_agent_call(agent_name, model, input_tokens, output_tokens, decision, chosen):
-    base = os.environ["EVALAI_BASE_URL"]
-    headers = {"Authorization": f"Bearer {os.environ['EVALAI_API_KEY']}", "Content-Type": "application/json"}
+    base = os.environ["EVALGATE_BASE_URL"]
+    headers = {"Authorization": f"Bearer {os.environ['EVALGATE_API_KEY']}", "Content-Type": "application/json"}
     trace = requests.post(f"{base}/api/traces", headers=headers, json={
         "name": f"Agent: {agent_name}", "traceId": f"py-{int(time.time()*1000)}",
-        "organizationId": int(os.environ["EVALAI_ORGANIZATION_ID"]), "status": "success"
+        "organizationId": int(os.environ["EVALGATE_ORGANIZATION_ID"]), "status": "success"
     }).json()
     requests.post(f"{base}/api/costs", headers=headers, json={
         "spanId": trace["id"], "provider": "openai", "model": model,
@@ -846,7 +846,7 @@ def trace_agent_call(agent_name, model, input_tokens, output_tokens, decision, c
 ```typescript
 import { AIEvalClient, WorkflowTracer } from '@evalgate/sdk';
 
-const client = AIEvalClient.init(); // reads EVALAI_API_KEY env
+const client = AIEvalClient.init(); // reads EVALGATE_API_KEY env
 const tracer = new WorkflowTracer(client, { debug: true });
 
 await tracer.startWorkflow('My Pipeline', {

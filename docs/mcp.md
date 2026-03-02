@@ -14,7 +14,7 @@ EvalGate exposes an **MCP-style tool discovery and execution API** for AI agents
 Use either:
 
 - **Session cookie** — when using the platform in a browser
-- **API key** — `Authorization: Bearer <EVALAI_API_KEY>`
+- **API key** — `Authorization: Bearer <EVALGATE_API_KEY>`
 
 Get API keys from **Settings → Developer** in the app.
 
