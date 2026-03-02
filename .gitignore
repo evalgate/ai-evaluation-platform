@@ -63,3 +63,4 @@ evals/regression-report.json
 evals/confidence-summary.json
 evals/latency-benchmark.json
 .env*.local
+.pypirc
