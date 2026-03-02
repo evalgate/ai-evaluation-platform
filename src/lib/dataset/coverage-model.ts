@@ -209,6 +209,81 @@ function detectGaps(
 	return gaps.sort((a, b) => b.importance - a.importance);
 }
 
+// ── Embedding support (Gap E) ──────────────────────────────────────────────────
+
+/**
+ * A function that produces a dense vector embedding for a text string.
+ * Callers must inject this — the module itself has no external dependencies.
+ *
+ * @param text - Input string to embed
+ * @returns A numeric vector (length must be consistent across all calls)
+ */
+export type EmbeddingFn = (text: string) => number[];
+
+/**
+ * Identifies which embedding model/version produced the stored vectors.
+ * Changing this value invalidates any cached embedding clusters.
+ */
+export interface EmbeddingVersionInfo {
+	/** Embedding model identifier, e.g. "text-embedding-3-small" */
+	model: string;
+	/** Embedding dimension */
+	dimensions: number;
+	/** Short hash of the model + dimension for cache keying */
+	versionHash: string;
+}
+
+/** Compute a deterministic version hash from model + dimensions. */
+export function computeEmbeddingVersionHash(model: string, dimensions: number): string {
+	const raw = `${model}:${dimensions}`;
+	let h = 0;
+	for (let i = 0; i < raw.length; i++) {
+		h = (Math.imul(31, h) + raw.charCodeAt(i)) | 0;
+	}
+	return Math.abs(h).toString(16).padStart(8, "0");
+}
+
+function cosineSimilarity(a: number[], b: number[]): number {
+	if (a.length !== b.length || a.length === 0) return 0;
+	let dot = 0, magA = 0, magB = 0;
+	for (let i = 0; i < a.length; i++) {
+		dot += a[i]! * b[i]!;
+		magA += a[i]! * a[i]!;
+		magB += b[i]! * b[i]!;
+	}
+	const denom = Math.sqrt(magA) * Math.sqrt(magB);
+	return denom === 0 ? 0 : dot / denom;
+}
+
+function clusterByEmbeddings(
+	points: Array<{ id: string; embedding: number[] }>,
+	k: number,
+): Map<number, string[]> {
+	if (points.length === 0) return new Map();
+	const clampedK = Math.min(k, points.length);
+
+	const step = Math.max(1, Math.floor(points.length / clampedK));
+	const centroids = points
+		.filter((_, i) => i % step === 0)
+		.slice(0, clampedK)
+		.map((p) => p.embedding);
+
+	const assignments = new Map<number, string[]>();
+	for (let i = 0; i < clampedK; i++) assignments.set(i, []);
+
+	for (const point of points) {
+		let bestCluster = 0;
+		let bestSim = -Infinity;
+		for (let ci = 0; ci < centroids.length; ci++) {
+			const sim = cosineSimilarity(point.embedding, centroids[ci]!);
+			if (sim > bestSim) { bestSim = sim; bestCluster = ci; }
+		}
+		assignments.get(bestCluster)!.push(point.id);
+	}
+
+	return assignments;
+}
+
 // ── Core model ────────────────────────────────────────────────────────────────
 
 /**
@@ -217,12 +292,22 @@ function detectGaps(
  * @param points - Behavior points (test cases / traces)
  * @param k - Number of behavior clusters to discover (default: auto)
  * @param options.seedPhrases - Phrases used for gap detection (default: DEFAULT_GAP_SEED_PHRASES)
+ * @param options.embeddingFn - Optional embedding function (Gap E). When provided,
+ *   cosine-similarity clustering is used instead of BoW Jaccard. The flag
+ *   `useEmbeddings` must also be true (default: true when embeddingFn is supplied).
+ * @param options.embeddingVersion - Metadata about the embedding model for cache keying.
  */
 export function buildCoverageModel(
 	points: BehaviorPoint[],
 	k?: number,
-	options: { seedPhrases?: readonly string[] } = {},
+	options: {
+		seedPhrases?: readonly string[];
+		embeddingFn?: EmbeddingFn;
+		useEmbeddings?: boolean;
+		embeddingVersion?: EmbeddingVersionInfo;
+	} = {},
 ): CoverageModel {
+	const useEmbed = options.embeddingFn !== undefined && options.useEmbeddings !== false;
 	const seedPhrases = options.seedPhrases ?? DEFAULT_GAP_SEED_PHRASES;
 	if (points.length === 0) {
 		return {
@@ -244,7 +329,18 @@ export function buildCoverageModel(
 	const clusterCount =
 		k ?? Math.min(20, Math.max(1, Math.round(Math.sqrt(points.length))));
 
-	const assignments = clusterPoints(tokenizedPoints, clusterCount);
+	// Choose clustering strategy: embedding cosine similarity (Gap E) or BoW Jaccard
+	let assignments: Map<number, string[]>;
+	if (useEmbed && options.embeddingFn) {
+		const embeddedPoints = tokenizedPoints.map((p) => ({
+			id: p.id,
+			embedding: options.embeddingFn!(p.text),
+		}));
+		assignments = clusterByEmbeddings(embeddedPoints, clusterCount);
+	} else {
+		assignments = clusterPoints(tokenizedPoints, clusterCount);
+	}
+
 	const idToPoint = new Map(tokenizedPoints.map((p) => [p.id, p]));
 
 	const clusters: BehaviorCluster[] = [];
@@ -259,7 +355,7 @@ export function buildCoverageModel(
 		const density = clusterDensity(members);
 		const clusterId = `cluster-${clusterIdx}`;
 
-		// Cluster centroid token set
+		// Cluster centroid token set (used for gap detection regardless of clustering mode)
 		const centroidSet = new Set(topTokens);
 		for (const m of members) {
 			for (const t of m.tokens) centroidSet.add(t);
