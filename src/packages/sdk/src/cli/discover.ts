@@ -203,17 +203,21 @@ function extractSpecNames(content: string): string[] {
 
 	// Form 1: defineEval("name", ...) or defineEval('name', ...) or defineEval(`name`, ...)
 	const stringArgPattern = /defineEval\s*\(\s*["'`]([^"'`]+)["'`]/g;
-	let m: RegExpExecArray | null;
-	while ((m = stringArgPattern.exec(content)) !== null) {
+	let m = stringArgPattern.exec(content);
+	while (m !== null) {
 		names.push(m[1]);
+		m = stringArgPattern.exec(content);
 	}
 
 	if (names.length > 0) return names;
 
 	// Form 2: defineEval({ name: "..." }) — object-first form
-	const objNamePattern = /defineEval\s*\(\s*\{[\s\S]*?name\s*:\s*["'`]([^"'`]+)["'`]/g;
-	while ((m = objNamePattern.exec(content)) !== null) {
+	const objNamePattern =
+		/defineEval\s*\(\s*\{[\s\S]*?name\s*:\s*["'`]([^"'`]+)["'`]/g;
+	m = objNamePattern.exec(content);
+	while (m !== null) {
 		names.push(m[1]);
+		m = objNamePattern.exec(content);
 	}
 
 	return names;
