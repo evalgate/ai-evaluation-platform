@@ -4,6 +4,10 @@ When you change `docs/openapi.json`, add an entry here before running `pnpm open
 
 Format: `## X.Y.Z` or `## [X.Y.Z]` with a short description.
 
+## 2.2.2
+
+- Bump spec version to align with SDK 2.2.2 (new assertions: hasPII, containsAllRequiredFields, hasValidCodeSyntax, isFactuallyConsistent, hasNoBias, respondsInLanguage + async variants; WorkflowTracer fix; importData fix; compareWithSnapshot fix)
+
 ## 2.2.1
 
 - Bump spec version to align with SDK 2.2.1 (patch: snapshot accepts object input)
