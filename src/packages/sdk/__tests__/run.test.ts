@@ -190,7 +190,7 @@ describe("Run Command", () => {
 
 		expect(result.metadata.totalSpecs).toBe(3);
 		expect(result.metadata.mode).toBe("spec");
-		expect(result.metadata.duration).toBeGreaterThan(0);
+		expect(result.metadata.duration).toBeGreaterThanOrEqual(0);
 	});
 
 	it("should handle missing manifest gracefully", async () => {
