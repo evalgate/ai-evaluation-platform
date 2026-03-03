@@ -142,14 +142,14 @@ export {
 } from "./testing";
 
 // Snapshot testing (Tier 2.8)
-import { compareWithSnapshot, snapshot } from "./snapshot";
+import { compareSnapshots, compareWithSnapshot, snapshot } from "./snapshot";
 
 export {
 	snapshot,
 	compareWithSnapshot,
+	compareSnapshots,
 	// Aliases for backward compatibility
 	snapshot as saveSnapshot,
-	compareWithSnapshot as compareSnapshots,
 };
 
 import type { ExportFormat } from "./export";
@@ -187,6 +187,7 @@ export { Logger } from "./logger";
 export { extendExpectWithToPassGate } from "./matchers";
 export {
 	autoPaginate,
+	autoPaginateGenerator,
 	createPaginatedIterator,
 	decodeCursor,
 	encodeCursor,

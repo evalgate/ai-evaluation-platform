@@ -146,7 +146,8 @@ function createLocalExecutor() {
     return new LocalExecutorImpl();
 }
 /**
- * Default local executor instance
+ * Default local executor factory
+ * Call as defaultLocalExecutor() to get a new executor instance.
  * For convenience in simple use cases
  */
-exports.defaultLocalExecutor = createLocalExecutor();
+exports.defaultLocalExecutor = createLocalExecutor;

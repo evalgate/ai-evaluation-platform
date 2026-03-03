@@ -315,7 +315,10 @@ class EvalRuntimeImpl {
  * Create a new scoped runtime with lifecycle management
  * Returns a handle for proper resource management
  */
-function createEvalRuntime(projectRoot = process.cwd()) {
+function createEvalRuntime(projectRootOrConfig = process.cwd()) {
+    const projectRoot = typeof projectRootOrConfig === "string"
+        ? projectRootOrConfig
+        : (projectRootOrConfig.projectRoot ?? process.cwd());
     const runtime = new EvalRuntimeImpl(projectRoot);
     // Create bound defineEval function
     const boundDefineEval = ((nameOrConfig, executor, options) => {

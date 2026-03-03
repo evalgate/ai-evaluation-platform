@@ -136,7 +136,7 @@ async function exportData(client, options) {
  * console.log(`Imported ${result.summary.imported} items`);
  * ```
  */
-async function importData(client, data, options) {
+async function importData(client, data, options = {}) {
     const result = {
         summary: { total: 0, imported: 0, skipped: 0, failed: 0 },
         details: {},
@@ -155,7 +155,7 @@ async function importData(client, data, options) {
         return result;
     }
     // Import traces
-    if (data.traces) {
+    if (data.traces && client?.traces) {
         const traceResults = { imported: 0, skipped: 0, failed: 0 };
         for (const trace of data.traces) {
             try {
@@ -191,7 +191,7 @@ async function importData(client, data, options) {
         result.summary.total += data.traces.length;
     }
     // Import evaluations
-    if (data.evaluations) {
+    if (data.evaluations && client?.evaluations) {
         const evalResults = { imported: 0, skipped: 0, failed: 0 };
         for (const evaluation of data.evaluations) {
             try {

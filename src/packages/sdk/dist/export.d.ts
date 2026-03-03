@@ -140,7 +140,7 @@ export declare function exportData(client: AIEvalClient, options: ExportOptions)
  * console.log(`Imported ${result.summary.imported} items`);
  * ```
  */
-export declare function importData(client: AIEvalClient, data: ExportData, options: ImportOptions): Promise<ImportResult>;
+export declare function importData(client: AIEvalClient, data: ExportData, options?: ImportOptions): Promise<ImportResult>;
 /**
  * Export data to JSON file
  *

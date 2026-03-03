@@ -65,7 +65,7 @@ function traceOpenAI(openai, evalClient, options = {}) {
                     }
                     : {}),
             });
-            await evalClient.traces.create({
+            await evalClient.traces?.create({
                 name: `OpenAI: ${params.model}`,
                 traceId,
                 organizationId: organizationId || evalClient.getOrganizationId(),
@@ -87,7 +87,7 @@ function traceOpenAI(openai, evalClient, options = {}) {
                 error: error instanceof Error ? error.message : String(error),
             });
             await evalClient.traces
-                .create({
+                ?.create({
                 name: `OpenAI: ${params.model}`,
                 traceId,
                 organizationId: organizationId || evalClient.getOrganizationId(),
@@ -95,7 +95,7 @@ function traceOpenAI(openai, evalClient, options = {}) {
                 durationMs,
                 metadata: errorMetadata,
             })
-                .catch(() => {
+                ?.catch(() => {
                 // Ignore errors in trace creation to avoid masking the original error
             });
             throw error;
@@ -124,7 +124,7 @@ async function traceOpenAICall(evalClient, name, fn, options = {}) {
     const startTime = Date.now();
     const traceId = `openai-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     try {
-        await evalClient.traces.create({
+        await evalClient.traces?.create({
             name,
             traceId,
             organizationId: options.organizationId || evalClient.getOrganizationId(),
@@ -133,7 +133,7 @@ async function traceOpenAICall(evalClient, name, fn, options = {}) {
         });
         const result = await fn();
         const durationMs = Date.now() - startTime;
-        await evalClient.traces.create({
+        await evalClient.traces?.create({
             name,
             traceId,
             organizationId: options.organizationId || evalClient.getOrganizationId(),
@@ -145,7 +145,7 @@ async function traceOpenAICall(evalClient, name, fn, options = {}) {
     }
     catch (error) {
         const durationMs = Date.now() - startTime;
-        await evalClient.traces.create({
+        await evalClient.traces?.create({
             name,
             traceId,
             organizationId: options.organizationId || evalClient.getOrganizationId(),

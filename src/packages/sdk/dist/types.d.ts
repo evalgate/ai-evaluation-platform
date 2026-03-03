@@ -38,8 +38,13 @@ export interface ClientConfig {
     keepAlive?: boolean;
 }
 /**
- * Evaluation template categories
- * Updated with new template types for comprehensive LLM testing
+ * Evaluation template identifier constants for use with the EvalAI platform API.
+ *
+ * These are **string identifiers** (e.g. `"unit-testing"`) that reference
+ * pre-built templates on the platform — not template definition objects.
+ * Pass these values to `evaluations.create({ templateId: EvaluationTemplates.UNIT_TESTING })`
+ * to spin up a pre-configured evaluation. For custom criteria, thresholds, and
+ * test cases, build your own evaluation config instead.
  */
 export declare const EvaluationTemplates: {
     readonly UNIT_TESTING: "unit-testing";

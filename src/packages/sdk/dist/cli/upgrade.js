@@ -480,7 +480,12 @@ After upgrading:
     console.log("    - package.json                  eval:regression-gate + eval:baseline-update");
     console.log("    - .github/workflows/            Gate + governance workflows");
     console.log("    - .github/CODEOWNERS            Baseline requires approval\n");
+    console.log("  ⚠️  IMPORTANT — Reset your baseline before pushing:");
+    console.log("    The gate compares against your existing Tier 1 baseline.");
+    console.log("    If your test script changed, run this first to avoid an immediate regression:");
+    console.log("    npx evalgate baseline update    (or: pnpm eval:baseline-update)\n");
     console.log("  Next:");
+    console.log("    npx evalgate baseline update");
     console.log("    git add -A");
     console.log("    git commit -m 'chore: upgrade EvalGate gate to Tier 2'");
     console.log("    git push\n");

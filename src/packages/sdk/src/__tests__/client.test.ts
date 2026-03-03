@@ -21,6 +21,13 @@ describe("AIEvalClient", () => {
 			);
 		});
 
+		it("should default baseUrl to https://api.evalgate.com when not provided", () => {
+			const client = new AIEvalClient({ apiKey: "test-key" });
+			expect((client as unknown as { baseUrl: string }).baseUrl).toBe(
+				"https://api.evalgate.com",
+			);
+		});
+
 		it("should initialize with explicit config", () => {
 			const client = new AIEvalClient({
 				apiKey: "test-key",

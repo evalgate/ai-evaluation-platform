@@ -4,6 +4,10 @@ When you change `docs/openapi.json`, add an entry here before running `pnpm open
 
 Format: `## X.Y.Z` or `## [X.Y.Z]` with a short description.
 
+## 2.2.3
+
+- Bump spec version to align with SDK 2.2.3 (bug fixes: `RequestCache` default TTL, `EvalGateError` subclass prototype chain + `retryAfter` direct property, `autoPaginate` returns `Promise<T[]>`, `createEvalRuntime` config-object overload, `defaultLocalExecutor` callable factory, `SnapshotManager.save` null/undefined safety, `compareSnapshots` disk-load, `AIEvalClient` default baseUrl → `https://api.evalgate.com`, `importData` optional-chaining guards, `toContainCode` raw-code detection, `hasReadabilityScore` `{min,max}` object form; new exports: `autoPaginateGenerator`, `compareSnapshots`)
+
 ## 2.2.2
 
 - Bump spec version to align with SDK 2.2.2 (new assertions: hasPII, containsAllRequiredFields, hasValidCodeSyntax, isFactuallyConsistent, hasNoBias, respondsInLanguage + async variants; WorkflowTracer fix; importData fix; compareWithSnapshot fix)

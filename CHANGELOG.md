@@ -2,6 +2,32 @@
 
 Platform and SDK releases. For detailed SDK changes, see [src/packages/sdk/CHANGELOG.md](src/packages/sdk/CHANGELOG.md).
 
+## [2.2.3] - 2026-03-03
+
+### Fixed
+
+- **`RequestCache` default TTL** — cache entries stored without an explicit TTL were immediately stale, causing every read to miss. Default is now `CacheTTL.MEDIUM`.
+- **`EvalGateError` subclass names and prototype chain** — `ValidationError.name` surfaced as `"EvalGateError"` in stack traces; `RateLimitError.retryAfter` was not a direct property. All four subclasses now correctly set `this.name` and call `Object.setPrototypeOf` after `super()`.
+- **`autoPaginate` returns a flat array** — was resolving to an unexhausted `AsyncGenerator`. Now returns `Promise<T[]>`. Streaming callers should use the new `autoPaginateGenerator` export.
+- **`createEvalRuntime` config object overload** — passing `{ projectRoot }` was silently ignored. Now accepts `string | { name?, projectRoot? }`.
+- **`defaultLocalExecutor` is now a callable factory** — was a pre-constructed instance; now re-exported as `createLocalExecutor` so each call site gets a fresh executor.
+- **`SnapshotManager.save` crash on `undefined`/`null`** — both values now serialize to the strings `"undefined"` and `"null"` instead of throwing.
+- **`compareSnapshots` loads both snapshots from disk** — the old alias passed raw content as the second argument. The new `compareSnapshots(nameA, nameB)` resolves both names from disk before diffing.
+- **`AIEvalClient` default `baseUrl`** — now `https://api.evalgate.com` (was `http://localhost:3000`).
+- **`importData` guards on `client.traces` / `client.evaluations`** — both accesses now use optional chaining to prevent crashes with partial or undefined clients.
+- **`toContainCode` detects raw code** — raw `function`, `const`, `class`, arrow, `import`, `export`, and `return` patterns now satisfy the assertion without a fenced code block.
+- **`hasReadabilityScore` unwraps `{min, max}` object** — passing `{ min: 40 }` was coerced to `NaN`, making every call return `true`.
+
+### Added
+
+- **`autoPaginateGenerator`** — streaming `AsyncGenerator<T[]>` alternative to `autoPaginate`.
+- **`compareSnapshots(nameA, nameB, dir?)`** — named snapshot comparison that loads both sides from disk.
+- **141 new regression tests** — covering all fixes in this release across `RequestCache`, error classes, pagination, snapshot handling, client config, `importData`, and assertions.
+- **`upgrade --full` baseline reminder** — post-upgrade CLI warning to run `npx evalgate baseline update`.
+- **OpenAI/Anthropic integration safety** — `evalClient.traces?.create` optional chaining prevents crashes on minimal client configs.
+
+---
+
 ## [2.2.2] - 2026-03-03
 
 ### Fixed

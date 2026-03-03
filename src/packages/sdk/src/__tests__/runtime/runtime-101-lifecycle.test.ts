@@ -23,6 +23,34 @@ describe("RUNTIME-101: Runtime Lifecycle Contract", () => {
 		disposeActiveRuntime();
 	});
 
+	describe("createEvalRuntime config-object overload (bug fix: object used as path)", () => {
+		it("should accept a config object with name and not crash", () => {
+			expect(() => createEvalRuntime({ name: "my-runtime" })).not.toThrow();
+		});
+
+		it("should accept a config object with projectRoot", () => {
+			expect(() =>
+				createEvalRuntime({ projectRoot: process.cwd() }),
+			).not.toThrow();
+		});
+
+		it("should accept a config object with both name and projectRoot", () => {
+			const handle = createEvalRuntime({
+				name: "test",
+				projectRoot: process.cwd(),
+			});
+			expect(handle.runtime).toBeDefined();
+		});
+
+		it("should accept a plain string path (existing behavior preserved)", () => {
+			expect(() => createEvalRuntime(process.cwd())).not.toThrow();
+		});
+
+		it("should accept no args (default to cwd)", () => {
+			expect(() => createEvalRuntime()).not.toThrow();
+		});
+	});
+
 	describe("RuntimeHandle interface", () => {
 		it("should return RuntimeHandle with all required properties", () => {
 			const handle = createEvalRuntime();

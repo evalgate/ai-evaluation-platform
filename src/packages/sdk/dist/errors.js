@@ -271,6 +271,10 @@ class RateLimitError extends EvalGateError {
     constructor(message, retryAfter) {
         super(message, "RATE_LIMIT_EXCEEDED", 429, { retryAfter });
         this.name = "RateLimitError";
+        if (retryAfter !== undefined) {
+            this.retryAfter = retryAfter;
+        }
+        Object.setPrototypeOf(this, RateLimitError.prototype);
     }
 }
 exports.RateLimitError = RateLimitError;
@@ -278,6 +282,7 @@ class AuthenticationError extends EvalGateError {
     constructor(message = "Authentication failed") {
         super(message, "AUTHENTICATION_ERROR", 401);
         this.name = "AuthenticationError";
+        Object.setPrototypeOf(this, AuthenticationError.prototype);
     }
 }
 exports.AuthenticationError = AuthenticationError;
@@ -285,6 +290,7 @@ class ValidationError extends EvalGateError {
     constructor(message = "Validation failed", details) {
         super(message, "VALIDATION_ERROR", 400, details);
         this.name = "ValidationError";
+        Object.setPrototypeOf(this, ValidationError.prototype);
     }
 }
 exports.ValidationError = ValidationError;
@@ -293,6 +299,7 @@ class NetworkError extends EvalGateError {
         super(message, "NETWORK_ERROR", 0);
         this.name = "NetworkError";
         this.retryable = true;
+        Object.setPrototypeOf(this, NetworkError.prototype);
     }
 }
 exports.NetworkError = NetworkError;

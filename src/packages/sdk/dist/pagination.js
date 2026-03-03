@@ -6,6 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.PaginatedIterator = void 0;
 exports.createPaginatedIterator = createPaginatedIterator;
 exports.autoPaginate = autoPaginate;
+exports.autoPaginateGenerator = autoPaginateGenerator;
 exports.encodeCursor = encodeCursor;
 exports.decodeCursor = decodeCursor;
 exports.createPaginationMeta = createPaginationMeta;
@@ -56,9 +57,34 @@ function createPaginatedIterator(fetchFn, limit = 50) {
     return new PaginatedIterator(fetchFn, limit);
 }
 /**
- * Auto-paginate helper that fetches all pages automatically
+ * Auto-paginate helper that fetches all pages and returns a flat array.
+ * @example
+ * ```typescript
+ * const allItems = await autoPaginate(
+ *   (offset, limit) => client.traces.list({ offset, limit }),
+ * );
+ * ```
  */
-async function* autoPaginate(fetchFn, limit = 50) {
+async function autoPaginate(fetchFn, limit = 50) {
+    const result = [];
+    let offset = 0;
+    let hasMore = true;
+    while (hasMore) {
+        const items = await fetchFn(offset, limit);
+        if (items.length === 0) {
+            break;
+        }
+        result.push(...items);
+        hasMore = items.length === limit;
+        offset += limit;
+    }
+    return result;
+}
+/**
+ * Streaming auto-paginate generator — yields individual items one at a time.
+ * Use this when you want to process items as they arrive rather than waiting for all pages.
+ */
+async function* autoPaginateGenerator(fetchFn, limit = 50) {
     let offset = 0;
     let hasMore = true;
     while (hasMore) {

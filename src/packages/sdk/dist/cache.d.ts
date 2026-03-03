@@ -21,7 +21,7 @@ export declare class RequestCache {
     /**
      * Store response in cache
      */
-    set<T>(method: string, url: string, data: T, ttl: number, params?: unknown): void;
+    set<T>(method: string, url: string, data: T, ttl?: number, params?: unknown): void;
     /**
      * Invalidate specific cache entry
      */

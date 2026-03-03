@@ -99,7 +99,7 @@ export declare class SnapshotManager {
      * }
      * ```
      */
-    compare(name: string, currentOutput: string): Promise<SnapshotComparison>;
+    compare(name: string, currentOutput: unknown): Promise<SnapshotComparison>;
     /**
      * List all snapshots
      *
@@ -165,7 +165,19 @@ export declare function loadSnapshot(name: string, dir?: string): Promise<Snapsh
  * }
  * ```
  */
-export declare function compareWithSnapshot(name: string, currentOutput: string, dir?: string): Promise<SnapshotComparison>;
+export declare function compareWithSnapshot(name: string, currentOutput: unknown, dir?: string): Promise<SnapshotComparison>;
+/**
+ * Compare two saved snapshots by name (convenience function)
+ *
+ * @example
+ * ```typescript
+ * const comparison = await compareSnapshots('baseline', 'current');
+ * if (!comparison.matches) {
+ *   console.log('Snapshots differ!', comparison.differences);
+ * }
+ * ```
+ */
+export declare function compareSnapshots(nameA: string, nameB: string, dir?: string): Promise<SnapshotComparison>;
 /**
  * Delete a snapshot (convenience function)
  */

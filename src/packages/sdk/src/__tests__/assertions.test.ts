@@ -24,6 +24,7 @@ import {
 	hasNoHallucinationsAsync,
 	hasNoToxicity,
 	hasNoToxicityAsync,
+	hasReadabilityScore,
 	hasSentiment,
 	hasSentimentAsync,
 	hasValidCodeSyntax,
@@ -37,6 +38,7 @@ import {
 	similarTo,
 	withinRange,
 } from "../assertions";
+import { createLocalExecutor, defaultLocalExecutor } from "../runtime/executor";
 
 describe("Expectation fluent API", () => {
 	describe("toEqual", () => {
@@ -147,18 +149,25 @@ describe("Expectation fluent API", () => {
 	});
 
 	describe("toMatchJSON", () => {
-		it("should pass when all schema keys exist", () => {
+		it("should pass when schema values match", () => {
 			const result = expect('{"status":"ok","data":1}').toMatchJSON({
-				status: "",
-				data: "",
+				status: "ok",
+				data: 1,
 			});
 			vitestExpect(result.passed).toBe(true);
 		});
 
+		it("should fail when schema values differ", () => {
+			const result = expect('{"status":"ok"}').toMatchJSON({
+				status: "error",
+			});
+			vitestExpect(result.passed).toBe(false);
+		});
+
 		it("should fail when schema keys are missing", () => {
 			const result = expect('{"status":"ok"}').toMatchJSON({
-				status: "",
-				missing: "",
+				status: "ok",
+				missing: "something",
 			});
 			vitestExpect(result.passed).toBe(false);
 		});
@@ -271,6 +280,32 @@ describe("Expectation fluent API", () => {
 
 		it("should fail without code blocks", () => {
 			const result = expect("No code here").toContainCode();
+			vitestExpect(result.passed).toBe(false);
+		});
+
+		it("should detect raw function declaration (bug fix)", () => {
+			const result = expect(
+				"function calculateTotal(items) { return items.reduce((a, b) => a + b, 0); }",
+			).toContainCode();
+			vitestExpect(result.passed).toBe(true);
+		});
+
+		it("should detect raw const assignment (bug fix)", () => {
+			const result = expect("const result = fetchData();").toContainCode();
+			vitestExpect(result.passed).toBe(true);
+		});
+
+		it("should detect raw import statement (bug fix)", () => {
+			const result = expect(
+				"import { useState } from 'react';",
+			).toContainCode();
+			vitestExpect(result.passed).toBe(true);
+		});
+
+		it("should still reject plain prose", () => {
+			const result = expect(
+				"The weather is nice today and I went for a walk.",
+			).toContainCode();
 			vitestExpect(result.passed).toBe(false);
 		});
 	});
@@ -872,5 +907,59 @@ describe("Async LLM assertions", () => {
 		await vitestExpect(
 			hasSentimentAsync("test", "positive", openaiCfg),
 		).rejects.toThrow("OpenAI API error 401");
+	});
+});
+
+describe("hasReadabilityScore — {min} object form (bug fix)", () => {
+	const readable = "The cat sat on the mat. Dogs run fast. Birds fly high.";
+
+	it("should accept a plain number threshold", () => {
+		vitestExpect(hasReadabilityScore(readable, 0)).toBe(true);
+		vitestExpect(hasReadabilityScore(readable, 200)).toBe(false);
+	});
+
+	it("should accept { min } object form and not crash", () => {
+		vitestExpect(() => hasReadabilityScore(readable, { min: 0 })).not.toThrow();
+	});
+
+	it("should pass when score is above { min }", () => {
+		vitestExpect(hasReadabilityScore(readable, { min: 0 })).toBe(true);
+	});
+
+	it("should fail when score is below { min }", () => {
+		vitestExpect(hasReadabilityScore(readable, { min: 200 })).toBe(false);
+	});
+
+	it("should apply { max } upper bound", () => {
+		vitestExpect(hasReadabilityScore(readable, { min: 0, max: 200 })).toBe(
+			true,
+		);
+		vitestExpect(hasReadabilityScore(readable, { min: 0, max: 1 })).toBe(false);
+	});
+
+	it("should treat missing min as 0 when only max provided", () => {
+		vitestExpect(hasReadabilityScore(readable, { max: 200 })).toBe(true);
+	});
+});
+
+describe("defaultLocalExecutor — callable factory (bug fix)", () => {
+	it("should be a function not an instance", () => {
+		vitestExpect(typeof defaultLocalExecutor).toBe("function");
+	});
+
+	it("should be the same reference as createLocalExecutor", () => {
+		vitestExpect(defaultLocalExecutor).toBe(createLocalExecutor);
+	});
+
+	it("should produce a usable executor when called", () => {
+		const executor = defaultLocalExecutor();
+		vitestExpect(executor).toBeDefined();
+		vitestExpect(typeof executor.executeSpec).toBe("function");
+	});
+
+	it("should produce a new instance on each call", () => {
+		const a = defaultLocalExecutor();
+		const b = defaultLocalExecutor();
+		vitestExpect(a).not.toBe(b);
 	});
 });

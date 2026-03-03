@@ -55,6 +55,7 @@ exports.SnapshotManager = void 0;
 exports.snapshot = snapshot;
 exports.loadSnapshot = loadSnapshot;
 exports.compareWithSnapshot = compareWithSnapshot;
+exports.compareSnapshots = compareSnapshots;
 exports.deleteSnapshot = deleteSnapshot;
 exports.listSnapshots = listSnapshots;
 // Environment check
@@ -130,7 +131,13 @@ class SnapshotManager {
         if (!options?.overwrite && fs.existsSync(filePath)) {
             throw new Error(`Snapshot '${name}' already exists. Use overwrite: true to update.`);
         }
-        const serialized = typeof output === "string" ? output : JSON.stringify(output);
+        const serialized = output === undefined
+            ? "undefined"
+            : output === null
+                ? "null"
+                : typeof output === "string"
+                    ? output
+                    : JSON.stringify(output);
         const snapshotData = {
             output: serialized,
             metadata: {
@@ -175,11 +182,14 @@ class SnapshotManager {
     async compare(name, currentOutput) {
         const snapshot = await this.load(name);
         const original = snapshot.output;
+        const currentOutputStr = typeof currentOutput === "string"
+            ? currentOutput
+            : JSON.stringify(currentOutput);
         // Exact match check
-        const exactMatch = original === currentOutput;
+        const exactMatch = original === currentOutputStr;
         // Calculate similarity (simple line-based diff)
         const originalLines = original.split("\n");
-        const currentLines = currentOutput.split("\n");
+        const currentLines = currentOutputStr.split("\n");
         const differences = [];
         const maxLines = Math.max(originalLines.length, currentLines.length);
         let matchingLines = 0;
@@ -199,7 +209,7 @@ class SnapshotManager {
             similarity,
             differences,
             original,
-            current: currentOutput,
+            current: currentOutputStr,
         };
     }
     /**
@@ -306,6 +316,22 @@ async function loadSnapshot(name, dir) {
 async function compareWithSnapshot(name, currentOutput, dir) {
     const manager = getSnapshotManager(dir);
     return manager.compare(name, currentOutput);
+}
+/**
+ * Compare two saved snapshots by name (convenience function)
+ *
+ * @example
+ * ```typescript
+ * const comparison = await compareSnapshots('baseline', 'current');
+ * if (!comparison.matches) {
+ *   console.log('Snapshots differ!', comparison.differences);
+ * }
+ * ```
+ */
+async function compareSnapshots(nameA, nameB, dir) {
+    const manager = getSnapshotManager(dir);
+    const snapshotB = await manager.load(nameB);
+    return manager.compare(nameA, snapshotB.output);
 }
 /**
  * Delete a snapshot (convenience function)

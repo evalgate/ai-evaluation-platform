@@ -192,7 +192,8 @@ export function createLocalExecutor(): LocalExecutor {
 }
 
 /**
- * Default local executor instance
+ * Default local executor factory
+ * Call as defaultLocalExecutor() to get a new executor instance.
  * For convenience in simple use cases
  */
-export const defaultLocalExecutor = createLocalExecutor();
+export const defaultLocalExecutor = createLocalExecutor;

@@ -265,12 +265,9 @@ export function generateDefineEvalCode(
 	const helperFunctions = generateHelperFunctionsForSuite(specs, options);
 	const evaluationFunction = generateEvaluationFunction();
 
-	return [
-		...imports,
-		...helperFunctions,
-		...evaluationFunction,
-		...specCode,
-	].join("\n");
+	return [...imports, helperFunctions, evaluationFunction, ...specCode].join(
+		"\n",
+	);
 }
 
 /**

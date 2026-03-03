@@ -89,9 +89,42 @@ export function createPaginatedIterator<T>(
 }
 
 /**
- * Auto-paginate helper that fetches all pages automatically
+ * Auto-paginate helper that fetches all pages and returns a flat array.
+ * @example
+ * ```typescript
+ * const allItems = await autoPaginate(
+ *   (offset, limit) => client.traces.list({ offset, limit }),
+ * );
+ * ```
  */
-export async function* autoPaginate<T>(
+export async function autoPaginate<T>(
+	fetchFn: (offset: number, limit: number) => Promise<T[]>,
+	limit: number = 50,
+): Promise<T[]> {
+	const result: T[] = [];
+	let offset = 0;
+	let hasMore = true;
+
+	while (hasMore) {
+		const items = await fetchFn(offset, limit);
+
+		if (items.length === 0) {
+			break;
+		}
+
+		result.push(...items);
+		hasMore = items.length === limit;
+		offset += limit;
+	}
+
+	return result;
+}
+
+/**
+ * Streaming auto-paginate generator — yields individual items one at a time.
+ * Use this when you want to process items as they arrive rather than waiting for all pages.
+ */
+export async function* autoPaginateGenerator<T>(
 	fetchFn: (offset: number, limit: number) => Promise<T[]>,
 	limit: number = 50,
 ): AsyncGenerator<T, void, unknown> {

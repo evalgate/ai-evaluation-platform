@@ -154,7 +154,13 @@ export class SnapshotManager {
 		}
 
 		const serialized =
-			typeof output === "string" ? output : JSON.stringify(output);
+			output === undefined
+				? "undefined"
+				: output === null
+					? "null"
+					: typeof output === "string"
+						? output
+						: JSON.stringify(output);
 		const snapshotData: SnapshotData = {
 			output: serialized,
 			metadata: {
@@ -378,6 +384,27 @@ export async function compareWithSnapshot(
 ): Promise<SnapshotComparison> {
 	const manager = getSnapshotManager(dir);
 	return manager.compare(name, currentOutput);
+}
+
+/**
+ * Compare two saved snapshots by name (convenience function)
+ *
+ * @example
+ * ```typescript
+ * const comparison = await compareSnapshots('baseline', 'current');
+ * if (!comparison.matches) {
+ *   console.log('Snapshots differ!', comparison.differences);
+ * }
+ * ```
+ */
+export async function compareSnapshots(
+	nameA: string,
+	nameB: string,
+	dir?: string,
+): Promise<SnapshotComparison> {
+	const manager = getSnapshotManager(dir);
+	const snapshotB = await manager.load(nameB);
+	return manager.compare(nameA, snapshotB.output);
 }
 
 /**

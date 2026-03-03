@@ -126,10 +126,11 @@ export declare class Expectation {
      */
     toBeBetween(min: number, max: number, message?: string): AssertionResult;
     /**
-     * Assert value contains code block
+     * Assert value contains code block or raw code
      * @example expect(output).toContainCode()
+     * @example expect(output).toContainCode('typescript')
      */
-    toContainCode(message?: string): AssertionResult;
+    toContainCode(language?: string, message?: string): AssertionResult;
     /**
      * Assert value is professional tone (no profanity)
      * @example expect(output).toBeProfessional()
@@ -193,18 +194,79 @@ export declare function notContainsPII(text: string): boolean;
  * if (hasPII(response)) throw new Error("PII leak");
  */
 export declare function hasPII(text: string): boolean;
+/**
+ * Lexicon-based sentiment check. **Fast and approximate** — suitable for
+ * low-stakes filtering or CI smoke tests. For production safety gates use
+ * {@link hasSentimentAsync} with an LLM provider for context-aware accuracy.
+ */
 export declare function hasSentiment(text: string, expected: "positive" | "negative" | "neutral"): boolean;
 export declare function similarTo(text1: string, text2: string, threshold?: number): boolean;
 export declare function withinRange(value: number, min: number, max: number): boolean;
 export declare function isValidEmail(email: string): boolean;
 export declare function isValidURL(url: string): boolean;
-export declare function hasNoHallucinations(text: string, groundTruth: string[]): boolean;
+/**
+ * Substring-based hallucination check — verifies each ground-truth fact
+ * appears verbatim in the text. **Fast and approximate**: catches missing
+ * facts but cannot detect paraphrased fabrications. Use
+ * {@link hasNoHallucinationsAsync} for semantic accuracy.
+ */
+export declare function hasNoHallucinations(text: string, groundTruth?: string[]): boolean;
 export declare function matchesSchema(value: unknown, schema: Record<string, unknown>): boolean;
-export declare function hasReadabilityScore(text: string, minScore: number): boolean;
+export declare function hasReadabilityScore(text: string, minScore: number | {
+    min?: number;
+    max?: number;
+}): boolean;
+/**
+ * Keyword-frequency language detector supporting 12 languages.
+ * **Fast and approximate** — detects the most common languages reliably
+ * but may struggle with short texts or closely related languages.
+ * Use {@link containsLanguageAsync} for reliable detection of any language.
+ */
 export declare function containsLanguage(text: string, language: string): boolean;
+/**
+ * Substring-based factual accuracy check. **Fast and approximate** — verifies
+ * each fact string appears in the text but cannot reason about meaning or
+ * paraphrasing. Use {@link hasFactualAccuracyAsync} for semantic accuracy.
+ */
 export declare function hasFactualAccuracy(text: string, facts: string[]): boolean;
 export declare function respondedWithinTime(startTime: number, maxMs: number): boolean;
+/**
+ * Blocklist-based toxicity check (~80 terms across 9 categories).
+ * **Fast and approximate** — catches explicit harmful language but has
+ * inherent gaps and context-blind false positives. Do NOT rely on this
+ * alone for production content safety gates; use {@link hasNoToxicityAsync}
+ * with an LLM for context-aware moderation.
+ */
 export declare function hasNoToxicity(text: string): boolean;
-export declare function followsInstructions(text: string, instructions: string[]): boolean;
+export declare function followsInstructions(text: string, instructions: string | string[]): boolean;
 export declare function containsAllRequiredFields(obj: unknown, requiredFields: string[]): boolean;
+export interface AssertionLLMConfig {
+    provider: "openai" | "anthropic";
+    apiKey: string;
+    model?: string;
+    baseUrl?: string;
+}
+export declare function configureAssertions(config: AssertionLLMConfig): void;
+export declare function getAssertionConfig(): AssertionLLMConfig | null;
+/**
+ * LLM-backed sentiment check. **Slow and accurate** — uses an LLM to
+ * classify sentiment with full context awareness. Requires
+ * {@link configureAssertions} or an inline `config` argument.
+ * Falls back gracefully with a clear error if no API key is configured.
+ */
+export declare function hasSentimentAsync(text: string, expected: "positive" | "negative" | "neutral", config?: AssertionLLMConfig): Promise<boolean>;
+/**
+ * LLM-backed toxicity check. **Slow and accurate** — context-aware, handles
+ * sarcasm, implicit threats, and culturally specific harmful content that
+ * blocklists miss. Recommended for production content safety gates.
+ */
+export declare function hasNoToxicityAsync(text: string, config?: AssertionLLMConfig): Promise<boolean>;
+export declare function containsLanguageAsync(text: string, language: string, config?: AssertionLLMConfig): Promise<boolean>;
+export declare function hasValidCodeSyntaxAsync(code: string, language: string, config?: AssertionLLMConfig): Promise<boolean>;
+export declare function hasFactualAccuracyAsync(text: string, facts: string[], config?: AssertionLLMConfig): Promise<boolean>;
+/**
+ * LLM-backed hallucination check. **Slow and accurate** — detects fabricated
+ * claims even when they are paraphrased or contradict facts indirectly.
+ */
+export declare function hasNoHallucinationsAsync(text: string, groundTruth: string[], config?: AssertionLLMConfig): Promise<boolean>;
 export declare function hasValidCodeSyntax(code: string, language: string): boolean;

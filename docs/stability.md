@@ -105,7 +105,7 @@ This document classifies every major feature by maturity level and provides API 
 | Cost Records | **Stable** | v1.0 | Per-call token + cost tracking |
 | LLM Judge | **Beta** | v1.0 | Meta-judge post-eval hook |
 
-### SDK (`@evalgate/sdk`) — v2.2.2
+### SDK (`@evalgate/sdk`) — v2.2.3
 
 | Feature | Tier | Since | Notes |
 |---------|------|-------|-------|
@@ -124,6 +124,15 @@ This document classifies every major feature by maturity level and provides API 
 | `importData(client, data, options?)` | **Stable** | v2.2.2 | `options` now optional (was required); prevents crash when called with 2 args |
 | `compareWithSnapshot(name, output)` | **Stable** | v2.2.2 | Accepts `unknown` input; objects coerced via JSON.stringify |
 | `WorkflowTracer` (no API key) | **Stable** | v2.2.2 | Defensive guard on `client.getOrganizationId`; no longer crashes without API key |
+| `RequestCache` (default TTL) | **Stable** | v2.2.3 | `set()` defaults to `CacheTTL.MEDIUM`; entries no longer immediately stale when TTL is omitted |
+| `autoPaginate(fetcher)` | **Stable** | v2.2.3 | Returns `Promise<T[]>` (flat array); was returning an unexhausted `AsyncGenerator` |
+| `autoPaginateGenerator(fetcher)` | **Stable** | v2.2.3 | Streaming `AsyncGenerator<T[]>` for incremental page processing |
+| `createEvalRuntime(config)` | **Stable** | v2.2.3 | Accepts `string \| { name?, projectRoot? }`; config-object overload previously silently ignored |
+| `defaultLocalExecutor` | **Stable** | v2.2.3 | Re-exported as callable factory (`createLocalExecutor`); was a pre-constructed instance |
+| `compareSnapshots(nameA, nameB, dir?)` | **Stable** | v2.2.3 | Loads both snapshots from disk and diffs them; replaces the incorrectly aliased `compareWithSnapshot` |
+| `snapshot(name, undefined\|null)` | **Stable** | v2.2.3 | `undefined` and `null` outputs serialize to `"undefined"` / `"null"` instead of throwing |
+| `toContainCode()` raw-code detection | **Stable** | v2.2.3 | Detects raw `function`, `const`, `class`, arrow, `import`/`export`, `return` without requiring a fenced block |
+| `hasReadabilityScore({ min, max })` | **Stable** | v2.2.3 | Accepts `number \| { min?, max? }`; object form was previously coerced to `NaN` |
 | Framework integrations | **Beta** | v1.0 | Jest, Vitest adapters |
 | Regression gate exports | **Stable** | v1.6 | `@evalgate/sdk/regression` |
 | Behavioral spec discover/run/diff | **Beta** | v2.0 | `evalgate discover`, `run`, `diff`, `ci` pipeline |

@@ -122,7 +122,7 @@ export function traceOpenAI(
 					: {}),
 			});
 
-			await evalClient.traces.create({
+			await evalClient.traces?.create({
 				name: `OpenAI: ${params.model}`,
 				traceId,
 				organizationId: organizationId || evalClient.getOrganizationId(),
@@ -146,7 +146,7 @@ export function traceOpenAI(
 			});
 
 			await evalClient.traces
-				.create({
+				?.create({
 					name: `OpenAI: ${params.model}`,
 					traceId,
 					organizationId: organizationId || evalClient.getOrganizationId(),
@@ -154,7 +154,7 @@ export function traceOpenAI(
 					durationMs,
 					metadata: errorMetadata,
 				})
-				.catch(() => {
+				?.catch(() => {
 					// Ignore errors in trace creation to avoid masking the original error
 				});
 
@@ -192,7 +192,7 @@ export async function traceOpenAICall<T>(
 	const traceId = `openai-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
 	try {
-		await evalClient.traces.create({
+		await evalClient.traces?.create({
 			name,
 			traceId,
 			organizationId: options.organizationId || evalClient.getOrganizationId(),
@@ -203,7 +203,7 @@ export async function traceOpenAICall<T>(
 		const result = await fn();
 		const durationMs = Date.now() - startTime;
 
-		await evalClient.traces.create({
+		await evalClient.traces?.create({
 			name,
 			traceId,
 			organizationId: options.organizationId || evalClient.getOrganizationId(),
@@ -216,7 +216,7 @@ export async function traceOpenAICall<T>(
 	} catch (error) {
 		const durationMs = Date.now() - startTime;
 
-		await evalClient.traces.create({
+		await evalClient.traces?.create({
 			name,
 			traceId,
 			organizationId: options.organizationId || evalClient.getOrganizationId(),

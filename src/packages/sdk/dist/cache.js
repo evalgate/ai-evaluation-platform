@@ -43,7 +43,7 @@ class RequestCache {
     /**
      * Store response in cache
      */
-    set(method, url, data, ttl, params) {
+    set(method, url, data, ttl = exports.CacheTTL.MEDIUM, params) {
         // Enforce cache size limit (LRU-style)
         if (this.cache.size >= this.maxSize) {
             const firstKey = this.cache.keys().next().value;

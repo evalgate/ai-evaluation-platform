@@ -8,8 +8,8 @@
  * @packageDocumentation
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.SpecRegistrationError = exports.SpecExecutionError = exports.RuntimeError = exports.EvalRuntimeError = exports.setActiveRuntime = exports.getActiveRuntime = exports.disposeActiveRuntime = exports.createEvalRuntime = exports.defaultLocalExecutor = exports.createLocalExecutor = exports.evalai = exports.defineSuite = exports.defineEval = exports.createResult = exports.createEvalContext = exports.validateContext = exports.mergeContexts = exports.cloneContext = exports.ContextManager = exports.withContext = exports.getContext = exports.createContext = exports.withinRange = exports.similarTo = exports.respondedWithinTime = exports.notContainsPII = exports.matchesSchema = exports.matchesPattern = exports.isValidURL = exports.isValidEmail = exports.hasValidCodeSyntax = exports.hasSentiment = exports.hasReadabilityScore = exports.hasPII = exports.hasNoToxicity = exports.hasNoHallucinations = exports.hasLength = exports.hasFactualAccuracy = exports.followsInstructions = exports.expect = exports.containsLanguage = exports.containsKeywords = exports.containsJSON = exports.containsAllRequiredFields = exports.NetworkError = exports.ValidationError = exports.AuthenticationError = exports.RateLimitError = exports.EvalGateError = exports.AIEvalClient = void 0;
-exports.WorkflowTracer = exports.traceWorkflowStep = exports.traceLangChainAgent = exports.traceCrewAI = exports.traceAutoGen = exports.createWorkflowTracer = exports.EvaluationTemplates = exports.streamEvaluation = exports.RateLimiter = exports.batchRead = exports.batchProcess = exports.REPORT_SCHEMA_VERSION = exports.GATE_EXIT = exports.GATE_CATEGORY = exports.ARTIFACTS = exports.PaginatedIterator = exports.encodeCursor = exports.decodeCursor = exports.createPaginatedIterator = exports.autoPaginate = exports.extendExpectWithToPassGate = exports.Logger = exports.openAIChatEval = exports.traceOpenAI = exports.traceAnthropic = exports.runCheck = exports.parseArgs = exports.EXIT = exports.RequestCache = exports.CacheTTL = exports.RequestBatcher = exports.importData = exports.exportData = exports.compareSnapshots = exports.saveSnapshot = exports.compareWithSnapshot = exports.snapshot = exports.TestSuite = exports.createTestSuite = void 0;
+exports.defaultLocalExecutor = exports.createLocalExecutor = exports.evalai = exports.defineSuite = exports.defineEval = exports.createResult = exports.createEvalContext = exports.validateContext = exports.mergeContexts = exports.cloneContext = exports.ContextManager = exports.withContext = exports.getContext = exports.createContext = exports.withinRange = exports.similarTo = exports.respondedWithinTime = exports.notContainsPII = exports.matchesSchema = exports.matchesPattern = exports.isValidURL = exports.isValidEmail = exports.hasValidCodeSyntaxAsync = exports.hasValidCodeSyntax = exports.hasSentimentAsync = exports.hasSentiment = exports.hasReadabilityScore = exports.hasPII = exports.hasNoToxicityAsync = exports.hasNoToxicity = exports.hasNoHallucinationsAsync = exports.hasNoHallucinations = exports.hasLength = exports.hasFactualAccuracyAsync = exports.hasFactualAccuracy = exports.getAssertionConfig = exports.followsInstructions = exports.expect = exports.containsLanguageAsync = exports.containsLanguage = exports.containsKeywords = exports.containsJSON = exports.containsAllRequiredFields = exports.configureAssertions = exports.NetworkError = exports.ValidationError = exports.AuthenticationError = exports.RateLimitError = exports.EvalGateError = exports.AIEvalClient = void 0;
+exports.WorkflowTracer = exports.traceWorkflowStep = exports.traceLangChainAgent = exports.traceCrewAI = exports.traceAutoGen = exports.createWorkflowTracer = exports.EvaluationTemplates = exports.streamEvaluation = exports.RateLimiter = exports.batchRead = exports.batchProcess = exports.REPORT_SCHEMA_VERSION = exports.GATE_EXIT = exports.GATE_CATEGORY = exports.ARTIFACTS = exports.PaginatedIterator = exports.encodeCursor = exports.decodeCursor = exports.createPaginatedIterator = exports.autoPaginateGenerator = exports.autoPaginate = exports.extendExpectWithToPassGate = exports.Logger = exports.openAIChatEval = exports.traceOpenAI = exports.traceAnthropic = exports.runCheck = exports.parseArgs = exports.EXIT = exports.RequestCache = exports.CacheTTL = exports.RequestBatcher = exports.importData = exports.exportData = exports.saveSnapshot = exports.compareSnapshots = exports.compareWithSnapshot = exports.snapshot = exports.TestSuite = exports.createTestSuite = exports.SpecRegistrationError = exports.SpecExecutionError = exports.RuntimeError = exports.EvalRuntimeError = exports.setActiveRuntime = exports.getActiveRuntime = exports.disposeActiveRuntime = exports.createEvalRuntime = void 0;
 // Main SDK exports
 var client_1 = require("./client");
 Object.defineProperty(exports, "AIEvalClient", { enumerable: true, get: function () { return client_1.AIEvalClient; } });
@@ -22,20 +22,30 @@ Object.defineProperty(exports, "RateLimitError", { enumerable: true, get: functi
 Object.defineProperty(exports, "ValidationError", { enumerable: true, get: function () { return errors_1.SDKError; } });
 // Enhanced assertions (Tier 1.3)
 var assertions_1 = require("./assertions");
+// LLM config
+Object.defineProperty(exports, "configureAssertions", { enumerable: true, get: function () { return assertions_1.configureAssertions; } });
 Object.defineProperty(exports, "containsAllRequiredFields", { enumerable: true, get: function () { return assertions_1.containsAllRequiredFields; } });
 Object.defineProperty(exports, "containsJSON", { enumerable: true, get: function () { return assertions_1.containsJSON; } });
 Object.defineProperty(exports, "containsKeywords", { enumerable: true, get: function () { return assertions_1.containsKeywords; } });
 Object.defineProperty(exports, "containsLanguage", { enumerable: true, get: function () { return assertions_1.containsLanguage; } });
+// LLM-backed async variants
+Object.defineProperty(exports, "containsLanguageAsync", { enumerable: true, get: function () { return assertions_1.containsLanguageAsync; } });
 Object.defineProperty(exports, "expect", { enumerable: true, get: function () { return assertions_1.expect; } });
 Object.defineProperty(exports, "followsInstructions", { enumerable: true, get: function () { return assertions_1.followsInstructions; } });
+Object.defineProperty(exports, "getAssertionConfig", { enumerable: true, get: function () { return assertions_1.getAssertionConfig; } });
 Object.defineProperty(exports, "hasFactualAccuracy", { enumerable: true, get: function () { return assertions_1.hasFactualAccuracy; } });
+Object.defineProperty(exports, "hasFactualAccuracyAsync", { enumerable: true, get: function () { return assertions_1.hasFactualAccuracyAsync; } });
 Object.defineProperty(exports, "hasLength", { enumerable: true, get: function () { return assertions_1.hasLength; } });
 Object.defineProperty(exports, "hasNoHallucinations", { enumerable: true, get: function () { return assertions_1.hasNoHallucinations; } });
+Object.defineProperty(exports, "hasNoHallucinationsAsync", { enumerable: true, get: function () { return assertions_1.hasNoHallucinationsAsync; } });
 Object.defineProperty(exports, "hasNoToxicity", { enumerable: true, get: function () { return assertions_1.hasNoToxicity; } });
+Object.defineProperty(exports, "hasNoToxicityAsync", { enumerable: true, get: function () { return assertions_1.hasNoToxicityAsync; } });
 Object.defineProperty(exports, "hasPII", { enumerable: true, get: function () { return assertions_1.hasPII; } });
 Object.defineProperty(exports, "hasReadabilityScore", { enumerable: true, get: function () { return assertions_1.hasReadabilityScore; } });
 Object.defineProperty(exports, "hasSentiment", { enumerable: true, get: function () { return assertions_1.hasSentiment; } });
+Object.defineProperty(exports, "hasSentimentAsync", { enumerable: true, get: function () { return assertions_1.hasSentimentAsync; } });
 Object.defineProperty(exports, "hasValidCodeSyntax", { enumerable: true, get: function () { return assertions_1.hasValidCodeSyntax; } });
+Object.defineProperty(exports, "hasValidCodeSyntaxAsync", { enumerable: true, get: function () { return assertions_1.hasValidCodeSyntaxAsync; } });
 Object.defineProperty(exports, "isValidEmail", { enumerable: true, get: function () { return assertions_1.isValidEmail; } });
 Object.defineProperty(exports, "isValidURL", { enumerable: true, get: function () { return assertions_1.isValidURL; } });
 Object.defineProperty(exports, "matchesPattern", { enumerable: true, get: function () { return assertions_1.matchesPattern; } });
@@ -81,8 +91,8 @@ Object.defineProperty(exports, "createTestSuite", { enumerable: true, get: funct
 Object.defineProperty(exports, "TestSuite", { enumerable: true, get: function () { return testing_1.TestSuite; } });
 // Snapshot testing (Tier 2.8)
 const snapshot_1 = require("./snapshot");
+Object.defineProperty(exports, "compareSnapshots", { enumerable: true, get: function () { return snapshot_1.compareSnapshots; } });
 Object.defineProperty(exports, "compareWithSnapshot", { enumerable: true, get: function () { return snapshot_1.compareWithSnapshot; } });
-Object.defineProperty(exports, "compareSnapshots", { enumerable: true, get: function () { return snapshot_1.compareWithSnapshot; } });
 Object.defineProperty(exports, "snapshot", { enumerable: true, get: function () { return snapshot_1.snapshot; } });
 Object.defineProperty(exports, "saveSnapshot", { enumerable: true, get: function () { return snapshot_1.snapshot; } });
 // Export/Import utilities (Tier 4.18)
@@ -120,6 +130,7 @@ var matchers_1 = require("./matchers");
 Object.defineProperty(exports, "extendExpectWithToPassGate", { enumerable: true, get: function () { return matchers_1.extendExpectWithToPassGate; } });
 var pagination_1 = require("./pagination");
 Object.defineProperty(exports, "autoPaginate", { enumerable: true, get: function () { return pagination_1.autoPaginate; } });
+Object.defineProperty(exports, "autoPaginateGenerator", { enumerable: true, get: function () { return pagination_1.autoPaginateGenerator; } });
 Object.defineProperty(exports, "createPaginatedIterator", { enumerable: true, get: function () { return pagination_1.createPaginatedIterator; } });
 Object.defineProperty(exports, "decodeCursor", { enumerable: true, get: function () { return pagination_1.decodeCursor; } });
 Object.defineProperty(exports, "encodeCursor", { enumerable: true, get: function () { return pagination_1.encodeCursor; } });

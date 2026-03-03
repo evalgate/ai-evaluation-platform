@@ -450,6 +450,8 @@ Your local `openAIChatEval` runs continue to work. No account cancellation. No d
 
 See [CHANGELOG.md](CHANGELOG.md) for the full release history.
 
+**v2.2.3** — Bug-fix release. `RequestCache` default TTL, `EvalGateError` subclass prototype chain and `retryAfter` direct property, `autoPaginate` now returns `Promise<T[]>` (new `autoPaginateGenerator` for streaming), `createEvalRuntime` config-object overload, `defaultLocalExecutor` callable factory, `SnapshotManager.save` null/undefined safety, `compareSnapshots` loads both sides from disk, `AIEvalClient` default baseUrl → `https://api.evalgate.com`, `importData` optional-chaining guards, `toContainCode` raw-code detection, `hasReadabilityScore` `{min,max}` object form. 141 new regression tests.
+
 **v2.2.2** — 8 stub assertions replaced with real implementations (`hasSentiment` expanded lexicon, `hasNoToxicity` ~80-term blocklist, `hasValidCodeSyntax` real bracket balance, `containsLanguage` 12 languages + BCP-47, `hasFactualAccuracy`/`hasNoHallucinations` case-insensitive, `hasReadabilityScore` per-word syllable fix, `matchesSchema` JSON Schema support). Added LLM-backed `*Async` variants + `configureAssertions`. Fixed `importData` crash, `compareWithSnapshot` object coercion, `WorkflowTracer` defensive guard. 115 new tests.
 
 **v2.2.1** — `snapshot(name, output)` accepts objects; auto-serialized via `JSON.stringify`

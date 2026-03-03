@@ -67,7 +67,7 @@ function traceAnthropic(anthropic, evalClient, options = {}) {
                     }
                     : {}),
             });
-            await evalClient.traces.create({
+            await evalClient.traces?.create({
                 name: `Anthropic: ${params.model}`,
                 traceId,
                 organizationId: organizationId || evalClient.getOrganizationId(),
@@ -89,7 +89,7 @@ function traceAnthropic(anthropic, evalClient, options = {}) {
                 error: error instanceof Error ? error.message : String(error),
             });
             await evalClient.traces
-                .create({
+                ?.create({
                 name: `Anthropic: ${params.model}`,
                 traceId,
                 organizationId: organizationId || evalClient.getOrganizationId(),
@@ -97,7 +97,7 @@ function traceAnthropic(anthropic, evalClient, options = {}) {
                 durationMs,
                 metadata: errorMetadata,
             })
-                .catch(() => {
+                ?.catch(() => {
                 // Ignore errors in trace creation to avoid masking the original error
             });
             throw error;
@@ -127,7 +127,7 @@ async function traceAnthropicCall(evalClient, name, fn, options = {}) {
     const startTime = Date.now();
     const traceId = `anthropic-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     try {
-        await evalClient.traces.create({
+        await evalClient.traces?.create({
             name,
             traceId,
             organizationId: options.organizationId || evalClient.getOrganizationId(),
@@ -136,7 +136,7 @@ async function traceAnthropicCall(evalClient, name, fn, options = {}) {
         });
         const result = await fn();
         const durationMs = Date.now() - startTime;
-        await evalClient.traces.create({
+        await evalClient.traces?.create({
             name,
             traceId,
             organizationId: options.organizationId || evalClient.getOrganizationId(),
@@ -148,7 +148,7 @@ async function traceAnthropicCall(evalClient, name, fn, options = {}) {
     }
     catch (error) {
         const durationMs = Date.now() - startTime;
-        await evalClient.traces.create({
+        await evalClient.traces?.create({
             name,
             traceId,
             organizationId: options.organizationId || evalClient.getOrganizationId(),

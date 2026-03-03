@@ -10,7 +10,8 @@ import type { LocalExecutor } from "./types";
  */
 export declare function createLocalExecutor(): LocalExecutor;
 /**
- * Default local executor instance
+ * Default local executor factory
+ * Call as defaultLocalExecutor() to get a new executor instance.
  * For convenience in simple use cases
  */
-export declare const defaultLocalExecutor: LocalExecutor;
+export declare const defaultLocalExecutor: typeof createLocalExecutor;

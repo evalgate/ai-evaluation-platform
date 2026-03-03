@@ -59,7 +59,7 @@ export class RequestCache {
 		method: string,
 		url: string,
 		data: T,
-		ttl: number,
+		ttl: number = CacheTTL.MEDIUM,
 		params?: unknown,
 	): void {
 		// Enforce cache size limit (LRU-style)

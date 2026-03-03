@@ -61,7 +61,10 @@ export interface SerializedSpec {
  * Create a new scoped runtime with lifecycle management
  * Returns a handle for proper resource management
  */
-export declare function createEvalRuntime(projectRoot?: string): RuntimeHandle;
+export declare function createEvalRuntime(projectRootOrConfig?: string | {
+    name?: string;
+    projectRoot?: string;
+}): RuntimeHandle;
 /**
  * Helper function for safe runtime execution with automatic cleanup
  * Ensures runtime is disposed even if an exception is thrown

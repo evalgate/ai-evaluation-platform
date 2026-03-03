@@ -231,13 +231,17 @@ export class Expectation {
 		message?: string,
 	): AssertionResult {
 		let passed = false;
-		let parsedJson = null;
+		let parsedJson: Record<string, unknown> | null = null;
 
 		try {
-			parsedJson = JSON.parse(String(this.value));
-			const requiredKeys = Object.keys(schema);
-			const actualKeys = Object.keys(parsedJson);
-			passed = requiredKeys.every((key) => actualKeys.includes(key));
+			parsedJson = JSON.parse(String(this.value)) as Record<string, unknown>;
+			const entries = Object.entries(schema);
+			passed = entries.every(
+				([key, expectedValue]) =>
+					parsedJson !== null &&
+					key in parsedJson &&
+					JSON.stringify(parsedJson[key]) === JSON.stringify(expectedValue),
+			);
 		} catch (_e) {
 			passed = false;
 		}
@@ -465,21 +469,31 @@ export class Expectation {
 	}
 
 	/**
-	 * Assert value contains code block
+	 * Assert value contains code block or raw code
 	 * @example expect(output).toContainCode()
+	 * @example expect(output).toContainCode('typescript')
 	 */
-	toContainCode(message?: string): AssertionResult {
+	toContainCode(language?: string, message?: string): AssertionResult {
 		const text = String(this.value);
-		const hasCodeBlock =
-			/```[\s\S]*?```/.test(text) || /<code>[\s\S]*?<\/code>/.test(text);
+		const hasMarkdownBlock = language
+			? new RegExp(`\`\`\`${language}[\\s\\S]*?\`\`\``).test(text)
+			: /```[\s\S]*?```/.test(text);
+		const hasHtmlBlock = /<code>[\s\S]*?<\/code>/.test(text);
+		const hasRawCode =
+			/\bfunction\s+\w+\s*\(/.test(text) ||
+			/\b(?:const|let|var)\s+\w+\s*=/.test(text) ||
+			/\bclass\s+\w+/.test(text) ||
+			/=>\s*[{(]/.test(text) ||
+			/\bimport\s+.*\bfrom\b/.test(text) ||
+			/\bexport\s+(?:default\s+)?(?:function|class|const)/.test(text) ||
+			/\breturn\s+.+;/.test(text);
+		const hasCodeBlock = hasMarkdownBlock || hasHtmlBlock || hasRawCode;
 		return {
 			name: "toContainCode",
 			passed: hasCodeBlock,
-			expected: "code block",
+			expected: language ? `code block (${language})` : "code block",
 			actual: text,
-			message:
-				message ||
-				(hasCodeBlock ? "Contains code block" : "No code block found"),
+			message: message || (hasCodeBlock ? "Contains code" : "No code found"),
 		};
 	}
 
@@ -783,7 +797,7 @@ export function isValidURL(url: string): boolean {
  */
 export function hasNoHallucinations(
 	text: string,
-	groundTruth: string[],
+	groundTruth: string[] = [],
 ): boolean {
 	const lower = text.toLowerCase();
 	return groundTruth.every((truth) => lower.includes(truth.toLowerCase()));
@@ -810,7 +824,13 @@ export function matchesSchema(
 	return Object.keys(schema).every((key) => key in obj);
 }
 
-export function hasReadabilityScore(text: string, minScore: number): boolean {
+export function hasReadabilityScore(
+	text: string,
+	minScore: number | { min?: number; max?: number },
+): boolean {
+	const threshold =
+		typeof minScore === "number" ? minScore : (minScore.min ?? 0);
+	const maxThreshold = typeof minScore === "object" ? minScore.max : undefined;
 	const wordList = text.trim().split(/\s+/).filter(Boolean);
 	const words = wordList.length || 1;
 	const sentences =
@@ -818,7 +838,9 @@ export function hasReadabilityScore(text: string, minScore: number): boolean {
 	const totalSyllables = wordList.reduce((sum, w) => sum + syllables(w), 0);
 	const score =
 		206.835 - 1.015 * (words / sentences) - 84.6 * (totalSyllables / words);
-	return score >= minScore;
+	return (
+		score >= threshold && (maxThreshold === undefined || score <= maxThreshold)
+	);
 }
 
 function syllables(word: string): number {
@@ -1236,9 +1258,12 @@ export function hasNoToxicity(text: string): boolean {
 
 export function followsInstructions(
 	text: string,
-	instructions: string[],
+	instructions: string | string[],
 ): boolean {
-	return instructions.every((instruction) => {
+	const instructionList = Array.isArray(instructions)
+		? instructions
+		: [instructions];
+	return instructionList.every((instruction) => {
 		if (instruction.startsWith("!")) {
 			return !text.includes(instruction.slice(1));
 		}

@@ -64,8 +64,13 @@ class WorkflowTracer {
         this.costs = [];
         this.spanCounter = 0;
         this.client = client;
+        const resolvedOrgId = options.organizationId ??
+            (typeof client?.getOrganizationId === "function"
+                ? client.getOrganizationId()
+                : undefined) ??
+            0;
         this.options = {
-            organizationId: options.organizationId || client.getOrganizationId() || 0,
+            organizationId: resolvedOrgId,
             autoCalculateCost: options.autoCalculateCost ?? true,
             tracePrefix: options.tracePrefix || "workflow",
             captureFullPayloads: options.captureFullPayloads ?? true,

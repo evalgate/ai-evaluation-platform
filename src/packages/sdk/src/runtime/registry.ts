@@ -404,8 +404,14 @@ class EvalRuntimeImpl implements EvalRuntime {
  * Returns a handle for proper resource management
  */
 export function createEvalRuntime(
-	projectRoot: string = process.cwd(),
+	projectRootOrConfig:
+		| string
+		| { name?: string; projectRoot?: string } = process.cwd(),
 ): RuntimeHandle {
+	const projectRoot =
+		typeof projectRootOrConfig === "string"
+			? projectRootOrConfig
+			: (projectRootOrConfig.projectRoot ?? process.cwd());
 	const runtime = new EvalRuntimeImpl(projectRoot);
 
 	// Create bound defineEval function
