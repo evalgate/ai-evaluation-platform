@@ -73,7 +73,7 @@ pip install pauly4010-evalgate-sdk
 
 ## CLI Commands
 
-### 🚀 One-Command CI (v2.1.1)
+### 🚀 One-Command CI (v2.2.2)
 
 ```bash
 npx evalgate ci --format github --write-results --base main    # Complete CI pipeline
@@ -106,7 +106,7 @@ npx evalgate doctor            # Verify CI/CD setup
 EvalGate provides:
 - **One-Command CI**: Complete evaluation pipeline with smart caching and GitHub integration
 - **Workflow Tracing**: Instrument multi-agent workflows with DAG visualization, agent handoffs, and decision auditing
-- **Evaluation Engine**: 50+ evaluation templates, createTestSuite runner, 20 Expectation methods + 21 standalone assertion functions
+- **Evaluation Engine**: 50+ evaluation templates, createTestSuite runner, 20 Expectation methods + 27 standalone assertion functions (21 sync + 6 LLM-backed async variants)
 - **Cost Analytics**: Track LLM spending per model/provider with built-in pricing for OpenAI, Anthropic, Google (12+ models)
 - **Agent Benchmarking**: Compare agent architectures (ReAct, CoT, ToT) across accuracy, latency, cost, and safety metrics
 - **Governance Engine**: Enterprise-grade compliance with presets (SOC2, GDPR, HIPAA, FINRA_4511, PCI-DSS) and approval/blocking rules

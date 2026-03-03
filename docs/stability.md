@@ -105,7 +105,7 @@ This document classifies every major feature by maturity level and provides API 
 | Cost Records | **Stable** | v1.0 | Per-call token + cost tracking |
 | LLM Judge | **Beta** | v1.0 | Meta-judge post-eval hook |
 
-### SDK (`@evalgate/sdk`) — v2.2.1
+### SDK (`@evalgate/sdk`) — v2.2.2
 
 | Feature | Tier | Since | Notes |
 |---------|------|-------|-------|
@@ -117,6 +117,13 @@ This document classifies every major feature by maturity level and provides API 
 | `hasPII(text)` | **Stable** | v2.2 | Semantic PII detection; `true` = PII found |
 | `defineSuite` (object + positional) | **Stable** | v2.2 | Both call forms accepted |
 | `snapshot(name, output)` | **Stable** | v2.2 | Accepts string or object; auto-serializes via JSON.stringify |
+| `hasSentiment` / `hasNoToxicity` / `hasValidCodeSyntax` / `containsLanguage` / `hasFactualAccuracy` / `hasNoHallucinations` / `hasReadabilityScore` (sync) | **Stable** | v2.2.2 | Real heuristic implementations; marked **Fast and approximate** in JSDoc |
+| `matchesSchema` | **Stable** | v2.2.2 | Handles JSON Schema `required` array, `properties` object, and simple key-presence template; backward compatible |
+| `hasSentimentAsync` / `hasNoToxicityAsync` / `containsLanguageAsync` / `hasValidCodeSyntaxAsync` / `hasFactualAccuracyAsync` / `hasNoHallucinationsAsync` | **Beta** | v2.2.2 | LLM-backed async variants; marked **Slow and accurate**; require `configureAssertions` or per-call config |
+| `configureAssertions(config)` / `getAssertionConfig()` | **Stable** | v2.2.2 | Global `AssertionLLMConfig` for async assertion variants |
+| `importData(client, data, options?)` | **Stable** | v2.2.2 | `options` now optional (was required); prevents crash when called with 2 args |
+| `compareWithSnapshot(name, output)` | **Stable** | v2.2.2 | Accepts `unknown` input; objects coerced via JSON.stringify |
+| `WorkflowTracer` (no API key) | **Stable** | v2.2.2 | Defensive guard on `client.getOrganizationId`; no longer crashes without API key |
 | Framework integrations | **Beta** | v1.0 | Jest, Vitest adapters |
 | Regression gate exports | **Stable** | v1.6 | `@evalgate/sdk/regression` |
 | Behavioral spec discover/run/diff | **Beta** | v2.0 | `evalgate discover`, `run`, `diff`, `ci` pipeline |

@@ -186,7 +186,7 @@ export async function exportData(
 export async function importData(
 	client: AIEvalClient,
 	data: ExportData,
-	options: ImportOptions,
+	options: ImportOptions = {},
 ): Promise<ImportResult> {
 	const result: ImportResult = {
 		summary: { total: 0, imported: 0, skipped: 0, failed: 0 },

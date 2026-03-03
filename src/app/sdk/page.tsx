@@ -10,18 +10,18 @@ import { Card } from "@/components/ui/card";
 export const metadata: Metadata = {
 	title: "SDK Quick Start - EvalGate | CI for AI Behavior",
 	description:
-		"EvalGate 2.0.0: CI for AI behavior. One-command CI workflow, TypeScript & Python SDKs. 1.4k+ npm downloads/month. Stop LLM regressions before they reach production.",
+		"EvalGate 2.2.2: CI for AI behavior. One-command CI workflow, TypeScript & Python SDKs. 1.4k+ npm downloads/month. Stop LLM regressions before they reach production.",
 	openGraph: {
 		title: "SDK Quick Start - EvalGate | CI for AI Behavior",
 		description:
-			"EvalGate 2.0.0: CI for AI behavior. One-command CI workflow, TypeScript & Python SDKs. Stop LLM regressions before they reach production.",
+			"EvalGate 2.2.2: CI for AI behavior. One-command CI workflow, TypeScript & Python SDKs. Stop LLM regressions before they reach production.",
 		type: "website",
 	},
 	twitter: {
 		card: "summary_large_image",
 		title: "SDK Quick Start - EvalGate | CI for AI Behavior",
 		description:
-			"EvalGate 2.0.0: CI for AI behavior. One-command CI workflow, TypeScript & Python SDKs. Stop LLM regressions before they reach production.",
+			"EvalGate 2.2.2: CI for AI behavior. One-command CI workflow, TypeScript & Python SDKs. Stop LLM regressions before they reach production.",
 	},
 };
 

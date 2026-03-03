@@ -5,6 +5,40 @@ All notable changes to the @evalgate/sdk package will be documented in this file
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.2] - 2026-03-03
+
+### Fixed
+
+- **8 stub assertions replaced with real implementations:**
+  - `hasSentiment` — substring matching + expanded 34/31-word positive/negative lexicon (was exact-match, 4 words each)
+  - `hasNoHallucinations` — case-insensitive fact matching (was case-sensitive)
+  - `hasFactualAccuracy` — case-insensitive fact matching (was case-sensitive)
+  - `containsLanguage` — expanded from 3 languages (en/es/fr) to 12 (+ de/it/pt/nl/ru/zh/ja/ko/ar) with BCP-47 subtag support (`zh-CN` → `zh`)
+  - `hasValidCodeSyntax` — real bracket/brace/parenthesis balance checker with string literal and comment awareness (handles JS `//`/`/* */`, Python `#`, template literals, single/double quotes); JSON fast-path via `JSON.parse`
+  - `hasNoToxicity` — expanded from 4 words to ~80 terms across 9 categories: insults, degradation, violence/threats, self-harm directed at others, dehumanization, hate/rejection, harassment, profanity-as-attacks, bullying/appearance/mental-health weaponization
+  - `hasReadabilityScore` — fixed Flesch-Kincaid syllable counting to be per-word (was treating entire text as one word)
+  - `matchesSchema` — now dispatches on schema format: JSON Schema `required` array (`{ required: ['name'] }` → checks required keys exist), JSON Schema `properties` object (`{ properties: { name: {} } }` → checks property keys exist), or simple key-presence template (existing behavior preserved for backward compat). Fixes regression: `matchesSchema({ name: 'test', score: 95 }, { type: 'object', required: ['name'] })` was returning `false`
+- **`importData` crash** — `options: ImportOptions` parameter now defaults to `{}` to prevent `Cannot read properties of undefined (reading 'dryRun')` when called as `importData(client, data)`
+- **`compareWithSnapshot` / `SnapshotManager.compare` object coercion** — both now accept `unknown` input and coerce non-string values via `JSON.stringify` before comparison, matching the existing behavior of `SnapshotManager.save()`
+- **`WorkflowTracer` constructor crash** — defensive guard: `typeof client?.getOrganizationId === "function"` before calling it; prevents `TypeError: client.getOrganizationId is not a function` when using partial clients or initializing without an API key
+
+### Added
+
+- **LLM-backed async assertion variants** — 6 new exported functions:
+  - `hasSentimentAsync(text, expected, config?)` — LLM classifies sentiment with full context awareness
+  - `hasNoToxicityAsync(text, config?)` — LLM detects sarcastic, implicit, and culturally specific toxic content that blocklists miss
+  - `containsLanguageAsync(text, language, config?)` — LLM language detection for any language
+  - `hasValidCodeSyntaxAsync(code, language, config?)` — LLM deep syntax analysis beyond bracket balance
+  - `hasFactualAccuracyAsync(text, facts, config?)` — LLM checks facts semantically, catches paraphrased inaccuracies
+  - `hasNoHallucinationsAsync(text, groundTruth, config?)` — LLM detects fabricated claims even when paraphrased
+- **`configureAssertions(config: AssertionLLMConfig)`** — set global LLM provider/apiKey/model/baseUrl once; all `*Async` functions use it automatically; per-call `config` overrides it
+- **`getAssertionConfig()`** — retrieve current global assertion LLM config
+- **`AssertionLLMConfig` type** — exported interface: `{ provider: "openai" | "anthropic"; apiKey: string; model?: string; baseUrl?: string }`
+- **JSDoc `**Fast and approximate**` / `**Slow and accurate**` markers** on all sync/async assertion pairs with `{@link xAsync}` cross-references that appear in IDE tooltips
+- **115 new tests** in `assertions.test.ts` covering all improved sync assertions (expanded lexicons, JSON Schema formats, bracket balance edge cases, 12-language detection, BCP-47) and all 6 async variants (OpenAI path, Anthropic path, global config, error cases, HTTP 4xx handling)
+
+---
+
 ## [2.2.1] - 2026-03-03
 
 ### Fixed
@@ -50,6 +84,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Low:** Explain no longer shows "unnamed" for builtin gate failures
 - **Docs:** Added missing `discover --manifest` step to local quickstart
 
+---
+
 ## [2.1.2] - 2026-03-02
 
 ### Fixed
@@ -57,11 +93,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Type safety** — aligned with platform 2.1.2; zero TypeScript errors across all integration points
 - **CI gate** — all SDK tests, lint, and build checks passing
 
+---
+
 ## [2.1.1] - 2026-03-02
 
 ### Fixed
 
 - Version alignment with platform 2.1.1
+
+---
 
 ## [2.0.0] - 2026-03-01
 
@@ -364,7 +404,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - error catalog stability + graceful handling of unknown codes
   - exports contract (retention visibility, 410 semantics)
 
---
+---
 
 ## [1.5.0] - 2026-02-18
 
@@ -411,6 +451,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Package hardening** — `files`, `module`, `sideEffects: false` for leaner npm publish
 - **CLI** — Passes `baseline` param to quality API for deterministic CI gates
+
+---
 
 ## [1.3.0] - 2025-10-21
 

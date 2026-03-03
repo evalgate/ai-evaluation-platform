@@ -1,6 +1,6 @@
 {
 	"name": "@evalgate/sdk",
-	"version": "2.2.1",
+	"version": "2.2.2",
 	"publishConfig": {
 		"access": "public",
 		"registry": "https://registry.npmjs.org/"
@@ -16,7 +16,7 @@
 		"CHANGELOG.md"
 	],
 	"bin": {
-		"evalgate": "./dist/cli/index.js"
+		"evalgate": "dist/cli/index.js"
 	},
 	"engines": {
 		"node": ">=16.0.0"

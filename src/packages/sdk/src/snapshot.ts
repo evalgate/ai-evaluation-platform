@@ -203,17 +203,21 @@ export class SnapshotManager {
 	 */
 	async compare(
 		name: string,
-		currentOutput: string,
+		currentOutput: unknown,
 	): Promise<SnapshotComparison> {
 		const snapshot = await this.load(name);
 		const original = snapshot.output;
+		const currentOutputStr =
+			typeof currentOutput === "string"
+				? currentOutput
+				: JSON.stringify(currentOutput);
 
 		// Exact match check
-		const exactMatch = original === currentOutput;
+		const exactMatch = original === currentOutputStr;
 
 		// Calculate similarity (simple line-based diff)
 		const originalLines = original.split("\n");
-		const currentLines = currentOutput.split("\n");
+		const currentLines = currentOutputStr.split("\n");
 
 		const differences: string[] = [];
 		const maxLines = Math.max(originalLines.length, currentLines.length);
@@ -237,7 +241,7 @@ export class SnapshotManager {
 			similarity,
 			differences,
 			original,
-			current: currentOutput,
+			current: currentOutputStr,
 		};
 	}
 
@@ -369,7 +373,7 @@ export async function loadSnapshot(
  */
 export async function compareWithSnapshot(
 	name: string,
-	currentOutput: string,
+	currentOutput: unknown,
 	dir?: string,
 ): Promise<SnapshotComparison> {
 	const manager = getSnapshotManager(dir);

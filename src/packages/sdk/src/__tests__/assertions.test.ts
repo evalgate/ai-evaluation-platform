@@ -1,15 +1,33 @@
-import { describe, it, expect as vitestExpect } from "vitest";
 import {
+	afterEach,
+	beforeEach,
+	describe,
+	it,
+	vi,
+	expect as vitestExpect,
+} from "vitest";
+import {
+	type AssertionLLMConfig,
+	configureAssertions,
 	containsAllRequiredFields,
 	containsJSON,
 	containsKeywords,
+	containsLanguage,
+	containsLanguageAsync,
 	expect,
 	followsInstructions,
+	getAssertionConfig,
+	hasFactualAccuracy,
+	hasFactualAccuracyAsync,
 	hasLength,
 	hasNoHallucinations,
+	hasNoHallucinationsAsync,
 	hasNoToxicity,
+	hasNoToxicityAsync,
 	hasSentiment,
+	hasSentimentAsync,
 	hasValidCodeSyntax,
+	hasValidCodeSyntaxAsync,
 	isValidEmail,
 	isValidURL,
 	matchesPattern,
@@ -401,5 +419,458 @@ describe("Standalone assertion functions", () => {
 	it("hasValidCodeSyntax", () => {
 		vitestExpect(hasValidCodeSyntax('{"valid": true}', "json")).toBe(true);
 		vitestExpect(hasValidCodeSyntax("{invalid}", "json")).toBe(false);
+	});
+});
+
+describe("hasSentiment — expanded lexicon and substring matching", () => {
+	it("detects positive via substring (not exact word boundary)", () => {
+		vitestExpect(
+			hasSentiment("magnificent performance overall", "positive"),
+		).toBe(true);
+		vitestExpect(hasSentiment("truly inspiring work", "positive")).toBe(true);
+		vitestExpect(
+			hasSentiment("an outstanding and valuable result", "positive"),
+		).toBe(true);
+	});
+
+	it("detects negative via substring", () => {
+		vitestExpect(
+			hasSentiment("utterly mediocre and flawed output", "negative"),
+		).toBe(true);
+		vitestExpect(
+			hasSentiment("completely unreliable and disappointing", "negative"),
+		).toBe(true);
+	});
+
+	it("returns false when sentiment does not match", () => {
+		vitestExpect(hasSentiment("This is great and amazing!", "negative")).toBe(
+			false,
+		);
+		vitestExpect(hasSentiment("This is terrible and awful", "positive")).toBe(
+			false,
+		);
+	});
+
+	it("neutral when positive and negative counts are equal", () => {
+		vitestExpect(hasSentiment("The sky is blue", "neutral")).toBe(true);
+	});
+});
+
+describe("hasNoHallucinations — case-insensitive", () => {
+	it("matches facts regardless of case in text", () => {
+		vitestExpect(
+			hasNoHallucinations("PARIS is the capital of FRANCE", [
+				"paris",
+				"france",
+			]),
+		).toBe(true);
+	});
+
+	it("matches facts regardless of case in fact list", () => {
+		vitestExpect(
+			hasNoHallucinations("Paris is the capital of France", [
+				"PARIS",
+				"FRANCE",
+			]),
+		).toBe(true);
+	});
+
+	it("returns false when a fact is absent", () => {
+		vitestExpect(hasNoHallucinations("Berlin is great", ["paris"])).toBe(false);
+	});
+});
+
+describe("hasFactualAccuracy — case-insensitive", () => {
+	it("passes when facts appear in different case", () => {
+		vitestExpect(
+			hasFactualAccuracy("The Eiffel Tower is in Paris", [
+				"eiffel tower",
+				"paris",
+			]),
+		).toBe(true);
+	});
+
+	it("passes when fact list uses different case than text", () => {
+		vitestExpect(
+			hasFactualAccuracy("albert einstein was a physicist", [
+				"Albert Einstein",
+			]),
+		).toBe(true);
+	});
+
+	it("returns false when a fact is missing", () => {
+		vitestExpect(
+			hasFactualAccuracy("The Eiffel Tower is in Paris", ["london"]),
+		).toBe(false);
+	});
+});
+
+describe("matchesSchema — JSON Schema formats", () => {
+	it("handles JSON Schema required array — keys exist", () => {
+		vitestExpect(
+			matchesSchema(
+				{ name: "test", score: 95 },
+				{ type: "object", required: ["name", "score"] },
+			),
+		).toBe(true);
+	});
+
+	it("handles JSON Schema required array — missing required key", () => {
+		vitestExpect(
+			matchesSchema(
+				{ name: "test" },
+				{ type: "object", required: ["name", "score"] },
+			),
+		).toBe(false);
+	});
+
+	it("handles JSON Schema required — reported regression case", () => {
+		vitestExpect(
+			matchesSchema(
+				{ name: "test", score: 95 },
+				{ type: "object", required: ["name"] },
+			),
+		).toBe(true);
+	});
+
+	it("handles JSON Schema properties format", () => {
+		vitestExpect(
+			matchesSchema(
+				{ name: "alice", age: 30 },
+				{ properties: { name: {}, age: {} } },
+			),
+		).toBe(true);
+		vitestExpect(
+			matchesSchema({ name: "alice" }, { properties: { name: {}, age: {} } }),
+		).toBe(false);
+	});
+
+	it("preserves backward-compatible simple template format", () => {
+		vitestExpect(
+			matchesSchema({ name: "test", value: 1 }, { name: "", value: "" }),
+		).toBe(true);
+		vitestExpect(
+			matchesSchema({ name: "test" }, { name: "", missing: "" }),
+		).toBe(false);
+	});
+
+	it("returns false for non-objects", () => {
+		vitestExpect(matchesSchema("not an object", { key: "" })).toBe(false);
+		vitestExpect(matchesSchema(null, { key: "" })).toBe(false);
+	});
+});
+
+describe("hasNoToxicity — expanded categories", () => {
+	it("passes for clean text", () => {
+		vitestExpect(hasNoToxicity("Have a great day!")).toBe(true);
+		vitestExpect(hasNoToxicity("The report is ready for review.")).toBe(true);
+	});
+
+	it("catches direct insults", () => {
+		vitestExpect(hasNoToxicity("You are an idiot")).toBe(false);
+		vitestExpect(hasNoToxicity("What a complete moron")).toBe(false);
+		vitestExpect(hasNoToxicity("You're a dumbass")).toBe(false);
+	});
+
+	it("catches violence and threats", () => {
+		vitestExpect(hasNoToxicity("I will kill you")).toBe(false);
+		vitestExpect(hasNoToxicity("I'll destroy you")).toBe(false);
+		vitestExpect(hasNoToxicity("hope you die")).toBe(false);
+	});
+
+	it("catches self-harm directed at others", () => {
+		vitestExpect(hasNoToxicity("go kill yourself")).toBe(false);
+		vitestExpect(hasNoToxicity("better off dead")).toBe(false);
+	});
+
+	it("catches profanity used as attacks", () => {
+		vitestExpect(hasNoToxicity("fuck you and your team")).toBe(false);
+		vitestExpect(hasNoToxicity("shut the fuck up")).toBe(false);
+	});
+
+	it("catches harassment", () => {
+		vitestExpect(hasNoToxicity("i'll ruin you")).toBe(false);
+		vitestExpect(hasNoToxicity("make your life hell")).toBe(false);
+	});
+});
+
+describe("hasValidCodeSyntax — real bracket balance", () => {
+	describe("JSON", () => {
+		it("passes for valid JSON", () => {
+			vitestExpect(hasValidCodeSyntax('{"valid": true}', "json")).toBe(true);
+		});
+		it("fails for invalid JSON", () => {
+			vitestExpect(hasValidCodeSyntax("{invalid}", "json")).toBe(false);
+		});
+	});
+
+	describe("JavaScript/TypeScript", () => {
+		it("passes for valid function", () => {
+			vitestExpect(
+				hasValidCodeSyntax("function add(a, b) { return a + b; }", "js"),
+			).toBe(true);
+			vitestExpect(
+				hasValidCodeSyntax(
+					"const fn = (x: number): number => { return x * 2; }",
+					"ts",
+				),
+			).toBe(true);
+		});
+
+		it("fails for unclosed brace", () => {
+			vitestExpect(
+				hasValidCodeSyntax("function add(a, b) { return a + b;", "js"),
+			).toBe(false);
+		});
+
+		it("fails for unclosed parenthesis", () => {
+			vitestExpect(hasValidCodeSyntax("console.log('hello'", "js")).toBe(false);
+		});
+
+		it("fails for extra closing delimiter", () => {
+			vitestExpect(
+				hasValidCodeSyntax("function foo() {} }", "javascript"),
+			).toBe(false);
+		});
+
+		it("ignores braces inside template literals", () => {
+			vitestExpect(
+				// biome-ignore lint/suspicious/noTemplateCurlyInString: intentional — testing that ${} inside backtick strings is ignored
+				hasValidCodeSyntax("const msg = `Hello ${name}`;", "ts"),
+			).toBe(true);
+		});
+
+		it("ignores braces inside line comments", () => {
+			vitestExpect(
+				hasValidCodeSyntax(
+					"// { unclosed comment brace\nfunction foo() {}",
+					"js",
+				),
+			).toBe(true);
+		});
+
+		it("ignores braces inside block comments", () => {
+			vitestExpect(
+				hasValidCodeSyntax("/* { unclosed */ function foo() {}", "typescript"),
+			).toBe(true);
+		});
+
+		it("ignores braces inside string literals", () => {
+			vitestExpect(hasValidCodeSyntax('const s = "hello {world}";', "js")).toBe(
+				true,
+			);
+		});
+	});
+
+	describe("Python", () => {
+		it("passes for valid function", () => {
+			vitestExpect(
+				hasValidCodeSyntax("def add(a, b):\n    return a + b", "python"),
+			).toBe(true);
+		});
+
+		it("fails for unclosed parenthesis", () => {
+			vitestExpect(hasValidCodeSyntax("def foo(a, b:\n    pass", "py")).toBe(
+				false,
+			);
+		});
+
+		it("ignores braces after hash comment", () => {
+			vitestExpect(
+				hasValidCodeSyntax("# { unclosed\ndef foo():\n    pass", "python"),
+			).toBe(true);
+		});
+	});
+});
+
+describe("containsLanguage — 12 languages", () => {
+	it("detects English", () => {
+		vitestExpect(
+			containsLanguage("The quick brown fox jumps over the lazy dog", "en"),
+		).toBe(true);
+	});
+
+	it("detects French", () => {
+		vitestExpect(
+			containsLanguage("Le renard brun saute par-dessus le chien", "fr"),
+		).toBe(true);
+	});
+
+	it("detects German", () => {
+		vitestExpect(
+			containsLanguage("Der schnelle braune Fuchs springt über den Hund", "de"),
+		).toBe(true);
+	});
+
+	it("detects Spanish", () => {
+		vitestExpect(
+			containsLanguage("El zorro marrón salta sobre el perro", "es"),
+		).toBe(true);
+	});
+
+	it("detects Chinese via CJK characters", () => {
+		vitestExpect(containsLanguage("这是一个测试的句子", "zh")).toBe(true);
+	});
+
+	it("detects Japanese via hiragana markers", () => {
+		vitestExpect(containsLanguage("これはテストの文です", "ja")).toBe(true);
+	});
+
+	it("handles BCP-47 subtag (zh-CN → zh)", () => {
+		vitestExpect(containsLanguage("这是中文", "zh-CN")).toBe(true);
+	});
+
+	it("returns false for unknown language code", () => {
+		vitestExpect(containsLanguage("Hello world", "xx")).toBe(false);
+	});
+});
+
+describe("Async LLM assertions", () => {
+	const savedConfig: AssertionLLMConfig | null = getAssertionConfig();
+
+	beforeEach(() => {
+		vi.stubGlobal("fetch", vi.fn());
+	});
+
+	afterEach(() => {
+		vi.unstubAllGlobals();
+		if (savedConfig) configureAssertions(savedConfig);
+	});
+
+	const mockOpenAI = (content: string) => {
+		(fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+			ok: true,
+			json: async () => ({ choices: [{ message: { content } }] }),
+			text: async () => content,
+		});
+	};
+
+	const mockAnthropic = (text: string) => {
+		(fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+			ok: true,
+			json: async () => ({ content: [{ text }] }),
+			text: async () => text,
+		});
+	};
+
+	const openaiCfg: AssertionLLMConfig = {
+		provider: "openai",
+		apiKey: "sk-test",
+	};
+	const anthropicCfg: AssertionLLMConfig = {
+		provider: "anthropic",
+		apiKey: "sk-ant-test",
+	};
+
+	it("configureAssertions sets global config used by async functions", async () => {
+		configureAssertions(openaiCfg);
+		mockOpenAI("positive");
+		const result = await hasSentimentAsync("I love this!", "positive");
+		vitestExpect(result).toBe(true);
+		vitestExpect(fetch).toHaveBeenCalledOnce();
+	});
+
+	it("hasSentimentAsync — OpenAI — positive match", async () => {
+		mockOpenAI("positive");
+		vitestExpect(
+			await hasSentimentAsync("I love this!", "positive", openaiCfg),
+		).toBe(true);
+	});
+
+	it("hasSentimentAsync — OpenAI — mismatch returns false", async () => {
+		mockOpenAI("negative");
+		vitestExpect(
+			await hasSentimentAsync("I love this!", "positive", openaiCfg),
+		).toBe(false);
+	});
+
+	it("hasSentimentAsync — Anthropic path", async () => {
+		mockAnthropic("neutral");
+		vitestExpect(
+			await hasSentimentAsync("The sky is blue.", "neutral", anthropicCfg),
+		).toBe(true);
+	});
+
+	it("hasNoToxicityAsync — returns true when LLM says no", async () => {
+		mockOpenAI("no");
+		vitestExpect(await hasNoToxicityAsync("Have a great day!", openaiCfg)).toBe(
+			true,
+		);
+	});
+
+	it("hasNoToxicityAsync — returns false when LLM says yes", async () => {
+		mockOpenAI("yes");
+		vitestExpect(await hasNoToxicityAsync("I hate you", openaiCfg)).toBe(false);
+	});
+
+	it("containsLanguageAsync — detects language via LLM", async () => {
+		mockOpenAI("yes");
+		vitestExpect(
+			await containsLanguageAsync("Bonjour le monde", "French", openaiCfg),
+		).toBe(true);
+	});
+
+	it("hasValidCodeSyntaxAsync — valid code", async () => {
+		mockAnthropic("yes");
+		vitestExpect(
+			await hasValidCodeSyntaxAsync("def foo(): pass", "python", anthropicCfg),
+		).toBe(true);
+	});
+
+	it("hasValidCodeSyntaxAsync — invalid code", async () => {
+		mockOpenAI("no");
+		vitestExpect(
+			await hasValidCodeSyntaxAsync("def foo(: pass", "python", openaiCfg),
+		).toBe(false);
+	});
+
+	it("hasFactualAccuracyAsync — all facts present", async () => {
+		mockOpenAI("yes");
+		vitestExpect(
+			await hasFactualAccuracyAsync(
+				"Paris is in France",
+				["Paris is in France"],
+				openaiCfg,
+			),
+		).toBe(true);
+	});
+
+	it("hasNoHallucinationsAsync — consistent with ground truth", async () => {
+		mockAnthropic("yes");
+		vitestExpect(
+			await hasNoHallucinationsAsync(
+				"The sun orbits the Earth",
+				["The Earth orbits the sun"],
+				anthropicCfg,
+			),
+		).toBe(true);
+	});
+
+	it("throws a clear error when no config is set", async () => {
+		configureAssertions(null as unknown as AssertionLLMConfig);
+		await vitestExpect(hasSentimentAsync("test", "positive")).rejects.toThrow(
+			"No LLM config set",
+		);
+	});
+
+	it("throws on unsupported provider", async () => {
+		const badCfg = {
+			provider: "gemini",
+			apiKey: "key",
+		} as unknown as AssertionLLMConfig;
+		await vitestExpect(
+			hasSentimentAsync("test", "positive", badCfg),
+		).rejects.toThrow("Unsupported provider");
+	});
+
+	it("throws on non-ok API response", async () => {
+		(fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+			ok: false,
+			status: 401,
+			text: async () => "Unauthorized",
+		});
+		await vitestExpect(
+			hasSentimentAsync("test", "positive", openaiCfg),
+		).rejects.toThrow("OpenAI API error 401");
 	});
 });

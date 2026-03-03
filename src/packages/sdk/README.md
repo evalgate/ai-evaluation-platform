@@ -3,7 +3,7 @@
 [![npm version](https://img.shields.io/npm/v/@evalgate/sdk.svg)](https://www.npmjs.com/package/@evalgate/sdk)
 [![npm downloads](https://img.shields.io/npm/dm/@evalgate/sdk.svg)](https://www.npmjs.com/package/@evalgate/sdk)
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-blue.svg)](https://www.typescriptlang.org/)
-[![SDK Tests](https://img.shields.io/badge/tests-172%20passed-brightgreen.svg)](#)
+[![SDK Tests](https://img.shields.io/badge/tests-159%20passed-brightgreen.svg)](#)
 [![Contract Version](https://img.shields.io/badge/report%20schema-v1-blue.svg)](#)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
@@ -366,6 +366,33 @@ import type {
 } from "@evalgate/sdk/regression";
 ```
 
+### Assertions — Sync (fast, heuristic) and Async (slow, LLM-backed)
+
+```typescript
+import {
+  // Sync — fast and approximate (no API key needed)
+  hasSentiment, hasNoToxicity, hasValidCodeSyntax,
+  containsLanguage, hasFactualAccuracy, hasNoHallucinations,
+  matchesSchema,
+  // Async — slow and accurate (requires API key)
+  configureAssertions, hasSentimentAsync, hasNoToxicityAsync,
+  hasValidCodeSyntaxAsync, containsLanguageAsync,
+  hasFactualAccuracyAsync, hasNoHallucinationsAsync,
+} from "@evalgate/sdk";
+
+// Configure once (or pass per-call)
+configureAssertions({ provider: "openai", apiKey: process.env.OPENAI_API_KEY });
+
+// Sync — fast, no network
+console.log(hasSentiment("I love this!", "positive"));   // true
+console.log(hasNoToxicity("Have a great day!"));          // true
+console.log(hasValidCodeSyntax("function f() {}", "js")); // true
+
+// Async — LLM-backed, context-aware
+console.log(await hasSentimentAsync("subtle irony...", "negative")); // true
+console.log(await hasNoToxicityAsync("sarcastic attack text"));       // false
+```
+
 ### Platform Client
 
 ```typescript
@@ -423,17 +450,17 @@ Your local `openAIChatEval` runs continue to work. No account cancellation. No d
 
 See [CHANGELOG.md](CHANGELOG.md) for the full release history.
 
+**v2.2.2** — 8 stub assertions replaced with real implementations (`hasSentiment` expanded lexicon, `hasNoToxicity` ~80-term blocklist, `hasValidCodeSyntax` real bracket balance, `containsLanguage` 12 languages + BCP-47, `hasFactualAccuracy`/`hasNoHallucinations` case-insensitive, `hasReadabilityScore` per-word syllable fix, `matchesSchema` JSON Schema support). Added LLM-backed `*Async` variants + `configureAssertions`. Fixed `importData` crash, `compareWithSnapshot` object coercion, `WorkflowTracer` defensive guard. 115 new tests.
+
+**v2.2.1** — `snapshot(name, output)` accepts objects; auto-serialized via `JSON.stringify`
+
+**v2.2.0** — `expect().not` modifier, `hasPII()`, `defineSuite` object form, `snapshot` parameter order fix, `specId` collision fix
+
 **v1.8.0** — `evalgate doctor` rewrite (9-check checklist), `evalgate explain` command, guided failure flow, CI template with doctor preflight
 
 **v1.7.0** — `evalgate init` scaffolder, `evalgate upgrade --full`, `detectRunner()`, machine-readable gate output, init test matrix
 
 **v1.6.0** — `evalgate gate`, `evalgate baseline`, regression gate constants & types
-
-**v1.5.8** — secureRoute fix, test infra fixes, 304 handling fix
-
-**v1.5.5** — PASS/WARN/FAIL semantics, flake intelligence, golden regression suite
-
-**v1.5.0** — GitHub annotations, `--onFail import`, `evalgate doctor`
 
 ## License
 

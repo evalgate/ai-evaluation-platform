@@ -2,6 +2,24 @@
 
 Platform and SDK releases. For detailed SDK changes, see [src/packages/sdk/CHANGELOG.md](src/packages/sdk/CHANGELOG.md).
 
+## [2.2.2] - 2026-03-03
+
+### Fixed
+
+- **8 stub assertions replaced** — `hasSentiment`, `hasNoHallucinations`, `hasFactualAccuracy` (case-insensitive), `containsLanguage` (12 languages + BCP-47), `hasValidCodeSyntax` (real bracket/brace/paren balance with string & comment awareness), `hasNoToxicity` (~80 terms, 9 categories), `hasReadabilityScore` (per-word syllable counting), `matchesSchema` (handles JSON Schema `required` array and `properties` object, not just key-presence)
+- **`importData` crash** — `options` parameter now defaults to `{}` to prevent `Cannot read properties of undefined (reading 'dryRun')`
+- **`compareWithSnapshot` object coercion** — both `SnapshotManager.compare` and the `compareWithSnapshot` convenience function now accept `unknown`; objects are coerced via `JSON.stringify` before comparison
+- **`WorkflowTracer` constructor crash** — defensive `typeof client?.getOrganizationId === "function"` guard prevents crash when using partial/mock clients or calling without an API key
+
+### Added
+
+- **LLM-backed async assertion variants** — `hasSentimentAsync`, `hasNoToxicityAsync`, `containsLanguageAsync`, `hasValidCodeSyntaxAsync`, `hasFactualAccuracyAsync`, `hasNoHallucinationsAsync` — use OpenAI or Anthropic for context-aware, semantic evaluation
+- **`configureAssertions(config)` / `getAssertionConfig()`** — set a global `AssertionLLMConfig` (provider, apiKey, model, baseUrl) once; all `*Async` functions pick it up automatically, or accept a per-call override
+- **JSDoc fast/slow markers** — every sync assertion is marked `**Fast and approximate**` with `{@link xAsync}` cross-reference; every async variant is marked `**Slow and accurate**` — visible in IDE tooltips
+- **115 new assertion tests** — full coverage for all improved sync assertions, JSON Schema `matchesSchema` formats, and all 6 async variants (mocked OpenAI + Anthropic paths, error cases)
+
+---
+
 ## [2.2.1] - 2026-03-03
 
 ### Fixed

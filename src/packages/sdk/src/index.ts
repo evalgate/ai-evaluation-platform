@@ -29,20 +29,31 @@ export {
 
 // Enhanced assertions (Tier 1.3)
 export {
+	type AssertionLLMConfig,
+	// LLM config
+	configureAssertions,
 	containsAllRequiredFields,
 	containsJSON,
 	containsKeywords,
 	containsLanguage,
+	// LLM-backed async variants
+	containsLanguageAsync,
 	expect,
 	followsInstructions,
+	getAssertionConfig,
 	hasFactualAccuracy,
+	hasFactualAccuracyAsync,
 	hasLength,
 	hasNoHallucinations,
+	hasNoHallucinationsAsync,
 	hasNoToxicity,
+	hasNoToxicityAsync,
 	hasPII,
 	hasReadabilityScore,
 	hasSentiment,
+	hasSentimentAsync,
 	hasValidCodeSyntax,
+	hasValidCodeSyntaxAsync,
 	isValidEmail,
 	isValidURL,
 	matchesPattern,
