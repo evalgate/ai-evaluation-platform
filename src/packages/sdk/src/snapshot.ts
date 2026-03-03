@@ -137,7 +137,7 @@ export class SnapshotManager {
 	 */
 	async save(
 		name: string,
-		output: string,
+		output: unknown,
 		options?: {
 			tags?: string[];
 			metadata?: Record<string, unknown>;
@@ -153,12 +153,14 @@ export class SnapshotManager {
 			);
 		}
 
+		const serialized =
+			typeof output === "string" ? output : JSON.stringify(output);
 		const snapshotData: SnapshotData = {
-			output,
+			output: serialized,
 			metadata: {
 				name,
 				createdAt: new Date().toISOString(),
-				hash: this.generateHash(output),
+				hash: this.generateHash(serialized),
 				tags: options?.tags,
 				metadata: options?.metadata,
 			},
@@ -291,7 +293,7 @@ export class SnapshotManager {
 	 * await manager.update('haiku-test', newOutput);
 	 * ```
 	 */
-	async update(name: string, output: string): Promise<SnapshotData> {
+	async update(name: string, output: unknown): Promise<SnapshotData> {
 		const existing = await this.load(name);
 		return this.save(name, output, {
 			tags: existing.metadata.tags,
@@ -325,7 +327,7 @@ function getSnapshotManager(dir?: string): SnapshotManager {
  */
 export async function snapshot(
 	name: string,
-	output: string,
+	output: unknown,
 	options?: {
 		tags?: string[];
 		metadata?: Record<string, unknown>;

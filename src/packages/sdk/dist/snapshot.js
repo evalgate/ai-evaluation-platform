@@ -130,12 +130,13 @@ class SnapshotManager {
         if (!options?.overwrite && fs.existsSync(filePath)) {
             throw new Error(`Snapshot '${name}' already exists. Use overwrite: true to update.`);
         }
+        const serialized = typeof output === "string" ? output : JSON.stringify(output);
         const snapshotData = {
-            output,
+            output: serialized,
             metadata: {
                 name,
                 createdAt: new Date().toISOString(),
-                hash: this.generateHash(output),
+                hash: this.generateHash(serialized),
                 tags: options?.tags,
                 metadata: options?.metadata,
             },

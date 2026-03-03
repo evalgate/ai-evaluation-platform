@@ -2,6 +2,14 @@
 
 Platform and SDK releases. For detailed SDK changes, see [src/packages/sdk/CHANGELOG.md](src/packages/sdk/CHANGELOG.md).
 
+## [2.2.1] - 2026-03-03
+
+### Fixed
+
+- **`snapshot` object input** — `snapshot('name', { score: 92 })` now works; objects auto-serialized via `JSON.stringify`
+
+---
+
 ## [2.2.0] - 2026-03-03
 
 ### Breaking

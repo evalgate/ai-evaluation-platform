@@ -73,7 +73,7 @@ export declare class SnapshotManager {
      * await manager.save('haiku-test', output, { tags: ['poetry'] });
      * ```
      */
-    save(name: string, output: string, options?: {
+    save(name: string, output: unknown, options?: {
         tags?: string[];
         metadata?: Record<string, unknown>;
         overwrite?: boolean;
@@ -127,7 +127,7 @@ export declare class SnapshotManager {
      * await manager.update('haiku-test', newOutput);
      * ```
      */
-    update(name: string, output: string): Promise<SnapshotData>;
+    update(name: string, output: unknown): Promise<SnapshotData>;
 }
 /**
  * Save a snapshot (convenience function)
@@ -138,7 +138,7 @@ export declare class SnapshotManager {
  * await snapshot('haiku-test', output);
  * ```
  */
-export declare function snapshot(name: string, output: string, options?: {
+export declare function snapshot(name: string, output: unknown, options?: {
     tags?: string[];
     metadata?: Record<string, unknown>;
     overwrite?: boolean;

@@ -1,6 +1,6 @@
 # Stability Matrix
 
-> Last updated: 2026-03-02
+> Last updated: 2026-03-03
 
 This document classifies every major feature by maturity level and provides API compatibility guarantees for each tier.
 
@@ -105,7 +105,7 @@ This document classifies every major feature by maturity level and provides API 
 | Cost Records | **Stable** | v1.0 | Per-call token + cost tracking |
 | LLM Judge | **Beta** | v1.0 | Meta-judge post-eval hook |
 
-### SDK (`@evalgate/sdk`) — v2.2.0
+### SDK (`@evalgate/sdk`) — v2.2.1
 
 | Feature | Tier | Since | Notes |
 |---------|------|-------|-------|
@@ -116,7 +116,7 @@ This document classifies every major feature by maturity level and provides API 
 | Assertions library | **Stable** | v1.0 | 15+ assertion types |
 | `hasPII(text)` | **Stable** | v2.2 | Semantic PII detection; `true` = PII found |
 | `defineSuite` (object + positional) | **Stable** | v2.2 | Both call forms accepted |
-| `snapshot(name, output)` | **Stable** | v2.2 | Param order fixed; `saveSnapshot` alias updated |
+| `snapshot(name, output)` | **Stable** | v2.2 | Accepts string or object; auto-serializes via JSON.stringify |
 | Framework integrations | **Beta** | v1.0 | Jest, Vitest adapters |
 | Regression gate exports | **Stable** | v1.6 | `@evalgate/sdk/regression` |
 | Behavioral spec discover/run/diff | **Beta** | v2.0 | `evalgate discover`, `run`, `diff`, `ci` pipeline |
