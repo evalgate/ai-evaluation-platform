@@ -94,6 +94,16 @@ function detectRunner(cwd) {
     }
     return "unknown";
 }
+function hasTestScript(cwd) {
+    try {
+        const pkg = JSON.parse(fs.readFileSync(path.join(cwd, "package.json"), "utf-8"));
+        const script = pkg.scripts?.test ?? "";
+        return !!script && script !== 'echo "Error: no test specified" && exit 1';
+    }
+    catch {
+        return false;
+    }
+}
 function runBuiltinGate(cwd) {
     const t0 = Date.now();
     const baselinePath = path.join(cwd, BASELINE_REL);
@@ -101,6 +111,7 @@ function runBuiltinGate(cwd) {
     const pm = detectPackageManager(cwd);
     const command = `${pm} test`;
     const runner = detectRunner(cwd);
+    const projectHasTestScript = hasTestScript(cwd);
     // Load baseline
     if (!fs.existsSync(baselinePath)) {
         return {
@@ -165,16 +176,18 @@ function runBuiltinGate(cwd) {
     const baselineTotal = baselineData.confidenceTests?.total ?? 0;
     const failures = [];
     const deltas = [];
-    // Delta: tests passing
-    deltas.push({
-        metric: "tests_passing",
-        baseline: baselinePassed,
-        current: testsPassed,
-        delta: testsPassed === baselinePassed ? "0" : testsPassed ? "+1" : "-1",
-        status: testsPassed ? "pass" : "fail",
-    });
-    if (!testsPassed && baselinePassed) {
-        failures.push("Tests were passing in baseline but are now failing");
+    // Delta: tests passing — only meaningful when a test script exists
+    if (projectHasTestScript) {
+        deltas.push({
+            metric: "tests_passing",
+            baseline: baselinePassed,
+            current: testsPassed,
+            delta: testsPassed === baselinePassed ? "0" : testsPassed ? "+1" : "-1",
+            status: testsPassed ? "pass" : "fail",
+        });
+        if (!testsPassed && baselinePassed) {
+            failures.push("Tests were passing in baseline but are now failing");
+        }
     }
     // Delta: test count (only if we captured counts)
     if (testCount > 0 || baselineTotal > 0) {

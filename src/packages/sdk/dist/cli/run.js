@@ -52,6 +52,7 @@ exports.runEvaluationsCLI = runEvaluationsCLI;
 const node_child_process_1 = require("node:child_process");
 const fs = __importStar(require("node:fs/promises"));
 const path = __importStar(require("node:path"));
+const registry_1 = require("../runtime/registry");
 const impact_analysis_1 = require("./impact-analysis");
 /**
  * Generate deterministic run ID
@@ -138,69 +139,99 @@ async function loadManifest(projectRoot = process.cwd()) {
     }
 }
 /**
- * Execute specifications
+ * Execute specifications — grouped by file to avoid redundant loads
  */
 async function executeSpecs(specs) {
-    const results = [];
+    // Group specs by their absolute file path
+    const specsByFile = new Map();
     for (const spec of specs) {
-        const result = await executeSpec(spec);
-        results.push(result);
+        const abs = path.isAbsolute(spec.filePath)
+            ? spec.filePath
+            : path.join(process.cwd(), spec.filePath);
+        const group = specsByFile.get(abs) ?? [];
+        group.push(spec);
+        specsByFile.set(abs, group);
+    }
+    const results = [];
+    for (const [absPath, fileSpecs] of specsByFile) {
+        // Fresh runtime per file to avoid cross-file contamination
+        (0, registry_1.disposeActiveRuntime)();
+        try {
+            // Bust require cache so the file re-executes its defineEval calls
+            delete require.cache[require.resolve(absPath)];
+        }
+        catch {
+            // Not in cache yet — fine
+        }
+        try {
+            // eslint-disable-next-line @typescript-eslint/no-require-imports
+            require(absPath);
+        }
+        catch (loadError) {
+            const isTs = absPath.endsWith(".ts") || absPath.endsWith(".tsx");
+            const msg = isTs &&
+                loadError instanceof Error &&
+                (loadError.message.includes("Unknown file extension") ||
+                    loadError.message.includes("SyntaxError"))
+                ? `TypeScript spec files require ts-node. Install: npm i -D ts-node, then run: node -r ts-node/register -e "require('@evalgate/sdk/register')" evalgate run`
+                : loadError instanceof Error
+                    ? loadError.message
+                    : String(loadError);
+            for (const spec of fileSpecs) {
+                results.push(makeErrorResult(spec, msg, 0));
+            }
+            continue;
+        }
+        const runtime = (0, registry_1.getActiveRuntime)();
+        const registered = runtime.list();
+        for (const spec of fileSpecs) {
+            const registeredSpec = registered.find((r) => r.name === spec.name);
+            if (!registeredSpec) {
+                results.push({
+                    specId: spec.id,
+                    name: spec.name,
+                    filePath: spec.filePath,
+                    result: {
+                        status: "skipped",
+                        error: `defineEval name "${spec.name}" not found in ${spec.filePath}`,
+                        duration: 0,
+                    },
+                });
+                continue;
+            }
+            const startTime = Date.now();
+            try {
+                const evalResult = await registeredSpec.executor({ input: "" });
+                results.push({
+                    specId: spec.id,
+                    name: spec.name,
+                    filePath: spec.filePath,
+                    result: {
+                        status: evalResult.pass ? "passed" : "failed",
+                        score: typeof evalResult.score === "number"
+                            ? evalResult.score / 100
+                            : undefined,
+                        error: evalResult.error,
+                        duration: Date.now() - startTime,
+                    },
+                });
+            }
+            catch (execError) {
+                results.push(makeErrorResult(spec, execError instanceof Error
+                    ? execError.message
+                    : String(execError), Date.now() - startTime));
+            }
+        }
     }
     return results;
 }
-/**
- * Execute individual specification
- */
-async function executeSpec(spec) {
-    const startTime = Date.now();
-    try {
-        // For now, simulate execution
-        // In a real implementation, this would:
-        // 1. Load the spec file
-        // 2. Execute the defineEval function
-        // 3. Capture the result
-        // Simulate some work
-        await new Promise((resolve) => setTimeout(resolve, Math.random() * 100 + 50));
-        // Simulate success/failure (90% success rate for demo)
-        const success = Math.random() > 0.1;
-        const duration = Date.now() - startTime;
-        if (success) {
-            return {
-                specId: spec.id,
-                name: spec.name,
-                filePath: spec.filePath,
-                result: {
-                    status: "passed",
-                    score: Math.random() * 0.3 + 0.7, // 0.7-1.0
-                    duration,
-                },
-            };
-        }
-        else {
-            return {
-                specId: spec.id,
-                name: spec.name,
-                filePath: spec.filePath,
-                result: {
-                    status: "failed",
-                    error: "Simulated execution failure",
-                    duration,
-                },
-            };
-        }
-    }
-    catch (error) {
-        return {
-            specId: spec.id,
-            name: spec.name,
-            filePath: spec.filePath,
-            result: {
-                status: "failed",
-                error: error instanceof Error ? error.message : String(error),
-                duration: Date.now() - startTime,
-            },
-        };
-    }
+function makeErrorResult(spec, error, duration) {
+    return {
+        specId: spec.id,
+        name: spec.name,
+        filePath: spec.filePath,
+        result: { status: "failed", error, duration },
+    };
 }
 /**
  * Calculate summary statistics
@@ -348,7 +379,8 @@ function printHumanResults(result) {
     console.log(`   ❌ Failed: ${result.summary.failed}`);
     console.log(`   ⏭️  Skipped: ${result.summary.skipped}`);
     console.log(`   📊 Pass Rate: ${(result.summary.passRate * 100).toFixed(1)}%`);
-    console.log("\n📋 Individual Results:");
+    const hasScores = result.results.some((r) => r.result.score !== undefined);
+    console.log(`\n📋 Individual Results:${hasScores ? "  (score = value returned by spec executor, 0–100)" : ""}`);
     for (const spec of result.results) {
         const status = spec.result.status === "passed"
             ? "✅"

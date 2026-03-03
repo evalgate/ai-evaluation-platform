@@ -183,8 +183,8 @@ async function analyzeSpecifications(
 	for (const filePath of specFiles) {
 		try {
 			const content = await fs.readFile(filePath, "utf-8");
-			const analysis = analyzeSpecFile(filePath, content);
-			specs.push(analysis);
+			const fileSpecs = analyzeSpecFile(filePath, content);
+			specs.push(...fileSpecs);
 		} catch (error) {
 			console.warn(
 				`Warning: Could not analyze ${filePath}: ${error instanceof Error ? error.message : String(error)}`,
@@ -196,23 +196,43 @@ async function analyzeSpecifications(
 }
 
 /**
- * Analyze a single specification file
+ * Extract all spec names from file content (handles both call forms)
  */
-function analyzeSpecFile(filePath: string, content: string): SpecAnalysis {
-	// Extract defineEval calls
-	const defineEvalMatches = content.match(/defineEval\s*\([^)]+\)/g) || [];
-	const specNames = defineEvalMatches.map((match) => {
-		const nameMatch = match.match(/["'`](.+?)["'`](?:\s*,|\s*\))/);
-		return nameMatch ? nameMatch[1] : "unnamed";
-	});
+function extractSpecNames(content: string): string[] {
+	const names: string[] = [];
 
-	// Extract tags
+	// Form 1: defineEval("name", ...) or defineEval('name', ...) or defineEval(`name`, ...)
+	const stringArgPattern = /defineEval\s*\(\s*["'`]([^"'`]+)["'`]/g;
+	let m: RegExpExecArray | null;
+	while ((m = stringArgPattern.exec(content)) !== null) {
+		names.push(m[1]);
+	}
+
+	if (names.length > 0) return names;
+
+	// Form 2: defineEval({ name: "..." }) — object-first form
+	const objNamePattern = /defineEval\s*\(\s*\{[\s\S]*?name\s*:\s*["'`]([^"'`]+)["'`]/g;
+	while ((m = objNamePattern.exec(content)) !== null) {
+		names.push(m[1]);
+	}
+
+	return names;
+}
+
+/**
+ * Analyze a single specification file — returns one SpecAnalysis per defineEval call
+ */
+function analyzeSpecFile(filePath: string, content: string): SpecAnalysis[] {
+	const specNames = extractSpecNames(content);
+
+	// Fallback: file matched as a spec file but we couldn't parse names
+	if (specNames.length === 0) {
+		specNames.push(path.basename(filePath, path.extname(filePath)));
+	}
+
+	// Shared analysis for the file
 	const tags = extractTags(content);
-
-	// Analyze complexity
 	const complexity = analyzeComplexity(content);
-
-	// Check for models and tools
 	const usesModels =
 		content.includes("model:") ||
 		content.includes("model=") ||
@@ -222,26 +242,22 @@ function analyzeSpecFile(filePath: string, content: string): SpecAnalysis {
 		content.includes("tool:") ||
 		content.includes("function.") ||
 		content.includes("call(");
-
-	// Check for assertions
 	const hasAssertions =
 		content.includes("assert") ||
 		content.includes("expect") ||
 		content.includes("should");
+	const relFile = path.relative(process.cwd(), filePath);
 
-	// Generate ID from file path
-	const id = generateSpecId(filePath);
-
-	return {
-		id,
-		name: specNames[0] || path.basename(filePath, ".ts"),
-		file: path.relative(process.cwd(), filePath),
+	return specNames.map((name, idx) => ({
+		id: generateSpecId(filePath, name, idx),
+		name,
+		file: relFile,
 		tags,
 		hasAssertions,
 		usesModels,
 		usesTools,
 		complexity,
-	};
+	}));
 }
 
 /**
@@ -321,11 +337,12 @@ function analyzeComplexity(content: string): "simple" | "medium" | "complex" {
 }
 
 /**
- * Generate specification ID from file path
+ * Generate specification ID from file path + name + index (unique per defineEval call)
  */
-function generateSpecId(filePath: string): string {
+function generateSpecId(filePath: string, name: string, index: number): string {
 	const relativePath = path.relative(process.cwd(), filePath);
-	const hash = Buffer.from(relativePath)
+	const key = `${relativePath}:${name}:${index}`;
+	const hash = Buffer.from(key)
 		.toString("base64")
 		.replace(/[+/=]/g, "")
 		.slice(0, 8);

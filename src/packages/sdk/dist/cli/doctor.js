@@ -96,7 +96,7 @@ function parseFlags(argv) {
     const baseUrl = raw.baseUrl ||
         process.env.EVALGATE_BASE_URL ||
         process.env.EVALAI_BASE_URL ||
-        "http://localhost:3000";
+        "https://api.evalgate.com";
     const apiKey = raw.apiKey ||
         process.env.EVALGATE_API_KEY ||
         process.env.EVALAI_API_KEY ||

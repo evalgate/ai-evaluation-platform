@@ -542,6 +542,7 @@ function buildFromBuiltinReport(
 
 	const topFailures = failures.slice(0, 3).map((f, i) => ({
 		rank: i + 1,
+		name: f.length > 60 ? `${f.slice(0, 57)}...` : f,
 		reason: f,
 	}));
 
