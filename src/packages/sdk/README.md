@@ -254,6 +254,33 @@ All commands automatically write artifacts so `explain` works with zero flags.
 npm install @evalgate/sdk openai
 ```
 
+Create `eval/your-spec.spec.ts`:
+
+```typescript
+import { defineEval } from "@evalgate/sdk";
+
+defineEval({
+  name: "Basic Math Operations",
+  description: "Test fundamental arithmetic",
+  prompt: "Test: 1+1=2, string concatenation, array includes",
+  expected: "All tests should pass",
+  tags: ["basic", "math"],
+  category: "unit-test"
+});
+```
+
+```bash
+# Discover specs and generate manifest
+npx @evalgate/sdk discover
+npx @evalgate/sdk discover --manifest
+
+# Run evaluations
+npx @evalgate/sdk run --write-results
+
+# Run local regression gate
+npx @evalgate/sdk gate
+```
+
 ```typescript
 import { openAIChatEval } from "@evalgate/sdk";
 
