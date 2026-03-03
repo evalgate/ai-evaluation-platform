@@ -11,7 +11,7 @@ import { evaluations, evaluationVersions, testCases } from "@/db/schema";
 import { logger } from "@/lib/logger";
 
 /** JSON.stringify with sorted keys for deterministic output. */
-function stableStringify(obj: unknown): string {
+function _stableStringify(obj: unknown): string {
 	return JSON.stringify(obj, (_key, value) => {
 		if (value && typeof value === "object" && !Array.isArray(value)) {
 			return Object.keys(value)

@@ -127,7 +127,7 @@ export function deriveRateLimitTier(
 // ── Overloads so callers get the correct context type ──
 
 /** Authenticated + org-scoped handler (default) */
-// @ts-ignore TS2394
+// @ts-expect-error TS2394
 export function secureRoute(
 	handler: (
 		req: NextRequest,

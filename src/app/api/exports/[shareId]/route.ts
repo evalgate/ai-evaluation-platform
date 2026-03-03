@@ -72,7 +72,7 @@ function normalizeToShareExportDTO(
 }
 
 export const GET = secureRoute(
-	// @ts-ignore handler returns Response which is not NextResponse; ctx type is structurally compatible
+	// @ts-expect-error handler returns Response which is not NextResponse; ctx type is structurally compatible
 	async (
 		req: NextRequest,
 		_ctx: import("@/lib/api/secure-route").AuthContext,
