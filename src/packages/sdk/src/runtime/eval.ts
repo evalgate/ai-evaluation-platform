@@ -6,6 +6,7 @@
  */
 
 import * as crypto from "node:crypto";
+import * as fs from "node:fs";
 import * as path from "node:path";
 import { getActiveRuntime } from "./registry";
 import type {
@@ -258,6 +259,108 @@ export const defineEval: DefineEvalFunction =
 // Attach .skip and .only modifiers (vitest/jest convention)
 defineEval.skip = defineEvalSkipImpl as DefineEvalFunction;
 defineEval.only = defineEvalOnlyImpl as DefineEvalFunction;
+
+/**
+ * Parse a JSONL file into an array of row objects.
+ * Each line must be a valid JSON object; blank lines are skipped.
+ */
+function parseJsonl(content: string): Record<string, unknown>[] {
+	return content
+		.split("\n")
+		.map((line) => line.trim())
+		.filter((line) => line.length > 0)
+		.map((line, i) => {
+			try {
+				return JSON.parse(line) as Record<string, unknown>;
+			} catch {
+				throw new SpecRegistrationError(
+					`Invalid JSON on line ${i + 1} of dataset`,
+				);
+			}
+		});
+}
+
+/**
+ * Parse a simple CSV file into an array of row objects.
+ * First line is treated as headers. Values are unquoted strings.
+ * For complex CSV (quoted fields, escapes), use a dedicated library.
+ */
+function parseCsv(content: string): Record<string, unknown>[] {
+	const lines = content
+		.split("\n")
+		.map((l) => l.trim())
+		.filter((l) => l.length > 0);
+	if (lines.length < 2) return [];
+	const headers = lines[0].split(",").map((h) => h.trim());
+	return lines.slice(1).map((line) => {
+		const values = line.split(",").map((v) => v.trim());
+		const row: Record<string, unknown> = {};
+		for (let i = 0; i < headers.length; i++) {
+			row[headers[i]] = values[i] ?? "";
+		}
+		return row;
+	});
+}
+
+/**
+ * Load a JSONL or CSV dataset and register one spec per row.
+ */
+function fromDatasetImpl<TRow extends Record<string, unknown>>(
+	name: string,
+	datasetPath: string,
+	executor: (context: EvalContext & { input: TRow }) => Promise<EvalResult>,
+	options?: SpecOptions,
+): void {
+	const resolvedPath = path.isAbsolute(datasetPath)
+		? datasetPath
+		: path.resolve(process.cwd(), datasetPath);
+
+	if (!fs.existsSync(resolvedPath)) {
+		throw new SpecRegistrationError(
+			`Dataset file not found: ${resolvedPath}`,
+		);
+	}
+
+	const content = fs.readFileSync(resolvedPath, "utf8");
+	const ext = path.extname(resolvedPath).toLowerCase();
+
+	let rows: Record<string, unknown>[];
+	if (ext === ".jsonl" || ext === ".ndjson") {
+		rows = parseJsonl(content);
+	} else if (ext === ".csv") {
+		rows = parseCsv(content);
+	} else if (ext === ".json") {
+		const parsed = JSON.parse(content);
+		rows = Array.isArray(parsed) ? parsed : [parsed];
+	} else {
+		throw new SpecRegistrationError(
+			`Unsupported dataset format: ${ext}. Use .jsonl, .ndjson, .csv, or .json`,
+		);
+	}
+
+	if (rows.length === 0) {
+		throw new SpecRegistrationError(
+			`Dataset is empty: ${resolvedPath}`,
+		);
+	}
+
+	for (let i = 0; i < rows.length; i++) {
+		const row = rows[i] as TRow;
+		const specName = `${name} - row ${i + 1}`;
+		const wrappedExecutor: EvalExecutor = (context: EvalContext) =>
+			executor({ ...context, input: row as unknown as string & TRow });
+		defineEvalWithMode("normal", specName, wrappedExecutor, {
+			...options,
+			metadata: {
+				...options?.metadata,
+				datasetPath: resolvedPath,
+				datasetRow: i + 1,
+			},
+		});
+	}
+}
+
+defineEval.fromDataset = fromDatasetImpl as DefineEvalFunction["fromDataset"];
 
 /**
  * Filter a list of specs according to skip/only semantics:

@@ -200,6 +200,27 @@ export interface DefineEvalFunction {
      * Follows the vitest/jest `.only` convention.
      */
     only: DefineEvalFunction;
+    /**
+     * Load a JSONL or CSV dataset and register one spec per row.
+     * Each row is passed as `context.input` (the parsed row object) to the executor.
+     *
+     * @param name - Base name for specs (each gets " [row N]" suffix)
+     * @param datasetPath - Path to a .jsonl or .csv file
+     * @param executor - Receives the parsed row as input
+     * @param options - Optional spec configuration applied to all rows
+     *
+     * @example
+     * ```ts
+     * defineEval.fromDataset("rag-accuracy", "./evals/golden.jsonl", async (ctx) => {
+     *   const row = ctx.input; // { question: string, expected: string }
+     *   const answer = await myRag(row.question);
+     *   return createResult({ pass: answer.includes(row.expected), score: 100 });
+     * });
+     * ```
+     */
+    fromDataset: <TRow extends Record<string, unknown> = Record<string, unknown>>(name: string, datasetPath: string, executor: (context: EvalContext & {
+        input: TRow;
+    }) => Promise<EvalResult>, options?: SpecOptions) => void;
 }
 /**
  * Specification definition options
