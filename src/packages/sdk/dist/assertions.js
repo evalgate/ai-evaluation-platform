@@ -50,6 +50,19 @@ exports.hasValidCodeSyntaxAsync = hasValidCodeSyntaxAsync;
 exports.hasFactualAccuracyAsync = hasFactualAccuracyAsync;
 exports.hasNoHallucinationsAsync = hasNoHallucinationsAsync;
 exports.hasValidCodeSyntax = hasValidCodeSyntax;
+/**
+ * Test if a term appears in text as a whole word (word-boundary match)
+ * or as a phrase (for multi-word terms). Single words use \b regex to
+ * avoid false positives like "hell" matching "hello".
+ */
+function textContainsTerm(lowerText, term) {
+    if (term.includes(" ")) {
+        // Multi-word phrases: substring match is correct
+        return lowerText.includes(term);
+    }
+    // Single words: word-boundary match
+    return new RegExp(`\\b${term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, "i").test(lowerText);
+}
 class AssertionError extends Error {
     constructor(message, expected, actual) {
         super(message);
@@ -475,7 +488,7 @@ class Expectation {
     toHaveNoProfanity(message) {
         const text = String(this.value).toLowerCase();
         const profanity = ["damn", "hell", "shit", "fuck", "ass", "bitch", "crap"];
-        const foundProfanity = profanity.filter((word) => text.includes(word));
+        const foundProfanity = profanity.filter((word) => textContainsTerm(text, word));
         const passed = foundProfanity.length === 0;
         return {
             name: "toHaveNoProfanity",
@@ -1198,7 +1211,7 @@ function hasNoToxicity(text) {
         "motherfucker",
         "fucktard",
     ];
-    return !toxicTerms.some((term) => lower.includes(term));
+    return !toxicTerms.some((term) => textContainsTerm(lower, term));
 }
 function followsInstructions(text, instructions) {
     const instructionList = Array.isArray(instructions)

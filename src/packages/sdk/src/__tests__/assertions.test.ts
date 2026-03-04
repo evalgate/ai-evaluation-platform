@@ -310,7 +310,35 @@ describe("Expectation fluent API", () => {
 		});
 	});
 
-	describe("toBeProfessional", () => {
+	describe("toHaveNoProfanity", () => {
+		it("should pass for clean text", () => {
+			const result = expect("Thank you for your inquiry.").toHaveNoProfanity();
+			vitestExpect(result.passed).toBe(true);
+		});
+
+		it("should fail for profane text", () => {
+			const result = expect("This is damn stupid").toHaveNoProfanity();
+			vitestExpect(result.passed).toBe(false);
+		});
+
+		it("should NOT false-positive on 'hello' (contains 'hell' substring)", () => {
+			const result = expect("Hello, how can I help you?").toHaveNoProfanity();
+			vitestExpect(result.passed).toBe(true);
+		});
+
+		it("should NOT false-positive on 'shell', 'shellfish', 'assess'", () => {
+			vitestExpect(expect("The shell command failed").toHaveNoProfanity().passed).toBe(true);
+			vitestExpect(expect("I love shellfish").toHaveNoProfanity().passed).toBe(true);
+			vitestExpect(expect("Let me assess the situation").toHaveNoProfanity().passed).toBe(true);
+		});
+
+		it("should still catch actual profanity as whole words", () => {
+			vitestExpect(expect("What the hell is this").toHaveNoProfanity().passed).toBe(false);
+			vitestExpect(expect("You are an ass").toHaveNoProfanity().passed).toBe(false);
+		});
+	});
+
+	describe("toBeProfessional (deprecated alias)", () => {
 		it("should pass for professional text", () => {
 			const result = expect("Thank you for your inquiry.").toBeProfessional();
 			vitestExpect(result.passed).toBe(true);

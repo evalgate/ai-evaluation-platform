@@ -203,8 +203,18 @@ describe.skipIf(!distExists)("dist-smoke: compiled output contract", () => {
 			expect(result.passed).toBe(false);
 		});
 
+		it("word-boundary: 'Hello' does NOT false-positive on 'hell'", () => {
+			const result = sdk.expect("Hello, how can I help you?").toHaveNoProfanity();
+			expect(result.passed).toBe(true);
+		});
+
+		it("word-boundary: 'shell', 'assess' do NOT false-positive", () => {
+			expect(sdk.expect("The shell command failed").toHaveNoProfanity().passed).toBe(true);
+			expect(sdk.expect("Let me assess the situation").toHaveNoProfanity().passed).toBe(true);
+		});
+
 		it("toBeProfessional deprecated alias still works", () => {
-			const result = sdk.expect("Thank you for your inquiry.").toBeProfessional();
+			const result = sdk.expect("Hello, how can I help?").toBeProfessional();
 			expect(result.passed).toBe(true);
 		});
 	});
