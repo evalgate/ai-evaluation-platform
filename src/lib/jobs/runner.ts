@@ -2,6 +2,7 @@ import { and, eq, lt, lte, or, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { jobRunnerLocks, jobs } from "@/db/schema";
 import { logger } from "@/lib/logger";
+import { handleTraceFailureAnalysis } from "./handlers/trace-failure-analysis";
 import {
 	handleWebhookDelivery,
 	WebhookDeliveryError,
@@ -38,6 +39,7 @@ type HandlerFn = (payload: Record<string, unknown>) => Promise<void>;
 
 const HANDLERS: Record<string, HandlerFn> = {
 	webhook_delivery: handleWebhookDelivery,
+	trace_failure_analysis: handleTraceFailureAnalysis,
 };
 
 /**

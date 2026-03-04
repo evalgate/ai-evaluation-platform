@@ -188,6 +188,15 @@ export {
 	verifyBaselineChecksum,
 } from "./cli/baseline";
 export { type CheckArgs, EXIT, parseArgs, runCheck } from "./cli/check";
+// Production trace collector (single-payload ingest)
+export {
+	type CollectorFeedbackInput,
+	type CollectorSpanInput,
+	type ReportTraceInput,
+	type ReportTraceOptions,
+	type ReportTraceResult,
+	reportTrace,
+} from "./collector";
 export { traceAnthropic } from "./integrations/anthropic";
 // Framework integrations (Tier 1.2)
 export { traceOpenAI } from "./integrations/openai";
@@ -310,6 +319,7 @@ export {
 	type FeatureUsage,
 	type OrganizationLimits,
 } from "./types";
+
 // Workflow tracing (Orchestration Layer)
 export {
 	type AgentHandoff,

@@ -375,6 +375,56 @@ export interface DriftAlertMetadata {
 
 export type ExportData = Record<string, unknown>;
 
+// ── failure_reports ───────────────────────────────────────────
+
+export interface FailureReportSuggestedFix {
+	type: string;
+	description: string;
+	confidence: number;
+}
+
+export interface FailureReportLineage {
+	causedByTraceIds: string[];
+	preventedRegressionIds: string[];
+	clusterId: string | null;
+	derivedTestCaseIds: string[];
+}
+
+export type FailureReportSecondaryCategories = string[];
+export type FailureReportSuggestedFixes = FailureReportSuggestedFix[];
+
+// ── candidate_eval_cases ─────────────────────────────────────
+
+export type CandidateEvalTags = string[];
+export type CandidateSourceTraceIds = string[];
+
+export interface CandidateExpectedConstraint {
+	type: string;
+	value: unknown;
+	required: boolean;
+	description?: string;
+}
+
+export type CandidateExpectedConstraints = CandidateExpectedConstraint[];
+
+export interface CandidateMinimizedInput {
+	userPrompt: string;
+	systemPrompt: string | null;
+	activeTools: string[];
+	conversationContext: Array<{ role: string; content: string }>;
+	failureSpanId: string | null;
+	failureOutput: string | null;
+	metadata: Record<string, unknown>;
+}
+
+// ── user_feedback ────────────────────────────────────────────
+
+export interface UserFeedbackValue {
+	score?: number;
+	comment?: string;
+	[key: string]: unknown;
+}
+
 // ── jobs ─────────────────────────────────────────────────────
 
 export interface JobPayload {

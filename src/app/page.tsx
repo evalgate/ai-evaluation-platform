@@ -7,20 +7,20 @@ import { HomeScreenshots } from "@/components/home-screenshots";
 import { InteractivePlayground } from "@/components/interactive-playground";
 
 export const metadata: Metadata = {
-	title: "EvalGate - Stop LLM Regressions in CI in 2 Minutes",
+	title: "EvalGate - AI Quality Infrastructure",
 	description:
-		"EvalGate is CI for AI behavior. Stop LLM regressions before they reach production. No infra. No lock-in. 1.4k+ npm downloads/month. TypeScript & Python SDKs.",
+		"Production failures automatically become regression tests. CI for AI behavior plus production trace collection, failure detection, and auto-generated test cases. TypeScript & Python SDKs.",
 	openGraph: {
-		title: "EvalGate - Stop LLM Regressions in CI in 2 Minutes",
+		title: "EvalGate - AI Quality Infrastructure",
 		description:
-			"EvalGate is CI for AI behavior. Stop LLM regressions before they reach production. No infra. No lock-in.",
+			"Production failures automatically become regression tests. CI for AI behavior plus production trace collection and auto-generated test cases.",
 		type: "website",
 	},
 	twitter: {
 		card: "summary_large_image",
-		title: "EvalGate - Stop LLM Regressions in CI in 2 Minutes",
+		title: "EvalGate - AI Quality Infrastructure",
 		description:
-			"EvalGate is CI for AI behavior. Stop LLM regressions before they reach production. No infra. No lock-in.",
+			"Production failures automatically become regression tests. CI for AI behavior plus production trace collection and auto-generated test cases.",
 	},
 };
 

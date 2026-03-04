@@ -18,9 +18,9 @@ import { WebMCPProvider } from "@/components/webmcp-provider";
 import VisualEditsMessenger from "../visual-edits/VisualEditsMessenger";
 
 export const metadata: Metadata = {
-	title: "EvalGate — Stop LLM Regressions in CI in 2 Minutes",
+	title: "EvalGate — AI Quality Infrastructure",
 	description:
-		"EvalGate is CI for AI behavior. Stop LLM regressions before they reach production. No infra. No lock-in. 1.4k+ npm downloads/month. TypeScript & Python SDKs. Integrates with LangChain, CrewAI, AutoGen.",
+		"Production failures automatically become regression tests. CI for AI behavior plus production trace collection, failure detection, and auto-generated test cases. TypeScript & Python SDKs. Integrates with LangChain, CrewAI, AutoGen.",
 	generator: "EvalGate",
 	keywords: [
 		"ai evaluation",
@@ -40,7 +40,8 @@ export const metadata: Metadata = {
 	],
 	openGraph: {
 		title: "EvalGate",
-		description: "Stop LLM regressions in CI in 2 minutes",
+		description:
+			"AI quality infrastructure. Production failures automatically become regression tests.",
 		type: "website",
 		url: "https://evalgate.com",
 		siteName: "EvalGate",

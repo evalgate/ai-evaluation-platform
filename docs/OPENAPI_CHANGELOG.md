@@ -4,6 +4,22 @@ When you change `docs/openapi.json`, add an entry here before running `pnpm open
 
 Format: `## X.Y.Z` or `## [X.Y.Z]` with a short description.
 
+## 3.0.0
+
+- **AI Reliability Loop** — Major version bump: production failures automatically become regression tests
+- New endpoint: `POST /api/collector` — single-payload trace + spans ingest (LangWatch-compatible)
+- New endpoint: `POST /api/traces/:id/feedback` — user feedback with thumbs-down triggering analysis
+- New endpoint: `GET /api/candidates` — list quarantined candidate eval cases
+- New endpoint: `GET /api/candidates/:id` — candidate detail with failure report
+- New endpoint: `PATCH /api/candidates/:id` — update candidate status
+- New endpoint: `POST /api/candidates/:id/promote` — promote candidate to test suite (with dedup guard)
+- New job type: `trace_failure_analysis` — async failure detection pipeline
+- Schema: `traces.analysis_status`, `traces.source`, `traces.environment` columns added
+- Schema: `failure_reports`, `candidate_eval_cases`, `user_feedback` tables added
+- Schema: `idx_traces_org_trace_id` compound unique index
+- Collector idempotency: `ON CONFLICT DO NOTHING` on trace + span inserts
+- Rate-limit guardrail: `MAX_ANALYSIS_RATE=200/min` per org sliding window
+
 ## 2.3.0
 
 - Bump spec version to align with SDK 2.3.0 (breaking: `hasConsistency` returns `passed` instead of `consistent`, `respondedWithinDuration`/`respondedWithinTimeSince` return `AssertionResult` instead of `boolean`; new barrel exports: `computeBaselineChecksum`, `verifyBaselineChecksum`, `resetSentimentDeprecationWarning`)

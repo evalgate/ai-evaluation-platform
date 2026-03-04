@@ -37,6 +37,17 @@ export type RunDetailsData = {
         };
     }>;
 };
+export interface FetchOptions {
+    apiKey: string;
+    baseUrl: string;
+    method?: string;
+    body?: Record<string, unknown>;
+}
+/**
+ * Generic authenticated fetch to any API endpoint.
+ * Used by promote, replay, and doctor CLI commands.
+ */
+export declare function fetchAPI(path: string, opts: FetchOptions): Promise<Record<string, unknown>>;
 export declare function fetchQualityLatest(baseUrl: string, apiKey: string, evaluationId: string, baseline: string): Promise<{
     ok: true;
     data: QualityLatestData;

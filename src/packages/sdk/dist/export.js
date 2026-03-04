@@ -335,10 +335,18 @@ function convertToCSV(data, type) {
         const value = item[h];
         if (value === null || value === undefined)
             return "";
-        if (typeof value === "object")
-            return JSON.stringify(value);
-        return String(value);
+        const str = typeof value === "object" ? JSON.stringify(value) : String(value);
+        return escapeCSVField(str);
     })
         .join(","));
-    return [headers.join(","), ...rows].join("\n");
+    return [headers.map(escapeCSVField).join(","), ...rows].join("\n");
+}
+function escapeCSVField(field) {
+    if (field.includes(",") ||
+        field.includes('"') ||
+        field.includes("\n") ||
+        field.includes("\r")) {
+        return `"${field.replace(/"/g, '""')}"`;
+    }
+    return field;
 }

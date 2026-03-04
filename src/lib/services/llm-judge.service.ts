@@ -483,7 +483,7 @@ export class LLMJudgeService {
 				return this.parseJudgementResponse(
 					content,
 					provider,
-					config.model || "gpt-4o-mini",
+					config.model || "claude-3-5-haiku-latest",
 				);
 			} else {
 				// Google or unsupported — fallback

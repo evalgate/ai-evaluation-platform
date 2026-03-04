@@ -220,11 +220,18 @@ class AIEvalClient {
             clearTimeout(timeoutId);
             const duration = Date.now() - startTime;
             let data;
+            const rawText = await response.text();
             try {
-                data = await response.json();
+                data = JSON.parse(rawText);
             }
             catch (_e) {
-                data = {};
+                // Non-JSON response: preserve raw text for error responses so
+                // createErrorFromResponse produces a meaningful message
+                data = !response.ok
+                    ? {
+                        error: rawText || response.statusText || "Non-JSON error response",
+                    }
+                    : {};
             }
             // Log response
             this.requestLogger.logResponse({

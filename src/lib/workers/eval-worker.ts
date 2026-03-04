@@ -324,6 +324,19 @@ class EvalWorker {
 				error: errorMessage,
 			});
 
+			// Merge error into existing traceLog (don't overwrite accumulated data)
+			let existingLog: Record<string, unknown> = {};
+			try {
+				const [currentRun] = await db
+					.select({ traceLog: evaluationRuns.traceLog })
+					.from(evaluationRuns)
+					.where(eq(evaluationRuns.id, runId))
+					.limit(1);
+				existingLog = (currentRun?.traceLog as Record<string, unknown>) ?? {};
+			} catch {
+				// If we can't read the existing log, proceed with empty
+			}
+
 			// Update run status to failed
 			await db
 				.update(evaluationRuns)
@@ -331,6 +344,7 @@ class EvalWorker {
 					status: "failed",
 					completedAt: new Date(),
 					traceLog: {
+						...existingLog,
 						error: errorMessage,
 						failedAt: new Date().toISOString(),
 					},
@@ -433,11 +447,20 @@ class EvalWorker {
 				testResultsForJudge,
 			);
 
-			// Update evaluation run with judge results
+			// Merge metaJudge results into existing traceLog (don't overwrite)
+			const [currentRun] = await db
+				.select({ traceLog: evaluationRuns.traceLog })
+				.from(evaluationRuns)
+				.where(eq(evaluationRuns.id, runId))
+				.limit(1);
+			const existingLog =
+				(currentRun?.traceLog as Record<string, unknown>) ?? {};
+
 			await db
 				.update(evaluationRuns)
 				.set({
 					traceLog: {
+						...existingLog,
 						metaJudge: {
 							triggeredAt: new Date().toISOString(),
 							completedAt: new Date().toISOString(),
@@ -461,11 +484,20 @@ class EvalWorker {
 				error: metaJudgeError,
 			});
 
-			// Update evaluation run with error information
+			// Merge error into existing traceLog (don't overwrite)
+			const [currentRun] = await db
+				.select({ traceLog: evaluationRuns.traceLog })
+				.from(evaluationRuns)
+				.where(eq(evaluationRuns.id, runId))
+				.limit(1);
+			const existingLog =
+				(currentRun?.traceLog as Record<string, unknown>) ?? {};
+
 			await db
 				.update(evaluationRuns)
 				.set({
 					traceLog: {
+						...existingLog,
 						metaJudge: {
 							triggeredAt: new Date().toISOString(),
 							error: metaJudgeError,

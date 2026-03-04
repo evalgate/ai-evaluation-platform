@@ -1,7 +1,7 @@
 import { ImageResponse } from "next/og";
 
 export const runtime = "edge";
-export const alt = "EvalGate — Stop LLM regressions in CI";
+export const alt = "EvalGate — AI Quality Infrastructure";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -25,7 +25,7 @@ export default async function Image() {
 				EvalGate
 			</div>
 			<div style={{ fontSize: 36, opacity: 0.8 }}>
-				Stop LLM regressions in CI in 2 minutes
+				Production failures become regression tests
 			</div>
 			<div style={{ fontSize: 24, opacity: 0.6, marginTop: 20 }}>
 				No infra. No lock-in. Remove anytime.

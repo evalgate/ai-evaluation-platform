@@ -4,6 +4,7 @@ import { z } from "zod";
 import { db } from "@/db";
 import { workflows } from "@/db/schema";
 import { notFound, validationError } from "@/lib/api/errors";
+import { parseBody } from "@/lib/api/parse";
 import { type AuthContext, secureRoute } from "@/lib/api/secure-route";
 import { SCOPES } from "@/lib/auth/scopes";
 import { logger } from "@/lib/logger";
@@ -92,14 +93,10 @@ export const POST = secureRoute(
 			return notFound("Workflow not found");
 		}
 
-		const body = await req.json();
+		const parsed = await parseBody(req, createRunSchema);
+		if (!parsed.ok) return parsed.response;
 
-		const validation = createRunSchema.safeParse(body);
-		if (!validation.success) {
-			return validationError("Invalid request body", validation.error.errors);
-		}
-
-		const { traceId, input, metadata } = validation.data;
+		const { traceId, input, metadata } = parsed.data;
 
 		const run = await workflowService.createRun({
 			workflowId,

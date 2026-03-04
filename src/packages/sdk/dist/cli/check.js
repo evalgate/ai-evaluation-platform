@@ -137,7 +137,7 @@ function parseArgs(argv) {
     const maxCostDeltaUsd = args["max-cost-delta-usd"] || args.maxCostDeltaUsd
         ? parseFloat(args["max-cost-delta-usd"] || args.maxCostDeltaUsd || "0")
         : undefined;
-    const profile = (args.profile || args.profile);
+    const profile = args.profile;
     let baseline = (args.baseline === "auto"
         ? "auto"
         : args.baseline === "previous"

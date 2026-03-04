@@ -4,6 +4,24 @@ import { AIEvalClient } from "../client";
 // Mock fetch globally
 const mockFetch = vi.fn();
 
+/** Helper: build a mock Response with both json() and text() */
+function mockResponse(
+	body: unknown,
+	status = 200,
+	ok = true,
+	headers?: Headers,
+) {
+	const json = JSON.stringify(body);
+	return {
+		ok,
+		status,
+		json: async () => body,
+		text: async () => json,
+		headers: headers ?? new Headers(),
+		statusText: ok ? "OK" : "Error",
+	};
+}
+
 describe("AIEvalClient", () => {
 	beforeEach(() => {
 		vi.stubGlobal("fetch", mockFetch);
@@ -51,11 +69,7 @@ describe("AIEvalClient", () => {
 
 	describe("request method", () => {
 		it("should send auth header", async () => {
-			mockFetch.mockResolvedValue({
-				ok: true,
-				json: async () => ({ data: "test" }),
-				status: 200,
-			});
+			mockFetch.mockResolvedValue(mockResponse({ data: "test" }));
 
 			const client = new AIEvalClient({
 				apiKey: "my-secret-key",
@@ -71,11 +85,7 @@ describe("AIEvalClient", () => {
 		});
 
 		it("should send X-EvalGate-SDK-Version and X-EvalGate-Spec-Version headers", async () => {
-			mockFetch.mockResolvedValue({
-				ok: true,
-				json: async () => ({ data: "test" }),
-				status: 200,
-			});
+			mockFetch.mockResolvedValue(mockResponse({ data: "test" }));
 
 			const client = new AIEvalClient({
 				apiKey: "key",
@@ -91,11 +101,7 @@ describe("AIEvalClient", () => {
 		});
 
 		it("should return parsed JSON on success", async () => {
-			mockFetch.mockResolvedValue({
-				ok: true,
-				json: async () => ({ result: "ok" }),
-				status: 200,
-			});
+			mockFetch.mockResolvedValue(mockResponse({ result: "ok" }));
 
 			const client = new AIEvalClient({
 				apiKey: "key",
@@ -106,11 +112,9 @@ describe("AIEvalClient", () => {
 		});
 
 		it("should throw on non-ok response", async () => {
-			mockFetch.mockResolvedValue({
-				ok: false,
-				json: async () => ({ error: "Not found", code: "NOT_FOUND" }),
-				status: 404,
-			});
+			mockFetch.mockResolvedValue(
+				mockResponse({ error: "Not found", code: "NOT_FOUND" }, 404, false),
+			);
 
 			const client = new AIEvalClient({
 				apiKey: "key",
@@ -122,21 +126,15 @@ describe("AIEvalClient", () => {
 
 		it("should retry on rate limit errors", async () => {
 			mockFetch
-				.mockResolvedValueOnce({
-					ok: false,
-					json: async () => ({
-						error: "Rate limited",
-						code: "RATE_LIMIT_EXCEEDED",
-					}),
-					status: 429,
-					headers: new Headers({ "Retry-After": "1" }),
-				})
-				.mockResolvedValueOnce({
-					ok: true,
-					json: async () => ({ result: "success" }),
-					status: 200,
-					headers: new Headers(),
-				});
+				.mockResolvedValueOnce(
+					mockResponse(
+						{ error: "Rate limited", code: "RATE_LIMIT_EXCEEDED" },
+						429,
+						false,
+						new Headers({ "Retry-After": "1" }),
+					),
+				)
+				.mockResolvedValueOnce(mockResponse({ result: "success" }));
 
 			const client = new AIEvalClient({
 				apiKey: "key",
@@ -172,11 +170,9 @@ describe("AIEvalClient", () => {
 
 	describe("TraceAPI", () => {
 		it("should call correct endpoint for traces.create", async () => {
-			mockFetch.mockResolvedValue({
-				ok: true,
-				json: async () => ({ id: 1, name: "Test Trace", traceId: "trace-1" }),
-				status: 200,
-			});
+			mockFetch.mockResolvedValue(
+				mockResponse({ id: 1, name: "Test Trace", traceId: "trace-1" }),
+			);
 
 			const client = new AIEvalClient({
 				apiKey: "key",
@@ -195,11 +191,7 @@ describe("AIEvalClient", () => {
 		});
 
 		it("should call correct endpoint for traces.list", async () => {
-			mockFetch.mockResolvedValue({
-				ok: true,
-				json: async () => [],
-				status: 200,
-			});
+			mockFetch.mockResolvedValue(mockResponse([]));
 
 			const client = new AIEvalClient({
 				apiKey: "key",
@@ -215,11 +207,7 @@ describe("AIEvalClient", () => {
 
 	describe("EvaluationAPI", () => {
 		it("should call correct endpoint for evaluations.create", async () => {
-			mockFetch.mockResolvedValue({
-				ok: true,
-				json: async () => ({ id: 1, name: "Eval" }),
-				status: 200,
-			});
+			mockFetch.mockResolvedValue(mockResponse({ id: 1, name: "Eval" }));
 
 			const client = new AIEvalClient({
 				apiKey: "key",
@@ -239,11 +227,7 @@ describe("AIEvalClient", () => {
 		});
 
 		it("should call correct endpoint for evaluations.createRun", async () => {
-			mockFetch.mockResolvedValue({
-				ok: true,
-				json: async () => ({ id: 1, status: "running" }),
-				status: 200,
-			});
+			mockFetch.mockResolvedValue(mockResponse({ id: 1, status: "running" }));
 
 			const client = new AIEvalClient({
 				apiKey: "key",
@@ -259,11 +243,9 @@ describe("AIEvalClient", () => {
 
 	describe("LLMJudgeAPI", () => {
 		it("should call correct endpoint for llmJudge.evaluate", async () => {
-			mockFetch.mockResolvedValue({
-				ok: true,
-				json: async () => ({ result: { score: 85 }, config: {} }),
-				status: 200,
-			});
+			mockFetch.mockResolvedValue(
+				mockResponse({ result: { score: 85 }, config: {} }),
+			);
 
 			const client = new AIEvalClient({
 				apiKey: "key",

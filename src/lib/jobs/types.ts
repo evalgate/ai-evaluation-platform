@@ -2,7 +2,7 @@
  * Shared types for the background job runner.
  */
 
-export type JobType = "webhook_delivery";
+export type JobType = "webhook_delivery" | "trace_failure_analysis";
 
 export type JobStatus = "pending" | "running" | "success" | "dead_letter";
 

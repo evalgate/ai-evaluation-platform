@@ -30,8 +30,8 @@ git push
 
 ```bash
 # SDK releases use the sdk/v prefix
-git tag sdk/v1.7.0
-git push origin sdk/v1.7.0
+git tag sdk/v3.0.0
+git push origin sdk/v3.0.0
 ```
 
 ### 4. What happens automatically

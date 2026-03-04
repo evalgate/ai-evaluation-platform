@@ -152,13 +152,14 @@ class EvalGateway {
 			userId,
 			testCaseIds,
 			options,
-		).catch((error) => {
+		).catch(async (error) => {
 			logger.error("Gateway: Failed to trigger worker", {
 				runId: run.id,
 				error,
 			});
 			// Update run status to failed if worker can't be triggered
-			db.update(evaluationRuns)
+			await db
+				.update(evaluationRuns)
 				.set({
 					status: "failed",
 					completedAt: new Date(),

@@ -5,6 +5,60 @@ All notable changes to the @evalgate/sdk package will be documented in this file
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.0.0] - 2026-03-04
+
+### Breaking — AI Reliability Loop
+
+EvalGate is no longer just a CI eval runner — it is now a full **AI reliability loop**. Production failures automatically become regression tests.
+
+- **Major version bump** signals the identity shift from "LLM evaluation platform" to "AI quality infrastructure"
+- No breaking changes to existing SDK exports or CLI commands — this is a capability expansion
+
+### Added
+
+#### Production-to-CI Loop (T0–T8)
+
+- **`POST /api/collector`** — Single-payload trace + spans ingest endpoint (LangWatch-compatible schema)
+- **Server-side sampling** — Error traces and negative feedback always analyzed; success traces sampled at configurable rate (default 10%)
+- **Async failure detection pipeline** — `trace_failure_analysis` background job: detect → group → generate → score → auto-promote
+- **Failure grouping** — SHA-256 `group_hash` deduplicates recurring failure patterns across traces
+- **Auto-promotion heuristic** — Candidates with `quality ≥ 90 AND confidence ≥ 0.8 AND detectors ≥ 2` auto-promoted to golden regression suite
+- **Golden regression dataset** — First-class `golden_regression` evaluation type per org, auto-created on first promote
+- **Candidate eval cases** — Quarantined test case candidates with full lifecycle: `quarantined → approved → promoted`
+- **User feedback endpoint** — `POST /api/traces/:id/feedback` with thumbs-down triggering analysis
+- **SDK `reportTrace()`** — Lightweight single-call trace reporting with client-side sampling
+- **`evalgate promote`** — CLI command to promote candidates (`--auto` for bulk, `--list` to view)
+- **`evalgate replay`** — CLI command to replay candidate against current model with constraint evaluation
+
+#### Production Hardening
+
+- **Collector idempotency** — `ON CONFLICT DO NOTHING` on both `traces.traceId` and `spans.spanId`; SDK retries never create duplicates
+- **Rate-limit guardrail** — Sliding-window rate limiter (`MAX_ANALYSIS_RATE=200/min` per org); traffic spikes don't overwhelm the analysis pipeline
+- **`analysis_status` on traces** — `pending → analyzing → analyzed → failed` lifecycle tracking
+- **`source` + `environment` columns** — First-class `source` (sdk/api/cli) and `environment` (production/staging/dev) on traces table
+- **Compound unique index** — `idx_traces_org_trace_id` on `(organization_id, trace_id)` for multi-tenant idempotency
+- **Dedup against existing tests** — `deduplicateAgainstExistingTests()` prevents near-duplicates in golden dataset (input hash + title match)
+
+#### Schema Changes (Migration: `0002_kind_ego.sql`)
+
+- `traces.analysis_status` — text, default `'pending'`
+- `traces.source` — text, nullable
+- `traces.environment` — text, nullable
+- `idx_traces_org_trace_id` — unique index on `(organization_id, trace_id)`
+
+#### New DB Tables (Migration: `0001_adorable_squadron_sinister.sql`)
+
+- `failure_reports` — 21 columns, failure detection persistence with group hash
+- `candidate_eval_cases` — 19 columns, quarantined test case candidates
+- `user_feedback` — 8 columns, end-user feedback signals
+
+### New Tests
+
+- 70 unit tests + 18 DB tests = **88 new tests** for the production-to-CI loop + hardening
+- Rate limiter: 10 tests, sampling: 8 tests, collector schema: 18 tests, pipeline: 26 tests, CLI: 11 tests, DB schema: 18 tests
+
+---
+
 ## [2.3.0] - 2026-03-04
 
 ### Breaking

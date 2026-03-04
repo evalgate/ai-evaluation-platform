@@ -107,6 +107,48 @@ Each tier is additive. You can use Tier 1 + Platform simultaneously.
 └─────────────────────────────────────────────────────┘
 ```
 
+## Data Flow: Production → CI Loop (v3.0.0)
+
+```
+Production App
+    │ SDK reportTrace({ sampleRate: 0.1 }) or POST /api/collector
+    ▼
+Trace Ingested (idempotent — ON CONFLICT DO NOTHING)
+    │ analysis_status: pending → analyzing
+    │ async job (errors + thumbs-down always analyzed, success sampled)
+    │ rate-limited: MAX_ANALYSIS_RATE = 200/min per org
+    ▼
+Failure Detection Pipeline (background job)
+    │ detect → aggregate → group (SHA-256 hash) → generate → score
+    ▼
+Candidate Eval Case (quarantined, quality-scored)
+    │ analysis_status: analyzing → analyzed
+    │
+    ├─ auto_promote_eligible? ──→ Golden Regression Dataset (auto)
+    │   (quality≥90 AND confidence≥0.8 AND detectors≥2)
+    │
+    └─ manual review needed ──→ evalgate replay → developer approves
+                                       │ dedup check (input hash + title)
+                                       ▼
+                              Golden Regression Dataset (manual)
+    │
+    ▼ next PR
+evalgate gate → golden regression runs → regression blocked ✅
+    │
+    ▼
+evalgate doctor → "AI Reliability Report"
+```
+
+**Key infrastructure:**
+- **Collector:** `POST /api/collector` — single-payload trace + spans ingest
+- **Sampling:** Server-side (error=always, thumbs_down=always, success=10%)
+- **Rate limiter:** Sliding-window per org, configurable via `MAX_ANALYSIS_RATE` env var
+- **Idempotency:** `ON CONFLICT DO NOTHING` on `traces.traceId` + `spans.spanId`
+- **Pipeline:** `trace_failure_analysis` job type with `analysis_status` lifecycle
+- **Dedup:** `deduplicateAgainstExistingTests()` prevents near-duplicates in golden dataset
+
+---
+
 ## Data Flow: Regression Gate
 
 ```

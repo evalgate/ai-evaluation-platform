@@ -8,20 +8,20 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 
 export const metadata: Metadata = {
-	title: "SDK Quick Start - EvalGate | CI for AI Behavior",
+	title: "SDK Quick Start - EvalGate | AI Quality Infrastructure",
 	description:
-		"EvalGate 2.2.2: CI for AI behavior. One-command CI workflow, TypeScript & Python SDKs. 1.4k+ npm downloads/month. Stop LLM regressions before they reach production.",
+		"EvalGate 3.0.0: AI quality infrastructure. Production failures become regression tests. TypeScript & Python SDKs. One-command CI workflow plus production trace collection.",
 	openGraph: {
-		title: "SDK Quick Start - EvalGate | CI for AI Behavior",
+		title: "SDK Quick Start - EvalGate | AI Quality Infrastructure",
 		description:
-			"EvalGate 2.2.2: CI for AI behavior. One-command CI workflow, TypeScript & Python SDKs. Stop LLM regressions before they reach production.",
+			"EvalGate 3.0.0: AI quality infrastructure. Production failures become regression tests. TypeScript & Python SDKs.",
 		type: "website",
 	},
 	twitter: {
 		card: "summary_large_image",
-		title: "SDK Quick Start - EvalGate | CI for AI Behavior",
+		title: "SDK Quick Start - EvalGate | AI Quality Infrastructure",
 		description:
-			"EvalGate 2.2.2: CI for AI behavior. One-command CI workflow, TypeScript & Python SDKs. Stop LLM regressions before they reach production.",
+			"EvalGate 3.0.0: AI quality infrastructure. Production failures become regression tests. TypeScript & Python SDKs.",
 	},
 };
 
@@ -206,29 +206,30 @@ npx evalgate check --format github --onFail import`;
 					{/* Hero */}
 					<div className="space-y-4">
 						<div className="flex flex-wrap items-center gap-2">
-							<Badge variant="secondary">CI for AI behavior</Badge>
+							<Badge variant="secondary">AI Quality Infrastructure</Badge>
 							<Badge variant="outline">TypeScript & Python</Badge>
-							<Badge variant="outline">20+ Assertions</Badge>
-							<Badge variant="outline">1.4k+ npm/month</Badge>
-							<Badge variant="default">EvalGate 2.0.0</Badge>
+							<Badge variant="outline">50+ Assertions</Badge>
+							<Badge variant="outline">Production → CI Loop</Badge>
+							<Badge variant="default">EvalGate 3.0.0</Badge>
 						</div>
 						<h1 className="text-4xl font-bold tracking-tight">
 							SDK Quick Start
 						</h1>
 						<p className="text-xl text-muted-foreground">
-							EvalGate is CI for AI behavior. One-command CI workflow with
-							complete evaluation pipeline. Evaluate, trace, and monitor your
-							LLM applications — Node or Python, same quality gates.
+							EvalGate is AI quality infrastructure. Production failures
+							automatically become regression tests. Collect traces, detect
+							failures, auto-generate test cases — Node or Python, same quality
+							gates.
 						</p>
 					</div>
 
-					{/* One-Command CI (EvalGate 2.0.0) */}
+					{/* One-Command CI (EvalGate 3.0.0) */}
 					<section className="space-y-4">
 						<div className="bg-gradient-to-br from-blue-500/10 to-blue-500/5 border border-blue-500/20 rounded-lg p-6">
 							<div className="flex items-center gap-2 mb-3">
 								<Sparkles className="h-5 w-5 text-blue-500" />
 								<h2 className="text-xl font-semibold">
-									🚀 One-Command CI (New in 2.0.0)
+									🚀 One-Command CI + AI Reliability Loop (3.0.0)
 								</h2>
 							</div>
 							<p className="text-muted-foreground mb-4">

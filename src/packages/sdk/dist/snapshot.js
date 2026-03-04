@@ -17,39 +17,6 @@
  * const matches = compareSnapshots(saved, output);
  * ```
  */
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || (function () {
-    var ownKeys = function(o) {
-        ownKeys = Object.getOwnPropertyNames || function (o) {
-            var ar = [];
-            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
-            return ar;
-        };
-        return ownKeys(o);
-    };
-    return function (mod) {
-        if (mod && mod.__esModule) return mod;
-        var result = {};
-        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
-        __setModuleDefault(result, mod);
-        return result;
-    };
-})();
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.SnapshotManager = void 0;
 exports.snapshot = snapshot;
@@ -58,15 +25,23 @@ exports.compareWithSnapshot = compareWithSnapshot;
 exports.compareSnapshots = compareSnapshots;
 exports.deleteSnapshot = deleteSnapshot;
 exports.listSnapshots = listSnapshots;
-// Environment check
-const isNode = typeof process !== "undefined" && process.versions?.node;
-if (!isNode) {
-    throw new Error("Snapshot testing requires Node.js and cannot run in browsers. " +
-        "This feature uses the filesystem for storing snapshots.");
+// Environment check — deferred to runtime so browser bundles that import the
+// SDK barrel don't crash at module-evaluation time.
+const isNode = typeof process !== "undefined" &&
+    process.versions?.node &&
+    typeof require !== "undefined";
+function requireNode() {
+    if (!isNode) {
+        throw new Error("Snapshot testing requires Node.js and cannot run in browsers. " +
+            "This feature uses the filesystem for storing snapshots.");
+    }
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    return {
+        crypto: require("node:crypto"),
+        fs: require("node:fs"),
+        path: require("node:path"),
+    };
 }
-const crypto = __importStar(require("node:crypto"));
-const fs = __importStar(require("node:fs"));
-const path = __importStar(require("node:path"));
 /**
  * Snapshot manager
  */
@@ -79,6 +54,7 @@ class SnapshotManager {
      * Ensure snapshot directory exists
      */
     ensureSnapshotDir() {
+        const { fs } = requireNode();
         if (!fs.existsSync(this.snapshotDir)) {
             fs.mkdirSync(this.snapshotDir, { recursive: true });
         }
@@ -102,6 +78,7 @@ class SnapshotManager {
             throw new Error("Snapshot name must contain at least one alphanumeric character");
         }
         // Security: prevent absolute paths
+        const { path } = requireNode();
         const filePath = path.join(this.snapshotDir, `${sanitized}.json`);
         const resolvedPath = path.resolve(filePath);
         const resolvedDir = path.resolve(this.snapshotDir);
@@ -114,6 +91,7 @@ class SnapshotManager {
      * Generate content hash
      */
     generateHash(content) {
+        const { crypto } = requireNode();
         return crypto.createHash("sha256").update(content).digest("hex");
     }
     /**
@@ -127,6 +105,7 @@ class SnapshotManager {
      */
     async save(name, output, options) {
         const filePath = this.getSnapshotPath(name);
+        const { fs } = requireNode();
         // Check if snapshot exists
         if (!options?.overwrite && fs.existsSync(filePath)) {
             throw new Error(`Snapshot '${name}' already exists. Use overwrite: true to update.`);
@@ -148,7 +127,7 @@ class SnapshotManager {
                 metadata: options?.metadata,
             },
         };
-        fs.writeFileSync(filePath, JSON.stringify(snapshotData, null, 2));
+        requireNode().fs.writeFileSync(filePath, JSON.stringify(snapshotData, null, 2));
         return snapshotData;
     }
     /**
@@ -162,6 +141,7 @@ class SnapshotManager {
      */
     async load(name) {
         const filePath = this.getSnapshotPath(name);
+        const { fs } = requireNode();
         if (!fs.existsSync(filePath)) {
             throw new Error(`Snapshot '${name}' not found`);
         }
@@ -222,6 +202,7 @@ class SnapshotManager {
      * ```
      */
     async list() {
+        const { fs, path } = requireNode();
         const files = fs.readdirSync(this.snapshotDir);
         const snapshots = [];
         for (const file of files) {
@@ -242,6 +223,7 @@ class SnapshotManager {
      */
     async delete(name) {
         const filePath = this.getSnapshotPath(name);
+        const { fs } = requireNode();
         if (!fs.existsSync(filePath)) {
             throw new Error(`Snapshot '${name}' not found`);
         }

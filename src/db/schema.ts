@@ -23,6 +23,10 @@ import type {
 	BenchmarkCustomMetrics,
 	BenchmarkDataset,
 	BenchmarkMetrics,
+	CandidateEvalTags,
+	CandidateExpectedConstraints,
+	CandidateMinimizedInput,
+	CandidateSourceTraceIds,
 	CustomMetrics,
 	DecisionAlternative,
 	DecisionInputContext,
@@ -30,6 +34,9 @@ import type {
 	ExecutionSettings,
 	ExecutorConfig,
 	ExportData,
+	FailureReportLineage,
+	FailureReportSecondaryCategories,
+	FailureReportSuggestedFixes,
 	GoldenSetTestCaseIds,
 	HandoffContext,
 	HumanAnnotationMetadata,
@@ -52,6 +59,7 @@ import type {
 	ToolCall,
 	TraceLog,
 	TraceMetadata,
+	UserFeedbackValue,
 	VersionSnapshotJson,
 	WebhookEvents,
 	WebhookPayload,
@@ -234,12 +242,19 @@ export const traces = pgTable(
 			.references(() => organizations.id)
 			.notNull(),
 		status: text("status").notNull().default("pending"),
+		analysisStatus: text("analysis_status").default("pending"), // pending | analyzing | analyzed | failed
+		source: text("source"), // sdk | api | cli
+		environment: text("environment"), // production | staging | dev
 		durationMs: integer("duration_ms"),
 		metadata: jsonb("metadata").$type<TraceMetadata>(),
 		createdAt: timestamp("created_at").defaultNow().notNull(),
 	},
 	(table) => [
 		index("idx_traces_org_created").on(table.organizationId, table.createdAt),
+		uniqueIndex("idx_traces_org_trace_id").on(
+			table.organizationId,
+			table.traceId,
+		),
 	],
 );
 
@@ -1052,3 +1067,120 @@ export const jobRunnerLocks = pgTable("job_runner_locks", {
 	lockedBy: text("locked_by"),
 	updatedAt: integer("updated_at").notNull().default(0),
 });
+
+// ── Production → CI Loop ─────────────────────────────────────────────────────
+
+export const failureReports = pgTable(
+	"failure_reports",
+	{
+		id: serial("id").primaryKey(),
+		organizationId: integer("organization_id")
+			.references(() => organizations.id)
+			.notNull(),
+		traceId: integer("trace_id").references(() => traces.id, {
+			onDelete: "set null",
+		}),
+		spanId: text("span_id"),
+		evaluationRunId: integer("evaluation_run_id").references(
+			() => evaluationRuns.id,
+		),
+		category: text("category").notNull(),
+		secondaryCategories: jsonb(
+			"secondary_categories",
+		).$type<FailureReportSecondaryCategories>(),
+		severity: text("severity").notNull(),
+		description: text("description").notNull(),
+		evidence: text("evidence"),
+		confidence: integer("confidence").notNull(), // stored as 0-100 integer (divide by 100 for 0-1)
+		detectorCount: integer("detector_count").notNull().default(1),
+		detectedBy: text("detected_by").notNull(),
+		suggestedFixes:
+			jsonb("suggested_fixes").$type<FailureReportSuggestedFixes>(),
+		lineage: jsonb("lineage").$type<FailureReportLineage>(),
+		groupHash: text("group_hash"),
+		occurrenceCount: integer("occurrence_count").notNull().default(1),
+		modelVersion: text("model_version"),
+		promptVersion: text("prompt_version"),
+		status: text("status").notNull().default("open"),
+		createdAt: timestamp("created_at").defaultNow().notNull(),
+	},
+	(table) => [
+		index("idx_failure_reports_org_created").on(
+			table.organizationId,
+			table.createdAt,
+		),
+		index("idx_failure_reports_group").on(
+			table.organizationId,
+			table.groupHash,
+		),
+	],
+);
+
+export const candidateEvalCases = pgTable(
+	"candidate_eval_cases",
+	{
+		id: serial("id").primaryKey(),
+		organizationId: integer("organization_id")
+			.references(() => organizations.id)
+			.notNull(),
+		failureReportId: integer("failure_report_id").references(
+			() => failureReports.id,
+		),
+		traceId: integer("trace_id").references(() => traces.id, {
+			onDelete: "set null",
+		}),
+		title: text("title").notNull(),
+		tags: jsonb("tags").$type<CandidateEvalTags>(),
+		sourceTraceIds: jsonb("source_trace_ids").$type<CandidateSourceTraceIds>(),
+		expectedConstraints: jsonb(
+			"expected_constraints",
+		).$type<CandidateExpectedConstraints>(),
+		minimizedInput: jsonb("minimized_input").$type<CandidateMinimizedInput>(),
+		evalCaseId: text("eval_case_id").notNull(),
+		qualityScore: integer("quality_score"),
+		qualityVerdict: text("quality_verdict"),
+		autoPromoteEligible: boolean("auto_promote_eligible")
+			.notNull()
+			.default(false),
+		status: text("status").notNull().default("quarantined"),
+		rationale: text("rationale"),
+		promotedToEvaluationId: integer("promoted_to_evaluation_id").references(
+			() => evaluations.id,
+		),
+		reviewedBy: text("reviewed_by").references(() => user.id),
+		reviewedAt: timestamp("reviewed_at"),
+		createdAt: timestamp("created_at").defaultNow().notNull(),
+	},
+	(table) => [
+		index("idx_candidates_org_status").on(table.organizationId, table.status),
+		index("idx_candidates_org_auto_promote").on(
+			table.organizationId,
+			table.autoPromoteEligible,
+		),
+	],
+);
+
+export const userFeedback = pgTable(
+	"user_feedback",
+	{
+		id: serial("id").primaryKey(),
+		organizationId: integer("organization_id")
+			.references(() => organizations.id)
+			.notNull(),
+		traceId: integer("trace_id")
+			.references(() => traces.id, { onDelete: "set null" })
+			.notNull(),
+		spanId: text("span_id"),
+		feedbackType: text("feedback_type").notNull(),
+		value: jsonb("value").$type<UserFeedbackValue>(),
+		userIdExternal: text("user_id_external"),
+		createdAt: timestamp("created_at").defaultNow().notNull(),
+	},
+	(table) => [
+		index("idx_user_feedback_trace").on(table.traceId),
+		index("idx_user_feedback_org_created").on(
+			table.organizationId,
+			table.createdAt,
+		),
+	],
+);

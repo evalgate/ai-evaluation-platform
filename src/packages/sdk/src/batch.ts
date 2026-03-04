@@ -219,12 +219,13 @@ export async function batchProcess<T, R>(
 	processor: (item: T) => Promise<R>,
 	concurrency: number = 5,
 ): Promise<R[]> {
-	const results: R[] = [];
+	const results: R[] = new Array(items.length);
 	const executing = new Set<Promise<void>>();
 
-	for (const item of items) {
-		const promise = processor(item).then((result) => {
-			results.push(result);
+	for (let i = 0; i < items.length; i++) {
+		const index = i;
+		const promise = processor(items[index]).then((result) => {
+			results[index] = result;
 		});
 
 		const tracked = promise.finally(() => executing.delete(tracked));

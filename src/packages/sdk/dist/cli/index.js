@@ -20,7 +20,9 @@ const impact_analysis_1 = require("./impact-analysis");
 const init_1 = require("./init");
 const migrate_1 = require("./migrate");
 const print_config_1 = require("./print-config");
+const promote_1 = require("./promote");
 const regression_gate_1 = require("./regression-gate");
+const replay_1 = require("./replay");
 const run_1 = require("./run");
 const share_1 = require("./share");
 const start_1 = require("./start");
@@ -46,6 +48,8 @@ const SUBCOMMAND_HELP = {
     diff: `evalgate diff — Compare two run reports\n\nUsage:\n  evalgate diff [options]\n\nOptions:\n  --base <ref>   Base branch or report path\n  --head <path>  Head report path\n  --format <fmt> Output format: human (default), json`,
     validate: `evalgate validate — Validate spec files without running them\n\nUsage:\n  evalgate validate [options]\n\nOptions:\n  --format <fmt>  Output format: human (default), json`,
     doctor: `evalgate doctor — Comprehensive CI/CD readiness checklist\n\nUsage:\n  evalgate doctor [options]\n\nOptions:\n  --report         Output JSON diagnostic bundle\n  --format <fmt>   Output format: human (default), json\n  --strict         Treat warnings as failures\n  --apiKey <key>   API key\n  --evaluationId <id>  Evaluation to verify`,
+    promote: `evalgate promote — Promote candidate eval cases to regression suite\n\nUsage:\n  evalgate promote <candidate-id>     Promote a specific candidate\n  evalgate promote --auto             Auto-promote all eligible\n  evalgate promote --list             List promotable candidates\n\nOptions:\n  --evaluation-id <id>  Target evaluation (default: golden regression)\n  --apiKey <key>        API key\n  --baseUrl <url>       API base URL`,
+    replay: `evalgate replay — Replay a candidate eval case\n\nUsage:\n  evalgate replay <candidate-id>\n\nOptions:\n  --model <model>   Override model\n  --format <fmt>    Output format: human (default), json\n  --apiKey <key>    API key\n  --baseUrl <url>   API base URL`,
     baseline: `evalgate baseline — Manage regression gate baselines\n\nUsage:\n  evalgate baseline init     Create starter evals/baseline.json\n  evalgate baseline update   Run tests and update baseline`,
     upgrade: `evalgate upgrade — Upgrade from Tier 1 to Tier 2\n\nUsage:\n  evalgate upgrade --full`,
     ci: `evalgate ci — One-command CI loop (manifest → impact → run → diff)\n\nUsage:\n  evalgate ci [options]\n\nOptions:\n  --base <ref>       Base reference for diff\n  --impacted-only    Run only impacted specs\n  --format <fmt>     Output format: human (default), json, github\n  --write-results    Write run results`,
@@ -245,6 +249,22 @@ else if (subcommand === "upgrade") {
     const code = (0, upgrade_1.runUpgrade)(argv.slice(1));
     process.exit(code);
 }
+else if (subcommand === "promote") {
+    (0, promote_1.runPromote)(argv.slice(1))
+        .then((code) => process.exit(code))
+        .catch((err) => {
+        console.error(`EvalGate ERROR: ${err instanceof Error ? err.message : String(err)}`);
+        process.exit(1);
+    });
+}
+else if (subcommand === "replay") {
+    (0, replay_1.runReplay)(argv.slice(1))
+        .then((code) => process.exit(code))
+        .catch((err) => {
+        console.error(`EvalGate ERROR: ${err instanceof Error ? err.message : String(err)}`);
+        process.exit(1);
+    });
+}
 else if (subcommand === "doctor") {
     (0, doctor_1.runDoctor)(argv.slice(1))
         .then((code) => process.exit(code))
@@ -354,7 +374,7 @@ else if (subcommand === "run") {
             format,
             writeResults,
         })
-            .then(() => process.exit(0))
+            .then((code) => process.exit(code))
             .catch((err) => {
             console.error(`EvalGate ERROR: ${err instanceof Error ? err.message : String(err)}`);
             process.exit(2);

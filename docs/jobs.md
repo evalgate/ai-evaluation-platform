@@ -317,6 +317,33 @@ If the upstream returns `5xx`:
 
 ---
 
+## Registered Job Types
+
+| Type | Handler | Payload | Description |
+|------|---------|---------|-------------|
+| `webhook_delivery` | `handleWebhookDelivery` | `{ webhookId, eventType, payload }` | Deliver webhook events to external endpoints |
+| `trace_failure_analysis` | `handleTraceFailureAnalysis` | `{ traceDbId, organizationId }` | Async failure detection pipeline: detect → group → generate → score → auto-promote (v3.0.0) |
+
+### `trace_failure_analysis` Pipeline (v3.0.0)
+
+Enqueued by `POST /api/collector` when sampling decides to analyze a trace. Rate-limited by `canEnqueueAnalysis()` (sliding window, 200/min per org).
+
+**Pipeline steps:**
+1. Set `traces.analysis_status = 'analyzing'`
+2. Load trace + spans from DB
+3. Run `detectRuleBased()` on each span with output
+4. Aggregate signals via `aggregateDetectorSignals()`
+5. Compute `group_hash = SHA-256(category + "|" + normalized_user_prompt)`
+6. Generate candidate eval case via `generateFromTrace()`
+7. Score quality via `evaluateTestQuality()`
+8. Check auto-promote eligibility (`quality≥90 AND confidence≥0.8 AND detectors≥2`)
+9. Persist `failure_reports` + `candidate_eval_cases` rows
+10. Set `traces.analysis_status = 'analyzed'` (or `'failed'` on error)
+
+**Idempotency:** The collector enqueues with `organizationId` scope. The pipeline is safe to retry — failure reports use group hash dedup, candidates are idempotent per trace.
+
+---
+
 ## Adding a New Job Type
 
 1. Add the type to `JobType` in `src/lib/jobs/types.ts`

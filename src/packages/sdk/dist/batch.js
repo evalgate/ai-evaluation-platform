@@ -162,11 +162,12 @@ function canBatch(method, endpoint) {
  * Batch multiple async operations with concurrency limit
  */
 async function batchProcess(items, processor, concurrency = 5) {
-    const results = [];
+    const results = new Array(items.length);
     const executing = new Set();
-    for (const item of items) {
-        const promise = processor(item).then((result) => {
-            results.push(result);
+    for (let i = 0; i < items.length; i++) {
+        const index = i;
+        const promise = processor(items[index]).then((result) => {
+            results[index] = result;
         });
         const tracked = promise.finally(() => executing.delete(tracked));
         executing.add(tracked);

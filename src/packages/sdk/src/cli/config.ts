@@ -10,6 +10,7 @@ import { PROFILES, type ProfileName } from "./profiles";
 
 export interface EvalAIConfig {
 	evaluationId?: string;
+	apiKey?: string;
 	baseUrl?: string;
 	minScore?: number;
 	minN?: number;

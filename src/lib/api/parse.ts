@@ -22,11 +22,11 @@ export type ParseBodyResult<T> =
  * On JSON parse error: returns VALIDATION_ERROR ('Invalid JSON body').
  * On schema validation failure: returns zodValidationError (canonical envelope).
  */
-export async function parseBody<T>(
+export async function parseBody<O, I = unknown>(
 	req: NextRequest,
-	schema: z.ZodSchema<T>,
+	schema: z.ZodType<O, z.ZodTypeDef, I>,
 	options?: { allowEmpty?: boolean },
-): Promise<ParseBodyResult<T>> {
+): Promise<ParseBodyResult<O>> {
 	let data: unknown;
 	try {
 		data = await req.json();

@@ -5,6 +5,7 @@
  * Sends X-EvalGate-SDK-Version and X-EvalGate-Spec-Version on all requests.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.fetchAPI = fetchAPI;
 exports.fetchQualityLatest = fetchQualityLatest;
 exports.fetchRunDetails = fetchRunDetails;
 exports.fetchRunExport = fetchRunExport;
@@ -15,6 +16,28 @@ const API_HEADERS = {
     "X-EvalGate-SDK-Version": version_1.SDK_VERSION,
     "X-EvalGate-Spec-Version": version_1.SPEC_VERSION,
 };
+/**
+ * Generic authenticated fetch to any API endpoint.
+ * Used by promote, replay, and doctor CLI commands.
+ */
+async function fetchAPI(path, opts) {
+    const headers = {
+        ...API_HEADERS,
+        Authorization: `Bearer ${opts.apiKey}`,
+    };
+    const init = { method: opts.method ?? "GET", headers };
+    if (opts.body) {
+        headers["Content-Type"] = "application/json";
+        init.body = JSON.stringify(opts.body);
+    }
+    const url = `${opts.baseUrl.replace(/\/$/, "")}${path}`;
+    const res = await fetch(url, init);
+    const text = await res.text();
+    if (!res.ok) {
+        throw new Error(`API ${res.status}: ${text.slice(0, 200)}`);
+    }
+    return JSON.parse(text);
+}
 async function fetchQualityLatest(baseUrl, apiKey, evaluationId, baseline) {
     const headers = { ...API_HEADERS, Authorization: `Bearer ${apiKey}` };
     const url = `${baseUrl.replace(/\/$/, "")}/api/quality?evaluationId=${evaluationId}&action=latest&baseline=${baseline}`;

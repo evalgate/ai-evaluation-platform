@@ -16,8 +16,14 @@ const webhookDeliverySchema = z.object({
 	timestamp: z.string().min(1),
 });
 
+const traceFailureAnalysisSchema = z.object({
+	traceDbId: z.number().int().positive(),
+	organizationId: z.number().int().positive(),
+});
+
 const PAYLOAD_SCHEMAS: Record<JobType, z.ZodSchema> = {
 	webhook_delivery: webhookDeliverySchema,
+	trace_failure_analysis: traceFailureAnalysisSchema,
 };
 
 export interface PayloadValidationResult {

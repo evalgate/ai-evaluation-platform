@@ -98,4 +98,4 @@ export declare function printJsonResults(result: RunResult): void;
 /**
  * CLI entry point
  */
-export declare function runEvaluationsCLI(options: RunOptions): Promise<void>;
+export declare function runEvaluationsCLI(options: RunOptions): Promise<number>;

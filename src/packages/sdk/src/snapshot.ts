@@ -17,18 +17,31 @@
  * ```
  */
 
-// Environment check
-const isNode = typeof process !== "undefined" && process.versions?.node;
-if (!isNode) {
-	throw new Error(
-		"Snapshot testing requires Node.js and cannot run in browsers. " +
-			"This feature uses the filesystem for storing snapshots.",
-	);
-}
+// Environment check — deferred to runtime so browser bundles that import the
+// SDK barrel don't crash at module-evaluation time.
+const isNode =
+	typeof process !== "undefined" &&
+	process.versions?.node &&
+	typeof require !== "undefined";
 
-import * as crypto from "node:crypto";
-import * as fs from "node:fs";
-import * as path from "node:path";
+function requireNode(): {
+	crypto: typeof import("node:crypto");
+	fs: typeof import("node:fs");
+	path: typeof import("node:path");
+} {
+	if (!isNode) {
+		throw new Error(
+			"Snapshot testing requires Node.js and cannot run in browsers. " +
+				"This feature uses the filesystem for storing snapshots.",
+		);
+	}
+	// eslint-disable-next-line @typescript-eslint/no-var-requires
+	return {
+		crypto: require("node:crypto"),
+		fs: require("node:fs"),
+		path: require("node:path"),
+	};
+}
 
 export interface SnapshotMetadata {
 	/** Snapshot name/ID */
@@ -78,6 +91,7 @@ export class SnapshotManager {
 	 * Ensure snapshot directory exists
 	 */
 	private ensureSnapshotDir(): void {
+		const { fs } = requireNode();
 		if (!fs.existsSync(this.snapshotDir)) {
 			fs.mkdirSync(this.snapshotDir, { recursive: true });
 		}
@@ -108,6 +122,7 @@ export class SnapshotManager {
 		}
 
 		// Security: prevent absolute paths
+		const { path } = requireNode();
 		const filePath = path.join(this.snapshotDir, `${sanitized}.json`);
 		const resolvedPath = path.resolve(filePath);
 		const resolvedDir = path.resolve(this.snapshotDir);
@@ -123,6 +138,7 @@ export class SnapshotManager {
 	 * Generate content hash
 	 */
 	private generateHash(content: string): string {
+		const { crypto } = requireNode();
 		return crypto.createHash("sha256").update(content).digest("hex");
 	}
 
@@ -146,6 +162,7 @@ export class SnapshotManager {
 	): Promise<SnapshotData> {
 		const filePath = this.getSnapshotPath(name);
 
+		const { fs } = requireNode();
 		// Check if snapshot exists
 		if (!options?.overwrite && fs.existsSync(filePath)) {
 			throw new Error(
@@ -172,7 +189,10 @@ export class SnapshotManager {
 			},
 		};
 
-		fs.writeFileSync(filePath, JSON.stringify(snapshotData, null, 2));
+		requireNode().fs.writeFileSync(
+			filePath,
+			JSON.stringify(snapshotData, null, 2),
+		);
 		return snapshotData;
 	}
 
@@ -187,6 +207,7 @@ export class SnapshotManager {
 	 */
 	async load(name: string): Promise<SnapshotData> {
 		const filePath = this.getSnapshotPath(name);
+		const { fs } = requireNode();
 
 		if (!fs.existsSync(filePath)) {
 			throw new Error(`Snapshot '${name}' not found`);
@@ -261,6 +282,7 @@ export class SnapshotManager {
 	 * ```
 	 */
 	async list(): Promise<SnapshotData[]> {
+		const { fs, path } = requireNode();
 		const files = fs.readdirSync(this.snapshotDir);
 		const snapshots: SnapshotData[] = [];
 
@@ -287,6 +309,7 @@ export class SnapshotManager {
 	 */
 	async delete(name: string): Promise<void> {
 		const filePath = this.getSnapshotPath(name);
+		const { fs } = requireNode();
 
 		if (!fs.existsSync(filePath)) {
 			throw new Error(`Snapshot '${name}' not found`);

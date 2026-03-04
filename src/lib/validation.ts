@@ -230,6 +230,66 @@ export const createSpanBodySchema = z.object({
 	evaluationRunId: z.number().int().positive().optional().nullable(),
 });
 
+// ── Collector (single-payload trace + spans ingest) ──────────────────────────
+
+const collectorSpanSchema = z.object({
+	span_id: z.string().min(1),
+	type: z
+		.enum(["llm", "tool", "agent", "retrieval", "default"])
+		.default("default"),
+	name: z.string().min(1),
+	parent_span_id: z.string().optional(),
+	input: z.unknown().optional(),
+	output: z.unknown().optional(),
+	model: z.string().optional(),
+	vendor: z.string().optional(),
+	params: z.record(z.unknown()).optional(),
+	metrics: z
+		.object({
+			prompt_tokens: z.number().int().optional(),
+			completion_tokens: z.number().int().optional(),
+			total_time_ms: z.number().optional(),
+		})
+		.optional(),
+	timestamps: z
+		.object({
+			started_at: z.number(),
+			finished_at: z.number(),
+		})
+		.optional(),
+	error: z
+		.object({
+			message: z.string(),
+			code: z.string().optional(),
+		})
+		.optional()
+		.nullable(),
+	behavioral: z.record(z.unknown()).optional(),
+	metadata: z.record(z.unknown()).optional(),
+});
+
+const collectorFeedbackSchema = z.object({
+	type: z.enum(["thumbs_up", "thumbs_down", "rating", "comment"]),
+	value: z.unknown().optional(),
+	user_id: z.string().optional(),
+});
+
+/** Body for POST /api/collector — single-payload trace + spans ingest */
+export const collectorBodySchema = z.object({
+	trace_id: z.string().min(1).max(255),
+	name: z.string().min(1).max(255),
+	status: z.enum(["pending", "success", "error"]).default("pending"),
+	duration_ms: z.number().int().min(0).optional().nullable(),
+	source: z.enum(["sdk", "api", "cli"]).optional(),
+	environment: z.enum(["production", "staging", "dev"]).optional(),
+	metadata: z.record(z.unknown()).optional().nullable(),
+	spans: z.array(collectorSpanSchema).min(1),
+	user_feedback: collectorFeedbackSchema.optional(),
+});
+
+export type CollectorBody = z.infer<typeof collectorBodySchema>;
+export type CollectorSpan = z.infer<typeof collectorSpanSchema>;
+
 /** Full API key creation schema including organizationId. */
 export const createAPIKeySchema = z.object({
 	name: z.string().min(1).max(255),

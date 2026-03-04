@@ -148,11 +148,7 @@ export function parseArgs(argv: string[]): ParseArgsResult {
 		args["max-cost-delta-usd"] || args.maxCostDeltaUsd
 			? parseFloat(args["max-cost-delta-usd"] || args.maxCostDeltaUsd || "0")
 			: undefined;
-	const profile = (args.profile || args.profile) as
-		| "strict"
-		| "balanced"
-		| "fast"
-		| undefined;
+	const profile = args.profile as "strict" | "balanced" | "fast" | undefined;
 	let baseline = (
 		args.baseline === "auto"
 			? "auto"

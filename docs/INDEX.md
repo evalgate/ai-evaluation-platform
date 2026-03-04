@@ -11,6 +11,13 @@ Canonical paths for all project documentation. If you're linking to a doc, use t
 | **Contributor Map** | [`docs/CONTRIBUTOR_MAP.md`](CONTRIBUTOR_MAP.md) | Contributors |
 | **Architecture** | [`docs/ARCHITECTURE.md`](ARCHITECTURE.md) | Contributors + evaluators |
 
+## Production → CI Loop (v3.0.0)
+
+| Doc | Path | Audience |
+|-----|------|----------|
+| **Implementation Plan** | [`docs/PRODUCTION_TO_CI_PLAN.md`](PRODUCTION_TO_CI_PLAN.md) | Contributors + architects |
+| **Pre-Mortem & Test Plan** | [`docs/PRODUCTION_TO_CI_PREMORTEM.md`](PRODUCTION_TO_CI_PREMORTEM.md) | Contributors + QA |
+
 ## Regression Gate
 
 | Doc | Path | Audience |

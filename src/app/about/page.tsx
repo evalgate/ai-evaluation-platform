@@ -34,8 +34,9 @@ export default function AboutPage() {
 						About Us
 					</h1>
 					<p className="text-base sm:text-lg text-muted-foreground max-w-3xl mx-auto px-2">
-						We're building the infrastructure layer for AI quality assurance,
-						helping teams ship reliable AI products with confidence.
+						We're building AI quality infrastructure where production failures
+						automatically become regression tests, so the same issue never ships
+						twice.
 					</p>
 				</div>
 
@@ -51,14 +52,15 @@ export default function AboutPage() {
 						<p className="text-base sm:text-lg text-muted-foreground leading-relaxed mb-3 sm:mb-4">
 							AI systems are fundamentally different from traditional software.
 							They're probabilistic, context-dependent, and can fail in
-							unexpected ways. Yet most teams are building AI products with the
-							same testing tools designed for deterministic code.
+							unexpected ways. Yet most teams only discover failures when users
+							complain.
 						</p>
 						<p className="text-base sm:text-lg text-muted-foreground leading-relaxed">
-							We believe every AI product needs rigorous evaluation before
-							reaching users. Our platform provides the tools to test, monitor,
-							and continuously improve AI systems — from unit tests in
-							development to A/B tests in production.
+							We built the AI reliability loop: collect production traces,
+							detect failures automatically, generate test cases, and promote
+							them into your CI regression suite. Combined with 50+ assertions,
+							LLM judges, and golden datasets, EvalGate ensures every AI product
+							improves with every deployment.
 						</p>
 					</div>
 				</section>
@@ -74,11 +76,13 @@ export default function AboutPage() {
 								❌ Without Proper Evaluation
 							</h3>
 							<ul className="space-y-2 text-sm text-muted-foreground">
-								<li>• Silent failures in production</li>
-								<li>• No visibility into model behavior</li>
+								<li>
+									• Silent failures in production — same bugs ship repeatedly
+								</li>
+								<li>• No visibility into model behavior at scale</li>
 								<li>• Prompt changes break existing use cases</li>
-								<li>• Expensive manual review processes</li>
-								<li>• Inability to measure improvement</li>
+								<li>• Manual test case creation can't keep up</li>
+								<li>• Inability to measure improvement over time</li>
 								<li>• User trust eroded by inconsistent outputs</li>
 							</ul>
 						</div>
@@ -87,12 +91,14 @@ export default function AboutPage() {
 								✓ With Our Platform
 							</h3>
 							<ul className="space-y-2 text-sm text-muted-foreground">
-								<li>• Catch regressions before deployment</li>
-								<li>• Full observability of LLM calls</li>
-								<li>• Automated regression testing</li>
+								<li>• Production failures auto-generate regression tests</li>
+								<li>• Full trace collection with idempotent ingest</li>
+								<li>• Golden regression datasets grow automatically</li>
 								<li>• Scale human review with LLM judges</li>
-								<li>• Track quality metrics over time</li>
-								<li>• Ship with confidence</li>
+								<li>• CI gates block regressions before deployment</li>
+								<li>
+									• Ship with confidence — the same issue never ships twice
+								</li>
 							</ul>
 						</div>
 					</div>
@@ -114,8 +120,8 @@ export default function AboutPage() {
 										End-to-End Platform
 									</h3>
 									<p className="text-sm text-muted-foreground">
-										From unit tests in your IDE to production monitoring, we
-										cover the entire AI development lifecycle. No need to stitch
+										From production trace collection to CI regression gates, we
+										cover the entire AI reliability lifecycle. No need to stitch
 										together multiple tools.
 									</p>
 								</div>
@@ -150,9 +156,9 @@ export default function AboutPage() {
 										Built for Production
 									</h3>
 									<p className="text-sm text-muted-foreground">
-										High-throughput tracing, real-time dashboards, and
-										statistical A/B testing. Scale from prototype to millions of
-										requests.
+										Idempotent trace ingest, rate-limited analysis,
+										auto-promotion heuristics, and golden regression datasets.
+										Scale from prototype to millions of requests.
 									</p>
 								</div>
 							</div>

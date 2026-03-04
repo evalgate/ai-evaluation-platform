@@ -6,10 +6,26 @@
  * Shows resilience to partial rollouts (new SDK → slightly older API).
  */
 
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AIEvalClient } from "../client";
 
 const mockFetch = vi.fn();
+
+function mockResponse(
+	body: unknown,
+	status = 200,
+	ok = true,
+	headers?: Headers,
+) {
+	return {
+		ok,
+		status,
+		json: async () => body,
+		text: async () => JSON.stringify(body),
+		headers: headers ?? new Headers(),
+		statusText: ok ? "OK" : "Error",
+	};
+}
 
 describe("Forward compatibility", () => {
 	beforeEach(() => {
@@ -22,17 +38,14 @@ describe("Forward compatibility", () => {
 	});
 
 	it("handles unknown response fields without crash", async () => {
-		mockFetch.mockResolvedValue({
-			ok: true,
-			json: async () => ({
+		mockFetch.mockResolvedValue(
+			mockResponse({
 				id: 1,
 				name: "Eval",
 				_unknownField: "ignored",
 				futureApiField: { nested: true },
 			}),
-			status: 200,
-			headers: new Headers(),
-		});
+		);
 
 		const client = new AIEvalClient({
 			apiKey: "key",
@@ -53,12 +66,7 @@ describe("Forward compatibility", () => {
 	});
 
 	it("handles missing optional fields without crash", async () => {
-		mockFetch.mockResolvedValue({
-			ok: true,
-			json: async () => ({ id: 1 }), // minimal response, munknown fields omitted
-			status: 200,
-			headers: new Headers(),
-		});
+		mockFetch.mockResolvedValue(mockResponse({ id: 1 }));
 
 		const client = new AIEvalClient({
 			apiKey: "key",
@@ -78,19 +86,21 @@ describe("Forward compatibility", () => {
 	});
 
 	it("handles error response with extra fields and surfaces requestId", async () => {
-		mockFetch.mockResolvedValue({
-			ok: false,
-			json: async () => ({
-				error: {
-					code: "NOT_FOUND",
-					message: "Not found",
-					requestId: "req-123",
+		mockFetch.mockResolvedValue(
+			mockResponse(
+				{
+					error: {
+						code: "NOT_FOUND",
+						message: "Not found",
+						requestId: "req-123",
+					},
+					_debug: "extra",
 				},
-				_debug: "extra",
-			}),
-			status: 404,
-			headers: new Headers({ "x-request-id": "req-123" }),
-		});
+				404,
+				false,
+				new Headers({ "x-request-id": "req-123" }),
+			),
+		);
 
 		const client = new AIEvalClient({
 			apiKey: "key",

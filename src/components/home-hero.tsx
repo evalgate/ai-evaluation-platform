@@ -17,17 +17,18 @@ export function HomeHero() {
 		<section className="py-20 sm:py-32 text-center">
 			<div className="container mx-auto px-4 max-w-5xl">
 				<p className="text-sm font-medium text-muted-foreground mb-3">
-					Built for teams shipping LLM features weekly
+					AI quality infrastructure for teams shipping LLM features weekly
 				</p>
 				<h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight mb-6">
-					Stop LLM Regressions in CI in{" "}
-					<span className="text-primary">2 Minutes</span>
+					Production Failures Become{" "}
+					<span className="text-primary">Regression Tests</span>
 				</h1>
 				<p className="text-lg sm:text-xl font-medium mb-4 max-w-3xl mx-auto">
-					One-command CI for AI evaluation.
+					The AI reliability loop. CI + production trace collection +
+					auto-generated test cases.
 				</p>
 				<div className="flex flex-wrap items-center justify-center gap-1.5 mb-6 font-mono text-sm">
-					{["discover", "manifest", "impact", "run", "diff", "PR summary"].map(
+					{["collect", "detect", "generate", "promote", "gate", "ship"].map(
 						(step, i, arr) => (
 							<span key={step} className="flex items-center gap-1.5">
 								<span className="px-2.5 py-1 rounded-md bg-muted text-muted-foreground border border-border">
@@ -45,8 +46,9 @@ export function HomeHero() {
 				</p>
 				<p className="text-base text-muted-foreground mb-8 max-w-2xl mx-auto">
 					LLMs drift silently — a prompt tweak can degrade quality by 15% and
-					you won&apos;t notice until users complain. EvalGate turns evaluations
-					into CI gates so regressions never reach production.
+					you won&apos;t notice until users complain. EvalGate collects
+					production traces, detects failures, and auto-generates regression
+					tests so the same issue never ships twice.
 				</p>
 				<div className="flex flex-col sm:flex-row gap-4 justify-center">
 					{session?.user ? (

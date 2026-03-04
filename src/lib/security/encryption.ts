@@ -336,32 +336,38 @@ export class PasswordUtils {
 		const numbers = "0123456789";
 		const symbols = "!@#$%^&*()_+-=[]{}|;:,.<>?";
 
+		const minLength = includeSymbols ? 4 : 3;
+		if (length < minLength) {
+			throw new Error(
+				`Password length must be at least ${minLength} to satisfy complexity requirements`,
+			);
+		}
+
 		let charset = lowercase + uppercase + numbers;
 		if (includeSymbols) {
 			charset += symbols;
 		}
 
-		const password = SecureRandom.string(length, charset);
+		// Guarantee one char from each required category, fill rest randomly
+		const required = [
+			lowercase[SecureRandom.integer(0, lowercase.length)],
+			uppercase[SecureRandom.integer(0, uppercase.length)],
+			numbers[SecureRandom.integer(0, numbers.length)],
+			...(includeSymbols
+				? [symbols[SecureRandom.integer(0, symbols.length)]]
+				: []),
+		];
 
-		// Ensure password has at least one character from each required category
-		const hasLowercase = /[a-z]/.test(password);
-		const hasUppercase = /[A-Z]/.test(password);
-		const hasNumbers = /\d/.test(password);
-		const hasSymbols = includeSymbols
-			? /[!@#$%^&*()_+\-=[\]{}|;:,.<>?]/.test(password)
-			: true;
+		const remaining = SecureRandom.string(length - required.length, charset);
+		const chars = [...required, ...remaining];
 
-		// If missing required characters, regenerate
-		if (
-			!hasLowercase ||
-			!hasUppercase ||
-			!hasNumbers ||
-			(includeSymbols && !hasSymbols)
-		) {
-			return PasswordUtils.generate(length, includeSymbols);
+		// Fisher-Yates shuffle to randomize positions
+		for (let i = chars.length - 1; i > 0; i--) {
+			const j = SecureRandom.integer(0, i + 1);
+			[chars[i], chars[j]] = [chars[j], chars[i]];
 		}
 
-		return password;
+		return chars.join("");
 	}
 
 	/**

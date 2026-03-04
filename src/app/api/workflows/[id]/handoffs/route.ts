@@ -4,6 +4,7 @@ import { z } from "zod";
 import { db } from "@/db";
 import { workflows } from "@/db/schema";
 import { notFound, validationError } from "@/lib/api/errors";
+import { parseBody } from "@/lib/api/parse";
 import { type AuthContext, secureRoute } from "@/lib/api/secure-route";
 import { SCOPES } from "@/lib/auth/scopes";
 import { logger } from "@/lib/logger";
@@ -103,23 +104,19 @@ export const POST = secureRoute(
 			return notFound("Workflow not found");
 		}
 
-		const body = await req.json();
-
-		const validation = createHandoffSchema.safeParse(body);
-		if (!validation.success) {
-			return validationError("Invalid request body", validation.error.errors);
-		}
+		const parsed = await parseBody(req, createHandoffSchema);
+		if (!parsed.ok) return parsed.response;
 
 		const handoff = await workflowService.createHandoff({
-			...validation.data,
+			...parsed.data,
 			organizationId: ctx.organizationId,
 		});
 
 		logger.info("Handoff created", {
 			handoffId: handoff.id,
 			workflowId,
-			runId: validation.data.workflowRunId,
-			type: validation.data.handoffType,
+			runId: parsed.data.workflowRunId,
+			type: parsed.data.handoffType,
 			organizationId: ctx.organizationId,
 		});
 

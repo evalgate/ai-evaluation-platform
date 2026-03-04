@@ -30,6 +30,7 @@ export { RequestBatcher } from "./batch";
 export { CacheTTL } from "./cache";
 export { computeBaselineChecksum, verifyBaselineChecksum, } from "./cli/baseline";
 export { type CheckArgs, EXIT, parseArgs, runCheck } from "./cli/check";
+export { type CollectorFeedbackInput, type CollectorSpanInput, type ReportTraceInput, type ReportTraceOptions, type ReportTraceResult, reportTrace, } from "./collector";
 export { traceAnthropic } from "./integrations/anthropic";
 export { traceOpenAI } from "./integrations/openai";
 export { type OpenAIChatEvalCase, type OpenAIChatEvalOptions, type OpenAIChatEvalResult, openAIChatEval, } from "./integrations/openai-eval";

@@ -1,4 +1,11 @@
-import { Beaker, Sparkles, Users, Zap } from "lucide-react";
+import {
+	Activity,
+	Beaker,
+	RefreshCw,
+	Sparkles,
+	Users,
+	Zap,
+} from "lucide-react";
 import { memo } from "react";
 import {
 	Card,
@@ -10,22 +17,34 @@ import {
 
 const FEATURES = [
 	{
-		icon: Beaker,
-		title: "Unit Testing",
+		icon: RefreshCw,
+		title: "AI Reliability Loop",
 		description:
-			"Automated assertions and test suites for LLM outputs with 20+ built-in validators",
+			"Production failures automatically become regression tests. Collect traces, detect issues, auto-generate test cases.",
 	},
 	{
-		icon: Users,
-		title: "Human Evaluation",
+		icon: Beaker,
+		title: "CI Regression Gate",
 		description:
-			"Collect expert feedback and annotations with customizable workflows",
+			"One-command CI pipeline with 50+ assertions, golden regression datasets, and auto-promotion heuristics",
+	},
+	{
+		icon: Activity,
+		title: "Production Tracing",
+		description:
+			"Collect traces from production with idempotent ingest, server-side sampling, and rate-limited analysis",
 	},
 	{
 		icon: Sparkles,
 		title: "LLM Judge",
 		description:
 			"Model-as-a-judge evaluations with custom criteria and multi-judge consensus",
+	},
+	{
+		icon: Users,
+		title: "Human Evaluation",
+		description:
+			"Collect expert feedback and annotations with customizable workflows",
 	},
 	{
 		icon: Zap,
@@ -39,14 +58,13 @@ export const HomeFeatures = memo(function HomeFeatures() {
 		<section className="py-16 sm:py-20 bg-muted/50">
 			<div className="container mx-auto px-4">
 				<h2 className="text-3xl sm:text-4xl font-bold text-center mb-4">
-					Everything You Need to Evaluate AI
+					AI Quality Infrastructure
 				</h2>
 				<p className="text-center text-muted-foreground mb-12 max-w-2xl mx-auto">
-					CI for AI behavior. Node & Python SDKs. 1.4k+ npm downloads/month.
-					From development to production, get comprehensive insights into your
-					AI systems.
+					From production traces to CI gates. Node & Python SDKs. Full lifecycle
+					AI quality — collect, detect, generate, gate, ship.
 				</p>
-				<div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 max-w-7xl mx-auto">
+				<div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 max-w-7xl mx-auto">
 					{FEATURES.map((feature) => (
 						<Card key={feature.title}>
 							<CardHeader>

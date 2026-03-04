@@ -39,6 +39,45 @@ export type RunDetailsData = {
 	}>;
 };
 
+// ── Generic fetch helper for CLI commands ────────────────────────────────────
+
+export interface FetchOptions {
+	apiKey: string;
+	baseUrl: string;
+	method?: string;
+	body?: Record<string, unknown>;
+}
+
+/**
+ * Generic authenticated fetch to any API endpoint.
+ * Used by promote, replay, and doctor CLI commands.
+ */
+export async function fetchAPI(
+	path: string,
+	opts: FetchOptions,
+): Promise<Record<string, unknown>> {
+	const headers: Record<string, string> = {
+		...API_HEADERS,
+		Authorization: `Bearer ${opts.apiKey}`,
+	};
+	const init: RequestInit = { method: opts.method ?? "GET", headers };
+
+	if (opts.body) {
+		headers["Content-Type"] = "application/json";
+		init.body = JSON.stringify(opts.body);
+	}
+
+	const url = `${opts.baseUrl.replace(/\/$/, "")}${path}`;
+	const res = await fetch(url, init);
+	const text = await res.text();
+
+	if (!res.ok) {
+		throw new Error(`API ${res.status}: ${text.slice(0, 200)}`);
+	}
+
+	return JSON.parse(text) as Record<string, unknown>;
+}
+
 export async function fetchQualityLatest(
 	baseUrl: string,
 	apiKey: string,

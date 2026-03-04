@@ -1,11 +1,11 @@
 {
 	"name": "@evalgate/sdk",
-	"version": "2.3.0",
+	"version": "3.0.0",
 	"publishConfig": {
 		"access": "public",
 		"registry": "https://registry.npmjs.org/"
 	},
-	"description": "EvalGate SDK - Complete API Coverage with Performance Optimizations",
+	"description": "EvalGate SDK - AI quality infrastructure. Production failures automatically become regression tests.",
 	"main": "dist/index.js",
 	"module": "dist/index.js",
 	"types": "dist/index.d.ts",

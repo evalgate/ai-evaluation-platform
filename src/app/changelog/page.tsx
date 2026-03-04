@@ -53,6 +53,40 @@ const typeLabel: Record<ReleaseType, string> = {
 
 const versions: VersionEntry[] = [
 	{
+		version: "3.0.0",
+		date: "2026-03-04",
+		packages: ["TypeScript", "Python", "Platform"],
+		type: "breaking",
+		sections: [
+			{
+				title: "Breaking",
+				items: [
+					"Major version bump — EvalGate is now AI quality infrastructure. Production failures automatically become regression tests. No breaking changes to existing SDK exports or CLI commands.",
+				],
+			},
+			{
+				title: "Added",
+				items: [
+					"AI Reliability Loop — full production-to-CI pipeline: collect traces → detect failures → group by hash → generate test cases → score quality → auto-promote to golden dataset → gate in CI",
+					"POST /api/collector — single-payload trace + spans ingest endpoint (LangWatch-compatible schema) with idempotent ON CONFLICT DO NOTHING",
+					"Failure detection pipeline — trace_failure_analysis async job: detect → aggregate → group (SHA-256) → generate → score → auto-promote",
+					"Auto-promotion heuristic — candidates with quality ≥ 90, confidence ≥ 0.8, and detectors ≥ 2 auto-promoted to golden regression suite",
+					"Golden regression dataset — first-class evaluation type per org, auto-created on first promote",
+					"Candidate eval cases — quarantined test case candidates with full lifecycle: quarantined → approved → promoted",
+					"User feedback endpoint — POST /api/traces/:id/feedback with thumbs-down triggering analysis",
+					"SDK reportTrace() — lightweight single-call trace reporting with client-side sampling",
+					"evalgate promote — CLI command to promote candidates (--auto for bulk, --list to view)",
+					"evalgate replay — CLI command to replay candidate against current model",
+					"Rate-limit guardrail — sliding-window rate limiter (200/min per org) prevents traffic spikes from overwhelming analysis",
+					"analysis_status on traces — pending → analyzing → analyzed → failed lifecycle tracking",
+					"source + environment columns — first-class trace metadata (sdk/api/cli, production/staging/dev)",
+					"Dedup against existing tests — prevents near-duplicates in golden dataset via input hash + title match",
+					"88 new tests (70 unit + 18 DB) covering collector, sampling, rate limiter, pipeline, CLI, and schema",
+				],
+			},
+		],
+	},
+	{
 		version: "2.2.2",
 		date: "2026-03-03",
 		packages: ["TypeScript", "Python"],

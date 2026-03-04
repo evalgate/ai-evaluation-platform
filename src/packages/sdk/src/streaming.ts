@@ -123,42 +123,42 @@ export async function batchProcess<TInput, TOutput>(
 	for (let batchIndex = 0; batchIndex < batches.length; batchIndex++) {
 		const batch = batches[batchIndex];
 
-		const processBatch = async () => {
-			const batchPromises = batch.map(async (item, itemIndex) => {
-				try {
-					const output = await processor(item);
-					result.successful.push(output);
-					result.summary.successful++;
-					return { success: true, output };
-				} catch (error) {
-					const batchError: BatchError = {
-						batch: batchIndex,
-						index: itemIndex,
-						error: error instanceof Error ? error : new Error(String(error)),
-						item,
-					};
+		const processItem = async (item: TInput, itemIndex: number) => {
+			try {
+				const output = await processor(item);
+				result.successful.push(output);
+				result.summary.successful++;
+				return { success: true, output };
+			} catch (error) {
+				const batchError: BatchError = {
+					batch: batchIndex,
+					index: itemIndex,
+					error: error instanceof Error ? error : new Error(String(error)),
+					item,
+				};
 
-					result.failed.push({
-						item,
-						error: batchError.error,
-					});
-					result.summary.failed++;
+				result.failed.push({
+					item,
+					error: batchError.error,
+				});
+				result.summary.failed++;
 
-					if (onError) onError(batchError);
+				if (onError) onError(batchError);
 
-					if (!continueOnError) {
-						throw error;
-					}
-
-					return { success: false, error };
+				if (!continueOnError) {
+					throw error;
 				}
-			});
 
+				return { success: false, error };
+			}
+		};
+
+		const processBatch = async () => {
 			if (parallel) {
-				await Promise.all(batchPromises);
+				await Promise.all(batch.map((item, idx) => processItem(item, idx)));
 			} else {
-				for (const promise of batchPromises) {
-					await promise;
+				for (let idx = 0; idx < batch.length; idx++) {
+					await processItem(batch[idx], idx);
 				}
 			}
 		};

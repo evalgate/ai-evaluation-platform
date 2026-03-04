@@ -432,16 +432,11 @@ async function runEvaluationsCLI(options) {
         else {
             printHumanResults(result);
         }
-        // Exit with appropriate code
-        if (result.summary.failed > 0) {
-            process.exit(1);
-        }
-        else {
-            process.exit(0);
-        }
+        // Return appropriate exit code (caller handles process.exit)
+        return result.summary.failed > 0 ? 1 : 0;
     }
     catch (error) {
         console.error("❌ Run failed:", error instanceof Error ? error.message : String(error));
-        process.exit(2);
+        return 2;
     }
 }
