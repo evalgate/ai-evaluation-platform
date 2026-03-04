@@ -2,6 +2,38 @@
 
 Platform and SDK releases. For detailed SDK changes, see [src/packages/sdk/CHANGELOG.md](src/packages/sdk/CHANGELOG.md).
 
+## [2.2.4] - 2026-03-03
+
+### Milestone
+
+- **Zero typecheck errors across both platform and SDK layers** — first time both layers are simultaneously clean. `pnpm typecheck` exits 0 with no suppressions.
+
+### Fixed (SDK)
+
+- **`ValidationError` re-export** — barrel `index.ts` was aliasing `SDKError` (which is `EvalGateError`) as `ValidationError`. Now imports the real `ValidationError` from `errors.ts`.
+- **`parseArgs` default `baseUrl`** — was `http://localhost:3000`, now uses shared `DEFAULT_BASE_URL` (`https://api.evalgate.com`) consistent with `AIEvalClient`.
+- **`createResult` field dropping** — `output`, `durationMs`, `tokens` were silently dropped. `EvalResult` interface and `createResult` now accept and pass them through.
+- **`Logger.child()` prefix formatting** — accepts `string | { prefix: string }` with runtime `typeof` guard. Prevents `[object Object]` prefix from plain-JS callers.
+- **`traceOpenAICall` non-fatal traces** — all `traces?.create()` calls wrapped in inner try/catch. `getOrganizationId()` throwing can no longer lose the `fn()` result.
+- **`WorkflowTracer` offline mode** — new `offline?: boolean` option skips all API calls while preserving in-memory state for local development.
+- **Profanity filter false positives** — `toHaveNoProfanity` and `hasNoToxicity` used `.includes()` which matched substrings ("hell" in "hello", "ass" in "assess"). Now uses word-boundary regex (`\b`) for single-word terms, substring match for multi-word phrases.
+
+### Changed (SDK)
+
+- **`respondedWithinTime` → `respondedWithinDuration`** — new function takes measured `durationMs` directly. `respondedWithinTimeSince` takes a start timestamp. Old `respondedWithinTime` kept as deprecated alias.
+- **`toBeProfessional` → `toHaveNoProfanity`** — renamed with honest JSDoc: "Blocklist check for 7 profane words. Does NOT analyze tone." Old name kept as deprecated alias.
+
+### Fixed (Platform)
+
+- **`DecisionAlternative` type unification** — `db/types.ts` and `decision.service.ts` had divergent interfaces (`{ name, score }` vs `{ action, confidence }`). Unified to canonical `{ action, confidence }` with dual-shape interface and `normalizeDecisionAlternative()` read-time mapper for old JSONB rows.
+
+### Added
+
+- **Compiled-output test harness** — `dist-smoke.test.ts` (31 tests) that `require()`s from `dist/`, not source. Catches stale bundles, missing exports, and async function preservation.
+- **Word-boundary regression tests** — "hello", "shell", "assess", "shellfish" all verified as non-matches for profanity/toxicity blocklists.
+
+---
+
 ## [2.2.3] - 2026-03-03
 
 ### Fixed
