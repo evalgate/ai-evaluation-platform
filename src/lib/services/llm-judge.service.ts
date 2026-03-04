@@ -601,6 +601,7 @@ export class LLMJudgeService {
 			.where(eq(llmJudgeResults.configId, configId));
 
 		const totalEvaluations = results.length;
+		// TODO: remove typeof guard after DecisionAlternative migration complete — metadata is now always object from JSONB
 		const passedEvaluations = results.filter((r) => {
 			try {
 				const metadata =

@@ -314,12 +314,14 @@ export class ShadowEvalService {
 					input: span.input || "",
 					output: span.output || "",
 					duration: span.duration || 0,
-					metadata:
+					// TODO: remove typeof guard after DecisionAlternative migration complete — metadata is now always object from JSONB
+						metadata:
 						typeof span.metadata === "string"
 							? JSON.parse(span.metadata)
 							: span.metadata,
 				})),
-				metadata:
+				// TODO: remove typeof guard after DecisionAlternative migration complete — metadata is now always object from JSONB
+					metadata:
 					typeof trace.metadata === "string"
 						? JSON.parse(trace.metadata)
 						: trace.metadata,

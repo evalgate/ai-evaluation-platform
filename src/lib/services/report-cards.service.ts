@@ -437,6 +437,7 @@ export class ReportCardsService {
 		}
 
 		const scores = judgeResults.map((r) => r.score || 0).filter((s) => s > 0);
+		// TODO: remove typeof guard after DecisionAlternative migration complete — metadata is now always object from JSONB
 		const passed = judgeResults.filter((r) => {
 			try {
 				const metadata =
@@ -594,6 +595,7 @@ export class ReportCardsService {
 	 * Extract cost from test result metadata.
 	 */
 	private extractCost(testResult: TestResult): number {
+		// TODO: remove typeof guard after DecisionAlternative migration complete — metadata is now always object from JSONB
 		try {
 			const meta =
 				typeof testResult.metadata === "string"
