@@ -6,6 +6,8 @@
 			"!**/.next",
 			"!**/dist",
 			"!**/.evalai",
+			"!**/.evalgate",
+			"!**/.evalgate-data",
 			"!**/node_modules",
 			"!**/drizzle/meta",
 			"!**/coverage",
