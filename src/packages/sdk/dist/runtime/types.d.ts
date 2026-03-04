@@ -81,6 +81,10 @@ export interface EvalResult {
     durationMs?: number;
     /** Execution error if failed */
     error?: string;
+    /** Generated output text */
+    output?: string;
+    /** Token count consumed */
+    tokens?: number;
 }
 /**
  * Scoped runtime context - prevents cross-run contamination

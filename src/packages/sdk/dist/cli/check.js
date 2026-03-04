@@ -17,7 +17,7 @@
  *   --policy <name>      Enforce a compliance policy (e.g. HIPAA, SOC2, GDPR)
  *   --baseline <mode>   Baseline comparison mode: "published" (default), "previous", or "production"
  *   --evaluationId <id>  Required. The evaluation to gate on.
- *   --baseUrl <url>      API base URL (default: EVALGATE_BASE_URL or http://localhost:3000)
+ *   --baseUrl <url>      API base URL (default: EVALGATE_BASE_URL or https://api.evalgate.com)
  *   --apiKey <key>       API key (default: EVALGATE_API_KEY env var)
  *   --share <mode>       Share link: "always" | "fail" | "never" (default: never)
  *                        fail = create public share link only when gate fails (CI-friendly)
@@ -36,7 +36,7 @@
  *   8  — Gate warned: near-regression (warnDrop ≤ drop < maxDrop)
  *
  * Environment:
- *   EVALGATE_BASE_URL  — API base URL (default: http://localhost:3000)
+ *   EVALGATE_BASE_URL  — API base URL (default: https://api.evalgate.com)
  *   EVALGATE_API_KEY   — API key for authentication
  */
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
@@ -76,20 +76,21 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.EXIT = void 0;
 exports.parseArgs = parseArgs;
 exports.runCheck = runCheck;
+const constants_1 = require("../constants");
 const fs = __importStar(require("node:fs"));
 const path = __importStar(require("node:path"));
 const api_1 = require("./api");
 const ci_context_1 = require("./ci-context");
 const config_1 = require("./config");
-const constants_1 = require("./constants");
+const constants_2 = require("./constants");
 const github_1 = require("./formatters/github");
 const human_1 = require("./formatters/human");
 const json_1 = require("./formatters/json");
 const pr_comment_1 = require("./formatters/pr-comment");
 const gate_1 = require("./gate");
 const build_check_report_1 = require("./report/build-check-report");
-var constants_2 = require("./constants");
-Object.defineProperty(exports, "EXIT", { enumerable: true, get: function () { return constants_2.EXIT; } });
+var constants_3 = require("./constants");
+Object.defineProperty(exports, "EXIT", { enumerable: true, get: function () { return constants_3.EXIT; } });
 function parseArgs(argv) {
     const args = {};
     for (let i = 0; i < argv.length; i++) {
@@ -106,7 +107,7 @@ function parseArgs(argv) {
             }
         }
     }
-    let baseUrl = args.baseUrl || process.env.EVALGATE_BASE_URL || "http://localhost:3000";
+    let baseUrl = args.baseUrl || process.env.EVALGATE_BASE_URL || constants_1.DEFAULT_BASE_URL;
     const apiKey = args.apiKey ||
         process.env.EVALGATE_API_KEY ||
         process.env.EVALAI_API_KEY ||
@@ -176,28 +177,28 @@ function parseArgs(argv) {
     if (!apiKey) {
         return {
             ok: false,
-            exitCode: constants_1.EXIT.BAD_ARGS,
+            exitCode: constants_2.EXIT.BAD_ARGS,
             message: "Error: --apiKey or EVALGATE_API_KEY is required",
         };
     }
     if (!evaluationId) {
         return {
             ok: false,
-            exitCode: constants_1.EXIT.BAD_ARGS,
+            exitCode: constants_2.EXIT.BAD_ARGS,
             message: "Run npx evalgate init and paste your evaluationId, or pass --evaluationId.",
         };
     }
     if (Number.isNaN(minScore) || minScore < 0 || minScore > 100) {
         return {
             ok: false,
-            exitCode: constants_1.EXIT.BAD_ARGS,
+            exitCode: constants_2.EXIT.BAD_ARGS,
             message: "Error: --minScore must be 0-100",
         };
     }
     if (minN !== undefined && (Number.isNaN(minN) || minN < 1)) {
         return {
             ok: false,
-            exitCode: constants_1.EXIT.BAD_ARGS,
+            exitCode: constants_2.EXIT.BAD_ARGS,
             message: "Error: --minN must be a positive number",
         };
     }
@@ -240,7 +241,7 @@ async function runCheck(args) {
         else {
             console.error(`EvalGate gate ERROR: API returned ${qualityResult.status} — ${qualityResult.body}`);
         }
-        return constants_1.EXIT.API_ERROR;
+        return constants_2.EXIT.API_ERROR;
     }
     const { data: quality, requestId } = qualityResult;
     const evaluationRunId = quality?.evaluationRunId;
@@ -350,6 +351,6 @@ if (isDirectRun) {
         .then((code) => process.exit(code))
         .catch((err) => {
         console.error(`EvalGate gate ERROR: ${err instanceof Error ? err.message : String(err)}`);
-        process.exit(constants_1.EXIT.API_ERROR);
+        process.exit(constants_2.EXIT.API_ERROR);
     });
 }

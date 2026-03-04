@@ -7,9 +7,9 @@
  * @packageDocumentation
  */
 export { AIEvalClient } from "./client";
-import { AuthenticationError, EvalGateError, NetworkError, RateLimitError, SDKError } from "./errors";
-export { EvalGateError, RateLimitError, AuthenticationError, SDKError as ValidationError, // Using SDKError as ValidationError for backward compatibility
-NetworkError, };
+import { AuthenticationError, EvalGateError, NetworkError, RateLimitError, ValidationError } from "./errors";
+export { EvalGateError, RateLimitError, AuthenticationError, ValidationError, NetworkError, };
+export { EvalGateError as SDKError } from "./errors";
 export { type AssertionLLMConfig, configureAssertions, containsAllRequiredFields, containsJSON, containsKeywords, containsLanguage, containsLanguageAsync, expect, followsInstructions, getAssertionConfig, hasFactualAccuracy, hasFactualAccuracyAsync, hasLength, hasNoHallucinations, hasNoHallucinationsAsync, hasNoToxicity, hasNoToxicityAsync, hasPII, hasReadabilityScore, hasSentiment, hasSentimentAsync, hasValidCodeSyntax, hasValidCodeSyntaxAsync, isValidEmail, isValidURL, matchesPattern, matchesSchema, notContainsPII, respondedWithinTime, similarTo, withinRange, } from "./assertions";
 import { createContext, EvalContext, getCurrentContext, withContext } from "./context";
 export { createContext, getCurrentContext as getContext, withContext, EvalContext as ContextManager, };

@@ -48,6 +48,9 @@ export declare function createResult(config: {
     assertions?: EvalResult["assertions"];
     metadata?: Record<string, unknown>;
     error?: string;
+    output?: string;
+    durationMs?: number;
+    tokens?: number;
 }): EvalResult;
 /**
  * Default export for convenience

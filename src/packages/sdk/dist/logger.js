@@ -93,9 +93,10 @@ class Logger {
      * Create child logger with prefix
      */
     child(prefix) {
+        const resolvedPrefix = typeof prefix === "string" ? prefix : prefix.prefix;
         return new Logger({
             ...this.options,
-            prefix: `${this.options.prefix}:${prefix}`,
+            prefix: `${this.options.prefix}:${resolvedPrefix}`,
         });
     }
     /**

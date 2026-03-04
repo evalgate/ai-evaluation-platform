@@ -69,7 +69,9 @@ export declare class Logger {
     /**
      * Create child logger with prefix
      */
-    child(prefix: string): Logger;
+    child(prefix: string | {
+        prefix: string;
+    }): Logger;
     /**
      * Set log level
      */

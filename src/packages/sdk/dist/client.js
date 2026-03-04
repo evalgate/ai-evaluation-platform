@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AIEvalClient = void 0;
 const batch_1 = require("./batch");
+const constants_1 = require("./constants");
 const cache_1 = require("./cache");
 const context_1 = require("./context");
 const errors_1 = require("./errors");
@@ -72,7 +73,7 @@ class AIEvalClient {
         this.baseUrl =
             config.baseUrl ||
                 getEnvVar("EVALGATE_BASE_URL", "EVALAI_BASE_URL") ||
-                (isBrowser ? "" : "https://api.evalgate.com");
+                (isBrowser ? "" : constants_1.DEFAULT_BASE_URL);
         this.timeout = config.timeout || 30000;
         // Tier 4.17: Debug mode with request logging
         const logLevel = config.logLevel || (config.debug ? "debug" : "info");

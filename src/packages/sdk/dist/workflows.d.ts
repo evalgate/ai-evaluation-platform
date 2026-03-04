@@ -170,6 +170,8 @@ export interface WorkflowTracerOptions {
     captureFullPayloads?: boolean;
     /** Debug mode */
     debug?: boolean;
+    /** Offline mode — skip all API calls, keep in-memory state only */
+    offline?: boolean;
 }
 /**
  * Agent span context

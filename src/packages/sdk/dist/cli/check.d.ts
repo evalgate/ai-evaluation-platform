@@ -16,7 +16,7 @@
  *   --policy <name>      Enforce a compliance policy (e.g. HIPAA, SOC2, GDPR)
  *   --baseline <mode>   Baseline comparison mode: "published" (default), "previous", or "production"
  *   --evaluationId <id>  Required. The evaluation to gate on.
- *   --baseUrl <url>      API base URL (default: EVALGATE_BASE_URL or http://localhost:3000)
+ *   --baseUrl <url>      API base URL (default: EVALGATE_BASE_URL or https://api.evalgate.com)
  *   --apiKey <key>       API key (default: EVALGATE_API_KEY env var)
  *   --share <mode>       Share link: "always" | "fail" | "never" (default: never)
  *                        fail = create public share link only when gate fails (CI-friendly)
@@ -35,7 +35,7 @@
  *   8  — Gate warned: near-regression (warnDrop ≤ drop < maxDrop)
  *
  * Environment:
- *   EVALGATE_BASE_URL  — API base URL (default: http://localhost:3000)
+ *   EVALGATE_BASE_URL  — API base URL (default: https://api.evalgate.com)
  *   EVALGATE_API_KEY   — API key for authentication
  */
 export { EXIT } from "./constants";

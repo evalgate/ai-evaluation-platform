@@ -245,6 +245,9 @@ function createResult(config) {
         assertions: config.assertions,
         metadata: config.metadata,
         error: config.error,
+        output: config.output,
+        durationMs: config.durationMs,
+        tokens: config.tokens,
     };
 }
 /**

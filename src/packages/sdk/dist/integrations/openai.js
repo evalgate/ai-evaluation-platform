@@ -123,6 +123,7 @@ function traceOpenAI(openai, evalClient, options = {}) {
 async function traceOpenAICall(evalClient, name, fn, options = {}) {
     const startTime = Date.now();
     const traceId = `openai-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    // Trace creation is non-fatal — never lose the fn() result due to tracing issues
     try {
         await evalClient.traces?.create({
             name,
@@ -131,30 +132,45 @@ async function traceOpenAICall(evalClient, name, fn, options = {}) {
             status: "pending",
             metadata: (0, context_1.mergeWithContext)({}),
         });
+    }
+    catch {
+        /* trace failure is non-fatal */
+    }
+    try {
         const result = await fn();
         const durationMs = Date.now() - startTime;
-        await evalClient.traces?.create({
-            name,
-            traceId,
-            organizationId: options.organizationId || evalClient.getOrganizationId(),
-            status: "success",
-            durationMs,
-            metadata: (0, context_1.mergeWithContext)({}),
-        });
+        try {
+            await evalClient.traces?.create({
+                name,
+                traceId,
+                organizationId: options.organizationId || evalClient.getOrganizationId(),
+                status: "success",
+                durationMs,
+                metadata: (0, context_1.mergeWithContext)({}),
+            });
+        }
+        catch {
+            /* trace failure is non-fatal */
+        }
         return result;
     }
     catch (error) {
         const durationMs = Date.now() - startTime;
-        await evalClient.traces?.create({
-            name,
-            traceId,
-            organizationId: options.organizationId || evalClient.getOrganizationId(),
-            status: "error",
-            durationMs,
-            metadata: (0, context_1.mergeWithContext)({
-                error: error instanceof Error ? error.message : String(error),
-            }),
-        });
+        try {
+            await evalClient.traces?.create({
+                name,
+                traceId,
+                organizationId: options.organizationId || evalClient.getOrganizationId(),
+                status: "error",
+                durationMs,
+                metadata: (0, context_1.mergeWithContext)({
+                    error: error instanceof Error ? error.message : String(error),
+                }),
+            });
+        }
+        catch {
+            /* trace failure is non-fatal */
+        }
         throw error;
     }
 }
