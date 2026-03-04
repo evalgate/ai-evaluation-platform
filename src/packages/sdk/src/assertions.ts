@@ -498,28 +498,39 @@ export class Expectation {
 	}
 
 	/**
-	 * Assert value is professional tone (no profanity)
-	 * @example expect(output).toBeProfessional()
+	 * Blocklist check for 7 common profane words. Does NOT analyze tone,
+	 * formality, or professional communication quality. For actual tone
+	 * analysis, use an LLM-backed assertion.
+	 * @see hasSentimentAsync for LLM-based tone checking
+	 * @example expect(output).toHaveNoProfanity()
 	 */
-	toBeProfessional(message?: string): AssertionResult {
+	toHaveNoProfanity(message?: string): AssertionResult {
 		const text = String(this.value).toLowerCase();
 		const profanity = ["damn", "hell", "shit", "fuck", "ass", "bitch", "crap"];
 		const foundProfanity = profanity.filter((word) => text.includes(word));
 		const passed = foundProfanity.length === 0;
 		return {
-			name: "toBeProfessional",
+			name: "toHaveNoProfanity",
 			passed,
-			expected: "professional tone",
+			expected: "no profanity",
 			actual:
 				foundProfanity.length > 0
 					? `Found: ${foundProfanity.join(", ")}`
-					: "professional",
+					: "clean",
 			message:
 				message ||
 				(passed
-					? "Professional tone"
-					: `Unprofessional language: ${foundProfanity.join(", ")}`),
+					? "No profanity found"
+					: `Profanity detected: ${foundProfanity.join(", ")}`),
 		};
+	}
+
+	/**
+	 * @deprecated Use {@link toHaveNoProfanity} instead. This method only
+	 * checks for 7 profane words — it does not analyze professional tone.
+	 */
+	toBeProfessional(message?: string): AssertionResult {
+		return this.toHaveNoProfanity(message);
 	}
 
 	/**
@@ -1086,8 +1097,37 @@ export function hasFactualAccuracy(text: string, facts: string[]): boolean {
 	return facts.every((fact) => lower.includes(fact.toLowerCase()));
 }
 
-export function respondedWithinTime(startTime: number, maxMs: number): boolean {
+/**
+ * Check if a measured duration is within the allowed limit.
+ * @param durationMs - The actual elapsed time in milliseconds
+ * @param maxMs - Maximum allowed duration in milliseconds
+ */
+export function respondedWithinDuration(
+	durationMs: number,
+	maxMs: number,
+): boolean {
+	return durationMs <= maxMs;
+}
+
+/**
+ * Check if elapsed time since a start timestamp is within the allowed limit.
+ * @param startTime - Timestamp from Date.now() captured before the operation
+ * @param maxMs - Maximum allowed duration in milliseconds
+ */
+export function respondedWithinTimeSince(
+	startTime: number,
+	maxMs: number,
+): boolean {
 	return Date.now() - startTime <= maxMs;
+}
+
+/**
+ * @deprecated Use {@link respondedWithinDuration} (takes measured duration)
+ * or {@link respondedWithinTimeSince} (takes start timestamp) instead.
+ * This function takes a start timestamp, not a duration — the name is misleading.
+ */
+export function respondedWithinTime(startTime: number, maxMs: number): boolean {
+	return respondedWithinTimeSince(startTime, maxMs);
 }
 
 /**

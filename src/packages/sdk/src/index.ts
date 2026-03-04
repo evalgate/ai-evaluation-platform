@@ -62,7 +62,9 @@ export {
 	matchesPattern,
 	matchesSchema,
 	notContainsPII,
+	respondedWithinDuration,
 	respondedWithinTime,
+	respondedWithinTimeSince,
 	similarTo,
 	withinRange,
 } from "./assertions";
