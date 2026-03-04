@@ -2,17 +2,49 @@
 
 Platform and SDK releases. For detailed SDK changes, see [src/packages/sdk/CHANGELOG.md](src/packages/sdk/CHANGELOG.md).
 
-## [2.3.0] - 2026-03-04
+## [3.0.0] - 2026-03-04
+
+### Breaking — AI Reliability Loop
+
+EvalGate is no longer just a CI eval runner — it is now a full **AI reliability loop**. Production failures automatically become regression tests.
+
+- **Major version bump** signals the identity shift from "LLM evaluation platform" to "AI quality infrastructure"
+- No breaking changes to existing SDK exports or CLI commands — this is a capability expansion
 
 ### Breaking (SDK)
 
 - **`hasConsistency` / `hasConsistencyAsync`** — return type changed from `{ score, consistent }` to `{ score, passed }` for API consistency with all other assertions.
 - **`respondedWithinDuration` / `respondedWithinTimeSince`** — return type changed from `boolean` to `AssertionResult` (`{ name, passed, expected, actual, message }`), matching all other assertion functions.
 
+### Added — Production-to-CI Loop
+
+- **`POST /api/collector`** — Single-payload trace + spans ingest endpoint (LangWatch-compatible schema)
+- **Server-side sampling** — Error traces and negative feedback always analyzed; success traces sampled at configurable rate (default 10%)
+- **Async failure detection pipeline** — `trace_failure_analysis` background job: detect → group → generate → score → auto-promote
+- **Failure grouping** — SHA-256 `group_hash` deduplicates recurring failure patterns across traces
+- **Auto-promotion heuristic** — Candidates with `quality ≥ 90 AND confidence ≥ 0.8 AND detectors ≥ 2` auto-promoted to golden regression suite
+- **Golden regression dataset** — First-class `golden_regression` evaluation type per org, auto-created on first promote
+- **Candidate eval cases** — Quarantined test case candidates with full lifecycle: `quarantined → approved → promoted`
+- **User feedback endpoint** — `POST /api/traces/:id/feedback` with thumbs-down triggering analysis
+- **Collector idempotency** — `ON CONFLICT DO NOTHING` on both `traces.traceId` and `spans.spanId`
+- **Rate-limit guardrail** — Sliding-window rate limiter (`MAX_ANALYSIS_RATE=200/min` per org)
+- **DB migrations** — New tables: `failure_reports`, `candidate_eval_cases`, `user_feedback`; new columns: `analysis_status`, `source`, `environment` on traces
+
 ### Added (SDK)
 
+- **SDK `reportTrace()`** — Lightweight single-call trace reporting with client-side sampling
+- **`evalgate promote`** — CLI command to promote candidates (`--auto` for bulk, `--list` to view)
+- **`evalgate replay`** — CLI command to replay candidate against current model with constraint evaluation
 - **`computeBaselineChecksum` / `verifyBaselineChecksum` in main barrel** — now importable directly from `@evalgate/sdk`.
 - **`resetSentimentDeprecationWarning` in main barrel** — deprecation reset utility for testing `hasSentimentAsync` behavior.
+
+### Fixed
+
+- **`parseBody` Zod type inference** — changed signature to `ZodType<O, ZodTypeDef, I>` so `.default()` fields return correct output types
+- **Error envelope audit compliance** — `candidates/[id]/promote` route now uses canonical `apiError()` helpers
+- **SDK test mocks** — added `text()` method to all fetch mocks (client uses `response.text()` + `JSON.parse()`)
+- **DOM test assertions** — updated `home-hero` and `home-features` tests to match current component copy
+- **Security audit** — patched `hono` (>=4.12.4) and `@hono/node-server` (>=1.19.10) via pnpm overrides
 
 ---
 
