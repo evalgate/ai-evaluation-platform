@@ -1,5 +1,6 @@
-import { describe, expect, it, afterEach } from "vitest";
-import { parseArgs } from "../../cli/check";
+import { describe, expect, it, afterEach, vi } from "vitest";
+import { parseArgs, runCheck } from "../../cli/check";
+import { EXIT } from "../../cli/constants";
 import { DEFAULT_BASE_URL } from "../../constants";
 
 describe("parseArgs baseUrl defaults", () => {
@@ -42,6 +43,65 @@ describe("parseArgs baseUrl defaults", () => {
 		expect(result.ok).toBe(true);
 		if (result.ok) {
 			expect(result.args.baseUrl).toBe("http://from-flag:9090");
+		}
+	});
+});
+
+describe("parseArgs --dry-run", () => {
+	it("parses --dry-run flag as dryRun: true", () => {
+		const result = parseArgs([
+			"--apiKey", "key",
+			"--evaluationId", "42",
+			"--dry-run",
+		]);
+		expect(result.ok).toBe(true);
+		if (result.ok) {
+			expect(result.args.dryRun).toBe(true);
+		}
+	});
+
+	it("dryRun is undefined when --dry-run is not passed", () => {
+		const result = parseArgs([
+			"--apiKey", "key",
+			"--evaluationId", "42",
+		]);
+		expect(result.ok).toBe(true);
+		if (result.ok) {
+			expect(result.args.dryRun).toBeUndefined();
+		}
+	});
+});
+
+describe("runCheck --dry-run exit code override", () => {
+	it("returns EXIT.PASS (0) even when gate would fail", async () => {
+		// Mock fetch to return a failing score
+		const originalFetch = globalThis.fetch;
+		globalThis.fetch = vi.fn().mockResolvedValue({
+			ok: true,
+			headers: new Headers(),
+			text: async () => JSON.stringify({
+				score: 10,
+				total: 5,
+				evaluationRunId: 1,
+			}),
+		}) as unknown as typeof fetch;
+
+		try {
+			const exitCode = await runCheck({
+				baseUrl: "http://localhost:3000",
+				apiKey: "test-key",
+				minScore: 90,
+				allowWeakEvidence: true,
+				evaluationId: "42",
+				baseline: "published",
+				format: "json",
+				explain: false,
+				share: "never",
+				dryRun: true,
+			});
+			expect(exitCode).toBe(EXIT.PASS);
+		} finally {
+			globalThis.fetch = originalFetch;
 		}
 	});
 });

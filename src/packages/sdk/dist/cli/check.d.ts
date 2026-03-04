@@ -22,6 +22,7 @@
  *                        fail = create public share link only when gate fails (CI-friendly)
  *   --pr-comment-out <file>  Write PR comment markdown to file (for GitHub Action to post)
  *   --profile <name>         Preset: strict (95/0/30), balanced (90/2/10), fast (85/5/5). Explicit flags override.
+ *   --dry-run               Run all checks and print results, but always exit 0
  *
  * Exit codes:
  *   0  — Gate passed
@@ -60,6 +61,8 @@ export interface CheckArgs {
     maxCostUsd?: number;
     maxLatencyMs?: number;
     maxCostDeltaUsd?: number;
+    /** When true, run all checks and print results but always exit 0. */
+    dryRun?: boolean;
 }
 export type ParseArgsResult = {
     ok: true;

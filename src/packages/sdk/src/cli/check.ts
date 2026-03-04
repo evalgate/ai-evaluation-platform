@@ -23,6 +23,7 @@
  *                        fail = create public share link only when gate fails (CI-friendly)
  *   --pr-comment-out <file>  Write PR comment markdown to file (for GitHub Action to post)
  *   --profile <name>         Preset: strict (95/0/30), balanced (90/2/10), fast (85/5/5). Explicit flags override.
+ *   --dry-run               Run all checks and print results, but always exit 0
  *
  * Exit codes:
  *   0  — Gate passed
@@ -86,6 +87,8 @@ export interface CheckArgs {
 	maxCostUsd?: number;
 	maxLatencyMs?: number;
 	maxCostDeltaUsd?: number;
+	/** When true, run all checks and print results but always exit 0. */
+	dryRun?: boolean;
 }
 
 export type ParseArgsResult =
@@ -128,6 +131,7 @@ export function parseArgs(argv: string[]): ParseArgsResult {
 		formatRaw === "json" ? "json" : formatRaw === "github" ? "github" : "human";
 	const explain = args.explain === "true" || args.explain === "1";
 	const onFail = args.onFail === "import" ? ("import" as const) : undefined;
+	const dryRun = args["dry-run"] === "true" || args.dryRun === "true";
 	const shareRaw = args.share || "never";
 	const share: CheckArgs["share"] =
 		shareRaw === "always" ? "always" : shareRaw === "fail" ? "fail" : "never";
@@ -251,6 +255,7 @@ export function parseArgs(argv: string[]): ParseArgsResult {
 				maxCostDeltaUsd != null && !Number.isNaN(maxCostDeltaUsd)
 					? maxCostDeltaUsd
 					: undefined,
+			dryRun: dryRun || undefined,
 		},
 	};
 }
@@ -411,6 +416,11 @@ export async function runCheck(args: CheckArgs): Promise<number> {
 				);
 			}
 		}
+	}
+
+	if (args.dryRun) {
+		console.error("\n[dry-run] Gate would have exited with code " + gateResult.exitCode);
+		return EXIT.PASS;
 	}
 
 	return gateResult.exitCode;

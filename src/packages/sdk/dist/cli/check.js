@@ -23,6 +23,7 @@
  *                        fail = create public share link only when gate fails (CI-friendly)
  *   --pr-comment-out <file>  Write PR comment markdown to file (for GitHub Action to post)
  *   --profile <name>         Preset: strict (95/0/30), balanced (90/2/10), fast (85/5/5). Explicit flags override.
+ *   --dry-run               Run all checks and print results, but always exit 0
  *
  * Exit codes:
  *   0  — Gate passed
@@ -123,6 +124,7 @@ function parseArgs(argv) {
     const format = formatRaw === "json" ? "json" : formatRaw === "github" ? "github" : "human";
     const explain = args.explain === "true" || args.explain === "1";
     const onFail = args.onFail === "import" ? "import" : undefined;
+    const dryRun = args["dry-run"] === "true" || args.dryRun === "true";
     const shareRaw = args.share || "never";
     const share = shareRaw === "always" ? "always" : shareRaw === "fail" ? "fail" : "never";
     const prCommentOut = args["pr-comment-out"] || args.prCommentOut || undefined;
@@ -229,6 +231,7 @@ function parseArgs(argv) {
             maxCostDeltaUsd: maxCostDeltaUsd != null && !Number.isNaN(maxCostDeltaUsd)
                 ? maxCostDeltaUsd
                 : undefined,
+            dryRun: dryRun || undefined,
         },
     };
 }
@@ -336,6 +339,10 @@ async function runCheck(args) {
                 console.error(`EvalGate import (onFail): ${importRes.status} — ${importRes.body}`);
             }
         }
+    }
+    if (args.dryRun) {
+        console.error("\n[dry-run] Gate would have exited with code " + gateResult.exitCode);
+        return constants_2.EXIT.PASS;
     }
     return gateResult.exitCode;
 }
