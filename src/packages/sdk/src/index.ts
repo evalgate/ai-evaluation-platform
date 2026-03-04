@@ -16,16 +16,19 @@ import {
 	EvalGateError,
 	NetworkError,
 	RateLimitError,
-	SDKError,
+	ValidationError,
 } from "./errors";
 
 export {
 	EvalGateError,
 	RateLimitError,
 	AuthenticationError,
-	SDKError as ValidationError, // Using SDKError as ValidationError for backward compatibility
+	ValidationError,
 	NetworkError,
 };
+
+// Legacy backward compat — SDKError is the old name for EvalGateError
+export { EvalGateError as SDKError } from "./errors";
 
 // Enhanced assertions (Tier 1.3)
 export {
