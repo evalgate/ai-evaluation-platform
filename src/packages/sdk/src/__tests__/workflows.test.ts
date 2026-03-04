@@ -307,3 +307,63 @@ describe("traceWorkflowStep", () => {
 		await tracer.endWorkflow({ status: "failed" }, "failed");
 	});
 });
+
+describe("WorkflowTracer offline mode", () => {
+	it("should not call client.traces in offline mode", async () => {
+		const mockCreate = vi.fn().mockResolvedValue({ id: 1 });
+		const mockUpdate = vi.fn().mockResolvedValue({});
+		const mockCreateSpan = vi.fn().mockResolvedValue({});
+		vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
+			ok: true,
+			json: async () => ({ id: 1 }),
+			status: 200,
+		}));
+		const client = new AIEvalClient({
+			apiKey: "test-key",
+			baseUrl: "http://localhost:3000",
+			organizationId: 1,
+		});
+		// Spy on the actual traces methods
+		client.traces.create = mockCreate;
+		client.traces.update = mockUpdate;
+		(client.traces as any).createSpan = mockCreateSpan;
+
+		const tracer = new WorkflowTracer(client, {
+			organizationId: 1,
+			offline: true,
+		});
+
+		await tracer.startWorkflow("Offline Test");
+		const span = await tracer.startAgentSpan("Agent1", { input: "hello" });
+		await tracer.endAgentSpan(span, { result: "done" });
+		await tracer.endWorkflow({ result: "ok" });
+
+		expect(mockCreate).not.toHaveBeenCalled();
+		expect(mockUpdate).not.toHaveBeenCalled();
+		expect(mockCreateSpan).not.toHaveBeenCalled();
+	});
+
+	it("should still record handoffs in memory when offline", async () => {
+		vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
+			ok: true,
+			json: async () => ({ id: 1 }),
+			status: 200,
+		}));
+		const client = new AIEvalClient({
+			apiKey: "test-key",
+			baseUrl: "http://localhost:3000",
+			organizationId: 1,
+		});
+		const tracer = new WorkflowTracer(client, {
+			organizationId: 1,
+			offline: true,
+		});
+
+		await tracer.startWorkflow("Test");
+		await tracer.recordHandoff("AgentA", "AgentB", { reason: "escalation" });
+		expect(tracer.getHandoffs()).toHaveLength(1);
+		expect(tracer.getHandoffs()[0].fromAgent).toBe("AgentA");
+		expect(tracer.getHandoffs()[0].toAgent).toBe("AgentB");
+		await tracer.endWorkflow();
+	});
+});

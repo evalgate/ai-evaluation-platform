@@ -217,6 +217,8 @@ export interface WorkflowTracerOptions {
 	captureFullPayloads?: boolean;
 	/** Debug mode */
 	debug?: boolean;
+	/** Offline mode — skip all API calls, keep in-memory state only */
+	offline?: boolean;
 }
 
 // ============================================================================
@@ -279,6 +281,7 @@ export class WorkflowTracer {
 			tracePrefix: options.tracePrefix || "workflow",
 			captureFullPayloads: options.captureFullPayloads ?? true,
 			debug: options.debug ?? false,
+			offline: options.offline ?? false,
 		};
 	}
 
@@ -315,27 +318,33 @@ export class WorkflowTracer {
 		const traceId = `${this.options.tracePrefix}-${Date.now()}-${this.generateId()}`;
 		const startedAt = new Date().toISOString();
 
-		// Create the trace
-		const trace = await this.client.traces.create({
-			name: `Workflow: ${name}`,
-			traceId,
-			organizationId: this.options.organizationId,
-			status: "pending",
-			metadata: mergeWithContext({
-				workflowName: name,
-				definition,
-				...metadata,
-			}),
-		});
+		// Create the trace (skip in offline mode)
+		let traceResultId = 0;
+		if (!this.options.offline) {
+			const trace = await this.client.traces.create({
+				name: `Workflow: ${name}`,
+				traceId,
+				organizationId: this.options.organizationId,
+				status: "pending",
+				metadata: mergeWithContext({
+					workflowName: name,
+					definition,
+					...metadata,
+				}),
+			});
+			traceResultId = trace.id;
+		}
 
-		this.currentWorkflow = {
-			id: 0, // Will be set after API call returns
-			traceId: trace.id,
+		const workflow: WorkflowContext = {
+			id: 0,
+			traceId: traceResultId,
 			name,
 			startedAt,
 			definition,
 			metadata,
 		};
+
+		this.currentWorkflow = workflow;
 
 		// Reset state
 		this.handoffs = [];
@@ -344,9 +353,9 @@ export class WorkflowTracer {
 		this.activeSpans.clear();
 		this.spanCounter = 0;
 
-		this.log("Started workflow", { name, traceId: trace.id });
+		this.log("Started workflow", { name, traceId: traceResultId });
 
-		return this.currentWorkflow;
+		return workflow;
 	}
 
 	/**
@@ -369,24 +378,26 @@ export class WorkflowTracer {
 			0,
 		);
 
-		// Update the original trace with completion data
-		await this.client.traces.update(this.currentWorkflow.traceId, {
-			status: status === "completed" ? "success" : "error",
-			durationMs,
-			metadata: mergeWithContext({
-				workflowName: this.currentWorkflow.name,
-				output,
-				status,
-				totalCost: totalCost.toFixed(6),
-				handoffCount: this.handoffs.length,
-				decisionCount: this.decisions.length,
-				agentCount: new Set(this.handoffs.map((h) => h.toAgent)).size + 1,
-				retryCount: this.costs.filter((c) => c.isRetry).length,
-				handoffs: this.handoffs,
-				decisions: this.decisions,
-				costs: this.costs,
-			}),
-		});
+		// Update the original trace with completion data (skip in offline mode)
+		if (!this.options.offline) {
+			await this.client.traces.update(this.currentWorkflow.traceId, {
+				status: status === "completed" ? "success" : "error",
+				durationMs,
+				metadata: mergeWithContext({
+					workflowName: this.currentWorkflow.name,
+					output,
+					status,
+					totalCost: totalCost.toFixed(6),
+					handoffCount: this.handoffs.length,
+					decisionCount: this.decisions.length,
+					agentCount: new Set(this.handoffs.map((h) => h.toAgent)).size + 1,
+					retryCount: this.costs.filter((c) => c.isRetry).length,
+					handoffs: this.handoffs,
+					decisions: this.decisions,
+					costs: this.costs,
+				}),
+			});
+		}
 
 		this.log("Ended workflow", {
 			name: this.currentWorkflow.name,
@@ -434,18 +445,20 @@ export class WorkflowTracer {
 
 		this.activeSpans.set(spanId, spanContext);
 
-		// Create span via API
-		await this.client.traces.createSpan(this.currentWorkflow.traceId, {
-			name: `Agent: ${agentName}`,
-			spanId,
-			type: "agent",
-			parentSpanId,
-			startTime,
-			metadata: mergeWithContext({
-				agentName,
-				...(this.options.captureFullPayloads ? { input } : {}),
-			}),
-		});
+		// Create span via API (skip in offline mode)
+		if (!this.options.offline) {
+			await this.client.traces.createSpan(this.currentWorkflow.traceId, {
+				name: `Agent: ${agentName}`,
+				spanId,
+				type: "agent",
+				parentSpanId,
+				startTime,
+				metadata: mergeWithContext({
+					agentName,
+					...(this.options.captureFullPayloads ? { input } : {}),
+				}),
+			});
+		}
 
 		this.log("Started agent span", { agentName, spanId });
 
@@ -468,21 +481,23 @@ export class WorkflowTracer {
 		const durationMs =
 			new Date(endTime).getTime() - new Date(span.startTime).getTime();
 
-		// Update span via API (create completion record)
-		await this.client.traces.createSpan(this.currentWorkflow.traceId, {
-			name: `Agent: ${span.agentName}`,
-			spanId: `${span.spanId}-end`,
-			type: "agent",
-			parentSpanId: span.spanId,
-			startTime: span.startTime,
-			endTime,
-			durationMs,
-			metadata: mergeWithContext({
-				agentName: span.agentName,
-				...(this.options.captureFullPayloads ? { output } : {}),
-				...(error ? { error } : {}),
-			}),
-		});
+		// Update span via API (skip in offline mode)
+		if (!this.options.offline) {
+			await this.client.traces.createSpan(this.currentWorkflow.traceId, {
+				name: `Agent: ${span.agentName}`,
+				spanId: `${span.spanId}-end`,
+				type: "agent",
+				parentSpanId: span.spanId,
+				startTime: span.startTime,
+				endTime,
+				durationMs,
+				metadata: mergeWithContext({
+					agentName: span.agentName,
+					...(this.options.captureFullPayloads ? { output } : {}),
+					...(error ? { error } : {}),
+				}),
+			});
+		}
 
 		this.activeSpans.delete(span.spanId);
 		this.log("Ended agent span", {
