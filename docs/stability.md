@@ -105,7 +105,7 @@ This document classifies every major feature by maturity level and provides API 
 | Cost Records | **Stable** | v1.0 | Per-call token + cost tracking |
 | LLM Judge | **Beta** | v1.0 | Meta-judge post-eval hook |
 
-### SDK (`@evalgate/sdk`) — v2.3.0
+### SDK (`@evalgate/sdk`) — v3.0.0
 
 | Feature | Tier | Since | Notes |
 |---------|------|-------|-------|
@@ -142,7 +142,7 @@ This document classifies every major feature by maturity level and provides API 
 | Regression gate exports | **Stable** | v1.6 | `@evalgate/sdk/regression` |
 | Behavioral spec discover/run/diff | **Beta** | v2.0 | `evalgate discover`, `run`, `diff`, `ci` pipeline |
 
-### EvalGate Intelligence Layer — v2.1.2
+### EvalGate Intelligence Layer — v3.0.0
 
 | Feature | Tier | Since | Notes |
 |---------|------|-------|-------|
@@ -166,7 +166,7 @@ This document classifies every major feature by maturity level and provides API 
 | **Replay Determinism** | **Beta** | v2.1 | SHA-256 input canonicalization for reproducible replay |
 | **Regression Attribution** | **Beta** | v2.1 | Scores diff signals (git, model, prompt, tool schema, dataset, judge) to rank regression causes |
 
-### EvalGate UX Components — v2.1.2
+### EvalGate UX Components — v3.0.0
 
 | Component | Tier | Since | Notes |
 |-----------|------|-------|-------|
@@ -194,5 +194,5 @@ This document classifies every major feature by maturity level and provides API 
 | `requireAuthWithOrg` (direct use in routes) | v1.2 | v2.0 | Wrap with `secureRoute()` |
 | `role: string` in AuthContext | v1.2 | v2.0 | Use `role: Role` (typed enum) |
 | String timestamps (hot-path tables) | v1.7 | v2.0 | Now integer timestamps via migration 0039 |
-| `hasConsistency` returning `{ consistent }` | v2.3 | v3.0 | Use `{ passed }` instead |
-| `respondedWithinDuration` returning `boolean` | v2.3 | v3.0 | Now returns `AssertionResult` |
+| `hasConsistency` returning `{ consistent }` | v2.3 | v3.0 ✅ removed | Use `{ passed }` instead |
+| `respondedWithinDuration` returning `boolean` | v2.3 | v3.0 ✅ removed | Now returns `AssertionResult` |
