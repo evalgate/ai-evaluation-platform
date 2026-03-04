@@ -8,7 +8,7 @@
 	},
 	"runtime": {
 		"mode": "spec",
-		"sdkVersion": "1.8.0"
+		"sdkVersion": "2.3.0"
 	},
 	"specFiles": [
 		{

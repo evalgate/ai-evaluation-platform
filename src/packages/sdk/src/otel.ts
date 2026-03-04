@@ -143,7 +143,7 @@ export class OTelExporter {
 			endpoint: options.endpoint ?? "http://localhost:4318/v1/traces",
 			serviceName: options.serviceName ?? "evalgate",
 			resourceAttributes: options.resourceAttributes ?? {},
-			sdkVersion: options.sdkVersion ?? "2.2.4",
+			sdkVersion: options.sdkVersion ?? "2.3.0",
 			headers: options.headers ?? {},
 		};
 	}

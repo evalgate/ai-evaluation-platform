@@ -5,6 +5,32 @@ All notable changes to the @evalgate/sdk package will be documented in this file
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.0] - 2026-03-04
+
+### Breaking
+
+- **`hasConsistency` / `hasConsistencyAsync` return `{ score, passed }` instead of `{ score, consistent }`** — aligns with every other assertion in the SDK that returns a `passed` field. If you were destructuring `consistent`, rename it to `passed`:
+  ```ts
+  // Before:
+  const { score, consistent } = hasConsistency(outputs);
+  // After:
+  const { score, passed } = hasConsistency(outputs);
+  ```
+- **`respondedWithinDuration` / `respondedWithinTimeSince` return `AssertionResult` instead of `boolean`** — these now return `{ name, passed, expected, actual, message }` like all other assertions, enabling uniform pipeline usage and failure messages. The deprecated `respondedWithinTime` alias also returns `AssertionResult`.
+  ```ts
+  // Before:
+  const ok = respondedWithinDuration(250, 500); // boolean
+  // After:
+  const { passed } = respondedWithinDuration(250, 500); // AssertionResult
+  ```
+
+### Added
+
+- **`computeBaselineChecksum` / `verifyBaselineChecksum` in main barrel** — previously only reachable via `@evalgate/sdk/cli/baseline` subpath. Now importable directly from `@evalgate/sdk`.
+- **`resetSentimentDeprecationWarning` in main barrel** — the one-time deprecation reset utility for `hasSentimentAsync` is now importable from the main entry point, making it easier to test deprecation behavior. `SentimentAsyncResult` type was already exported.
+
+---
+
 ## [2.2.3] - 2026-03-03
 
 ### Breaking

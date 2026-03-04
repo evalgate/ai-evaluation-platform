@@ -3,7 +3,7 @@
 [![npm version](https://img.shields.io/npm/v/@evalgate/sdk.svg)](https://www.npmjs.com/package/@evalgate/sdk)
 [![npm downloads](https://img.shields.io/npm/dm/@evalgate/sdk.svg)](https://www.npmjs.com/package/@evalgate/sdk)
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-blue.svg)](https://www.typescriptlang.org/)
-[![SDK Tests](https://img.shields.io/badge/tests-159%20passed-brightgreen.svg)](#)
+[![SDK Tests](https://img.shields.io/badge/tests-541%20passed-brightgreen.svg)](#)
 [![Contract Version](https://img.shields.io/badge/report%20schema-v1-blue.svg)](#)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 

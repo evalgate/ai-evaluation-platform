@@ -2,6 +2,20 @@
 
 Platform and SDK releases. For detailed SDK changes, see [src/packages/sdk/CHANGELOG.md](src/packages/sdk/CHANGELOG.md).
 
+## [2.3.0] - 2026-03-04
+
+### Breaking (SDK)
+
+- **`hasConsistency` / `hasConsistencyAsync`** — return type changed from `{ score, consistent }` to `{ score, passed }` for API consistency with all other assertions.
+- **`respondedWithinDuration` / `respondedWithinTimeSince`** — return type changed from `boolean` to `AssertionResult` (`{ name, passed, expected, actual, message }`), matching all other assertion functions.
+
+### Added (SDK)
+
+- **`computeBaselineChecksum` / `verifyBaselineChecksum` in main barrel** — now importable directly from `@evalgate/sdk`.
+- **`resetSentimentDeprecationWarning` in main barrel** — deprecation reset utility for testing `hasSentimentAsync` behavior.
+
+---
+
 ## [2.2.4] - 2026-03-03
 
 ### Milestone

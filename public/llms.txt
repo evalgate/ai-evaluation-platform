@@ -73,7 +73,7 @@ pip install pauly4010-evalgate-sdk
 
 ## CLI Commands
 
-### 🚀 One-Command CI (v2.2.2)
+### 🚀 One-Command CI (v2.3.0)
 
 ```bash
 npx evalgate ci --format github --write-results --base main    # Complete CI pipeline

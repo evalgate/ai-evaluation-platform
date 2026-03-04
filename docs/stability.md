@@ -1,6 +1,6 @@
 # Stability Matrix
 
-> Last updated: 2026-03-03
+> Last updated: 2026-03-04
 
 This document classifies every major feature by maturity level and provides API compatibility guarantees for each tier.
 
@@ -105,7 +105,7 @@ This document classifies every major feature by maturity level and provides API 
 | Cost Records | **Stable** | v1.0 | Per-call token + cost tracking |
 | LLM Judge | **Beta** | v1.0 | Meta-judge post-eval hook |
 
-### SDK (`@evalgate/sdk`) — v2.2.4
+### SDK (`@evalgate/sdk`) — v2.3.0
 
 | Feature | Tier | Since | Notes |
 |---------|------|-------|-------|
@@ -133,6 +133,11 @@ This document classifies every major feature by maturity level and provides API 
 | `snapshot(name, undefined\|null)` | **Stable** | v2.2.3 | `undefined` and `null` outputs serialize to `"undefined"` / `"null"` instead of throwing |
 | `toContainCode()` raw-code detection | **Stable** | v2.2.3 | Detects raw `function`, `const`, `class`, arrow, `import`/`export`, `return` without requiring a fenced block |
 | `hasReadabilityScore({ min, max })` | **Stable** | v2.2.3 | Accepts `number \| { min?, max? }`; object form was previously coerced to `NaN` |
+| `hasConsistency` / `hasConsistencyAsync` return `{ score, passed }` | **Stable** | v2.3 | Was `{ score, consistent }`; renamed for API consistency |
+| `respondedWithinDuration` returns `AssertionResult` | **Stable** | v2.3 | Was `boolean`; now returns `{ name, passed, expected, actual, message }` |
+| `respondedWithinTimeSince` returns `AssertionResult` | **Stable** | v2.3 | Was `boolean`; now returns `{ name, passed, expected, actual, message }` |
+| `computeBaselineChecksum` / `verifyBaselineChecksum` | **Stable** | v2.3 | Now in main barrel; was only reachable via `cli/baseline` subpath |
+| `resetSentimentDeprecationWarning` | **Stable** | v2.3 | Now in main barrel for testing deprecation behavior |
 | Framework integrations | **Beta** | v1.0 | Jest, Vitest adapters |
 | Regression gate exports | **Stable** | v1.6 | `@evalgate/sdk/regression` |
 | Behavioral spec discover/run/diff | **Beta** | v2.0 | `evalgate discover`, `run`, `diff`, `ci` pipeline |
@@ -189,3 +194,5 @@ This document classifies every major feature by maturity level and provides API 
 | `requireAuthWithOrg` (direct use in routes) | v1.2 | v2.0 | Wrap with `secureRoute()` |
 | `role: string` in AuthContext | v1.2 | v2.0 | Use `role: Role` (typed enum) |
 | String timestamps (hot-path tables) | v1.7 | v2.0 | Now integer timestamps via migration 0039 |
+| `hasConsistency` returning `{ consistent }` | v2.3 | v3.0 | Use `{ passed }` instead |
+| `respondedWithinDuration` returning `boolean` | v2.3 | v3.0 | Now returns `AssertionResult` |
