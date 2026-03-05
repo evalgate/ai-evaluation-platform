@@ -66,7 +66,7 @@ jobs:
           python-version: '3.12'
 
       - name: Install Python SDK
-        run: pip install -e src/packages/sdk-python
+        run: pip install -e "src/packages/sdk-python[cli]"
 
       - name: Verify Python SDK exports match TypeScript surface
         run: |
