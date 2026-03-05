@@ -2,7 +2,7 @@
 
 > AI quality infrastructure for Python. Trace, test, and gate every LLM call.
 
-**Current version: 2.3.0** — aligned with the TypeScript SDK (`@evalgate/sdk`).
+**Current version: 3.0.0** — Production-ready AI quality infrastructure.
 
 [![PyPI](https://img.shields.io/pypi/v/pauly4010-evalgate-sdk)](https://pypi.org/project/pauly4010-evalgate-sdk/)
 [![Python](https://img.shields.io/pypi/pyversions/pauly4010-evalgate-sdk)](https://pypi.org/project/pauly4010-evalgate-sdk/)
@@ -387,6 +387,17 @@ data = import_from_langsmith(langsmith_export)
 | `client.developer` | `get_usage`, `get_usage_summary`, `api_keys.*`, `webhooks.*` |
 
 ---
+
+## v3.0.0 Changelog
+
+**Major release: Production-ready AI quality infrastructure**
+
+- **Repository migration** - Moved to evalgate organization (https://github.com/evalgate/EvalGate)
+- **Version alignment** - All SDKs now at v3.0.0 with unified API surface
+- **CI compatibility** - Full compatibility with platform CI pipeline (507 tests passing)
+- **Enhanced error handling** - Improved CLI dependency management and import error messages
+- **Code formatting** - All Python files properly formatted with ruff
+- **Production ready** - Stable foundation for enterprise AI teams
 
 ## v2.3.0 Changelog
 

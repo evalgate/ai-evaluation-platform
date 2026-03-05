@@ -74,7 +74,7 @@ That's it! Your CI now:
 
 ---
 
-## 🚀 New in v2.0.0: One-Command CI
+## 🚀 New in v3.0.0: Production-Ready AI Quality Infrastructure
 
 ### `evalgate ci` - Complete CI Pipeline
 
@@ -125,7 +125,7 @@ Every failure prints a clear next step:
 
 ## CLI Commands
 
-### 🚀 One-Command CI (v2.0.0)
+### 🚀 One-Command CI (v3.0.0)
 
 | Command | Description |
 |---------|-------------|
@@ -488,6 +488,8 @@ Your local `openAIChatEval` runs continue to work. No account cancellation. No d
 ## Changelog
 
 See [CHANGELOG.md](CHANGELOG.md) for the full release history.
+
+**v3.0.0** — Major release: Production-ready AI quality infrastructure. Complete repository migration to evalgate organization, Python SDK v3.0.0 with full CI compatibility, enhanced error handling, and comprehensive test coverage (1077 tests passing). All SDKs now at v3.0.0 with unified API surface.
 
 **v2.2.3** — Bug-fix release. `RequestCache` default TTL, `EvalGateError` subclass prototype chain and `retryAfter` direct property, `autoPaginate` now returns `Promise<T[]>` (new `autoPaginateGenerator` for streaming), `createEvalRuntime` config-object overload, `defaultLocalExecutor` callable factory, `SnapshotManager.save` null/undefined safety, `compareSnapshots` loads both sides from disk, `AIEvalClient` default baseUrl → `https://api.evalgate.com`, `importData` optional-chaining guards, `toContainCode` raw-code detection, `hasReadabilityScore` `{min,max}` object form. 141 new regression tests.
 
