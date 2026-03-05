@@ -10,6 +10,13 @@ vi.mock("autumn-js/react", () => ({
 	useCustomer: (...args: unknown[]) => mockUseCustomer(...args),
 }));
 
+// Mock Progress to avoid Radix primitives hanging in JSDOM
+vi.mock("@/components/ui/progress", () => ({
+	Progress: ({ value, className }: { value?: number; className?: string }) => (
+		<div data-testid="progress" data-value={value} className={className} />
+	),
+}));
+
 import { PlanUsageIndicator } from "@/components/plan-usage-indicator";
 
 describe("PlanUsageIndicator", () => {

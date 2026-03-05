@@ -15,7 +15,6 @@ import {
 	failureReports,
 	organizations,
 	traces,
-	user,
 	userFeedback,
 } from "@/db/schema";
 
