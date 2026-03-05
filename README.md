@@ -1,13 +1,13 @@
 # EvalGate
 
-[![Platform CI](https://github.com/pauly7610/ai-evaluation-platform/actions/workflows/platform-ci.yml/badge.svg)](https://github.com/pauly7610/ai-evaluation-platform/actions/workflows/platform-ci.yml)
-[![GitHub stars](https://img.shields.io/github/stars/pauly7610/ai-evaluation-platform?style=flat-square)](https://github.com/pauly7610/ai-evaluation-platform)
+[![Platform CI](https://github.com/evalgate/EvalGate/actions/workflows/platform-ci.yml/badge.svg)](https://github.com/evalgate/EvalGate/actions/workflows/platform-ci.yml)
+[![GitHub stars](https://img.shields.io/github/stars/evalgate/EvalGate?style=flat-square)](https://github.com/evalgate/EvalGate)
 [![npm](https://img.shields.io/npm/v/@evalgate/sdk?style=flat-square&logo=npm&color=cb3837)](https://www.npmjs.com/package/@evalgate/sdk)
 [![npm downloads](https://img.shields.io/npm/dm/@evalgate/sdk?style=flat-square&logo=npm)](https://www.npmjs.com/package/@evalgate/sdk)
-[![PyPI](https://img.shields.io/pypi/v/pauly4010-evalgate-sdk?style=flat-square&logo=python&color=3776ab)](https://pypi.org/project/pauly4010-evalgate-sdk/)
+[![PyPI](https://img.shields.io/pypi/v/pauly4010-evalgate-sdk?style=flat-square&logo=python&color=3776ab)](https://pypi.org/project/pauly4010-evalgate-sdk/3.0.0/)
 [![PyPI downloads](https://img.shields.io/pypi/dm/pauly4010-evalgate-sdk?style=flat-square&logo=pypi)](https://pypi.org/project/pauly4010-evalgate-sdk/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](https://opensource.org/licenses/MIT)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](https://github.com/pauly7610/ai-evaluation-platform/pulls)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](https://github.com/evalgate/EvalGate/pulls)
 
 Stop LLM regressions in CI in 2 minutes.
 

@@ -47,12 +47,12 @@
 	"license": "MIT",
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/pauly7610/ai-evaluation-platform.git",
+		"url": "git+https://github.com/evalgate/EvalGate.git",
 		"directory": "src/packages/sdk"
 	},
 	"homepage": "https://evalgate.com",
 	"bugs": {
-		"url": "https://github.com/pauly7610/ai-evaluation-platform/issues"
+		"url": "https://github.com/evalgate/EvalGate/issues"
 	},
 	"dependencies": {
 		"commander": "^14.0.0"
