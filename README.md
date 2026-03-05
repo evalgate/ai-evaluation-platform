@@ -233,7 +233,7 @@ evalai discover → manifest.json → impact-analysis → run → diff
 ### Evaluation
 
 - **Four evaluation types:** Unit Tests, Human Evaluation, LLM Judge, A/B Testing
-- **50+ evaluation templates** across chatbots, RAG, code-gen, adversarial, multimodal, and industry domains
+- **14+ evaluation templates** across chatbots, RAG, code-gen, adversarial, multimodal, and industry domains
 - **Visual evaluation builder** — compose evals with drag-and-drop, no code required
 - **Quality score dashboard** — pass rates, trends, and drill-down into failures
 
