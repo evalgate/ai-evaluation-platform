@@ -66,7 +66,7 @@ export const goldenRegressionService = {
 			)
 			.limit(1);
 
-		return raced!;
+		return raced ?? undefined;
 	},
 
 	async find(organizationId: number) {

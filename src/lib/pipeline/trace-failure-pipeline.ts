@@ -121,9 +121,20 @@ async function runPipelineCore(
 	}
 
 	// Detect on the last output span (typically the final response)
-	const targetSpan = outputSpans[outputSpans.length - 1]!;
+	const targetSpan = outputSpans[outputSpans.length - 1];
+	if (!targetSpan || !targetSpan.output) {
+		return {
+			failureReportId: null,
+			candidateId: null,
+			category: null,
+			autoPromoteEligible: false,
+			skipped: true,
+			skipReason: "no_output_spans",
+		};
+	}
+
 	const signals = detectRuleBased({
-		output: targetSpan.output!,
+		output: targetSpan.output,
 		input: targetSpan.input ?? undefined,
 	});
 
