@@ -90,11 +90,11 @@ export default function IntegrationDocsPage() {
 						author: {
 							"@type": "Organization",
 							name: "EvalGate",
-							url: "https://github.com/pauly7610/ai-evaluation-platform",
+							url: "https://github.com/evalgate/ai-evaluation-platform",
 						},
 						programmingLanguage: ["TypeScript", "JavaScript", "Python"],
 						codeRepository:
-							"https://github.com/pauly7610/ai-evaluation-platform",
+							"https://github.com/evalgate/ai-evaluation-platform",
 						license: "https://opensource.org/licenses/MIT",
 						featureList: [
 							"Multi-agent workflow tracing with DAG visualization",
@@ -139,7 +139,7 @@ export default function IntegrationDocsPage() {
 								npm install @evalgate/sdk
 							</a>
 							<a
-								href="https://github.com/pauly7610/ai-evaluation-platform"
+								href="https://github.com/evalgate/ai-evaluation-platform"
 								target="_blank"
 								rel="noopener noreferrer"
 								className="inline-flex items-center gap-2 rounded-lg border border-zinc-700 px-4 py-2 text-sm font-semibold text-zinc-300 hover:border-zinc-500"

@@ -228,7 +228,7 @@ function generateSummary(suites, options) {
         ` * 4. Test with real data`,
         ` * 5. Remove evalgate.config.json when satisfied`,
         ` * `,
-        ` * For help with migration, see: https://github.com/evalgate/EvalGate/docs/MIGRATION.md`,
+        ` * For help with migration, see: https://github.com/evalgate/ai-evaluation-platform/docs/MIGRATION.md`,
         ` */`,
         ``,
     ].join("\n");

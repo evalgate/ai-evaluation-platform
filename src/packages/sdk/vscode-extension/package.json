@@ -7,7 +7,7 @@
 	"license": "MIT",
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/evalgate/EvalGate.git",
+		"url": "https://github.com/evalgate/ai-evaluation-platform.git",
 		"directory": "src/packages/sdk/vscode-extension"
 	},
 	"engines": {

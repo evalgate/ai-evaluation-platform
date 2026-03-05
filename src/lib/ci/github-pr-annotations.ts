@@ -294,7 +294,7 @@ export function buildPRCommentBody(
 
 	lines.push(
 		"---",
-		"_Posted by [EvalAI](https://github.com/pauly7610/ai-evaluation-platform)_",
+		"_Posted by [EvalAI](https://github.com/evalgate/ai-evaluation-platform)_",
 	);
 
 	return lines.join("\n");

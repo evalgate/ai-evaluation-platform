@@ -437,7 +437,7 @@ data = import_from_langsmith(langsmith_export)
 
 ## Examples
 
-See [`examples/python/`](https://github.com/pauly7610/ai-evaluation-platform/tree/main/examples/python):
+See [`examples/python/`](https://github.com/evalgate/ai-evaluation-platform/tree/main/examples/python):
 
 - **[OpenAI Eval](examples/python/openai_eval.ipynb)** — Trace and evaluate OpenAI chat completions
 - **[RAG Eval](examples/python/rag_eval.ipynb)** — Evaluate retrieval-augmented generation pipelines
@@ -457,7 +457,7 @@ Your local assertions keep working. No account cancellation. No data export requ
 
 ## Links
 
-[Platform](https://evalgate.com) · [GitHub](https://github.com/pauly7610/ai-evaluation-platform) · [TypeScript SDK](https://www.npmjs.com/package/@evalgate/sdk)
+[Platform](https://evalgate.com) · [GitHub](https://github.com/evalgate/ai-evaluation-platform) · [TypeScript SDK](https://www.npmjs.com/package/@evalgate/sdk)
 
 ## License
 

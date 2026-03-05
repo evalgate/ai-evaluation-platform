@@ -12,7 +12,7 @@ export const openApiSpec = {
 			"Comprehensive API for AI model evaluation, testing, and monitoring",
 		contact: {
 			name: "API Support",
-			url: "https://github.com/pauly7610/ai-evaluation-platform/issues",
+			url: "https://github.com/evalgate/ai-evaluation-platform/issues",
 		},
 	},
 	servers: [

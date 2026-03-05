@@ -1,13 +1,13 @@
 # EvalGate
 
-[![Platform CI](https://github.com/evalgate/EvalGate/actions/workflows/platform-ci.yml/badge.svg)](https://github.com/evalgate/EvalGate/actions/workflows/platform-ci.yml)
-[![GitHub stars](https://img.shields.io/github/stars/evalgate/EvalGate?style=flat-square)](https://github.com/evalgate/EvalGate)
+[![Platform CI](https://github.com/evalgate/ai-evaluation-platform/actions/workflows/platform-ci.yml/badge.svg)](https://github.com/evalgate/ai-evaluation-platform/actions/workflows/platform-ci.yml)
+[![GitHub stars](https://img.shields.io/github/stars/evalgate/ai-evaluation-platform?style=flat-square)](https://github.com/evalgate/ai-evaluation-platform)
 [![npm](https://img.shields.io/npm/v/@evalgate/sdk?style=flat-square&logo=npm&color=cb3837)](https://www.npmjs.com/package/@evalgate/sdk)
 [![npm downloads](https://img.shields.io/npm/dm/@evalgate/sdk?style=flat-square&logo=npm)](https://www.npmjs.com/package/@evalgate/sdk)
 [![PyPI](https://img.shields.io/pypi/v/pauly4010-evalgate-sdk?style=flat-square&logo=python&color=3776ab)](https://pypi.org/project/pauly4010-evalgate-sdk/3.0.0/)
 [![PyPI downloads](https://img.shields.io/pypi/dm/pauly4010-evalgate-sdk?style=flat-square&logo=pypi)](https://pypi.org/project/pauly4010-evalgate-sdk/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](https://opensource.org/licenses/MIT)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](https://github.com/evalgate/EvalGate/pulls)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](https://github.com/evalgate/ai-evaluation-platform/pulls)
 
 Stop LLM regressions in CI in 2 minutes.
 
@@ -255,7 +255,7 @@ evalai discover → manifest.json → impact-analysis → run → diff
 ### Setup
 
 ```bash
-git clone https://github.com/pauly7610/ai-evaluation-platform.git
+git clone https://github.com/evalgate/ai-evaluation-platform.git
 cd ai-evaluation-platform
 
 pnpm install
@@ -298,7 +298,7 @@ pnpm test           # Run tests (temp DB per worker, migrations in setup)
 pnpm build          # Production build
 ```
 
-Open an issue or submit a pull request at [https://github.com/pauly7610/ai-evaluation-platform](https://github.com/pauly7610/ai-evaluation-platform).
+Open an issue or submit a pull request at [https://github.com/evalgate/ai-evaluation-platform](https://github.com/evalgate/ai-evaluation-platform).
 
 ## License
 

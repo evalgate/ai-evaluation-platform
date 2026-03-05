@@ -57,10 +57,10 @@ evalgate = "evalgate_sdk.cli:app"
 
 [project.urls]
 Homepage = "https://evalgate.com"
-Documentation = "https://github.com/pauly7610/ai-evaluation-platform#readme"
-Repository = "https://github.com/pauly7610/ai-evaluation-platform"
-Issues = "https://github.com/pauly7610/ai-evaluation-platform/issues"
-Changelog = "https://github.com/pauly7610/ai-evaluation-platform/blob/main/src/packages/sdk-python/CHANGELOG.md"
+Documentation = "https://github.com/evalgate/ai-evaluation-platform#readme"
+Repository = "https://github.com/evalgate/ai-evaluation-platform"
+Issues = "https://github.com/evalgate/ai-evaluation-platform/issues"
+Changelog = "https://github.com/evalgate/ai-evaluation-platform/blob/main/src/packages/sdk-python/CHANGELOG.md"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/evalgate_sdk"]

@@ -61,7 +61,7 @@ export function Footer() {
 							</li>
 							<li>
 								<a
-									href="https://github.com/pauly7610/ai-evaluation-platform"
+									href="https://github.com/evalgate/ai-evaluation-platform"
 									target="_blank"
 									rel="noopener noreferrer"
 									className="hover:text-foreground"
@@ -76,7 +76,7 @@ export function Footer() {
 						<ul className="space-y-2 text-sm text-muted-foreground">
 							<li>
 								<a
-									href="https://github.com/pauly7610/ai-evaluation-platform/issues"
+									href="https://github.com/evalgate/ai-evaluation-platform/issues"
 									target="_blank"
 									rel="noopener noreferrer"
 									className="hover:text-foreground"
@@ -86,7 +86,7 @@ export function Footer() {
 							</li>
 							<li>
 								<a
-									href="https://github.com/pauly7610/ai-evaluation-platform/pulls"
+									href="https://github.com/evalgate/ai-evaluation-platform/pulls"
 									target="_blank"
 									rel="noopener noreferrer"
 									className="hover:text-foreground"
