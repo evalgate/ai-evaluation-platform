@@ -137,26 +137,19 @@ def validate_execution_mode(config: ExecutionModeConfig) -> dict[str, list[str] 
 
     if config.has_spec_runtime and config.has_legacy_runtime:
         warnings.append(
-            "Project contains both spec files and legacy config. "
-            "Consider migrating legacy tests to spec format."
+            "Project contains both spec files and legacy config. Consider migrating legacy tests to spec format."
         )
 
     if not config.has_spec_runtime and not config.has_legacy_runtime:
-        warnings.append(
-            "No tests found. Use 'evalgate init' to create a new project."
-        )
+        warnings.append("No tests found. Use 'evalgate init' to create a new project.")
 
     if config.mode == "spec" and not can_run_spec_mode(config):
         errors.append(
-            "Spec mode requested but no spec files found. "
-            "Create spec files with define_eval() or use legacy mode."
+            "Spec mode requested but no spec files found. Create spec files with define_eval() or use legacy mode."
         )
 
     if config.mode == "legacy" and not can_run_legacy_mode(config):
-        errors.append(
-            "Legacy mode requested but no config file found. "
-            "Create a config file or use spec mode."
-        )
+        errors.append("Legacy mode requested but no config file found. Create a config file or use spec mode.")
 
     return {"valid": len(errors) == 0, "warnings": warnings, "errors": errors}
 

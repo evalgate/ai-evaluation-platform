@@ -85,13 +85,14 @@ class TestOTelExporter:
     def test_export_run_result(self) -> None:
         exporter = create_otel_exporter()
         results = [
+            {"test_id": "t-1", "test_name": "test-a", "passed": True, "score": 95, "duration_ms": 100},
             {
-                "test_id": "t-1", "test_name": "test-a", 
-                "passed": True, "score": 95, "duration_ms": 100
-            },
-            {
-                "test_id": "t-2", "test_name": "test-b", 
-                "passed": False, "score": 30, "duration_ms": 200, "error": "fail"
+                "test_id": "t-2",
+                "test_name": "test-b",
+                "passed": False,
+                "score": 30,
+                "duration_ms": 200,
+                "error": "fail",
             },
         ]
         payload = exporter.export_run_result("run-1", results)

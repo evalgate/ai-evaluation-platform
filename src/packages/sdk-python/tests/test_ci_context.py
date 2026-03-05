@@ -69,8 +69,14 @@ class TestDetectCircle:
 class TestDetectNone:
     def test_no_ci(self, monkeypatch) -> None:
         for var in (
-            "GITHUB_ACTIONS", "GITLAB_CI", "CIRCLECI", "TF_BUILD", 
-            "JENKINS_URL", "CI", "CONTINUOUS_INTEGRATION", "BUILD_NUMBER"
+            "GITHUB_ACTIONS",
+            "GITLAB_CI",
+            "CIRCLECI",
+            "TF_BUILD",
+            "JENKINS_URL",
+            "CI",
+            "CONTINUOUS_INTEGRATION",
+            "BUILD_NUMBER",
         ):
             monkeypatch.delenv(var, raising=False)
         ctx = detect_ci_context()

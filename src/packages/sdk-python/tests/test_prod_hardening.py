@@ -150,9 +150,13 @@ class TestRunReportSuccessOnFailure:
 
         builder = create_run_report("run-x", {"sdk": "test"})
         builder.add_result(
-            test_id="t1", test_name="test", file_path="f.py",
-            position={"line": 1, "column": 1}, input="x",
-            passed=False, score=10.0,
+            test_id="t1",
+            test_name="test",
+            file_path="f.py",
+            position={"line": 1, "column": 1},
+            input="x",
+            passed=False,
+            score=10.0,
         )
         report = builder.build()
         assert report.summary.success is False
@@ -162,9 +166,13 @@ class TestRunReportSuccessOnFailure:
 
         builder = create_run_report("run-y", {"sdk": "test"})
         builder.add_result(
-            test_id="t1", test_name="test", file_path="f.py",
-            position={"line": 1, "column": 1}, input="x",
-            passed=True, score=100.0,
+            test_id="t1",
+            test_name="test",
+            file_path="f.py",
+            position={"line": 1, "column": 1},
+            input="x",
+            passed=True,
+            score=100.0,
         )
         report = builder.build()
         assert report.summary.success is True

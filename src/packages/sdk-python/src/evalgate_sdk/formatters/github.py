@@ -26,6 +26,7 @@ def format_github(report: dict[str, Any]) -> str:
 
     # Set output variables via GITHUB_OUTPUT (::set-output is deprecated since Oct 2022)
     import os
+
     github_output = os.environ.get("GITHUB_OUTPUT")
     if github_output:
         try:

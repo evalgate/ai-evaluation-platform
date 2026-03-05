@@ -22,6 +22,7 @@ from typing import Any
 @dataclass
 class SpecTrace:
     """Individual spec trace record."""
+
     schema_version: int = 1
     timestamp: int = 0
     timestamp_iso: str = ""
@@ -49,6 +50,7 @@ class SpecTrace:
 @dataclass
 class RunTrace:
     """Run-level trace summary."""
+
     schema_version: int = 1
     run: dict[str, Any] = field(default_factory=dict)
     summary: dict[str, Any] = field(default_factory=dict)
@@ -100,34 +102,32 @@ def build_run_trace(
     spec_traces: list[SpecTrace] = []
     for spec in results_list:
         spec_result = spec.get("result", spec)
-        spec_traces.append(SpecTrace(
-            timestamp=now,
-            timestamp_iso=datetime.now(timezone.utc).isoformat(),
-            run_id=run_id,
-            spec={
-                "id": spec.get("spec_id", spec.get("specId", "")),
-                "name": spec.get("name", ""),
-                "filePath": spec.get("file_path", spec.get("filePath", "")),
-            },
-            execution={
-                "status": spec_result.get("status", "unknown"),
-                "score": spec_result.get("score"),
-                "duration": spec_result.get("duration", spec_result.get("duration_ms", 0)),
-                "error": spec_result.get("error"),
-            },
-            git=git_info,
-            env={
-                "pythonVersion": sys.version.split()[0],
-                "platform": platform.system().lower(),
-                "ci": is_ci,
-            },
-        ))
+        spec_traces.append(
+            SpecTrace(
+                timestamp=now,
+                timestamp_iso=datetime.now(timezone.utc).isoformat(),
+                run_id=run_id,
+                spec={
+                    "id": spec.get("spec_id", spec.get("specId", "")),
+                    "name": spec.get("name", ""),
+                    "filePath": spec.get("file_path", spec.get("filePath", "")),
+                },
+                execution={
+                    "status": spec_result.get("status", "unknown"),
+                    "score": spec_result.get("score"),
+                    "duration": spec_result.get("duration", spec_result.get("duration_ms", 0)),
+                    "error": spec_result.get("error"),
+                },
+                git=git_info,
+                env={
+                    "pythonVersion": sys.version.split()[0],
+                    "platform": platform.system().lower(),
+                    "ci": is_ci,
+                },
+            )
+        )
 
-    durations = [
-        s.execution.get("duration", 0)
-        for s in spec_traces
-        if s.execution.get("status") != "skipped"
-    ]
+    durations = [s.execution.get("duration", 0) for s in spec_traces if s.execution.get("status") != "skipped"]
     latency = calculate_percentiles(durations)
 
     return RunTrace(

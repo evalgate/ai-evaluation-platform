@@ -106,18 +106,28 @@ def run_builtin_gate(cwd: str) -> BuiltinReport:
 
     if not os.path.isfile(baseline_path):
         return BuiltinReport(
-            timestamp=now, exit_code=2, category="infra_error", passed=False,
+            timestamp=now,
+            exit_code=2,
+            category="infra_error",
+            passed=False,
             failures=["Baseline file not found. Run: evalgate init"],
-            duration_ms=int((time.time() - t0) * 1000), command=command, runner=runner,
+            duration_ms=int((time.time() - t0) * 1000),
+            command=command,
+            runner=runner,
         )
 
     try:
         baseline_data = json.loads(Path(baseline_path).read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError):
         return BuiltinReport(
-            timestamp=now, exit_code=2, category="infra_error", passed=False,
+            timestamp=now,
+            exit_code=2,
+            category="infra_error",
+            passed=False,
             failures=["Failed to parse evals/baseline.json"],
-            duration_ms=int((time.time() - t0) * 1000), command=command, runner=runner,
+            duration_ms=int((time.time() - t0) * 1000),
+            command=command,
+            runner=runner,
         )
 
     baseline_meta = None
@@ -131,19 +141,32 @@ def run_builtin_gate(cwd: str) -> BuiltinReport:
     try:
         result = subprocess.run(
             command.split(),
-            cwd=cwd, capture_output=True, text=True, timeout=300,
+            cwd=cwd,
+            capture_output=True,
+            text=True,
+            timeout=300,
         )
     except subprocess.TimeoutExpired:
         return BuiltinReport(
-            timestamp=now, exit_code=2, category="infra_error", passed=False,
+            timestamp=now,
+            exit_code=2,
+            category="infra_error",
+            passed=False,
             failures=["Test command timed out after 300s"],
-            duration_ms=int((time.time() - t0) * 1000), command=command, runner=runner,
+            duration_ms=int((time.time() - t0) * 1000),
+            command=command,
+            runner=runner,
         )
     except OSError as exc:
         return BuiltinReport(
-            timestamp=now, exit_code=2, category="infra_error", passed=False,
+            timestamp=now,
+            exit_code=2,
+            category="infra_error",
+            passed=False,
             failures=[f"Failed to run test command: {exc}"],
-            duration_ms=int((time.time() - t0) * 1000), command=command, runner=runner,
+            duration_ms=int((time.time() - t0) * 1000),
+            command=command,
+            runner=runner,
         )
 
     tests_passed = result.returncode == 0
@@ -165,26 +188,30 @@ def run_builtin_gate(cwd: str) -> BuiltinReport:
     failures: list[str] = []
     deltas: list[dict[str, Any]] = []
 
-    deltas.append({
-        "metric": "tests_passing",
-        "baseline": baseline_passed,
-        "current": tests_passed,
-        "delta": "0" if tests_passed == baseline_passed else ("+1" if tests_passed else "-1"),
-        "status": "pass" if tests_passed else "fail",
-    })
+    deltas.append(
+        {
+            "metric": "tests_passing",
+            "baseline": baseline_passed,
+            "current": tests_passed,
+            "delta": "0" if tests_passed == baseline_passed else ("+1" if tests_passed else "-1"),
+            "status": "pass" if tests_passed else "fail",
+        }
+    )
 
     if not tests_passed and baseline_passed:
         failures.append("Tests were passing in baseline but are now failing")
 
     if test_count > 0 or baseline_total > 0:
         count_delta = test_count - baseline_total
-        deltas.append({
-            "metric": "test_count",
-            "baseline": baseline_total,
-            "current": test_count,
-            "delta": f"+{count_delta}" if count_delta >= 0 else str(count_delta),
-            "status": "pass" if test_count >= baseline_total else "fail",
-        })
+        deltas.append(
+            {
+                "metric": "test_count",
+                "baseline": baseline_total,
+                "current": test_count,
+                "delta": f"+{count_delta}" if count_delta >= 0 else str(count_delta),
+                "status": "pass" if test_count >= baseline_total else "fail",
+            }
+        )
         if test_count < baseline_total:
             failures.append(f"Test count dropped from {baseline_total} to {test_count} ({count_delta})")
 
@@ -210,15 +237,16 @@ def format_human(report: BuiltinReport) -> str:
     lines = [f"\n{icon} EvalGate Gate: {report.category.upper()}\n"]
 
     if report.deltas:
+
         def pad(s, n):
             return str(s).ljust(n)
+
         lines.append(f"  {pad('Metric', 16)} {pad('Baseline', 10)} {pad('Current', 10)} {pad('Delta', 8)} Status")
-        lines.append(f"  {'-'*16} {'-'*10} {'-'*10} {'-'*8} ------")
+        lines.append(f"  {'-' * 16} {'-' * 10} {'-' * 10} {'-' * 8} ------")
         for d in report.deltas:
             si = "✔" if d["status"] == "pass" else "✖"
             lines.append(
-                f"  {pad(d['metric'], 16)} {pad(d['baseline'], 10)} "
-                f"{pad(d['current'], 10)} {pad(d['delta'], 8)} {si}"
+                f"  {pad(d['metric'], 16)} {pad(d['baseline'], 10)} {pad(d['current'], 10)} {pad(d['delta'], 8)} {si}"
             )
 
     if report.failures:
@@ -262,7 +290,8 @@ def run_gate(argv: list[str] | None = None) -> int:
     evals_dir = os.path.join(cwd, "evals")
     os.makedirs(evals_dir, exist_ok=True)
     Path(os.path.join(cwd, "evals", "regression-report.json")).write_text(
-        json.dumps(report.to_dict(), indent=2) + "\n", encoding="utf-8",
+        json.dumps(report.to_dict(), indent=2) + "\n",
+        encoding="utf-8",
     )
 
     if args.format == "json":

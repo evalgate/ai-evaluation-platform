@@ -270,6 +270,7 @@ def from_dataset(
             async def wrapper(ctx: EvalContext) -> EvalResult:
                 ctx.input = r
                 return await executor(ctx)
+
             return wrapper
 
         row_options = SpecOptions(

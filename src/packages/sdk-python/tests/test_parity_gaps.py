@@ -95,10 +95,12 @@ class TestDefineEvalMethodSyntax:
 
     def test_skip_exists(self) -> None:
         from evalgate_sdk.runtime.eval import define_eval
+
         assert callable(define_eval.skip)
 
     def test_only_exists(self) -> None:
         from evalgate_sdk.runtime.eval import define_eval
+
         assert callable(define_eval.only)
 
 
@@ -134,6 +136,7 @@ class TestBaselineChecksum:
 
     def test_exported_from_barrel(self) -> None:
         import evalgate_sdk
+
         assert hasattr(evalgate_sdk, "compute_baseline_checksum")
         assert hasattr(evalgate_sdk, "verify_baseline_checksum")
 
@@ -146,10 +149,12 @@ class TestRequestCacheRemoved:
 
     def test_not_in_all(self) -> None:
         import evalgate_sdk
+
         assert "RequestCache" not in evalgate_sdk.__all__
 
     def test_not_importable_from_barrel(self) -> None:
         import evalgate_sdk
+
         assert not hasattr(evalgate_sdk, "RequestCache")
 
 
@@ -307,8 +312,7 @@ class TestTestSuiteConfigOptions:
         from evalgate_sdk.types import TestSuiteConfig
 
         cfg = TestSuiteConfig(
-            retries=3, retry_delay_ms=500, retry_jitter=True, 
-            seed=42, strict=True, stop_on_failure=True
+            retries=3, retry_delay_ms=500, retry_jitter=True, seed=42, strict=True, stop_on_failure=True
         )
         assert cfg.retries == 3
         assert cfg.seed == 42

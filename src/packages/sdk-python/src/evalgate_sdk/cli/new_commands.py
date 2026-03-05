@@ -149,12 +149,17 @@ def start(
         if format == "human":
             console.print("[yellow]📦 No config found. Initializing...[/yellow]")
         config_path.parent.mkdir(parents=True, exist_ok=True)
-        config_path.write_text(json.dumps({
-            "version": 1,
-            "project_name": Path(project_root).name,
-            "eval_dir": "eval",
-            "baseline": ".evalgate/baseline.json",
-        }, indent=2))
+        config_path.write_text(
+            json.dumps(
+                {
+                    "version": 1,
+                    "project_name": Path(project_root).name,
+                    "eval_dir": "eval",
+                    "baseline": ".evalgate/baseline.json",
+                },
+                indent=2,
+            )
+        )
         if format == "human":
             console.print("[green]✓ Initialized .evalgate/config.json[/green]")
 
@@ -173,6 +178,7 @@ def start(
         console.print("\n[cyan]🔍 Discovering specs...[/cyan]")
 
     from evalgate_sdk.runtime.execution_mode import get_execution_mode
+
     mode_config = get_execution_mode(project_root)
     spec_count = len(mode_config.spec_files)
 
@@ -182,9 +188,8 @@ def start(
     if spec_count == 0:
         if format == "human":
             console.print(
-            "[yellow]No spec files found. Create eval files with "
-            "define_eval() or use --template.[/yellow]"
-        )
+                "[yellow]No spec files found. Create eval files with define_eval() or use --template.[/yellow]"
+            )
         raise typer.Exit(0)
 
     if format == "human":
@@ -228,6 +233,7 @@ def watch(
         console.print(f"[cyan]▶ Running specs at {time.strftime('%H:%M:%S')}...[/cyan]")
         try:
             from evalgate_sdk.runtime.registry import create_eval_runtime
+
             handle = create_eval_runtime("watch-mode")
             for f in sorted(watch_dir.rglob("*.py")):
                 if f.name.startswith("_"):
@@ -325,6 +331,7 @@ def validate(
         raise typer.Exit(1)
 
     from evalgate_sdk.runtime.registry import create_eval_runtime
+
     handle = create_eval_runtime("validate")
     errors: list[str] = []
     file_count = 0

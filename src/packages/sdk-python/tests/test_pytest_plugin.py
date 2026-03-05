@@ -78,17 +78,21 @@ class TestAssertNoErrors:
 
 class TestAssertAllAssertionsPassed:
     def test_all_passed(self) -> None:
-        result = FakeResult(assertions=[
-            {"passed": True, "assertion_type": "a"},
-            {"passed": True, "assertion_type": "b"},
-        ])
+        result = FakeResult(
+            assertions=[
+                {"passed": True, "assertion_type": "a"},
+                {"passed": True, "assertion_type": "b"},
+            ]
+        )
         assert_all_assertions_passed(result)
 
     def test_one_failed(self) -> None:
-        result = FakeResult(assertions=[
-            {"passed": True, "assertion_type": "a"},
-            {"passed": False, "assertion_type": "check-b", "message": "nope"},
-        ])
+        result = FakeResult(
+            assertions=[
+                {"passed": True, "assertion_type": "a"},
+                {"passed": False, "assertion_type": "check-b", "message": "nope"},
+            ]
+        )
         with pytest.raises(pytest.fail.Exception, match="check-b"):
             assert_all_assertions_passed(result)
 

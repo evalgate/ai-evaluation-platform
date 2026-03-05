@@ -91,11 +91,11 @@ async def import_data(data: ExportData, options: ImportOptions | None = None, *,
     if client is None:
         try:
             from evalgate_sdk.client import get_default_client
+
             client = get_default_client()
         except Exception as err:
             raise TypeError(
-                "import_data() requires a client. Either pass client=... "
-                "or initialise a default client first."
+                "import_data() requires a client. Either pass client=... or initialise a default client first."
             ) from err
     opts = options or ImportOptions()
     result = ImportResult(dry_run=opts.dry_run)

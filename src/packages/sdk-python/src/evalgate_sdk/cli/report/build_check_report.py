@@ -83,28 +83,32 @@ def build_check_report(
         for r in run_details["results"]:
             if r.get("status") == "failed":
                 tc = r.get("test_cases", {})
-                raw.append({
-                    "test_case_id": r.get("testCaseId") or r.get("test_case_id"),
-                    "status": "failed",
-                    "name": tc.get("name"),
-                    "input": tc.get("input"),
-                    "expected_output": tc.get("expectedOutput") or tc.get("expected_output"),
-                    "output": r.get("output"),
-                })
+                raw.append(
+                    {
+                        "test_case_id": r.get("testCaseId") or r.get("test_case_id"),
+                        "status": "failed",
+                        "name": tc.get("name"),
+                        "input": tc.get("input"),
+                        "expected_output": tc.get("expectedOutput") or tc.get("expected_output"),
+                        "output": r.get("output"),
+                    }
+                )
 
         sorted_raw = sort_failed_cases(raw)
         for fc in sorted_raw:
-            failed_cases.append(FailedCase(
-                test_case_id=fc.get("test_case_id"),
-                status="failed",
-                name=fc.get("name"),
-                input=fc.get("input"),
-                input_snippet=truncate_snippet(fc.get("input"), SNIPPET_MAX),
-                expected_output=fc.get("expected_output"),
-                expected_snippet=truncate_snippet(fc.get("expected_output"), SNIPPET_MAX),
-                output=fc.get("output"),
-                output_snippet=truncate_snippet(fc.get("output"), SNIPPET_MAX),
-            ))
+            failed_cases.append(
+                FailedCase(
+                    test_case_id=fc.get("test_case_id"),
+                    status="failed",
+                    name=fc.get("name"),
+                    input=fc.get("input"),
+                    input_snippet=truncate_snippet(fc.get("input"), SNIPPET_MAX),
+                    expected_output=fc.get("expected_output"),
+                    expected_snippet=truncate_snippet(fc.get("expected_output"), SNIPPET_MAX),
+                    output=fc.get("output"),
+                    output_snippet=truncate_snippet(fc.get("output"), SNIPPET_MAX),
+                )
+            )
 
     failed_cases_shown = min(len(failed_cases), TOP_N) if failed_cases else None
     failed_cases_more = (len(failed_cases) - TOP_N) if len(failed_cases) > TOP_N else None
@@ -187,7 +191,8 @@ def build_check_report(
         evidence_level=quality.get("evidenceLevel") or quality.get("evidence_level"),
         baseline_missing=quality.get("baselineMissing") or quality.get("baseline_missing"),
         baseline_status=(
-            "missing" if quality.get("baselineMissing") or quality.get("baseline_missing") 
+            "missing"
+            if quality.get("baselineMissing") or quality.get("baseline_missing")
             else ("found" if baseline_score is not None else None)
         ),
         flags=flags if flags else None,

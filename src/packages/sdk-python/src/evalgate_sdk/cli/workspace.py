@@ -18,6 +18,7 @@ _LEGACY_WARNING_SHOWN = False
 @dataclass
 class EvalWorkspace:
     """EvalGate workspace paths."""
+
     root: str
     eval_dir: str
     runs_dir: str
@@ -43,8 +44,7 @@ def resolve_eval_workspace(project_root: str | None = None) -> EvalWorkspace:
 
     if use_legacy and not _LEGACY_WARNING_SHOWN:
         warnings.warn(
-            "[EvalGate] Deprecation: .evalai/ is deprecated. "
-            "Migrate to .evalgate/ (e.g. rename .evalai to .evalgate).",
+            "[EvalGate] Deprecation: .evalai/ is deprecated. Migrate to .evalgate/ (e.g. rename .evalai to .evalgate).",
             DeprecationWarning,
             stacklevel=2,
         )

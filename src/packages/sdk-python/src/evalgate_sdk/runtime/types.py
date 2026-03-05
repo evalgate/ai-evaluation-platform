@@ -9,6 +9,7 @@ from typing import Any, Literal
 @dataclass
 class DependsOn:
     """Dependency hints for impact analysis."""
+
     prompts: list[str] = field(default_factory=list)
     datasets: list[str] = field(default_factory=list)
     tools: list[str] = field(default_factory=list)

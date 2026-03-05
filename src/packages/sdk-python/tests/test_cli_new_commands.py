@@ -138,16 +138,18 @@ class TestValidateCommand:
 class TestPromoteCommand:
     def test_promote_candidates(self, tmp_path) -> None:
         candidate = tmp_path / "candidates.json"
-        candidate.write_text(json.dumps({
-            "results": [
-                {"test_name": "test-a", "score": 95},
-                {"test_name": "test-b", "score": 50},
-            ]
-        }))
+        candidate.write_text(
+            json.dumps(
+                {
+                    "results": [
+                        {"test_name": "test-a", "score": 95},
+                        {"test_name": "test-b", "score": 50},
+                    ]
+                }
+            )
+        )
         baseline_path = tmp_path / "baseline.json"
-        result = runner.invoke(app, [
-            "promote", str(candidate), "--baseline", str(baseline_path), "--min-score", "90"
-        ])
+        result = runner.invoke(app, ["promote", str(candidate), "--baseline", str(baseline_path), "--min-score", "90"])
         assert result.exit_code == 0
         assert "Promoted 1" in result.output
         assert "Skipped 1" in result.output
@@ -167,24 +169,32 @@ class TestPromoteCommand:
 class TestReplayCommand:
     def test_replay_all(self, tmp_path) -> None:
         results = tmp_path / "results.json"
-        results.write_text(json.dumps({
-            "results": [
-                {"test_name": "a", "score": 100, "passed": True, "duration_ms": 50},
-                {"test_name": "b", "score": 40, "passed": False, "duration_ms": 200},
-            ]
-        }))
+        results.write_text(
+            json.dumps(
+                {
+                    "results": [
+                        {"test_name": "a", "score": 100, "passed": True, "duration_ms": 50},
+                        {"test_name": "b", "score": 40, "passed": False, "duration_ms": 200},
+                    ]
+                }
+            )
+        )
         result = runner.invoke(app, ["replay", str(results)])
         assert result.exit_code == 0
         assert "2 result(s)" in result.output
 
     def test_replay_specific_spec(self, tmp_path) -> None:
         results = tmp_path / "results.json"
-        results.write_text(json.dumps({
-            "results": [
-                {"test_name": "a", "score": 100, "passed": True, "duration_ms": 50},
-                {"test_name": "b", "score": 40, "passed": False, "duration_ms": 200},
-            ]
-        }))
+        results.write_text(
+            json.dumps(
+                {
+                    "results": [
+                        {"test_name": "a", "score": 100, "passed": True, "duration_ms": 50},
+                        {"test_name": "b", "score": 40, "passed": False, "duration_ms": 200},
+                    ]
+                }
+            )
+        )
         result = runner.invoke(app, ["replay", str(results), "--spec", "a"])
         assert result.exit_code == 0
         assert "1 result(s)" in result.output

@@ -127,8 +127,10 @@ class TestValidateExecutionMode:
 
     def test_mixed_project_warning(self) -> None:
         config = ExecutionModeConfig(
-            has_spec_runtime=True, has_legacy_runtime=True,
-            spec_files=["a.py"], legacy_config="c.json",
+            has_spec_runtime=True,
+            has_legacy_runtime=True,
+            spec_files=["a.py"],
+            legacy_config="c.json",
         )
         result = validate_execution_mode(config)
         assert len(result["warnings"]) > 0

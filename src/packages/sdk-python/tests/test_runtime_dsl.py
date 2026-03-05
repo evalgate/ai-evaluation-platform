@@ -116,6 +116,7 @@ class TestFromDataset:
             path = f.name
 
         try:
+
             async def executor(ctx: EvalContext) -> EvalResult:
                 return create_result(passed=True, score=100.0)
 
@@ -136,6 +137,7 @@ class TestFromDataset:
             path = f.name
 
         try:
+
             async def executor(ctx: EvalContext) -> EvalResult:
                 return create_result(passed=True, score=100.0)
 
@@ -152,6 +154,7 @@ class TestFromDataset:
             path = f.name
 
         try:
+
             async def executor(ctx: EvalContext) -> EvalResult:
                 return create_result(passed=True, score=100.0)
 
@@ -175,6 +178,7 @@ class TestFromDataset:
             path = f.name
 
         try:
+
             async def executor(ctx: EvalContext) -> EvalResult:
                 return create_result(passed=True, score=100.0)
 
@@ -189,6 +193,7 @@ class TestFromDataset:
             path = f.name
 
         try:
+
             async def executor(ctx: EvalContext) -> EvalResult:
                 return create_result(passed=True, score=100.0)
 
@@ -203,6 +208,7 @@ class TestFromDataset:
             path = f.name
 
         try:
+
             async def executor(ctx: EvalContext) -> EvalResult:
                 return create_result(passed=True, score=100.0)
 

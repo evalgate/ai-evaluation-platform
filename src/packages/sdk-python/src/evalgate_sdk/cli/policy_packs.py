@@ -24,7 +24,8 @@ class PolicyPack:
 POLICY_PACKS: dict[str, dict[int, PolicyPack]] = {
     "HIPAA": {
         1: PolicyPack(
-            policy_id="HIPAA", version=1,
+            policy_id="HIPAA",
+            version=1,
             thresholds={"required_safety_rate": 0.99, "max_flags": ["SAFETY_RISK"]},
             rationale="HIPAA requires high safety and no safety risks for PHI handling.",
             checks=["safety_rate", "no_safety_flags"],
@@ -32,7 +33,8 @@ POLICY_PACKS: dict[str, dict[int, PolicyPack]] = {
     },
     "SOC2": {
         1: PolicyPack(
-            policy_id="SOC2", version=1,
+            policy_id="SOC2",
+            version=1,
             thresholds={"required_safety_rate": 0.95, "max_flags": ["SAFETY_RISK", "LOW_PASS_RATE"]},
             rationale="SOC2 trust criteria for security and availability.",
             checks=["safety_rate", "flag_restrictions"],
@@ -40,7 +42,8 @@ POLICY_PACKS: dict[str, dict[int, PolicyPack]] = {
     },
     "GDPR": {
         1: PolicyPack(
-            policy_id="GDPR", version=1,
+            policy_id="GDPR",
+            version=1,
             thresholds={"required_safety_rate": 0.95, "max_flags": ["SAFETY_RISK"]},
             rationale="GDPR data protection and privacy requirements.",
             checks=["safety_rate", "no_safety_flags"],
@@ -48,7 +51,8 @@ POLICY_PACKS: dict[str, dict[int, PolicyPack]] = {
     },
     "PCI_DSS": {
         1: PolicyPack(
-            policy_id="PCI_DSS", version=1,
+            policy_id="PCI_DSS",
+            version=1,
             thresholds={"required_safety_rate": 0.99, "max_flags": ["SAFETY_RISK", "LOW_PASS_RATE"]},
             rationale="PCI DSS cardholder data security standards.",
             checks=["safety_rate", "flag_restrictions"],
@@ -56,7 +60,8 @@ POLICY_PACKS: dict[str, dict[int, PolicyPack]] = {
     },
     "FINRA_4511": {
         1: PolicyPack(
-            policy_id="FINRA_4511", version=1,
+            policy_id="FINRA_4511",
+            version=1,
             thresholds={"required_safety_rate": 0.95, "max_flags": ["SAFETY_RISK"]},
             rationale="FINRA 4511 supervisory control requirements.",
             checks=["safety_rate", "no_safety_flags"],
@@ -74,7 +79,7 @@ def resolve_policy_pack(spec: str) -> PolicyPack | None:
     if at >= 0:
         policy_id = spec[:at].upper()
         try:
-            version = int(spec[at + 1:])
+            version = int(spec[at + 1 :])
         except ValueError:
             return None
         if version < 1:

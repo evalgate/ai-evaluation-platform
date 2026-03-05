@@ -36,9 +36,10 @@ def merge_runtime_contexts(
             "input": override.get("input") or merged.get("input"),
             "metadata": {**(merged.get("metadata") or {}), **(override.get("metadata") or {})},
             "options": (
-            {**(merged.get("options") or {}), **(override.get("options") or {})}
-            if override.get("options") else merged.get("options")
-        ),
+                {**(merged.get("options") or {}), **(override.get("options") or {})}
+                if override.get("options")
+                else merged.get("options")
+            ),
         }
     return merged
 

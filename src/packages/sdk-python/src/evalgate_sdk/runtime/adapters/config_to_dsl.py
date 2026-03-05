@@ -19,6 +19,7 @@ from typing import Any
 @dataclass
 class MigrationResult:
     """Migration result information."""
+
     success: bool = True
     specs_generated: int = 0
     errors: list[str] = field(default_factory=list)
@@ -29,6 +30,7 @@ class MigrationResult:
 @dataclass
 class EvalAIConfig:
     """Configuration file structure (existing evalgate.config.json)."""
+
     evaluation_id: str | None = None
     gate: dict[str, str] | None = None
     packages: dict[str, Any] | None = None
@@ -62,9 +64,7 @@ def migrate_config_to_dsl(
         Path(output_path).write_text(dsl_content, encoding="utf-8")
 
         result.specs_generated = 1
-        result.warnings.append(
-            "Generated basic DSL structure from evalgate.config.json. Manual completion required."
-        )
+        result.warnings.append("Generated basic DSL structure from evalgate.config.json. Manual completion required.")
     except Exception as exc:
         result.success = False
         result.errors.append(f"Config migration failed: {exc}")
@@ -88,9 +88,7 @@ def migrate_testsuite_to_dsl(
         Path(output_path).write_text(dsl_content, encoding="utf-8")
 
         result.specs_generated = len(cases)
-        result.warnings.append(
-            f"Migrated {len(cases)} test cases from TestSuite to define_eval() DSL"
-        )
+        result.warnings.append(f"Migrated {len(cases)} test cases from TestSuite to define_eval() DSL")
     except Exception as exc:
         result.success = False
         result.errors.append(f"Migration failed: {exc}")
@@ -161,10 +159,7 @@ def _find_testsuite_files(project_root: str) -> list[str]:
     for root, dirs, files in os.walk(project_root):
         # Skip hidden dirs and common non-source dirs
         dirs[:] = [
-            d for d in dirs 
-            if not d.startswith(".") and d not in (
-                "node_modules", "__pycache__", ".git", "venv"
-            )
+            d for d in dirs if not d.startswith(".") and d not in ("node_modules", "__pycache__", ".git", "venv")
         ]
         for fname in files:
             if not fname.endswith(".py"):
@@ -183,7 +178,7 @@ def _generate_dsl_from_config(config: EvalAIConfig) -> str:
     """Generate DSL code from configuration."""
     now = datetime.now(timezone.utc).isoformat()
     eval_id = json.dumps(config.evaluation_id) if config.evaluation_id else "None"
-    return f'''# Auto-generated from evalgate.config.json
+    return f"""# Auto-generated from evalgate.config.json
 # Generated at: {now}
 # This is a basic DSL structure — complete with your actual evaluations
 
@@ -211,7 +206,7 @@ async def _basic_eval(ctx):
             "input": input_text,
         }},
     )
-'''
+"""
 
 
 def _generate_dsl_from_suite(name: str, cases: list[dict[str, Any]]) -> str:
@@ -230,19 +225,21 @@ def _generate_dsl_from_suite(name: str, cases: list[dict[str, Any]]) -> str:
         case_id = case.get("id", f"{name}-case-{i + 1}")
         case_input = json.dumps(case.get("input", ""))
         case_expected = json.dumps(case.get("expected"))
-        lines.extend([
-            f'define_eval("{case_id}", lambda ctx: _eval_{i}(ctx))',
-            "",
-            f"async def _eval_{i}(ctx):",
-            f"    # Original input: {case_input}",
-            f"    # Original expected: {case_expected}",
-            "    input_text = ctx.input",
-            "    # TODO: Replace with your actual agent/LLM call",
-            '    output = f"Agent response to: {input_text}"',
-            "    passed = len(output) > 0",
-            "    return create_result(passed=passed, score=100 if passed else 0, output=output)",
-            "",
-        ])
+        lines.extend(
+            [
+                f'define_eval("{case_id}", lambda ctx: _eval_{i}(ctx))',
+                "",
+                f"async def _eval_{i}(ctx):",
+                f"    # Original input: {case_input}",
+                f"    # Original expected: {case_expected}",
+                "    input_text = ctx.input",
+                "    # TODO: Replace with your actual agent/LLM call",
+                '    output = f"Agent response to: {input_text}"',
+                "    passed = len(output) > 0",
+                "    return create_result(passed=passed, score=100 if passed else 0, output=output)",
+                "",
+            ]
+        )
 
     return "\n".join(lines)
 
@@ -251,7 +248,7 @@ def _generate_placeholder_dsl(original_file: str) -> str:
     """Generate placeholder DSL for files that need manual migration."""
     now = datetime.now(timezone.utc).isoformat()
     basename = Path(original_file).stem
-    return f'''# Migration placeholder for: {original_file}
+    return f"""# Migration placeholder for: {original_file}
 # Generated at: {now}
 # This file contains TestSuite usage that needs manual migration
 
@@ -270,4 +267,4 @@ async def _placeholder_eval(ctx):
         score=100 if len(output) > 0 else 0,
         metadata={{"migrated_from": {json.dumps(original_file)}}},
     )
-'''
+"""

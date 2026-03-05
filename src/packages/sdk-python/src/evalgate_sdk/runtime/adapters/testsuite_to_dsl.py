@@ -19,6 +19,7 @@ from evalgate_sdk.runtime.eval import create_result
 @dataclass
 class TestSuiteAdapterOptions:
     """Adapter configuration options."""
+
     include_provenance: bool = True
     preserve_ids: bool = True
     generate_helpers: bool = True
@@ -27,6 +28,7 @@ class TestSuiteAdapterOptions:
 @dataclass
 class TestDefinition:
     """A single test definition from a legacy TestSuite."""
+
     id: str = ""
     input: str = ""
     expected: str | None = None
@@ -45,6 +47,7 @@ class TestDefinition:
 @dataclass
 class AdaptedSpec:
     """An adapted EvalSpec from a legacy TestSuite."""
+
     id: str = ""
     name: str = ""
     file_path: str = "legacy://testsuite"
@@ -80,13 +83,15 @@ def adapt_test_suite(
 
         metadata: dict[str, Any] = dict(test.metadata)
         if opts.include_provenance:
-            metadata.update({
-                "source": "legacy",
-                "legacy_suite_name": suite_name,
-                "legacy_test_id": test.id,
-                "original_input": test.input,
-                "original_expected": test.expected,
-            })
+            metadata.update(
+                {
+                    "source": "legacy",
+                    "legacy_suite_name": suite_name,
+                    "legacy_test_id": test.id,
+                    "original_input": test.input,
+                    "original_expected": test.expected,
+                }
+            )
 
         executor = _create_executor_from_test(test, opts.generate_helpers)
 
@@ -128,27 +133,29 @@ def generate_define_eval_code(
         original_input = repr(spec.metadata.get("original_input", ""))
         original_expected = repr(spec.metadata.get("original_expected"))
 
-        lines.extend([
-            f'define_eval("{spec.name}", _eval_{i}, options={{'
-            f'"description": "{spec.description}", "tags": {spec.tags!r}}})',
-            "",
-            f"async def _eval_{i}(ctx):",
-            f"    # Original input: {original_input}",
-            f"    # Original expected: {original_expected}",
-            "    input_text = ctx.input",
-            "",
-            "    # TODO: Replace with your actual agent/LLM call",
-            '    output = f"Response to: {input_text}"',
-            "",
-            "    # Legacy evaluation logic",
-            f"    expected = {original_expected}",
-            "    if expected is not None:",
-            "        passed = output == expected",
-            "    else:",
-            "        passed = len(output) > 0",
-            "    return create_result(passed=passed, score=100 if passed else 0, output=output)",
-            "",
-        ])
+        lines.extend(
+            [
+                f'define_eval("{spec.name}", _eval_{i}, options={{'
+                f'"description": "{spec.description}", "tags": {spec.tags!r}}})',
+                "",
+                f"async def _eval_{i}(ctx):",
+                f"    # Original input: {original_input}",
+                f"    # Original expected: {original_expected}",
+                "    input_text = ctx.input",
+                "",
+                "    # TODO: Replace with your actual agent/LLM call",
+                '    output = f"Response to: {input_text}"',
+                "",
+                "    # Legacy evaluation logic",
+                f"    expected = {original_expected}",
+                "    if expected is not None:",
+                "        passed = output == expected",
+                "    else:",
+                "        passed = len(output) > 0",
+                "    return create_result(passed=passed, score=100 if passed else 0, output=output)",
+                "",
+            ]
+        )
 
     return "\n".join(lines)
 

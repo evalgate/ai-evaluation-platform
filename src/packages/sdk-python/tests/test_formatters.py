@@ -35,8 +35,12 @@ PASSING_REPORT = {
     "evaluationId": "eval-456",
     "score": 95,
     "summary": {
-        "total": 5, "passed": 5, "failed": 0, 
-        "pass_rate": 100.0, "average_score": 95.0, "total_duration_ms": 200
+        "total": 5,
+        "passed": 5,
+        "failed": 0,
+        "pass_rate": 100.0,
+        "average_score": 95.0,
+        "total_duration_ms": 200,
     },
 }
 

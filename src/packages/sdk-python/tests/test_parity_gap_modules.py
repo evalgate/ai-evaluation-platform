@@ -198,8 +198,17 @@ class TestExitConstants:
         assert EXIT.PASS == 0
 
     def test_all_unique(self) -> None:
-        codes = [EXIT.PASS, EXIT.SCORE_BELOW, EXIT.REGRESSION, EXIT.POLICY_VIOLATION,
-                 EXIT.API_ERROR, EXIT.BAD_ARGS, EXIT.LOW_N, EXIT.WEAK_EVIDENCE, EXIT.WARN_REGRESSION]
+        codes = [
+            EXIT.PASS,
+            EXIT.SCORE_BELOW,
+            EXIT.REGRESSION,
+            EXIT.POLICY_VIOLATION,
+            EXIT.API_ERROR,
+            EXIT.BAD_ARGS,
+            EXIT.LOW_N,
+            EXIT.WEAK_EVIDENCE,
+            EXIT.WARN_REGRESSION,
+        ]
         assert len(set(codes)) == len(codes)
 
 
@@ -247,11 +256,15 @@ class TestCliConfig:
         assert found is None or isinstance(found, str)
 
     def test_load_config(self, tmp_path) -> None:
-        (tmp_path / "evalgate.config.json").write_text(json.dumps({
-            "evaluationId": "eval-1",
-            "minScore": 90,
-            "profile": "strict",
-        }))
+        (tmp_path / "evalgate.config.json").write_text(
+            json.dumps(
+                {
+                    "evaluationId": "eval-1",
+                    "minScore": 90,
+                    "profile": "strict",
+                }
+            )
+        )
         config = load_config(str(tmp_path))
         assert config is not None
         assert config.evaluation_id == "eval-1"
@@ -366,10 +379,18 @@ class TestTraces:
         result = {
             "run_id": "r-1",
             "results": [
-                {"name": "a", "spec_id": "s1", "file_path": "f.py",
-                 "result": {"status": "passed", "score": 100, "duration": 50}},
-                {"name": "b", "spec_id": "s2", "file_path": "g.py",
-                 "result": {"status": "failed", "score": 0, "duration": 100, "error": "oops"}},
+                {
+                    "name": "a",
+                    "spec_id": "s1",
+                    "file_path": "f.py",
+                    "result": {"status": "passed", "score": 100, "duration": 50},
+                },
+                {
+                    "name": "b",
+                    "spec_id": "s2",
+                    "file_path": "g.py",
+                    "result": {"status": "failed", "score": 0, "duration": 100, "error": "oops"},
+                },
             ],
             "metadata": {"mode": "spec", "duration": 150},
             "summary": {"passed": 1, "failed": 1, "skipped": 0, "passRate": 50},
@@ -473,10 +494,12 @@ class TestBuildCheckReport:
             quality={"score": 50, "evaluationRunId": 1},
             gate_result={"passed": False, "reasonCode": "SCORE_TOO_LOW"},
             base_url="https://app.evalgate.com",
-            run_details={"results": [
-                {"status": "failed", "testCaseId": 1, "output": "bad", "test_cases": {"name": "t1", "input": "q"}},
-                {"status": "passed", "testCaseId": 2},
-            ]},
+            run_details={
+                "results": [
+                    {"status": "failed", "testCaseId": 1, "output": "bad", "test_cases": {"name": "t1", "input": "q"}},
+                    {"status": "passed", "testCaseId": 2},
+                ]
+            },
         )
         assert len(report.failed_cases) == 1
         assert report.failed_cases[0].name == "t1"
@@ -493,9 +516,13 @@ class TestRegressionGate:
         assert args.format == "json"
 
     def test_format_human_pass(self) -> None:
-        report = BuiltinReport(passed=True, category="pass", deltas=[
-            {"metric": "tests_passing", "baseline": True, "current": True, "delta": "0", "status": "pass"},
-        ])
+        report = BuiltinReport(
+            passed=True,
+            category="pass",
+            deltas=[
+                {"metric": "tests_passing", "baseline": True, "current": True, "delta": "0", "status": "pass"},
+            ],
+        )
         out = format_human(report)
         assert "✅" in out
         assert "PASS" in out
@@ -507,9 +534,13 @@ class TestRegressionGate:
         assert "dropped" in out
 
     def test_format_github(self) -> None:
-        report = BuiltinReport(passed=True, category="pass", deltas=[
-            {"metric": "tests_passing", "baseline": True, "current": True, "delta": "0", "status": "pass"},
-        ])
+        report = BuiltinReport(
+            passed=True,
+            category="pass",
+            deltas=[
+                {"metric": "tests_passing", "baseline": True, "current": True, "delta": "0", "status": "pass"},
+            ],
+        )
         out = format_github(report)
         assert "| Metric |" in out
         assert "✅" in out

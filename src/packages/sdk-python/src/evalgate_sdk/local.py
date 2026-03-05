@@ -123,9 +123,7 @@ class LocalStorage:
         stats.evaluations = len(self.list_evaluations())
         stats.spans = len(list(self._spans_dir.glob("*.json")))
         stats.total_size_bytes = sum(
-            f.stat().st_size
-            for d in (self._traces_dir, self._evals_dir, self._spans_dir)
-            for f in d.glob("*.json")
+            f.stat().st_size for d in (self._traces_dir, self._evals_dir, self._spans_dir) for f in d.glob("*.json")
         )
         return stats
 

@@ -8,6 +8,7 @@ from __future__ import annotations
 
 class EXIT:
     """Exit code constants for CLI commands."""
+
     PASS = 0
     SCORE_BELOW = 1
     REGRESSION = 2

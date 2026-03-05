@@ -42,8 +42,18 @@ class CollectorSpanInput:
     def to_dict(self) -> dict[str, Any]:
         d: dict[str, Any] = {"span_id": self.span_id, "name": self.name}
         for key in (
-            "type", "parent_span_id", "input", "output", "model", "vendor",
-            "params", "metrics", "timestamps", "error", "behavioral", "metadata",
+            "type",
+            "parent_span_id",
+            "input",
+            "output",
+            "model",
+            "vendor",
+            "params",
+            "metrics",
+            "timestamps",
+            "error",
+            "behavioral",
+            "metadata",
         ):
             val = getattr(self, key)
             if val is not None:
@@ -96,6 +106,7 @@ class ReportTraceInput:
 @dataclass
 class ReportTraceOptions:
     """Options for ``report_trace``."""
+
     sample_rate: float = 1.0
 
 
@@ -122,9 +133,7 @@ async def report_trace(
     opts = options or ReportTraceOptions()
 
     is_error = input.status == "error"
-    is_negative_feedback = (
-        input.user_feedback is not None and input.user_feedback.type == "thumbs_down"
-    )
+    is_negative_feedback = input.user_feedback is not None and input.user_feedback.type == "thumbs_down"
     bypass_sampling = is_error or is_negative_feedback
 
     if not bypass_sampling and opts.sample_rate < 1.0 and random.random() >= opts.sample_rate:

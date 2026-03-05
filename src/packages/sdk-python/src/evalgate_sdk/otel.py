@@ -113,9 +113,7 @@ class OTelExporter:
 
     def __init__(self, options: OTelExporterOptions | None = None) -> None:
         opts = options or OTelExporterOptions()
-        self._endpoint = opts.endpoint or os.environ.get(
-            "OTEL_EXPORTER_OTLP_ENDPOINT", "http://localhost:4318"
-        )
+        self._endpoint = opts.endpoint or os.environ.get("OTEL_EXPORTER_OTLP_ENDPOINT", "http://localhost:4318")
         self._service_name = opts.service_name
         self._headers = opts.headers
         self._timeout = opts.timeout_ms / 1000.0
@@ -148,15 +146,17 @@ class OTelExporter:
                 parent = getattr(raw, "parent_span_id", None)
 
             attrs.append(OTelAttribute(key="evalgate.service", value=self._service_name))
-            spans.append(OTelSpan(
-                trace_id=trace_id,
-                span_id=span_id,
-                name=name,
-                start_time_unix_nano=start_ns,
-                end_time_unix_nano=end_ns,
-                parent_span_id=parent,
-                attributes=attrs,
-            ))
+            spans.append(
+                OTelSpan(
+                    trace_id=trace_id,
+                    span_id=span_id,
+                    name=name,
+                    start_time_unix_nano=start_ns,
+                    end_time_unix_nano=end_ns,
+                    parent_span_id=parent,
+                    attributes=attrs,
+                )
+            )
 
         return self._build_payload(spans)
 
@@ -201,17 +201,19 @@ class OTelExporter:
                 OTelAttribute(key="evalgate.score", value=r.get("score", 0)),
                 OTelAttribute(key="evalgate.passed", value=r.get("passed", False)),
             ]
-            spans.append(OTelSpan(
-                trace_id=trace_id,
-                span_id=span_id,
-                parent_span_id=root_span_id,
-                name=f"evalgate.spec.{r.get('test_name', 'unknown')}",
-                start_time_unix_nano=s_start,
-                end_time_unix_nano=s_end,
-                status_code=status,
-                status_message=r.get("error", ""),
-                attributes=attrs,
-            ))
+            spans.append(
+                OTelSpan(
+                    trace_id=trace_id,
+                    span_id=span_id,
+                    parent_span_id=root_span_id,
+                    name=f"evalgate.spec.{r.get('test_name', 'unknown')}",
+                    start_time_unix_nano=s_start,
+                    end_time_unix_nano=s_end,
+                    status_code=status,
+                    status_message=r.get("error", ""),
+                    attributes=attrs,
+                )
+            )
 
         return self._build_payload(spans)
 

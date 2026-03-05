@@ -25,6 +25,7 @@ MANIFEST_SCHEMA_VERSION = 1
 @dataclass
 class SpecFile:
     """Spec file information."""
+
     file_path: str = ""
     file_hash: str = ""
     spec_count: int = 0
@@ -33,20 +34,27 @@ class SpecFile:
 @dataclass
 class Spec:
     """Individual specification."""
+
     id: str = ""
     name: str = ""
     suite_path: list[str] = field(default_factory=list)
     file_path: str = ""
     position: dict[str, int] = field(default_factory=lambda: {"line": 1, "column": 1})
     tags: list[str] = field(default_factory=list)
-    depends_on: dict[str, list[str]] = field(default_factory=lambda: {
-        "prompts": [], "datasets": [], "tools": [], "code": [],
-    })
+    depends_on: dict[str, list[str]] = field(
+        default_factory=lambda: {
+            "prompts": [],
+            "datasets": [],
+            "tools": [],
+            "code": [],
+        }
+    )
 
 
 @dataclass
 class EvaluationManifest:
     """Evaluation Manifest Schema."""
+
     schema_version: int = MANIFEST_SCHEMA_VERSION
     generated_at: int = 0
     project: dict[str, str] = field(default_factory=dict)
@@ -61,24 +69,28 @@ class EvaluationManifest:
             "project": self.project,
             "runtime": self.runtime,
             "specFiles": [
-            {
-                "filePath": sf.file_path, 
-                "fileHash": sf.file_hash, 
-                "specCount": sf.spec_count
-            } 
-            for sf in self.spec_files
-        ],
-            "specs": [{
-                "id": s.id, "name": s.name, "suitePath": s.suite_path,
-                "filePath": s.file_path, "position": s.position,
-                "tags": s.tags, "dependsOn": s.depends_on,
-            } for s in self.specs],
+                {"filePath": sf.file_path, "fileHash": sf.file_hash, "specCount": sf.spec_count}
+                for sf in self.spec_files
+            ],
+            "specs": [
+                {
+                    "id": s.id,
+                    "name": s.name,
+                    "suitePath": s.suite_path,
+                    "filePath": s.file_path,
+                    "position": s.position,
+                    "tags": s.tags,
+                    "dependsOn": s.depends_on,
+                }
+                for s in self.specs
+            ],
         }
 
 
 @dataclass
 class ManifestLock:
     """Lock file for caching."""
+
     generated_at: int = 0
     file_hashes: dict[str, str] = field(default_factory=dict)
 
@@ -86,6 +98,7 @@ class ManifestLock:
 @dataclass
 class SpecAnalysis:
     """Discovery result for a single spec."""
+
     id: str = ""
     name: str = ""
     file: str = ""
@@ -122,11 +135,17 @@ def generate_manifest(
             depends_on = _extract_dependencies(content)
             suite_path = _generate_suite_path(sa.tags, file_path)
 
-            processed_specs.append(Spec(
-                id=sa.id, name=sa.name, suite_path=suite_path,
-                file_path=_normalize_path(sa.file, project_root),
-                position=position, tags=sa.tags, depends_on=depends_on,
-            ))
+            processed_specs.append(
+                Spec(
+                    id=sa.id,
+                    name=sa.name,
+                    suite_path=suite_path,
+                    file_path=_normalize_path(sa.file, project_root),
+                    position=position,
+                    tags=sa.tags,
+                    depends_on=depends_on,
+                )
+            )
 
     mode_str = getattr(execution_mode, "mode", "spec") if execution_mode else "spec"
 
@@ -153,10 +172,16 @@ def write_manifest(manifest: EvaluationManifest, project_root: str) -> None:
         file_hashes={sf.file_path: sf.file_hash for sf in manifest.spec_files},
     )
     lock_path = os.path.join(evalgate_dir, "manifest.lock.json")
-    Path(lock_path).write_text(json.dumps({
-        "generatedAt": lock.generated_at,
-        "fileHashes": lock.file_hashes,
-    }, indent=2), encoding="utf-8")
+    Path(lock_path).write_text(
+        json.dumps(
+            {
+                "generatedAt": lock.generated_at,
+                "fileHashes": lock.file_hashes,
+            },
+            indent=2,
+        ),
+        encoding="utf-8",
+    )
 
 
 def read_manifest(project_root: str) -> EvaluationManifest | None:
@@ -171,23 +196,21 @@ def read_manifest(project_root: str) -> EvaluationManifest | None:
             runtime=data.get("runtime", {}),
         )
         for sf in data.get("specFiles", []):
-            m.spec_files.append(SpecFile(
-                file_path=sf["filePath"], 
-                file_hash=sf["fileHash"], 
-                spec_count=sf["specCount"]
-            ))
+            m.spec_files.append(
+                SpecFile(file_path=sf["filePath"], file_hash=sf["fileHash"], spec_count=sf["specCount"])
+            )
         for s in data.get("specs", []):
-            m.specs.append(Spec(
-                id=s["id"], 
-                name=s["name"], 
-                suite_path=s.get("suitePath", []),
-                file_path=s["filePath"], 
-                position=s.get("position", {"line": 1, "column": 1}),
-                tags=s.get("tags", []), 
-                depends_on=s.get("dependsOn", {
-                    "prompts": [], "datasets": [], "tools": [], "code": []
-                }),
-            ))
+            m.specs.append(
+                Spec(
+                    id=s["id"],
+                    name=s["name"],
+                    suite_path=s.get("suitePath", []),
+                    file_path=s["filePath"],
+                    position=s.get("position", {"line": 1, "column": 1}),
+                    tags=s.get("tags", []),
+                    depends_on=s.get("dependsOn", {"prompts": [], "datasets": [], "tools": [], "code": []}),
+                )
+            )
         return m
     except (OSError, json.JSONDecodeError, KeyError):
         return None
@@ -258,7 +281,7 @@ def _extract_dependencies(content: str) -> dict[str, list[str]]:
     patterns = {
         "prompts": re.compile(r'["\']([^"\']*\.md)["\']'),
         "datasets": re.compile(r'["\']([^"\']*\.json)["\']'),
-        "code": re.compile(r'from\s+([^\s]+)\s+import|import\s+([^\s]+)'),
+        "code": re.compile(r"from\s+([^\s]+)\s+import|import\s+([^\s]+)"),
     }
     for key, pat in patterns.items():
         for m in pat.finditer(content):

@@ -127,12 +127,24 @@ class TestRunReportBuilder:
     def test_multiple_results_summary(self) -> None:
         builder = create_run_report("run-8", RUNTIME_INFO)
         builder.add_result(
-            test_id="t-1", test_name="a", file_path="f", position={"line": 1, "column": 1},
-            input="x", passed=True, score=80.0, duration_ms=100.0,
+            test_id="t-1",
+            test_name="a",
+            file_path="f",
+            position={"line": 1, "column": 1},
+            input="x",
+            passed=True,
+            score=80.0,
+            duration_ms=100.0,
         )
         builder.add_result(
-            test_id="t-2", test_name="b", file_path="f", position={"line": 2, "column": 1},
-            input="y", passed=False, score=40.0, duration_ms=200.0,
+            test_id="t-2",
+            test_name="b",
+            file_path="f",
+            position={"line": 2, "column": 1},
+            input="y",
+            passed=False,
+            score=40.0,
+            duration_ms=200.0,
         )
         report = builder.build()
         assert report.summary.total == 2
@@ -147,9 +159,13 @@ class TestParseRunReport:
     def test_parse_valid(self) -> None:
         builder = create_run_report("run-p1", RUNTIME_INFO)
         builder.add_result(
-            test_id="t-1", test_name="test", file_path="f.py",
-            position={"line": 1, "column": 1}, input="x",
-            passed=True, score=100.0,
+            test_id="t-1",
+            test_name="test",
+            file_path="f.py",
+            position={"line": 1, "column": 1},
+            input="x",
+            passed=True,
+            score=100.0,
         )
         json_str = builder.to_json()
         report = parse_run_report(json_str)

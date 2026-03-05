@@ -25,6 +25,7 @@ CONFIG_FILES = [
 @dataclass
 class EvalAIConfig:
     """Loaded configuration."""
+
     evaluation_id: str | None = None
     api_key: str | None = None
     base_url: str | None = None
@@ -100,6 +101,7 @@ def load_config(cwd: str | None = None) -> EvalAIConfig | None:
         return config
     except Exception as exc:
         import warnings
+
         warnings.warn(f"[EvalGate] Failed to load config from {config_path}: {exc}", stacklevel=2)
         return None
 
@@ -141,8 +143,15 @@ def merge_config_with_args(
 
     # Args override
     for key in (
-        "evaluation_id", "base_url", "min_score", "max_drop", 
-        "warn_drop", "min_n", "allow_weak_evidence", "baseline", "profile"
+        "evaluation_id",
+        "base_url",
+        "min_score",
+        "max_drop",
+        "warn_drop",
+        "min_n",
+        "allow_weak_evidence",
+        "baseline",
+        "profile",
     ):
         if args.get(key) is not None:
             merged[key] = args[key]
@@ -175,18 +184,22 @@ def _dict_to_config(d: dict[str, Any]) -> EvalAIConfig:
 
 
 def _config_to_dict(c: EvalAIConfig) -> dict[str, Any]:
-    return {k: v for k, v in {
-        "evaluation_id": c.evaluation_id,
-        "api_key": c.api_key,
-        "base_url": c.base_url,
-        "min_score": c.min_score,
-        "min_n": c.min_n,
-        "max_drop": c.max_drop,
-        "warn_drop": c.warn_drop,
-        "allow_weak_evidence": c.allow_weak_evidence,
-        "baseline": c.baseline,
-        "profile": c.profile,
-    }.items() if v is not None}
+    return {
+        k: v
+        for k, v in {
+            "evaluation_id": c.evaluation_id,
+            "api_key": c.api_key,
+            "base_url": c.base_url,
+            "min_score": c.min_score,
+            "min_n": c.min_n,
+            "max_drop": c.max_drop,
+            "warn_drop": c.warn_drop,
+            "allow_weak_evidence": c.allow_weak_evidence,
+            "baseline": c.baseline,
+            "profile": c.profile,
+        }.items()
+        if v is not None
+    }
 
 
 def _load_from_pyproject(path: str, cwd: str | None) -> EvalAIConfig | None:

@@ -18,11 +18,14 @@ from evalgate_sdk.collector import (
 
 def _make_mock_client(response: dict | None = None) -> AsyncMock:
     client = AsyncMock()
-    client._request = AsyncMock(return_value=response or {
-        "trace_db_id": 42,
-        "span_count": 1,
-        "queued_for_analysis": True,
-    })
+    client._request = AsyncMock(
+        return_value=response
+        or {
+            "trace_db_id": 42,
+            "span_count": 1,
+            "queued_for_analysis": True,
+        }
+    )
     return client
 
 

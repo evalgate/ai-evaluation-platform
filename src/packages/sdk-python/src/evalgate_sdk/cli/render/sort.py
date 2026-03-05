@@ -19,6 +19,7 @@ STATUS_SEVERITY: dict[str, int] = {
 
 def sort_failed_cases(cases: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """Sort cases by status severity then test_case_id."""
+
     def sort_key(c: dict[str, Any]) -> tuple[int, int]:
         status = (c.get("status") or "").lower()
         sev = STATUS_SEVERITY.get(status, 4)

@@ -219,6 +219,7 @@ def create_run_report(
 def _filter_dataclass_fields(cls: type, d: dict[str, Any]) -> dict[str, Any]:
     """Keep only keys that match dataclass field names — prevents TypeError on extras."""
     import dataclasses
+
     valid = {f.name for f in dataclasses.fields(cls)}
     return {k: v for k, v in d.items() if k in valid}
 
