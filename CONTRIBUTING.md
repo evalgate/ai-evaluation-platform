@@ -1,4 +1,4 @@
-# Contributing to EvalAI
+# Contributing to EvalGate
 
 Thanks for your interest in contributing! This guide covers the essentials.
 
