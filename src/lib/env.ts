@@ -90,7 +90,8 @@ export function env(): ServerEnv {
 		// During build time, return placeholder values so static generation works
 		if (isBuildTime()) {
 			_cachedEnv = {
-				DATABASE_URL: "postgres://placeholder:placeholder@localhost:5432/placeholder",
+				DATABASE_URL:
+					"postgres://placeholder:placeholder@localhost:5432/placeholder",
 				BETTER_AUTH_SECRET: "build-time-placeholder-secret-not-for-runtime",
 				NODE_ENV: "production",
 			} as ServerEnv;
