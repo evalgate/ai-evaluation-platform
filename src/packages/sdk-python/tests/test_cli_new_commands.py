@@ -7,7 +7,9 @@ from pathlib import Path
 
 from typer.testing import CliRunner
 
-from evalgate_sdk.cli import app
+from evalgate_sdk.cli import get_app
+
+app = get_app()
 from evalgate_sdk.cli.new_commands import (
     TEMPLATE_DESCRIPTIONS,
     TEMPLATES,
