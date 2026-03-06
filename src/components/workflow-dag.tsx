@@ -558,6 +558,8 @@ export function WorkflowDAG({
 
 	const nodeMap = new Map(layout.nodes.map((n) => [n.id, n]));
 
+	const edgeOccurrenceMap = new Map<string, number>();
+
 	return (
 		<div className={cn("overflow-auto", className)}>
 			<svg width={layout.width} height={layout.height} className="min-w-full">
@@ -588,15 +590,19 @@ export function WorkflowDAG({
 
 				{/* Render edges first (behind nodes) */}
 				<g className="edges">
-					{definition.edges.map((edge, index) => {
+					{definition.edges.map((edge) => {
 						const fromNode = nodeMap.get(edge.from);
 						const toNode = nodeMap.get(edge.to);
+						const baseKey = `${edge.from}-${edge.to}-${edge.label ?? ""}-${edge.condition ?? ""}`;
+						const occurrence = edgeOccurrenceMap.get(baseKey) ?? 0;
+						edgeOccurrenceMap.set(baseKey, occurrence + 1);
+						const uniqueKey = `${baseKey}-${occurrence}`;
 
 						if (!fromNode || !toNode) return null;
 
 						return (
 							<DAGEdge
-								key={`${edge.from}-${edge.to}-${index}`}
+								key={uniqueKey}
 								fromNode={fromNode}
 								toNode={toNode}
 								edge={edge}

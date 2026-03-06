@@ -29,6 +29,19 @@ export function DiffViewer({
 }: DiffViewerProps) {
 	const diff = useMemo(() => computeDiff(expected, actual), [expected, actual]);
 
+	const diffWithKeys = useMemo(() => {
+		const counts = new Map<string, number>();
+		return diff.map((line) => {
+			const baseKey = `${line.type}-${line.text}`;
+			const occurrence = counts.get(baseKey) ?? 0;
+			counts.set(baseKey, occurrence + 1);
+			return {
+				...line,
+				key: `${baseKey}-${occurrence}`,
+			};
+		});
+	}, [diff]);
+
 	const addedCount = diff.filter((l) => l.type === "added").length;
 	const removedCount = diff.filter((l) => l.type === "removed").length;
 
@@ -57,9 +70,9 @@ export function DiffViewer({
 			</CardHeader>
 			<CardContent>
 				<div className="font-mono text-xs overflow-x-auto rounded-lg bg-zinc-950 p-3 max-h-96 overflow-y-auto">
-					{diff.map((line, i) => (
+					{diffWithKeys.map((line) => (
 						<div
-							key={`${line.type}-${i}-${line.text?.slice(0, 20) || ""}`}
+							key={line.key}
 							className={`px-2 py-0.5 whitespace-pre-wrap ${
 								line.type === "added"
 									? "bg-green-500/10 text-green-400"

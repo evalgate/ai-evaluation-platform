@@ -83,6 +83,16 @@ export function DebugPanel({ evaluationId, runId, onClose }: DebugPanelProps) {
 		data_fix: "🗃️",
 	};
 
+	const getSuggestedFixKey = (() => {
+		const counts = new Map<string, number>();
+		return (fix: SuggestedFix) => {
+			const baseKey = `${fix.type}-${fix.description ?? ""}-${Math.round(fix.confidence * 100)}`;
+			const occurrence = counts.get(baseKey) ?? 0;
+			counts.set(baseKey, occurrence + 1);
+			return `${baseKey}-${occurrence}`;
+		};
+	})();
+
 	return (
 		<div className="fixed right-0 top-0 h-full w-[420px] bg-zinc-950 border-l border-zinc-800 shadow-2xl z-50 flex flex-col overflow-hidden">
 			{/* Header */}
@@ -217,9 +227,9 @@ export function DebugPanel({ evaluationId, runId, onClose }: DebugPanelProps) {
 									</CardTitle>
 								</CardHeader>
 								<CardContent className="space-y-3">
-									{analysis.suggestedFixes.map((fix, i) => (
+									{analysis.suggestedFixes.map((fix) => (
 										<div
-											key={`fix-${fix.type}-${i}`}
+											key={getSuggestedFixKey(fix)}
 											className="p-3 bg-zinc-800/50 rounded-lg"
 										>
 											<div className="flex items-center justify-between mb-1">
