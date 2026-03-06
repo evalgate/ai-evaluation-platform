@@ -26,11 +26,11 @@ def _get_pytest() -> Any:
     """Lazily import pytest, raising a clear error if not installed."""
     try:
         import pytest
+
         return pytest
     except ImportError as exc:
         raise ImportError(
-            "pytest is required for evalgate_sdk.pytest_plugin. "
-            "Install with: pip install pytest"
+            "pytest is required for evalgate_sdk.pytest_plugin. Install with: pip install pytest"
         ) from exc
 
 
