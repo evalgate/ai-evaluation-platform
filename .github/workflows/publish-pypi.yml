@@ -7,6 +7,10 @@ on:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write
+      contents: read
     steps:
       - uses: actions/checkout@v4
 
@@ -14,15 +18,14 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Install dependencies
-        run: pip install build twine
+      - name: Install build tools
+        run: pip install build
 
       - name: Build
         run: python -m build
         working-directory: src/packages/sdk-python
 
       - name: Publish to PyPI
-        env:
-          TWINE_USERNAME: __token__
-          TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
-        run: twine upload src/packages/sdk-python/dist/* --non-interactive
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: src/packages/sdk-python/dist/
