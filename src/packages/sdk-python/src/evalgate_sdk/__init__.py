@@ -559,6 +559,7 @@ __all__ = [
     "get_github_step_summary_path",
     # CLI config (T14)
     "EvalAIConfig",
+    "EvalGateConfig",
     "find_config_path",
     "load_config",
     "merge_config_with_args",

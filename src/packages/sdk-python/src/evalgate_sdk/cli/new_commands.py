@@ -23,11 +23,6 @@ console = Console()
 FILES_ARG = typer.Argument(..., help="Two or more result JSON files to compare")
 
 
-# ── Gate profile presets ──────────────────────────────────────────────
-
-from evalgate_sdk.cli.profiles import PROFILES  # noqa: E402
-
-
 # ── Templates ─────────────────────────────────────────────────────────
 
 TEMPLATE_DESCRIPTIONS = {
