@@ -9,7 +9,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](https://opensource.org/licenses/MIT)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](https://github.com/evalgate/ai-evaluation-platform/pulls)
 
-Stop LLM regressions in CI in 2 minutes.
+Stop LLM regressions in CI in 2 minutes. 🚀
 
 No infra. No lock-in. Remove anytime.
 
