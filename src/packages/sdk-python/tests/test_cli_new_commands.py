@@ -9,11 +9,11 @@ from typer.testing import CliRunner
 
 from evalgate_sdk.cli import app
 from evalgate_sdk.cli.new_commands import (
-    PROFILES,
     TEMPLATE_DESCRIPTIONS,
     TEMPLATES,
     _install_template,
 )
+from evalgate_sdk.cli.profiles import PROFILES
 
 runner = CliRunner()
 
