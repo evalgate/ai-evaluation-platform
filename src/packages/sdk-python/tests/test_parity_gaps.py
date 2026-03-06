@@ -141,21 +141,21 @@ class TestBaselineChecksum:
         assert hasattr(evalgate_sdk, "verify_baseline_checksum")
 
 
-# ── Gap 5: RequestCache removed from barrel ──────────────────────────
+# ── Gap 5: RequestCache exported in barrel ───────────────────────────
 
 
-class TestRequestCacheRemoved:
-    """RequestCache should not be in the public barrel."""
+class TestRequestCacheExported:
+    """RequestCache should be in the public barrel (required by CI compat check)."""
 
-    def test_not_in_all(self) -> None:
+    def test_in_all(self) -> None:
         import evalgate_sdk
 
-        assert "RequestCache" not in evalgate_sdk.__all__
+        assert "RequestCache" in evalgate_sdk.__all__
 
-    def test_not_importable_from_barrel(self) -> None:
+    def test_importable_from_barrel(self) -> None:
         import evalgate_sdk
 
-        assert not hasattr(evalgate_sdk, "RequestCache")
+        assert hasattr(evalgate_sdk, "RequestCache")
 
 
 # ── Gap 6: WorkflowTracer offline mode ───────────────────────────────
