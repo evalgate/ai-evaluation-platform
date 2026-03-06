@@ -26,7 +26,7 @@ const FEATURES = [
 		icon: Beaker,
 		title: "CI Regression Gate",
 		description:
-			"One-command CI pipeline with 50+ assertions, golden regression datasets, and auto-promotion heuristics",
+			"One-command CI pipeline with 50+ built-in quality assertions, golden regression datasets, and auto-promotion heuristics",
 	},
 	{
 		icon: Activity,

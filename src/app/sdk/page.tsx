@@ -208,9 +208,9 @@ npx evalgate check --format github --onFail import`;
 						<div className="flex flex-wrap items-center gap-2">
 							<Badge variant="secondary">AI Quality Infrastructure</Badge>
 							<Badge variant="outline">TypeScript & Python</Badge>
-							<Badge variant="outline">50+ Assertions</Badge>
+							<Badge variant="outline">50+ Built-in Assertions</Badge>
 							<Badge variant="outline">Production → CI Loop</Badge>
-							<Badge variant="default">EvalGate 3.0.0</Badge>
+							<Badge variant="default">EvalGate 3.0.1</Badge>
 						</div>
 						<h1 className="text-4xl font-bold tracking-tight">
 							SDK Quick Start
@@ -526,7 +526,7 @@ jobs:
 								<Link href="/templates">
 									<Button variant="outline" className="w-full justify-start">
 										<CheckCircle2 className="h-4 w-4 mr-2" />
-										Browse 50+ Evaluation Templates
+										Browse Evaluation Templates
 									</Button>
 								</Link>
 								<Link href="/playground">

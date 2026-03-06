@@ -44,7 +44,7 @@ export function WebMCPProvider() {
 			{
 				name: "list_evaluation_templates",
 				description:
-					"EvalGate: List evaluation templates for testing AI models. Returns templates from the quick-start library (6) and full catalog (50+ across 17 categories: unit_tests, adversarial, human_eval, llm_judge, chatbot, rag, code-gen, etc.) with configurations and test cases.",
+					"EvalGate: List evaluation templates for testing AI models. Returns templates from the quick-start library and full catalog across 17 categories (unit_tests, adversarial, human_eval, llm_judge, chatbot, rag, code-gen, etc.) with configurations and test cases.",
 				inputSchema: {
 					type: "object",
 					properties: {

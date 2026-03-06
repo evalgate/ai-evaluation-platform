@@ -72,6 +72,27 @@ That's it! Your CI now:
 - ✅ Posts rich summary in PR with regressions
 - ✅ Exits with proper codes (0=clean, 1=regressions, 2=config)
 
+## Two Quickstart Paths
+
+### Path A: Local Gate (no account, no API key)
+
+```bash
+npx @evalgate/sdk init
+npx evalgate gate
+npx evalgate baseline update
+```
+
+Use this path when you want CI regression blocking from your existing test suite only.
+
+### Path B: Platform Gate (dashboard, history, PR annotations)
+
+```bash
+npx evalgate init
+npx evalgate check --format github --onFail import
+```
+
+Use this path when you want quality score trends, trace-linked failures, and PR annotation workflows.
+
 ---
 
 ## 🚀 New in v3.0.1: Production-Ready AI Quality Infrastructure

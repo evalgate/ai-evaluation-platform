@@ -170,6 +170,7 @@ export function InteractivePlayground({
 			name: "Chatbot Accuracy",
 			description:
 				"See how well a customer service chatbot handles common questions",
+			preview: "Preview: quality score, pass/fail split, and top failure notes",
 			icon: "💬",
 			difficulty: "Beginner",
 			time: "30s",
@@ -180,6 +181,7 @@ export function InteractivePlayground({
 			name: "RAG Hallucination",
 			description:
 				"Detect when AI makes up information not in source documents",
+			preview: "Preview: hallucination flags with expected vs actual output",
 			icon: "🔍",
 			difficulty: "Intermediate",
 			time: "45s",
@@ -190,6 +192,7 @@ export function InteractivePlayground({
 			name: "Code Generation",
 			description:
 				"Evaluate if generated code actually works and follows best practices",
+			preview: "Preview: failed test cases, score breakdown, and recommendations",
 			icon: "💻",
 			difficulty: "Advanced",
 			time: "1m",
@@ -200,6 +203,7 @@ export function InteractivePlayground({
 			name: "Test Your Own",
 			description:
 				"Paste your AI's input and output, pick assertions, see results instantly",
+			preview: "Preview: instant assertion checks using your own output",
 			icon: "🧪",
 			difficulty: "Custom",
 			time: "instant",
@@ -466,7 +470,8 @@ ${(results.qualityScore?.recommendations || []).map((r: string) => `- ${r}`).joi
 					Try AI Evaluation in 30 Seconds
 				</h2>
 				<p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-					Choose a scenario below and see real evaluation results instantly.
+					Choose a scenario below to run a real demo endpoint and see sample
+					results instantly.
 					Sign up to save results and use the API.
 				</p>
 			</div>
@@ -495,7 +500,10 @@ ${(results.qualityScore?.recommendations || []).map((r: string) => `- ${r}`).joi
 									</div>
 								</div>
 								<CardTitle className="text-xl">{scenario.name}</CardTitle>
-								<CardDescription>{scenario.description}</CardDescription>
+								<CardDescription>
+									{scenario.description}
+									<span className="mt-1 block text-xs">{scenario.preview}</span>
+								</CardDescription>
 							</CardHeader>
 							<CardContent>
 								<Button
@@ -503,7 +511,9 @@ ${(results.qualityScore?.recommendations || []).map((r: string) => `- ${r}`).joi
 									variant={scenario.id === "custom" ? "outline" : "default"}
 								>
 									<Play className="h-4 w-4 mr-2" />
-									{scenario.id === "custom" ? "Start" : "Run Demo"}
+									{scenario.id === "custom"
+										? "Start Custom Check"
+										: "Run Demo (sample results)"}
 								</Button>
 							</CardContent>
 						</Card>

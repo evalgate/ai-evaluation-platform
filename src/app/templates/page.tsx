@@ -1,7 +1,7 @@
 /**
  * Evaluation Templates Page
  * Browse and copy ready-to-use evaluation templates
- * Two-tier layout: Featured quick-start templates + full 50+ template catalog
+ * Two-tier layout: Featured quick-start templates + full template catalog
  */
 
 import { Copy, Layers, Search, Zap } from "lucide-react";

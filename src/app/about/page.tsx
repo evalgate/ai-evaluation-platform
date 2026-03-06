@@ -58,7 +58,8 @@ export default function AboutPage() {
 						<p className="text-base sm:text-lg text-muted-foreground leading-relaxed">
 							We built the AI reliability loop: collect production traces,
 							detect failures automatically, generate test cases, and promote
-							them into your CI regression suite. Combined with 50+ assertions,
+							them into your CI regression suite. Combined with 50+ built-in
+							quality assertions,
 							LLM judges, and golden datasets, EvalGate ensures every AI product
 							improves with every deployment.
 						</p>

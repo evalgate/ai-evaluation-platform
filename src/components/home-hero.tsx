@@ -110,6 +110,9 @@ export function HomeHero() {
 				<h2 className="text-2xl font-bold text-center mb-8">
 					See it in action
 				</h2>
+				<p className="text-sm text-muted-foreground text-center mb-6">
+					Real product screens from the current EvalGate UI
+				</p>
 				<div className="grid grid-cols-1 md:grid-cols-3 gap-6">
 					{[
 						{
@@ -126,7 +129,8 @@ export function HomeHero() {
 						},
 						{
 							title: "Evaluation Builder",
-							description: "50+ templates with drag-and-drop configuration",
+							description:
+								"Template library with drag-and-drop evaluation configuration",
 							src: "/screenshots/evaluation-detail.png",
 						},
 					].map((item) => (
