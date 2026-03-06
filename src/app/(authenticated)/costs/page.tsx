@@ -459,8 +459,8 @@ export default function CostsPage() {
 													className="text-xs"
 												/>
 												<Tooltip
-													formatter={(value: number) => [
-														`$${value.toFixed(4)}`,
+													formatter={(value) => [
+														`$${Number(value ?? 0).toFixed(4)}`,
 														"Cost",
 													]}
 													labelFormatter={(label) =>
@@ -515,8 +515,8 @@ export default function CostsPage() {
 													className="text-xs"
 												/>
 												<Tooltip
-													formatter={(value: number) => [
-														value.toLocaleString(),
+													formatter={(value) => [
+														(value ?? 0).toLocaleString(),
 														"Tokens",
 													]}
 													labelFormatter={(label) =>
@@ -626,8 +626,8 @@ export default function CostsPage() {
 														))}
 													</Pie>
 													<Tooltip
-														formatter={(value: number) =>
-															`$${value.toFixed(2)}`
+														formatter={(value) =>
+															`$${Number(value ?? 0).toFixed(2)}`
 														}
 													/>
 												</PieChart>

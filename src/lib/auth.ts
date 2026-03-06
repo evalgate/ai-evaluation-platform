@@ -1,5 +1,5 @@
+import { drizzleAdapter } from "@better-auth/drizzle-adapter";
 import { betterAuth } from "better-auth";
-import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { bearer } from "better-auth/plugins";
 import type { NextRequest } from "next/server";
 import { db } from "@/db";
