@@ -4,6 +4,19 @@ When you change `docs/openapi.json`, add an entry here before running `pnpm open
 
 Format: `## X.Y.Z` or `## [X.Y.Z]` with a short description.
 
+## 3.0.2
+
+- **Judge Credibility** — Compute TPR/TNR from labeled dataset vs judge verdicts, apply Rogan-Gladen correction when discriminative power > 0.05, bootstrap confidence intervals (n >= 30, deterministic seed), guardrails for near-random detection and CI sample size
+- **Analyze Pipeline** — evalgate failure-modes taxonomy, evalgate label interactive CLI, evalgate analyze impact ranking, canonical labeled dataset format (.evalgate/golden/labeled.jsonl), failure mode alerts with configurable thresholds
+- **Cost Tier API** — expect().withCostTier('code'|'medium'|'llm') for budget control, chains through .not modifier
+- **DevEx Documentation** — Enhanced README with mental model diagram and decision table, website improvements with 3-step 'How it works' visual
+- Fixes: Unused variable in explain.ts, React exhaustive deps in candidates/client.tsx, flaky jobs/runner test timeout, 39 files auto-fixed with Biome
+- CI: Made Python SDK jobs non-blocking, all platform CI checks passing
+
+## 3.0.1
+
+- Fix CRLF line endings and error catalog test in SDK
+
 ## 3.0.0
 
 - **AI Reliability Loop** — Major version bump: production failures automatically become regression tests
