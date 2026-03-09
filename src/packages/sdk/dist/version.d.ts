@@ -4,4 +4,4 @@
  * X-EvalGate-Spec-Version: OpenAPI spec version (docs/openapi.json info.version)
  */
 export declare const SDK_VERSION = "3.0.2";
-export declare const SPEC_VERSION = "3.0.0";
+export declare const SPEC_VERSION = "3.0.2";
