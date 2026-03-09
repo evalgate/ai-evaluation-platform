@@ -16,11 +16,9 @@ describe("jobs/runner", () => {
 	});
 
 	describe("reclaim path", () => {
-		it(
-			"reclaims expired running jobs and updates them to pending",
-			async () => {
-				// Import after mocks to prevent leakage
-				const { runDueJobs } = await import("@/lib/jobs/runner");
+		it("reclaims expired running jobs and updates them to pending", async () => {
+			// Import after mocks to prevent leakage
+			const { runDueJobs } = await import("@/lib/jobs/runner");
 
 			// Create a stale running job with expired lock
 			const staleJob = harness.makeJob({
@@ -36,15 +34,13 @@ describe("jobs/runner", () => {
 
 			const result = await runDueJobs("test-runner");
 
-				expect(result.reclaimed).toBe(1);
-				expect(staleJob.status).toBe("pending");
-				expect(staleJob.lockedBy).toBeNull();
-				expect(staleJob.lockedAt).toBeNull();
-				expect(staleJob.lockedUntil).toBeNull();
-				expect(staleJob.lastErrorCode).toBe("JOB_LOCK_TIMEOUT_RECLAIMED");
-			},
-			10000,
-		);
+			expect(result.reclaimed).toBe(1);
+			expect(staleJob.status).toBe("pending");
+			expect(staleJob.lockedBy).toBeNull();
+			expect(staleJob.lockedAt).toBeNull();
+			expect(staleJob.lockedUntil).toBeNull();
+			expect(staleJob.lastErrorCode).toBe("JOB_LOCK_TIMEOUT_RECLAIMED");
+		}, 10000);
 
 		it("does not reclaim jobs that are still within lock TTL", async () => {
 			const { runDueJobs } = await import("@/lib/jobs/runner");
