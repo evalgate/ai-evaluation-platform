@@ -151,7 +151,7 @@ Open source. Production-ready. **1.4k+ npm downloads/month** · Used by develope
 | Capability                                                                                      | Status              |
 | ----------------------------------------------------------------------------------------------- | ------------------- |
 | CI regression gate (`evalgate ci`, `evalgate gate`)                                             | Production          |
-| TypeScript SDK ([`@evalgate/sdk`](https://www.npmjs.com/package/@evalgate/sdk))                | Production (v3.0.1) |
+| TypeScript SDK ([`@evalgate/sdk`](https://www.npmjs.com/package/@evalgate/sdk))                | Production (v3.0.2) |
 | Python SDK ([`pauly4010-evalgate-sdk`](https://pypi.org/project/pauly4010-evalgate-sdk/))           | Production          |
 | Multi-tenant auth & RBAC                                                                        | Production          |
 | Evaluation engine (template library across 17 categories, 4 types)                              | Production          |
@@ -206,6 +206,50 @@ jobs:
 ## Key Features
 
 > **EvalGate is CI for AI behavior.** Same gates, same quality checks — whether you use Node, Python, or the REST API.
+
+### Judge Credibility (v3.0.2)
+
+**Advanced LLM judge reliability with statistical rigor:**
+- **TPR/TNR Computation** — Calculate true positive rate and true negative rate from labeled dataset vs judge verdicts
+- **Rogan-Gladen Correction** — Apply statistical correction when discriminative power > 0.05 for more accurate judge assessments
+- **Bootstrap Confidence Intervals** — Generate confidence intervals with n >= 30 samples using deterministic seeding for reproducible results
+- **Guardrails** — Automatic skip of correction when near-random detection, skip CI when sample size insufficient
+- **Configurable Thresholds** — Set judge.tprMin, judge.tnrMin, judge.minLabeledSamples, judge.bootstrapSeed
+
+```bash
+npx evalgate judge-credibility --labeled-dataset .evalgate/golden/labeled.jsonl
+# Outputs: TPR, TNR, corrected estimates, confidence intervals, warnings
+```
+
+### Analyze Pipeline (v3.0.2)
+
+**Systematic failure analysis and impact ranking:**
+- **Failure-Modes Taxonomy** — Define app-specific failure categories for consistent classification
+- **Interactive CLI Labeling** — `evalgate label` command for pass/fail + failure mode classification
+- **Impact Ranking** — Frequency × weight = impact prioritization for systematic triage
+- **Canonical Labeled Dataset** — Standard `.evalgate/golden/labeled.jsonl` format for golden labeling
+- **Failure Mode Alerts** — Configurable thresholds (maxPercent, maxCount, weight) for automated alerts
+
+```bash
+npx evalgate analyze --labeled-dataset .evalgate/golden/labeled.jsonl
+# Outputs: Failure mode frequencies, impact rankings, alert recommendations
+```
+
+### Cost Tier API (v3.0.2)
+
+**Budget control for evaluation pipelines:**
+- **withCostTier()** — Chain with any assertion method: `expect().withCostTier('code'|'medium'|'llm')`
+- **Budget Enforcement** — Prevent cost overruns by setting maximum cost tiers per evaluation
+- **Works with .not** — Full compatibility with negation: `expect().not.withCostTier('llm')`
+
+```typescript
+import { expect } from '@evalgate/sdk';
+
+// Budget-controlled assertions
+await expect(response).to.contain("Paris").withCostTier('medium');
+await expect(code).to.beValid().withCostTier('code');
+await expect(summary).to.beFactuallyConsistent().withCostTier('llm');
+```
 
 ### EvalGate Discovery: Intelligent Spec Compiler
 

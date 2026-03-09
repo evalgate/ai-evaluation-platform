@@ -73,12 +73,36 @@ pip install pauly4010-evalgate-sdk
 
 ## CLI Commands
 
-### 🚀 One-Command CI (v2.3.0)
+### 🚀 One-Command CI (v3.0.2)
 
 ```bash
 npx evalgate ci --format github --write-results --base main    # Complete CI pipeline
 npx evalgate ci --impacted-only                               # Run only impacted specs
 npx evalgate ci --format json                                  # JSON output for automation
+```
+
+### 🆕 v3.0.2 Features
+
+#### Judge Credibility
+```bash
+npx evalgate judge-credibility --labeled-dataset .evalgate/golden/labeled.jsonl
+# Advanced TPR/TNR computation with Rogan-Gladen correction and bootstrap confidence intervals
+```
+
+#### Analyze Pipeline  
+```bash
+npx evalgate analyze --labeled-dataset .evalgate/golden/labeled.jsonl
+# Failure-modes taxonomy, impact ranking, and systematic AI quality analysis
+```
+
+#### Cost Tier API
+```typescript
+import { expect } from '@evalgate/sdk';
+
+// Budget-controlled assertions
+await expect(response).to.contain("Paris").withCostTier('medium');
+await expect(code).to.beValid().withCostTier('code');
+await expect(summary).to.beFactuallyConsistent().withCostTier('llm');
 ```
 
 ### Discovery & Analysis
@@ -99,7 +123,59 @@ npx evalgate baseline update   # Re-run tests and update baseline
 npx evalgate upgrade --full    # Upgrade to full metric gate (golden eval, confidence, latency, cost)
 npx evalgate check             # Gate on quality score (requires API key)
 npx evalgate doctor            # Verify CI/CD setup
+npx evalgate label             # Interactive CLI for pass/fail + failure mode classification
+npx evalgate explain           # Root cause analysis with fix suggestions
 ```
+
+## 🆕 Golden Path Documentation (v3.0.2)
+
+EvalGate's **golden path** is the canonical 7-step evaluation loop that demonstrates the complete AI quality infrastructure. **Zero mocks, zero database, zero network required.**
+
+### The 7-Step Loop
+```
+SDK payload → Validate → Freeze → Detect failures → Generate test case → Quarantine → Promote → PR annotation → Replay plan → Dataset health
+```
+
+### Quick Demo
+```bash
+# Run the complete golden path demo
+pnpm tsx scripts/golden-path-demo.ts
+
+# Run golden regression test
+pnpm eval:golden
+```
+
+### Step-by-Step Breakdown
+
+1. **SDK Payload Validation** - `validateTraceUpload()` checks specVersion and schema
+2. **Freeze with Redaction** - `freezeTrace()` creates immutable snapshots with PII redaction
+3. **Failure Detection** - `detectRuleBased()` identifies refusals, hallucinations, tool errors
+4. **Test Case Generation** - `createGeneratedTestCase()` → `quarantineTestCase()` → `promoteTestCase()`
+5. **PR Annotation** - `buildCheckRunPayload()` and `buildPRCommentBody()` for GitHub integration
+6. **Replay Plan** - `buildReplayPlan()` pre-flights snapshots with tier filtering
+7. **Dataset Health** - `analyzeDatasetHealth()` detects duplicates, outliers, and trends
+
+### Golden Dataset Format
+```json
+{
+  "name": "golden-regression",
+  "minScore": 100,
+  "baselineScore": 100,
+  "cases": [
+    { "input": "What is 2 + 2?", "expectedOutput": "4" },
+    { "input": "What color is the sky?", "expectedOutput": "blue" },
+    { "input": "Say 'ok' in one word.", "expectedOutput": "ok" }
+  ]
+}
+```
+
+### Labeled Dataset for Judge Credibility (v3.0.2)
+```jsonl
+{"caseId":"case-001","input":"What is 2+2?","expected":"4","actual":"4","label":"pass","failureMode":null,"labeledAt":"2026-03-09T09:00:00.000Z"}
+{"caseId":"case-002","input":"Summarize this article","expected":"Brief summary","actual":"I cannot help","label":"fail","failureMode":"refusal","labeledAt":"2026-03-09T09:00:00.000Z"}
+```
+
+**Expected output**: All 7 steps execute with `✓` markers, demonstrating the complete reliability loop from production traces to regression gates.
 
 ## What EvalGate Provides
 

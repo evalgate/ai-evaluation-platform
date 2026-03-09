@@ -5,6 +5,9 @@ import {
 	Sparkles,
 	Users,
 	Zap,
+	Balance,
+	Search,
+	Shield,
 } from "lucide-react";
 import { memo } from "react";
 import {
@@ -16,6 +19,24 @@ import {
 } from "@/components/ui/card";
 
 const FEATURES = [
+	{
+		icon: Balance,
+		title: "Judge Credibility",
+		description:
+			"Advanced TPR/TNR computation with Rogan-Gladen correction and bootstrap confidence intervals for reliable LLM judge evaluations",
+	},
+	{
+		icon: Search,
+		title: "Analyze Pipeline",
+		description:
+			"Failure-modes taxonomy, interactive CLI labeling, impact ranking, and canonical labeled dataset format for systematic AI quality analysis",
+	},
+	{
+		icon: Shield,
+		title: "Cost Tier API",
+		description:
+			"Budget control with expect().withCostTier() for 'code'|'medium'|'llm' tiers, preventing cost overruns in evaluation pipelines",
+	},
 	{
 		icon: RefreshCw,
 		title: "AI Reliability Loop",

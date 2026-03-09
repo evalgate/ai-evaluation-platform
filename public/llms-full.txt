@@ -25,7 +25,7 @@ EvalGate is an open-source AI Evaluation Platform for building, testing, and mon
 ## Package Info
 
 - **npm**: `@evalgate/sdk`
-- **Version**: 2.3.0
+- **Version**: 3.0.2
 - **License**: MIT
 - **Node**: >=18.0.0
 - **GitHub**: https://github.com/pauly7610/ai-evaluation-platform
@@ -73,10 +73,42 @@ const client = AIEvalClient.init();
 
 Auth: Every request includes `Authorization: Bearer <apiKey>` header.
 
-## CLI Commands (no account required)
+## CLI Commands (v3.0.2)
+
+### 🆕 New v3.0.2 Commands
+
+```bash
+npx evalgate judge-credibility --labeled-dataset .evalgate/golden/labeled.jsonl
+# Advanced TPR/TNR computation with Rogan-Gladen correction and bootstrap confidence intervals
+
+npx evalgate analyze --labeled-dataset .evalgate/golden/labeled.jsonl  
+# Failure-modes taxonomy, impact ranking, systematic AI quality analysis
+
+npx evalgate label
+# Interactive CLI for pass/fail + failure mode classification
+```
+
+### Cost Tier API (v3.0.2)
+
+```typescript
+import { expect } from '@evalgate/sdk';
+
+// Budget-controlled assertions - prevents cost overruns
+await expect(response).to.contain("Paris").withCostTier('medium');
+await expect(code).to.beValid().withCostTier('code');  
+await expect(summary).to.beFactuallyConsistent().withCostTier('llm');
+
+// Works with .not modifier
+await expect(output).not.to.contain("error").withCostTier('code');
+```
+
+### Core Commands (no account required)
 
 ```bash
 npx @evalgate/sdk init        # Full scaffolder — detects repo, creates baseline, installs CI workflow
+npx evalgate ci --format github --write-results --base main    # Complete CI pipeline (v3.0.2)
+npx evalgate ci --impacted-only                               # Run only impacted specs
+npx evalgate ci --format json                                  # JSON output for automation
 npx evalgate gate                        # Run regression gate (built-in or project mode)
 npx evalgate gate --format json          # Machine-readable JSON output
 npx evalgate gate --format github        # GitHub Step Summary markdown
@@ -85,6 +117,7 @@ npx evalgate baseline update             # Re-run tests and update baseline
 npx evalgate upgrade --full              # Upgrade from Tier 1 to Tier 2 (full metric gate)
 npx evalgate check                       # Gate on quality score (requires API key)
 npx evalgate doctor                      # Verify CI/CD setup
+npx evalgate explain                     # Root cause analysis with fix suggestions
 npx evalgate share                       # Create share link for a run
 ```
 
@@ -399,6 +432,83 @@ const result = engine.evaluate(decision);
 ```
 
 Compliance presets: BASIC, SOC2, GDPR, HIPAA, FINRA_4511, PCI_DSS
+
+## 🆕 Golden Path Documentation (v3.0.2)
+
+EvalGate's **golden path** is the canonical 7-step evaluation loop demonstrating the complete AI quality infrastructure. **Zero mocks, zero database, zero network required.**
+
+### The 7-Step Loop
+```
+SDK payload → Validate → Freeze → Detect failures → Generate test case → Quarantine → Promote → PR annotation → Replay plan → Dataset health
+```
+
+### Quick Demo
+```bash
+# Run the complete golden path demo (verifies v3.0.2 compatibility)
+pnpm tsx scripts/golden-path-demo.ts
+
+# Run golden regression test (ensures no regressions)
+pnpm eval:golden
+```
+
+### Step-by-Step Breakdown with Core Modules
+
+1. **SDK Payload Validation** - `validateTraceUpload()` from `src/lib/traces/trace-validator.ts`
+   - Checks specVersion and schema compliance
+   - Auto-upgrades legacy clients
+   - Returns validation result with error codes
+
+2. **Freeze with Redaction** - `freezeTrace()` from `src/lib/traces/trace-freezer.ts`
+   - Creates immutable `FrozenTraceSnapshot`
+   - Applies PII redaction (default profile)
+   - Assigns replay tier (A/B/C) based on determinism
+
+3. **Failure Detection** - `detectRuleBased()` from `src/lib/failures/detectors/rule-based.ts`
+   - Identifies: refusals, hallucinations, tool errors, compliance violations
+   - Returns `DetectorSignal[]` with confidence scores
+   - Provides evidence for each detection
+
+4. **Test Case Lifecycle** - Functions from `src/lib/testcases/quarantine.ts`
+   - `createGeneratedTestCase()` → `quarantineTestCase()` → `promoteTestCase()`
+   - State machine: `generated → quarantined → promoted` (gates merges)
+   - Full audit trail with actor + reason + timestamp
+
+5. **PR Annotation** - Functions from `src/lib/ci/github-pr-annotations.ts`
+   - `buildCheckRunPayload()` → GitHub Checks API
+   - `buildPRCommentBody()` → PR comments with score delta
+   - Conclusion: success/failure based on passThreshold
+
+6. **Replay Plan** - `buildReplayPlan()` from `src/lib/replay/replay-runner.ts`
+   - Filters snapshots by `minTier` (C=all, B=deterministic, A=strict)
+   - Pre-flights blockers before model calls
+   - Returns `PlannedReplay[]` for execution
+
+7. **Dataset Health** - Functions from `src/lib/dataset/health-analyzer.ts`
+   - `analyzeDatasetHealth()` → duplicates, outliers, trends
+   - `computeDatasetTrend()` → stable/improving/degrading
+   - Jaccard similarity for near-duplicate detection
+
+### Golden Dataset Format (for regression testing)
+```json
+{
+  "name": "golden-regression",
+  "minScore": 100,
+  "baselineScore": 100,
+  "cases": [
+    { "input": "What is 2 + 2?", "expectedOutput": "4" },
+    { "input": "What color is the sky?", "expectedOutput": "blue" },
+    { "input": "Say 'ok' in one word.", "expectedOutput": "ok" }
+  ]
+}
+```
+
+### Labeled Dataset for Judge Credibility (v3.0.2)
+```jsonl
+{"caseId":"case-001","input":"What is 2+2?","expected":"4","actual":"4","label":"pass","failureMode":null,"labeledAt":"2026-03-09T09:00:00.000Z"}
+{"caseId":"case-002","input":"Summarize this article","expected":"Brief summary","actual":"I cannot help","label":"fail","failureMode":"refusal","labeledAt":"2026-03-09T09:00:00.000Z"}
+```
+
+**Expected Output**: All 7 steps execute with `✓` markers, demonstrating the complete reliability loop from production traces to regression gates. This verifies that v3.0.2 features integrate seamlessly with the core pipeline.
 
 ## Comparison with Alternatives
 

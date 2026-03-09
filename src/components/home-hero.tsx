@@ -24,11 +24,11 @@ export function HomeHero() {
 					<span className="text-primary">Regression Tests</span>
 				</h1>
 				<p className="text-lg sm:text-xl font-medium mb-4 max-w-3xl mx-auto">
-					The AI reliability loop. CI + production trace collection +
-					auto-generated test cases.
+					Judge credibility + analyze pipeline + cost control. The complete AI
+					quality infrastructure.
 				</p>
 				<div className="flex flex-wrap items-center justify-center gap-1.5 mb-6 font-mono text-sm">
-					{["collect", "detect", "generate", "promote", "gate", "ship"].map(
+					{["analyze", "label", "rank", "budget", "gate", "ship"].map(
 						(step, i, arr) => (
 							<span key={step} className="flex items-center gap-1.5">
 								<span className="px-2.5 py-1 rounded-md bg-muted text-muted-foreground border border-border">
