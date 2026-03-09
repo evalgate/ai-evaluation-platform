@@ -66,6 +66,7 @@ export interface UpdateWorkflowRunParams {
 
 export interface CreateHandoffParams {
 	workflowRunId: number;
+	workflowId: number;
 	organizationId: number;
 	fromSpanId?: string;
 	toSpanId: string;
@@ -230,7 +231,12 @@ class WorkflowService {
 				totalCost: sql<string>`sum(cast(${workflowRuns.totalCost} as real))`,
 			})
 			.from(workflowRuns)
-			.where(eq(workflowRuns.workflowId, id))
+			.where(
+				and(
+					eq(workflowRuns.workflowId, id),
+					eq(workflowRuns.organizationId, organizationId),
+				),
+			)
 			.groupBy(workflowRuns.status);
 
 		const totalRuns = runs.reduce((sum, r) => sum + Number(r.count), 0);
@@ -262,10 +268,17 @@ class WorkflowService {
 	/**
 	 * List runs for a workflow
 	 */
-	async listRuns(workflowId: number, params: ListWorkflowRunsParams = {}) {
+	async listRuns(
+		workflowId: number,
+		organizationId: number,
+		params: ListWorkflowRunsParams = {},
+	) {
 		const { limit = 50, offset = 0, status } = params;
 
-		const conditions = [eq(workflowRuns.workflowId, workflowId)];
+		const conditions = [
+			eq(workflowRuns.workflowId, workflowId),
+			eq(workflowRuns.organizationId, organizationId),
+		];
 
 		if (status) {
 			conditions.push(eq(workflowRuns.status, status));
@@ -285,11 +298,17 @@ class WorkflowService {
 	/**
 	 * Get a single workflow run by ID
 	 */
-	async getRunById(runId: number) {
+	async getRunById(runId: number, workflowId: number, organizationId: number) {
 		const result = await db
 			.select()
 			.from(workflowRuns)
-			.where(eq(workflowRuns.id, runId))
+			.where(
+				and(
+					eq(workflowRuns.id, runId),
+					eq(workflowRuns.workflowId, workflowId),
+					eq(workflowRuns.organizationId, organizationId),
+				),
+			)
 			.limit(1);
 
 		return result[0] || null;
@@ -299,6 +318,18 @@ class WorkflowService {
 	 * Create a workflow run
 	 */
 	async createRun(params: CreateWorkflowRunParams) {
+		const [trace] = await db
+			.select({ id: traces.id })
+			.from(traces)
+			.where(
+				and(
+					eq(traces.id, params.traceId),
+					eq(traces.organizationId, params.organizationId),
+				),
+			)
+			.limit(1);
+		if (!trace) return null;
+
 		const now = new Date();
 
 		const result = await db
@@ -321,8 +352,13 @@ class WorkflowService {
 	/**
 	 * Update a workflow run
 	 */
-	async updateRun(runId: number, params: UpdateWorkflowRunParams) {
-		const existing = await this.getRunById(runId);
+	async updateRun(
+		runId: number,
+		workflowId: number,
+		organizationId: number,
+		params: UpdateWorkflowRunParams,
+	) {
+		const existing = await this.getRunById(runId, workflowId, organizationId);
 		if (!existing) return null;
 
 		const now = new Date();
@@ -357,7 +393,13 @@ class WorkflowService {
 					? { completedAt: now }
 					: {}),
 			})
-			.where(eq(workflowRuns.id, runId))
+			.where(
+				and(
+					eq(workflowRuns.id, runId),
+					eq(workflowRuns.workflowId, workflowId),
+					eq(workflowRuns.organizationId, organizationId),
+				),
+			)
 			.returning();
 
 		return result[0] || null;
@@ -366,22 +408,36 @@ class WorkflowService {
 	/**
 	 * Get run with associated trace and spans
 	 */
-	async getRunWithDetails(runId: number) {
-		const run = await this.getRunById(runId);
+	async getRunWithDetails(
+		runId: number,
+		workflowId: number,
+		organizationId: number,
+	) {
+		const run = await this.getRunById(runId, workflowId, organizationId);
 		if (!run) return null;
 
 		// Get associated trace
 		const trace = await db
 			.select()
 			.from(traces)
-			.where(eq(traces.id, run.traceId))
+			.where(
+				and(
+					eq(traces.id, run.traceId),
+					eq(traces.organizationId, organizationId),
+				),
+			)
 			.limit(1);
 
 		// Get handoffs for this run
 		const handoffs = await db
 			.select()
 			.from(agentHandoffs)
-			.where(eq(agentHandoffs.workflowRunId, runId))
+			.where(
+				and(
+					eq(agentHandoffs.workflowRunId, runId),
+					eq(agentHandoffs.organizationId, organizationId),
+				),
+			)
 			.orderBy(agentHandoffs.timestamp);
 
 		return {
@@ -398,11 +454,27 @@ class WorkflowService {
 	/**
 	 * List handoffs for a workflow run
 	 */
-	async listHandoffs(workflowRunId: number) {
+	async listHandoffs(
+		workflowRunId: number,
+		workflowId: number,
+		organizationId: number,
+	) {
+		const run = await this.getRunById(
+			workflowRunId,
+			workflowId,
+			organizationId,
+		);
+		if (!run) return null;
+
 		const results = await db
 			.select()
 			.from(agentHandoffs)
-			.where(eq(agentHandoffs.workflowRunId, workflowRunId))
+			.where(
+				and(
+					eq(agentHandoffs.workflowRunId, workflowRunId),
+					eq(agentHandoffs.organizationId, organizationId),
+				),
+			)
 			.orderBy(agentHandoffs.timestamp);
 
 		return results;
@@ -412,6 +484,13 @@ class WorkflowService {
 	 * Create a handoff
 	 */
 	async createHandoff(params: CreateHandoffParams) {
+		const run = await this.getRunById(
+			params.workflowRunId,
+			params.workflowId,
+			params.organizationId,
+		);
+		if (!run) return null;
+
 		const now = new Date();
 
 		const result = await db
@@ -436,7 +515,13 @@ class WorkflowService {
 			.set({
 				handoffCount: sql`coalesce(${workflowRuns.handoffCount}, 0) + 1`,
 			})
-			.where(eq(workflowRuns.id, params.workflowRunId));
+			.where(
+				and(
+					eq(workflowRuns.id, params.workflowRunId),
+					eq(workflowRuns.workflowId, params.workflowId),
+					eq(workflowRuns.organizationId, params.organizationId),
+				),
+			);
 
 		return result[0];
 	}
@@ -444,7 +529,7 @@ class WorkflowService {
 	/**
 	 * Get handoff statistics for a workflow
 	 */
-	async getHandoffStats(workflowId: number) {
+	async getHandoffStats(workflowId: number, organizationId: number) {
 		const stats = await db
 			.select({
 				handoffType: agentHandoffs.handoffType,
@@ -454,7 +539,13 @@ class WorkflowService {
 			})
 			.from(agentHandoffs)
 			.innerJoin(workflowRuns, eq(agentHandoffs.workflowRunId, workflowRuns.id))
-			.where(eq(workflowRuns.workflowId, workflowId))
+			.where(
+				and(
+					eq(workflowRuns.workflowId, workflowId),
+					eq(workflowRuns.organizationId, organizationId),
+					eq(agentHandoffs.organizationId, organizationId),
+				),
+			)
 			.groupBy(
 				agentHandoffs.handoffType,
 				agentHandoffs.fromAgent,

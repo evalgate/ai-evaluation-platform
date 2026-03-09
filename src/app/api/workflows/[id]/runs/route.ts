@@ -1,8 +1,5 @@
-import { and, eq } from "drizzle-orm";
 import { type NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { db } from "@/db";
-import { workflows } from "@/db/schema";
 import { notFound, validationError } from "@/lib/api/errors";
 import { parseBody } from "@/lib/api/parse";
 import { type AuthContext, secureRoute } from "@/lib/api/secure-route";
@@ -28,16 +25,10 @@ export const GET = secureRoute(
 			return validationError("Valid workflow ID is required");
 		}
 
-		// Verify workflow belongs to the caller's organization
-		const [workflow] = await db
-			.select({ id: workflows.id })
-			.from(workflows)
-			.where(
-				and(
-					eq(workflows.id, workflowId),
-					eq(workflows.organizationId, ctx.organizationId),
-				),
-			);
+		const workflow = await workflowService.getById(
+			workflowId,
+			ctx.organizationId,
+		);
 
 		if (!workflow) {
 			return notFound("Workflow not found");
@@ -52,11 +43,15 @@ export const GET = secureRoute(
 			| "cancelled"
 			| null;
 
-		const runs = await workflowService.listRuns(workflowId, {
-			limit,
-			offset,
-			status: status || undefined,
-		});
+		const runs = await workflowService.listRuns(
+			workflowId,
+			ctx.organizationId,
+			{
+				limit,
+				offset,
+				status: status || undefined,
+			},
+		);
 
 		return NextResponse.json(runs, {
 			headers: {
@@ -78,16 +73,10 @@ export const POST = secureRoute(
 			return validationError("Valid workflow ID is required");
 		}
 
-		// Verify workflow belongs to the caller's organization
-		const [workflow] = await db
-			.select({ id: workflows.id })
-			.from(workflows)
-			.where(
-				and(
-					eq(workflows.id, workflowId),
-					eq(workflows.organizationId, ctx.organizationId),
-				),
-			);
+		const workflow = await workflowService.getById(
+			workflowId,
+			ctx.organizationId,
+		);
 
 		if (!workflow) {
 			return notFound("Workflow not found");
@@ -105,6 +94,10 @@ export const POST = secureRoute(
 			input,
 			metadata,
 		});
+
+		if (!run) {
+			return notFound("Trace not found");
+		}
 
 		logger.info("Workflow run created", {
 			runId: run.id,

@@ -4,6 +4,12 @@ When you change `docs/openapi.json`, add an entry here before running `pnpm open
 
 Format: `## X.Y.Z` or `## [X.Y.Z]` with a short description.
 
+## 3.0.3
+
+- Bump spec version to align with platform and TypeScript SDK `3.0.3`
+- Reliability hardening release: scoped workflow authorization, deterministic evaluation timeout/failure handling, standalone build regression coverage, and deterministic usage-accounting idempotency keys
+- No intended API contract shape changes; this patch release aligns release metadata, request headers, and validation artifacts
+
 ## 3.0.2
 
 - **Judge Credibility** — Compute TPR/TNR from labeled dataset vs judge verdicts, apply Rogan-Gladen correction when discriminative power > 0.05, bootstrap confidence intervals (n >= 30, deterministic seed), guardrails for near-random detection and CI sample size

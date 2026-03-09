@@ -149,6 +149,13 @@ Use this path when you want quality score trends, trace-linked failures, and PR 
 
 ## 🚀 v3.x highlights: Production-Ready AI Quality Infrastructure
 
+### 🆕 v3.0.3 — Reliability Hardening
+
+- Scoped workflow authorization hardening with cross-org and cross-workflow regression coverage
+- Deterministic evaluation execution timeout and terminal failure-state handling
+- Windows-vs-standalone build regression coverage for `next.config.ts`
+- Deterministic usage-accounting idempotency keys for high-confidence resource-creation events
+
 ### 🆕 v3.0.2 — Judge Credibility + Analyze Phase
 
 Build a labeled golden dataset, measure failure-mode frequency, and trust your judge score.
@@ -1074,6 +1081,8 @@ Your local `openAIChatEval` runs continue to work. No account cancellation. No d
 ## Changelog
 
 See [CHANGELOG.md](CHANGELOG.md) for the full release history.
+
+**v3.0.3** — Reliability hardening release: scoped workflow authorization fixes, evaluation timeout and failure-state hardening, Windows standalone-build regression coverage, and deterministic usage-accounting idempotency keys.
 
 **v3.0.2** — Judge Credibility + Analyze Phase: `judge-credibility.ts` (TPR/TNR bias-corrected pass rate θ̂, bootstrap CI, graceful degradation), `judgeCredibility` block in JSON report, gate exit 8 (WARN) on skipped correction, `evalgate label` interactive labeling CLI, `evalgate analyze` failure-mode frequency report, `evalgate failure-modes` mode definition CLI, canonical `.evalgate/golden/labeled.jsonl` schema, `withCostTier()` assertion method, `failureModeAlerts` config, `evaluateReplayOutcome()` keep/discard with `comparisonBasis`, `evalgate replay-decision` command, golden set health in doctor, `evalgate explain` SPECIFICATION GAP / GENERALIZATION FAILURE classification, onboarding guide (`docs/zero-to-golden-30-minutes.md`).
 

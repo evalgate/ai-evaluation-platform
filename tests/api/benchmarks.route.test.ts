@@ -1,5 +1,6 @@
 import { NextRequest } from "next/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { trackFeature } from "@/lib/autumn-server";
 
 // Inline mock required: vi.hoisted runs before imports. See tests/helpers/mock-auth.ts for canonical structure.
 const autumnServerMock = vi.hoisted(() => {
@@ -135,6 +136,12 @@ describe("/api/benchmarks", () => {
 			} as never);
 
 			expect(response.status).toBe(201);
+			expect(vi.mocked(trackFeature)).toHaveBeenCalledWith(
+				expect.objectContaining({
+					featureId: "benchmarks",
+					idempotencyKey: "benchmarks-1",
+				}),
+			);
 		});
 
 		it("rejects invalid task types", async () => {

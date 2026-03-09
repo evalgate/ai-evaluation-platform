@@ -209,7 +209,7 @@ export const POST = secureRoute(async (req: NextRequest, ctx: AuthContext) => {
 				userId: ctx.userId,
 				featureId: "evaluation_created",
 				value: 1,
-				idempotencyKey: `evaluation-${newEvaluation.id}-${Date.now()}`,
+				idempotencyKey: `evaluation_created-${newEvaluation.id}`,
 			});
 
 			if (organizationId) {
@@ -217,14 +217,14 @@ export const POST = secureRoute(async (req: NextRequest, ctx: AuthContext) => {
 					userId: ctx.userId,
 					featureId: "projects",
 					value: 1,
-					idempotencyKey: `project-${organizationId}-${Date.now()}`,
+					idempotencyKey: `projects-${organizationId}-${newEvaluation.id}`,
 				});
 
 				await trackFeature({
 					userId: ctx.userId,
 					featureId: "evals_per_project",
 					value: 1,
-					idempotencyKey: `eval-org-${organizationId}-${newEvaluation.id}-${Date.now()}`,
+					idempotencyKey: `evals_per_project-${organizationId}-${newEvaluation.id}`,
 				});
 			}
 		}

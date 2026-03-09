@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { GET, POST } from "@/app/api/traces/route";
+import { trackFeature } from "@/lib/autumn-server";
 
 // Inline mock required: vi.hoisted runs before imports. See tests/helpers/mock-auth.ts for canonical structure.
 const autumnServerMock = vi.hoisted(() => {
@@ -102,6 +103,20 @@ describe("/api/traces", () => {
 			const response = await POST(req, routeContext as never);
 
 			expect(response.status).toBe(201);
+			expect(vi.mocked(trackFeature)).toHaveBeenNthCalledWith(
+				1,
+				expect.objectContaining({
+					featureId: "traces",
+					idempotencyKey: "traces-1",
+				}),
+			);
+			expect(vi.mocked(trackFeature)).toHaveBeenNthCalledWith(
+				2,
+				expect.objectContaining({
+					featureId: "traces_per_project",
+					idempotencyKey: "traces_per_project-1-1",
+				}),
+			);
 		});
 
 		it("should reject missing required fields", async () => {

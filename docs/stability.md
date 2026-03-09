@@ -1,6 +1,6 @@
 # Stability Matrix
 
-> Last updated: 2026-03-06
+> Last updated: 2026-03-09
 
 This document classifies every major feature by maturity level and provides API compatibility guarantees for each tier.
 
@@ -105,7 +105,7 @@ This document classifies every major feature by maturity level and provides API 
 | Cost Records | **Stable** | v1.0 | Per-call token + cost tracking |
 | LLM Judge | **Beta** | v1.0 | Meta-judge post-eval hook |
 
-### SDK (`@evalgate/sdk`) — v3.0.2
+### SDK (`@evalgate/sdk`) — v3.0.3
 
 | Feature | Tier | Since | Notes |
 |---------|------|-------|-------|

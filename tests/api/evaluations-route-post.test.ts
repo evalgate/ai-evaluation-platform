@@ -167,8 +167,26 @@ describe("POST /api/evaluations", () => {
 				expect.objectContaining({ input: "calc" }),
 			]),
 		);
-		expect(vi.mocked(trackFeature)).toHaveBeenCalledWith(
-			expect.objectContaining({ featureId: "evaluation_created" }),
+		expect(vi.mocked(trackFeature)).toHaveBeenNthCalledWith(
+			1,
+			expect.objectContaining({
+				featureId: "evaluation_created",
+				idempotencyKey: "evaluation_created-42",
+			}),
+		);
+		expect(vi.mocked(trackFeature)).toHaveBeenNthCalledWith(
+			2,
+			expect.objectContaining({
+				featureId: "projects",
+				idempotencyKey: "projects-1-42",
+			}),
+		);
+		expect(vi.mocked(trackFeature)).toHaveBeenNthCalledWith(
+			3,
+			expect.objectContaining({
+				featureId: "evals_per_project",
+				idempotencyKey: "evals_per_project-1-42",
+			}),
 		);
 		expect(vi.mocked(trackFeature)).toHaveBeenCalledTimes(3);
 	});

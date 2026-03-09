@@ -2,6 +2,16 @@
 
 Platform and SDK releases. For detailed SDK changes, see [src/packages/sdk/CHANGELOG.md](src/packages/sdk/CHANGELOG.md).
 
+## [3.0.3] - 2026-03-09
+
+### Fixed — Reliability Hardening & Release Validation
+
+- **Workflow authorization hardening** — Scoped workflow run and handoff service methods now enforce workflow and organization ownership consistently, with cross-org and cross-workflow regression coverage.
+- **Evaluation execution reliability** — Added execution timeouts, deterministic terminal run states, improved run-level failure persistence, and regression tests for timeouts and persistence failures.
+- **Standalone build regression coverage** — Added unit tests for `next.config.ts` to lock in Windows vs non-Windows `output: "standalone"` behavior and `NEXT_OUTPUT_STANDALONE` override semantics.
+- **Deterministic billing usage tracking** — Replaced timestamp-based idempotency keys for high-confidence resource-creation accounting events (evaluations, workflows, traces, benchmarks, annotation tasks) with deterministic resource-based keys and route-level regression tests.
+- **Validation** — Release hardening passed targeted API/unit regressions, `lint`, `typecheck`, and production build.
+
 ## [3.0.2] - 2026-03-09
 
 ### Added — Judge Credibility, Analyze Phase, Measurement & CI

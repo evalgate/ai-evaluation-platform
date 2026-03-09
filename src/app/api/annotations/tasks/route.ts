@@ -170,12 +170,14 @@ export const POST = secureRoute(async (req: NextRequest, ctx: AuthContext) => {
 				userId: ctx.userId,
 				featureId: "annotations",
 				value: 1,
+				idempotencyKey: `annotations-${inserted[0].id}`,
 			});
 
 			await trackFeature({
 				userId: ctx.userId,
 				featureId: "annotations_per_project",
 				value: 1,
+				idempotencyKey: `annotations_per_project-${ctx.organizationId}-${inserted[0].id}`,
 			});
 		}
 

@@ -130,14 +130,14 @@ export const POST = secureRoute(
 				userId: ctx.userId,
 				featureId: "workflows",
 				value: 1,
-				idempotencyKey: `workflow-${workflow.id}-${Date.now()}`,
+				idempotencyKey: `workflows-${workflow.id}`,
 			});
 
 			await trackFeature({
 				userId: ctx.userId,
 				featureId: "workflows_per_project",
 				value: 1,
-				idempotencyKey: `workflow-org-${organizationId}-${workflow.id}-${Date.now()}`,
+				idempotencyKey: `workflows_per_project-${organizationId}-${workflow.id}`,
 			});
 
 			logger.info("Workflow created", {

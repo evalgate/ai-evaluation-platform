@@ -81,14 +81,14 @@ export const POST = secureRoute(
 				userId: ctx.userId,
 				featureId: "traces",
 				value: 1,
-				idempotencyKey: `trace-${newTrace[0].id}-${Date.now()}`,
+				idempotencyKey: `traces-${newTrace[0].id}`,
 			});
 
 			await trackFeature({
 				userId: ctx.userId,
 				featureId: "traces_per_project",
 				value: 1,
-				idempotencyKey: `trace-org-${ctx.organizationId}-${newTrace[0].id}-${Date.now()}`,
+				idempotencyKey: `traces_per_project-${ctx.organizationId}-${newTrace[0].id}`,
 			});
 
 			return NextResponse.json(newTrace[0], { status: 201 });

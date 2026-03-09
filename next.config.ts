@@ -3,6 +3,9 @@ import { withSentryConfig } from "@sentry/nextjs";
 import type { NextConfig } from "next";
 import { withAxiom } from "next-axiom";
 
+const shouldUseStandaloneOutput =
+	process.env.NEXT_OUTPUT_STANDALONE === "true" || process.platform !== "win32";
+
 const withBundleAnalyzer = bundleAnalyzer({
 	enabled: process.env.ANALYZE === "true",
 });
@@ -85,7 +88,7 @@ const nextConfig: NextConfig = {
 	productionBrowserSourceMaps: false,
 
 	// Required for Docker deployments (standalone output)
-	output: "standalone",
+	output: shouldUseStandaloneOutput ? "standalone" : undefined,
 
 	// Turbopack configuration
 	// Note: component-tagger-loader disabled — causes Turbopack panic on Windows

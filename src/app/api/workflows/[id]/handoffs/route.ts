@@ -1,8 +1,5 @@
-import { and, eq } from "drizzle-orm";
 import { type NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { db } from "@/db";
-import { workflows } from "@/db/schema";
 import { notFound, validationError } from "@/lib/api/errors";
 import { parseBody } from "@/lib/api/parse";
 import { type AuthContext, secureRoute } from "@/lib/api/secure-route";
@@ -31,16 +28,10 @@ export const GET = secureRoute(
 			return validationError("Valid workflow ID is required");
 		}
 
-		// Verify workflow belongs to the caller's organization
-		const [workflow] = await db
-			.select({ id: workflows.id })
-			.from(workflows)
-			.where(
-				and(
-					eq(workflows.id, workflowId),
-					eq(workflows.organizationId, ctx.organizationId),
-				),
-			);
+		const workflow = await workflowService.getById(
+			workflowId,
+			ctx.organizationId,
+		);
 
 		if (!workflow) {
 			return notFound("Workflow not found");
@@ -49,19 +40,28 @@ export const GET = secureRoute(
 		const { searchParams } = new URL(req.url);
 		const runId = searchParams.get("runId");
 
-		// If runId is provided, get handoffs for that specific run
 		if (runId) {
 			const runIdNum = parseInt(runId, 10);
 			if (Number.isNaN(runIdNum)) {
 				return validationError("Valid run ID is required");
 			}
 
-			const handoffs = await workflowService.listHandoffs(runIdNum);
+			const handoffs = await workflowService.listHandoffs(
+				runIdNum,
+				workflowId,
+				ctx.organizationId,
+			);
+			if (!handoffs) {
+				return notFound("Workflow run not found");
+			}
+
 			return NextResponse.json(handoffs);
 		}
 
-		// Otherwise, get handoff statistics for the workflow
-		const stats = await workflowService.getHandoffStats(workflowId);
+		const stats = await workflowService.getHandoffStats(
+			workflowId,
+			ctx.organizationId,
+		);
 
 		return NextResponse.json(
 			{
@@ -89,16 +89,10 @@ export const POST = secureRoute(
 			return validationError("Valid workflow ID is required");
 		}
 
-		// Verify workflow belongs to the caller's organization
-		const [workflow] = await db
-			.select({ id: workflows.id })
-			.from(workflows)
-			.where(
-				and(
-					eq(workflows.id, workflowId),
-					eq(workflows.organizationId, ctx.organizationId),
-				),
-			);
+		const workflow = await workflowService.getById(
+			workflowId,
+			ctx.organizationId,
+		);
 
 		if (!workflow) {
 			return notFound("Workflow not found");
@@ -109,8 +103,13 @@ export const POST = secureRoute(
 
 		const handoff = await workflowService.createHandoff({
 			...parsed.data,
+			workflowId,
 			organizationId: ctx.organizationId,
 		});
+
+		if (!handoff) {
+			return notFound("Workflow run not found");
+		}
 
 		logger.info("Handoff created", {
 			handoffId: handoff.id,

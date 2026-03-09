@@ -294,6 +294,138 @@ describe("EvaluationService additional coverage", () => {
 
 			expect(result).not.toBeNull();
 			expect(result?.id).toBe(1);
+			expect(result?.status).toBe("pending_review");
+			expect(state.updateValues).toMatchObject({
+				status: "pending_review",
+				totalCases: 1,
+				processedCount: 0,
+			});
+		});
+
+		it("marks timed out executor cases as completed_with_failures", async () => {
+			vi.useFakeTimers();
+			try {
+				const mockEval = {
+					id: 1,
+					name: "Timed Eval",
+					organizationId: 1,
+					type: "standard",
+					executorType: "webhook",
+					executorConfig: { endpoint: "https://example.test" },
+					executionSettings: { timeout: 5 },
+				};
+				const mockTestCases = [
+					{ id: 11, input: "test", expectedOutput: "expected response" },
+				];
+				const mockRun = { id: 1, startedAt: new Date("2024-01-01T00:00:00Z") };
+
+				let selectCallCount = 0;
+				vi.mocked((await import("@/db")).db.select).mockImplementation(() => {
+					selectCallCount++;
+					if (selectCallCount <= 3) return makeBuilder([mockEval]);
+					return makeBuilder(mockTestCases);
+				});
+
+				let insertCallCount = 0;
+				vi.mocked((await import("@/db")).db.insert).mockImplementation(() => {
+					insertCallCount++;
+					if (insertCallCount === 1) {
+						return {
+							values: vi.fn((val: any) => ({
+								returning: () => Promise.resolve([{ ...mockRun, ...val }]),
+							})),
+						} as any;
+					}
+					return {
+						values: vi.fn(() => Promise.resolve()),
+					} as any;
+				});
+
+				vi.mocked(
+					(await import("@/lib/services/eval-executor")).createExecutor,
+				).mockReturnValue({
+					run: vi.fn(() => new Promise(() => undefined)),
+				} as any);
+
+				const runPromise = evaluationService.run(1, 1);
+				await vi.advanceTimersByTimeAsync(10);
+				const result = await runPromise;
+
+				expect(result).not.toBeNull();
+				expect(result?.status).toBe("completed_with_failures");
+				expect(result?.failedCases).toBe(1);
+				expect(result?.processedCount).toBe(1);
+				expect(state.updateValues).toMatchObject({
+					status: "completed_with_failures",
+					passedCases: 0,
+					failedCases: 1,
+					processedCount: 1,
+				});
+			} finally {
+				vi.useRealTimers();
+			}
+		});
+
+		it("marks run failed and persists traceLog when result persistence fails", async () => {
+			const mockEval = {
+				id: 1,
+				name: "Persistence Failure Eval",
+				organizationId: 1,
+				type: "standard",
+				executorType: "webhook",
+				executorConfig: { endpoint: "https://example.test" },
+			};
+			const mockTestCases = [{ id: 21, input: "test", expectedOutput: "mock" }];
+			const mockRun = { id: 1, startedAt: new Date("2024-01-01T00:00:00Z") };
+
+			let selectCallCount = 0;
+			vi.mocked((await import("@/db")).db.select).mockImplementation(() => {
+				selectCallCount++;
+				if (selectCallCount <= 3) return makeBuilder([mockEval]);
+				return makeBuilder(mockTestCases);
+			});
+
+			let insertCallCount = 0;
+			vi.mocked((await import("@/db")).db.insert).mockImplementation(() => {
+				insertCallCount++;
+				if (insertCallCount === 1) {
+					return {
+						values: vi.fn((val: any) => ({
+							returning: () => Promise.resolve([{ ...mockRun, ...val }]),
+						})),
+					} as any;
+				}
+				return {
+					values: vi.fn(() => Promise.reject(new Error("result write failed"))),
+				} as any;
+			});
+
+			vi.mocked(
+				(await import("@/lib/services/eval-executor")).createExecutor,
+			).mockReturnValue({
+				run: vi.fn().mockResolvedValue({ output: "mock" }),
+			} as any);
+
+			const result = await evaluationService.run(1, 1);
+
+			expect(result).not.toBeNull();
+			expect(result?.status).toBe("failed");
+			expect(result?.processedCount).toBe(1);
+			expect(result?.traceLog).toMatchObject({
+				error: "result write failed",
+				processedCount: 1,
+				totalCases: 1,
+			});
+			expect(state.updateValues).toMatchObject({
+				status: "failed",
+				passedCases: 1,
+				failedCases: 0,
+				processedCount: 1,
+				traceLog: expect.objectContaining({
+					error: "result write failed",
+					processedCount: 1,
+				}),
+			});
 		});
 	});
 });

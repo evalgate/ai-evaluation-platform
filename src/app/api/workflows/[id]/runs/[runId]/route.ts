@@ -1,8 +1,5 @@
-import { and, eq } from "drizzle-orm";
 import { type NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { db } from "@/db";
-import { workflows } from "@/db/schema";
 import { notFound, validationError } from "@/lib/api/errors";
 import { type AuthContext, secureRoute } from "@/lib/api/secure-route";
 import { logger } from "@/lib/logger";
@@ -36,16 +33,10 @@ export const GET = secureRoute(
 			return validationError("Valid run ID is required");
 		}
 
-		// Verify workflow belongs to the caller's organization
-		const [workflow] = await db
-			.select({ id: workflows.id })
-			.from(workflows)
-			.where(
-				and(
-					eq(workflows.id, workflowId),
-					eq(workflows.organizationId, ctx.organizationId),
-				),
-			);
+		const workflow = await workflowService.getById(
+			workflowId,
+			ctx.organizationId,
+		);
 
 		if (!workflow) {
 			return notFound("Workflow not found");
@@ -55,24 +46,24 @@ export const GET = secureRoute(
 		const includeDetails = searchParams.get("includeDetails") === "true";
 
 		if (includeDetails) {
-			const result = await workflowService.getRunWithDetails(runIdNum);
-			if (
-				!result ||
-				result.run.workflowId !== workflowId ||
-				result.run.organizationId !== ctx.organizationId
-			) {
+			const result = await workflowService.getRunWithDetails(
+				runIdNum,
+				workflowId,
+				ctx.organizationId,
+			);
+			if (!result) {
 				return notFound("Workflow run not found");
 			}
 			return NextResponse.json(result);
 		}
 
-		const run = await workflowService.getRunById(runIdNum);
+		const run = await workflowService.getRunById(
+			runIdNum,
+			workflowId,
+			ctx.organizationId,
+		);
 
-		if (
-			!run ||
-			run.workflowId !== workflowId ||
-			run.organizationId !== ctx.organizationId
-		) {
+		if (!run) {
 			return notFound("Workflow run not found");
 		}
 
@@ -101,16 +92,10 @@ export const PUT = secureRoute(
 			return validationError("Valid run ID is required");
 		}
 
-		// Verify workflow belongs to the caller's organization
-		const [workflow] = await db
-			.select({ id: workflows.id })
-			.from(workflows)
-			.where(
-				and(
-					eq(workflows.id, workflowId),
-					eq(workflows.organizationId, ctx.organizationId),
-				),
-			);
+		const workflow = await workflowService.getById(
+			workflowId,
+			ctx.organizationId,
+		);
 
 		if (!workflow) {
 			return notFound("Workflow not found");
@@ -127,7 +112,12 @@ export const PUT = secureRoute(
 			...validation.data,
 			errorMessage: validation.data.errorMessage ?? undefined,
 		};
-		const updated = await workflowService.updateRun(runIdNum, updateData);
+		const updated = await workflowService.updateRun(
+			runIdNum,
+			workflowId,
+			ctx.organizationId,
+			updateData,
+		);
 
 		if (!updated) {
 			return notFound("Workflow run not found");

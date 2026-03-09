@@ -81,7 +81,7 @@ export const POST = secureRoute(
 				userId: ctx.userId,
 				featureId: "benchmarks",
 				value: 1,
-				idempotencyKey: `benchmark-${benchmark.id}-${Date.now()}`,
+				idempotencyKey: `benchmarks-${benchmark.id}`,
 			});
 
 			logger.info("Benchmark created", {
