@@ -8,6 +8,7 @@ import * as path from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import {
+	buildLabelableCasesFromClusterSummary,
 	type LabeledGoldenCase,
 	type LabeledOutcome,
 	parseLabelArgs,
@@ -61,14 +62,24 @@ describe("label command", () => {
 		it("parses empty args", () => {
 			const result = parseLabelArgs([]);
 			expect(result).toEqual({
+				clusterPath: null,
 				runPath: null,
 				outputPath: null,
 				format: "human",
 			});
 		});
 
+		it("parses --cluster flag", () => {
+			const result = parseLabelArgs(["--cluster", "clusters.json"]);
+			expect(result.clusterPath).toBe("clusters.json");
+			expect(result.runPath).toBeNull();
+			expect(result.outputPath).toBeNull();
+			expect(result.format).toBe("human");
+		});
+
 		it("parses --run flag", () => {
 			const result = parseLabelArgs(["--run", "custom-run.json"]);
+			expect(result.clusterPath).toBeNull();
 			expect(result.runPath).toBe("custom-run.json");
 			expect(result.outputPath).toBeNull();
 			expect(result.format).toBe("human");
@@ -76,6 +87,7 @@ describe("label command", () => {
 
 		it("parses --output flag", () => {
 			const result = parseLabelArgs(["--output", "out/labeled.jsonl"]);
+			expect(result.clusterPath).toBeNull();
 			expect(result.outputPath).toBe("out/labeled.jsonl");
 			expect(result.runPath).toBeNull();
 			expect(result.format).toBe("human");
@@ -98,6 +110,8 @@ describe("label command", () => {
 
 		it("parses multiple flags", () => {
 			const result = parseLabelArgs([
+				"--cluster",
+				"clusters.json",
 				"--run",
 				"run.json",
 				"--output",
@@ -106,6 +120,7 @@ describe("label command", () => {
 				"json",
 			]);
 			expect(result).toEqual({
+				clusterPath: "clusters.json",
 				runPath: "run.json",
 				outputPath: "out.jsonl",
 				format: "json",
@@ -162,6 +177,63 @@ describe("label command", () => {
 	});
 
 	describe("output format", () => {
+		it("builds labelable cases from a cluster summary with cluster metadata", () => {
+			const cases = buildLabelableCasesFromClusterSummary({
+				runId: "run-1",
+				totalRunResults: 2,
+				clusteredCases: 2,
+				skippedCases: 0,
+				requestedClusters: 1,
+				includePassed: false,
+				clusters: [
+					{
+						id: "cluster-0",
+						clusterLabel: "refund, partial, payment",
+						dominantPattern: "refund, partial, payment",
+						suggestedFailureMode: "payment_issue",
+						similarityThreshold: 0.82,
+						traceIds: ["spec-1", "spec-2"],
+						traceCount: 2,
+						keywords: ["refund", "partial", "payment"],
+						memberIds: ["spec-1", "spec-2"],
+						memberCount: 2,
+						density: 0.8,
+						statusCounts: { passed: 0, failed: 2, skipped: 0 },
+						samples: [{ caseId: "spec-1", name: "refund one" }],
+						cases: [
+							{
+								caseId: "spec-1",
+								name: "refund one",
+								filePath: "evals/refund.ts",
+								status: "failed",
+								input: "refund input",
+								expected: "refund expected",
+								actual: "refund actual",
+							},
+							{
+								caseId: "spec-2",
+								name: "refund two",
+								filePath: "evals/refund.ts",
+								status: "failed",
+								input: "refund input 2",
+								expected: "refund expected 2",
+								actual: "refund actual 2",
+							},
+						],
+					},
+				],
+			});
+
+			expect(cases).toHaveLength(2);
+			expect(cases[0]).toEqual(
+				expect.objectContaining({
+					caseId: "spec-1",
+					clusterId: "cluster-0",
+					clusterLabel: "refund, partial, payment",
+				}),
+			);
+		});
+
 		it("writes valid JSONL format", () => {
 			const cases: LabeledGoldenCase[] = [
 				{

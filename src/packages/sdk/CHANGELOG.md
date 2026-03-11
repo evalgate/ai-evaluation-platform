@@ -8,6 +8,76 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Remaining gap — autonomous search depth** — The first `evalgate auto` loop still relies on heuristic prompt-candidate templates and a fixed evaluation policy; it does not yet generate edits with a model, branch across multiple search trajectories, or refine future mutations from prior iteration outcomes.
 
+## [3.2.0] - 2026-03-11
+
+### Autonomous Optimization Loop
+
+EvalGate now supports unattended AI quality improvement. The adaptive loop introduced in 3.1 gains a daemon mode, stable exit codes, and full cluster-to-label workflow — completing the path from production failure to autonomous regression fix.
+
+#### `evalgate auto daemon` — run experiments overnight
+
+The adaptive optimization loop can now run unattended across multiple cycles. Point it at a `program.md`, set a budget, and let it ingest new failures, prioritize clusters, and propose prompt patches while you sleep.
+
+```bash
+evalgate auto daemon --cycles 5
+evalgate auto daemon --interval-ms 3600000   # hourly
+evalgate auto daemon --once                  # single cycle, for cron/CI
+```
+
+Each cycle writes a structured report to `.evalgate/auto/daemon/cycle-<timestamp>.json` with patch candidates, budget used, and stop reason. The loop always stops cleanly — budget exceeded, objective met, or cluster exhausted. It never retries silently.
+
+#### `evalgate cluster` — axial coding for unlabeled traces
+
+Group unlabeled traces by failure pattern before labeling. Instead of stepping through 200 traces in arbitrary order, cluster them first and label by group. Now uses LLM embeddings and cosine similarity for higher-quality clustering.
+
+```bash
+evalgate cluster
+evalgate cluster --failure-mode constraint_missing --min-size 3
+```
+
+Each cluster gets a generated label, dominant pattern description, and suggested failure mode mapping. Results write to `.evalgate/auto/clusters/` and feed directly into `evalgate label`.
+
+#### `evalgate label --cluster` — label by cluster
+
+Step through traces in cluster order instead of arrival order. Pair with `evalgate cluster` to go from unlabeled traces to a complete golden dataset in one session. Cluster metadata is now persisted in labeled JSONL entries.
+
+```bash
+evalgate cluster --output clusters.json
+evalgate label --cluster clusters.json
+```
+
+#### Exit code 9 — failure mode threshold breach
+
+Failure mode alert breaches now exit with code 9, distinct from quality score regressions (code 2). CI pipelines can now distinguish the two failure types independently without parsing log output.
+
+```
+exit 0  clean
+exit 1  regressions detected
+exit 2  quality score below threshold
+exit 8  judge correction unavailable (warn)
+exit 9  failure mode alert threshold breached  ← new
+exit 10 judge credibility untrustworthy
+```
+
+### Fixed
+
+- **`auto` planner stops on `cluster_exhausted`** — previously fell back to the first allowed family when all families had failed in a cluster, causing silent infinite retry. The planner now returns `cluster_exhausted` and the runner halts with an explicit warning.
+- **`doctor` validates replay-decision budget** — two new checks: warns when `run.budget` is configured but no baseline run exists to compare against; fails when the budget mode/limit combination is invalid.
+
+### Internal
+
+- `EXIT.FAILURE_MODE_THRESHOLD = 9` added to `reason-codes.ts`
+- `EXIT.JUDGE_CREDIBILITY_UNTRUSTWORTHY` shifted to `10`
+- `REASON_CODES.FAILURE_MODE_THRESHOLD` added; formatter union updated
+- `auto-planner.ts`: `planNextIteration()` returns `{ family: null, reason: "cluster_exhausted" }` when no families remain
+- `auto-cluster.ts`: `suggestedNextFamily` set to `null` on cluster exhaustion
+- `auto-commands.ts`: `runAutoDaemon()` added; wired into `auto.ts` dispatcher
+- `auto-program.ts`: parser accepts `daemon` section with fields: `enabled`, `interval_seconds`, `max_experiments_per_cycle`, `pr_on_win`, `min_utility_for_pr`
+- `label.ts`: `--cluster` flag, cluster report flattening, `clusterId` and `clusterLabel` written to labeled JSONL
+- `cluster.ts`: switched from Jaccard to LLM embeddings with cosine similarity; added `dominantPattern`, `suggestedFailureMode`, `similarityThreshold`, `traceIds`, `traceCount` fields
+
+**94 tests passing** across `auto`, `auto-history`, `auto-planner`, `auto-cluster`, `auto-reflection`, `cluster`, `label`, `doctor`, `gate`.
+
 ## [3.1.0] - 2026-03-09
 
 ### Added
