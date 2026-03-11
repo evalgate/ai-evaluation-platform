@@ -14,8 +14,7 @@ import {
 } from "../../cli/auto-program";
 
 function buildValidProgramMarkdown(extraTopLevel = ""): string {
-	return (
-		`# EvalGate Auto Program
+	return `${`# EvalGate Auto Program
 
 
 yaml
@@ -41,8 +40,7 @@ holdout:
 stop_conditions:
   target_ratio: 0.1
 ${extraTopLevel}
-`.replace("\nyaml\n", "\n```yaml\n") + "```\n"
-	);
+`.replace("\nyaml\n", "\n```yaml\n")}\`\`\`\n`;
 }
 
 describe("extractAutoProgramYamlBlock", () => {

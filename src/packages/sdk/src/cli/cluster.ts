@@ -71,30 +71,33 @@ const RUN_SEARCH_PATHS = [
 ];
 
 const DEFAULT_SIMILARITY_THRESHOLD = 0.5; // Lowered for test compatibility
-const MAX_EMBEDDING_BATCH_SIZE = 50;
+const _MAX_EMBEDDING_BATCH_SIZE = 50;
 
-// LLM embedding interface
-interface EmbeddingRequest {
-	inputs: string[];
-	model?: string;
-}
+// LLM embedding interface (for future use)
+// interface EmbeddingRequest {
+// 	inputs: string[];
+// 	model?: string;
+// }
 
-interface EmbeddingResponse {
-	embeddings: number[][];
-}
+// interface EmbeddingResponse {
+// 	embeddings: number[][];
+// }
 
 // Mock embedding function - in production this would call an LLM API
 async function generateEmbeddings(texts: string[]): Promise<number[][]> {
 	// For testing, create embeddings that cluster similar texts together
 	// Refund cases should be similar, tone cases should be similar
-	return texts.map(text => {
+	return texts.map((text) => {
 		const embedding = new Array(128).fill(0);
-		
+
 		// Create base vector
 		const baseHash = simpleHash(text);
-		
+
 		// Add pattern-specific features
-		if (text.toLowerCase().includes("refund") || text.toLowerCase().includes("payment")) {
+		if (
+			text.toLowerCase().includes("refund") ||
+			text.toLowerCase().includes("payment")
+		) {
 			// Refund pattern - high values in first 64 dimensions
 			for (let i = 0; i < 64; i++) {
 				embedding[i] = Math.sin(baseHash * (i + 1)) * 0.8 + 0.2;
@@ -102,7 +105,10 @@ async function generateEmbeddings(texts: string[]): Promise<number[][]> {
 			for (let i = 64; i < 128; i++) {
 				embedding[i] = Math.cos(baseHash * (i + 1)) * 0.1;
 			}
-		} else if (text.toLowerCase().includes("tone") || text.toLowerCase().includes("support")) {
+		} else if (
+			text.toLowerCase().includes("tone") ||
+			text.toLowerCase().includes("support")
+		) {
 			// Tone pattern - high values in last 64 dimensions
 			for (let i = 0; i < 64; i++) {
 				embedding[i] = Math.cos(baseHash * (i + 1)) * 0.1;
@@ -113,13 +119,14 @@ async function generateEmbeddings(texts: string[]): Promise<number[][]> {
 		} else {
 			// Other patterns - mixed
 			for (let i = 0; i < 128; i++) {
-				embedding[i] = Math.sin(baseHash * (i + 1)) * Math.cos(baseHash * (i + 2));
+				embedding[i] =
+					Math.sin(baseHash * (i + 1)) * Math.cos(baseHash * (i + 2));
 			}
 		}
-		
+
 		// Normalize
 		const norm = Math.sqrt(embedding.reduce((sum, val) => sum + val * val, 0));
-		return embedding.map(val => val / norm);
+		return embedding.map((val) => val / norm);
 	});
 }
 
@@ -127,7 +134,7 @@ function simpleHash(str: string): number {
 	let hash = 0;
 	for (let i = 0; i < str.length; i++) {
 		const char = str.charCodeAt(i);
-		hash = ((hash << 5) - hash) + char;
+		hash = (hash << 5) - hash + char;
 		hash = hash & hash; // Convert to 32-bit integer
 	}
 	return hash;
@@ -136,20 +143,20 @@ function simpleHash(str: string): number {
 // Cosine similarity calculation
 function cosineSimilarity(a: number[], b: number[]): number {
 	if (a.length === 0 || b.length === 0) return 0;
-	
+
 	let dotProduct = 0;
 	let normA = 0;
 	let normB = 0;
-	
+
 	for (let i = 0; i < a.length; i++) {
 		dotProduct += a[i] * b[i];
 		normA += a[i] * a[i];
 		normB += b[i] * b[i];
 	}
-	
+
 	normA = Math.sqrt(normA);
 	normB = Math.sqrt(normB);
-	
+
 	if (normA === 0 || normB === 0) return 0;
 	return dotProduct / (normA * normB);
 }
@@ -256,7 +263,7 @@ function tokenize(text: string): string[] {
 		.filter((token) => token.length > 2 && !STOP_WORDS.has(token));
 }
 
-function tokenSet(text: string): Set<string> {
+function _tokenSet(text: string): Set<string> {
 	return new Set(tokenize(text));
 }
 
@@ -292,7 +299,7 @@ function centroidKeywords(texts: string[], topN = 4): string[] {
 		.map(([token]) => token);
 }
 
-function clusterDensity(members: Array<{ tokens: Set<string> }>): number {
+function _clusterDensity(members: Array<{ tokens: Set<string> }>): number {
 	if (members.length < 2) {
 		return 1;
 	}
@@ -323,26 +330,30 @@ function buildTraceText(spec: SpecResult): string {
 }
 
 // Generate dominant pattern and suggested failure mode for a cluster
-function generateClusterMetadata(members: Array<{ text: string; status: string }>): {
+function generateClusterMetadata(
+	members: Array<{ text: string; status: string }>,
+): {
 	dominantPattern: string;
 	suggestedFailureMode: string | null;
 } {
-	const allTexts = members.map(m => m.text).join(" ");
-	const keywords = centroidKeywords(members.map(m => m.text));
-	
+	const _allTexts = members.map((m) => m.text).join(" ");
+	const keywords = centroidKeywords(members.map((m) => m.text));
+
 	// Generate dominant pattern from keywords
-	const dominantPattern = keywords.length > 0 
-		? keywords.slice(0, 3).join(", ") 
-		: "No clear pattern";
-	
+	const dominantPattern =
+		keywords.length > 0 ? keywords.slice(0, 3).join(", ") : "No clear pattern";
+
 	// Suggest failure mode based on common patterns
-	const failedMembers = members.filter(m => m.status === "failed");
+	const failedMembers = members.filter((m) => m.status === "failed");
 	if (failedMembers.length === 0) {
 		return { dominantPattern, suggestedFailureMode: null };
 	}
-	
-	const failedTexts = failedMembers.map(m => m.text).join(" ").toLowerCase();
-	
+
+	const failedTexts = failedMembers
+		.map((m) => m.text)
+		.join(" ")
+		.toLowerCase();
+
 	// Simple heuristic-based failure mode suggestion
 	if (failedTexts.includes("timeout") || failedTexts.includes("slow")) {
 		return { dominantPattern, suggestedFailureMode: "performance_timeout" };
@@ -353,10 +364,13 @@ function generateClusterMetadata(members: Array<{ text: string; status: string }
 	if (failedTexts.includes("format") || failedTexts.includes("parse")) {
 		return { dominantPattern, suggestedFailureMode: "format_mismatch" };
 	}
-	if (failedTexts.includes("constraint") || failedTexts.includes("validation")) {
+	if (
+		failedTexts.includes("constraint") ||
+		failedTexts.includes("validation")
+	) {
 		return { dominantPattern, suggestedFailureMode: "constraint_violation" };
 	}
-	
+
 	return { dominantPattern, suggestedFailureMode: "general_failure" };
 }
 
@@ -364,7 +378,7 @@ function generateClusterMetadata(members: Array<{ text: string; status: string }
 async function buildEmbeddingAssignments(
 	points: Array<{ caseId: string; text: string; embedding: number[] }>,
 	k: number,
-	similarityThreshold: number = DEFAULT_SIMILARITY_THRESHOLD,
+	_similarityThreshold: number = DEFAULT_SIMILARITY_THRESHOLD,
 ): Promise<Map<number, string[]>> {
 	if (points.length === 0) {
 		return new Map();
@@ -430,9 +444,9 @@ export async function clusterRunResult(
 	}
 
 	// Generate embeddings for all candidates
-	const texts = candidates.map(c => c.text);
+	const texts = candidates.map((c) => c.text);
 	const embeddings = await generateEmbeddings(texts);
-	
+
 	const candidatesWithEmbeddings = candidates.map((candidate, index) => ({
 		...candidate,
 		embedding: embeddings[index],
@@ -441,7 +455,10 @@ export async function clusterRunResult(
 	const clusterCount =
 		options.clusters ??
 		Math.min(8, Math.max(1, Math.round(Math.sqrt(candidates.length))));
-	const assignments = await buildEmbeddingAssignments(candidatesWithEmbeddings, clusterCount);
+	const assignments = await buildEmbeddingAssignments(
+		candidatesWithEmbeddings,
+		clusterCount,
+	);
 	const candidateById = new Map(
 		candidatesWithEmbeddings.map((candidate) => [candidate.caseId, candidate]),
 	);
@@ -457,10 +474,11 @@ export async function clusterRunResult(
 			.filter(
 				(member): member is NonNullable<typeof member> => member !== undefined,
 			);
-		
+
 		const keywords = centroidKeywords(members.map((member) => member.text));
-		const { dominantPattern, suggestedFailureMode } = generateClusterMetadata(members);
-		
+		const { dominantPattern, suggestedFailureMode } =
+			generateClusterMetadata(members);
+
 		const statusCounts = {
 			passed: 0,
 			failed: 0,
@@ -482,11 +500,17 @@ export async function clusterRunResult(
 				similarityCount++;
 			}
 		}
-		const avgSimilarity = similarityCount > 0 ? totalSimilarity / similarityCount : DEFAULT_SIMILARITY_THRESHOLD;
+		const avgSimilarity =
+			similarityCount > 0
+				? totalSimilarity / similarityCount
+				: DEFAULT_SIMILARITY_THRESHOLD;
 
 		clusters.push({
 			id: `cluster-${index}`,
-			clusterLabel: keywords.length > 0 ? keywords.slice(0, 3).join(", ") : `Cluster ${index + 1}`,
+			clusterLabel:
+				keywords.length > 0
+					? keywords.slice(0, 3).join(", ")
+					: `Cluster ${index + 1}`,
 			dominantPattern,
 			suggestedFailureMode,
 			similarityThreshold: avgSimilarity,
