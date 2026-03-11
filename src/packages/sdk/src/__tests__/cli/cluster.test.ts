@@ -108,11 +108,14 @@ describe("clusterRunResult", () => {
 		expect(summary.clusters).toHaveLength(2);
 		// With the new embedding-based clustering, we expect different cluster sizes
 		// The important thing is that all failed traces are clustered
-		const totalClustered = summary.clusters.reduce((sum, cluster) => sum + cluster.traceCount, 0);
+		const totalClustered = summary.clusters.reduce(
+			(sum, cluster) => sum + cluster.traceCount,
+			0,
+		);
 		expect(totalClustered).toBe(4);
-		
+
 		// Verify that we have the expected trace IDs across all clusters
-		const allTraceIds = summary.clusters.flatMap(cluster => cluster.traceIds);
+		const allTraceIds = summary.clusters.flatMap((cluster) => cluster.traceIds);
 		expect(allTraceIds).toContain("refund-1");
 		expect(allTraceIds).toContain("refund-2");
 		expect(allTraceIds).toContain("tone-1");
@@ -129,7 +132,10 @@ describe("clusterRunResult", () => {
 		expect(summary.skippedCases).toBe(0);
 		// With the new embedding-based clustering, we expect different cluster sizes
 		// The important thing is that all traces are clustered
-		const totalClustered = summary.clusters.reduce((sum, cluster) => sum + cluster.traceCount, 0);
+		const totalClustered = summary.clusters.reduce(
+			(sum, cluster) => sum + cluster.traceCount,
+			0,
+		);
 		expect(totalClustered).toBe(5);
 		expect(
 			summary.clusters.reduce(
