@@ -345,6 +345,129 @@ describe("runAuto subcommands", () => {
 		}
 	});
 
+	it("inherits daemon interval and per-cycle budget defaults from program.md", async () => {
+		const projectRoot = makeTempProjectRoot();
+		const paths = resolveAutoWorkspacePaths(projectRoot);
+		const outputPath = path.join(
+			projectRoot,
+			".evalgate",
+			"auto",
+			"cycle-report.json",
+		);
+		fs.mkdirSync(path.dirname(paths.programPath), { recursive: true });
+		fs.mkdirSync(path.join(projectRoot, ".evalgate"), { recursive: true });
+		fs.mkdirSync(path.join(projectRoot, "prompts"), { recursive: true });
+		fs.writeFileSync(
+			paths.programPath,
+			[
+				"```yaml",
+				"objective:",
+				"  failure_mode: tone_mismatch",
+				"mutation:",
+				"  target: prompts/support.md",
+				"  allowed_families:",
+				"    - few-shot-examples",
+				"budget:",
+				"  max_experiments: 1",
+				"utility:",
+				"  weights:",
+				"    objective_reduction_ratio: 1",
+				"hard_vetoes:",
+				"  latency_ceiling: 0.2",
+				"promotion:",
+				"  min_utility: 0.05",
+				"holdout:",
+				"  selection: deterministic",
+				"stop_conditions:",
+				"  target_ratio: 0.1",
+				"daemon:",
+				"  interval_seconds: 5",
+				"  max_experiments_per_cycle: 2",
+				"```",
+				"",
+			].join("\n"),
+			"utf8",
+		);
+		fs.writeFileSync(
+			path.join(projectRoot, "prompts", "support.md"),
+			"Base prompt",
+			"utf8",
+		);
+		fs.writeFileSync(
+			path.join(projectRoot, ".evalgate", "manifest.json"),
+			JSON.stringify(
+				{
+					schemaVersion: 1,
+					generatedAt: 1738454400,
+					project: {
+						name: "test-project",
+						root: ".",
+						namespace: "test-project",
+					},
+					runtime: {
+						mode: "spec",
+						sdkVersion: "test",
+					},
+					specFiles: [
+						{
+							filePath: "evals/support.eval.ts",
+							fileHash: "hash-1",
+							specCount: 1,
+						},
+					],
+					specs: [
+						{
+							id: "spec-tone-1",
+							name: "support-tone",
+							suitePath: ["support"],
+							filePath: "evals/support.eval.ts",
+							position: { line: 1, column: 1 },
+							tags: ["support"],
+							dependsOn: {
+								prompts: ["prompts/support.md"],
+								datasets: [],
+								tools: [],
+								code: [],
+							},
+						},
+					],
+				},
+				null,
+				2,
+			),
+			"utf8",
+		);
+
+		try {
+			vi.spyOn(process, "cwd").mockReturnValue(projectRoot);
+			const exitCode = await runAuto([
+				"daemon",
+				"--cycles",
+				"1",
+				"--format",
+				"json",
+				"--dry-run",
+				"--output",
+				outputPath,
+			]);
+			const output = vi
+				.mocked(console.log)
+				.mock.calls.map((call) => call.join(" "));
+			const daemonSummary = JSON.parse(output.at(-1) ?? "{}") as {
+				intervalMs?: number;
+			};
+			const report = JSON.parse(fs.readFileSync(outputPath, "utf8")) as {
+				iterationBudget: number;
+			};
+
+			expect(exitCode).toBe(0);
+			expect(daemonSummary.intervalMs).toBe(5000);
+			expect(report.iterationBudget).toBe(2);
+		} finally {
+			fs.rmSync(projectRoot, { recursive: true, force: true });
+		}
+	});
+
 	it("renders history output from the ledger", async () => {
 		const projectRoot = makeTempProjectRoot();
 		const paths = resolveAutoWorkspacePaths(projectRoot);

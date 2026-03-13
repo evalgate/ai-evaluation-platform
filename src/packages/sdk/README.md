@@ -7,9 +7,9 @@
 [![Contract Version](https://img.shields.io/badge/report%20schema-v1-blue.svg)](#)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-**AI quality infrastructure. Production failures automatically become regression tests.**
+**AI quality infrastructure for golden datasets, automated regression, and guided optimization.**
 
-Complete pipeline: discover → manifest → impact → run → diff → PR summary. Plus: production trace collection, failure detection, auto-generated test cases, and golden regression datasets.
+Complete pipeline: discover → cluster → label/analyze → synthesize → gate/auto. Plus: production trace collection, saved artifacts, auto sessions, and golden regression datasets.
 
 Zero to production CI in 60 seconds. No infra. No lock-in. Remove anytime.
 
@@ -17,25 +17,27 @@ Zero to production CI in 60 seconds. No infra. No lock-in. Remove anytime.
 
 ## How EvalGate Works
 
-EvalGate is a **closed-loop AI quality system**. It connects production traffic to your eval suite so failures discovered in production become regression tests automatically.
+EvalGate is a **closed-loop AI quality system**. It connects evaluation specs, production traffic, and golden datasets so failures discovered in production can be clustered, labeled, promoted, and turned into future regression protection.
 
 ```
-Production Traffic
+Evaluation Specs + Production Traffic
        │
-       ▼  reportTrace()          ← asymmetric sampling: 10% success, 100% errors
+       ▼  evalgate discover --manifest / reportTrace()
        │
-       ▼  Failure Detection      ← candidates auto-quarantined for review
+       ▼  evalgate cluster       ← failures grouped by pattern before labeling
        │
-       ▼  evalgate label         ← you assign: pass/fail + failure mode (interactive)
+       ▼  evalgate label         ← you assign: pass/fail + failure mode
        │
        ▼  evalgate analyze       ← frequency × impact: which modes hurt most?
        │
-       ▼  evalgate ci            ← regression gate with validated judge credibility
+       ▼  evalgate synthesize    ← deterministic draft golden cases for review
        │
-       ▼  PR blocked or merged   ← loop restarts with new production data
+       ▼  evalgate gate / auto   ← regressions blocked, optimization loops bounded
+       │
+       ▼  Saved artifacts + auto sessions in the platform UI
 ```
 
-**The core insight:** your eval suite is not a one-time setup. It is a living document driven by production evidence. Every label you apply becomes a regression test that prevents the same failure from shipping again.
+**The core insight:** your eval suite is not a one-time setup. It is a living document driven by production evidence. Every label you apply, every cluster you review, and every accepted synthetic draft strengthens the regression suite that protects future releases.
 
 ---
 
@@ -47,11 +49,11 @@ Transform your AI application from basic testing to data-driven quality assuranc
 
 What you'll build:
 - ✅ Automated evaluation pipeline (2 minutes)
-- ✅ Production trace collection (5 minutes) 
-- ✅ Failure detection and auto-labeling (10 minutes)
+- ✅ Production trace collection and labeling inputs (5 minutes)
+- ✅ Coverage discovery and failure clustering (5 minutes)
 - ✅ Golden dataset with failure modes (15 minutes)
-- ✅ CI/CD integration with regression protection (5 minutes)
-- ✅ Budget-aware evaluation loop (3 minutes)
+- ✅ Synthetic golden-case drafts you can review and promote (3 minutes)
+- ✅ CI/CD regression protection and guided optimization loops (5 minutes)
 
 ---
 
@@ -148,6 +150,18 @@ Use this path when you want quality score trends, trace-linked failures, and PR 
 ---
 
 ## 🚀 v3.x highlights: Production-Ready AI Quality Infrastructure
+
+### 🆕 v3.2.2 — Saved Artifacts + Auto Sessions
+
+- Persist datasets, analyses, diversity reports, clusters, and syntheses so teams can reopen prior EvalGate work instead of recomputing it
+- Create, run, stop, and monitor guided auto sessions from the evaluation detail page
+- Align the release docs and versioned artifacts around the full golden-dataset + automated-regression workflow
+
+### 🆕 v3.2.0 — Cluster-Assisted Labeling + Auto Daemon
+
+- `evalgate auto daemon` can run bounded optimization cycles unattended with explicit stop reasons and per-cycle reports
+- `evalgate label --cluster` lets you label grouped failures in cluster order instead of raw arrival order
+- `evalgate cluster` now uses embeddings + cosine similarity and emits richer cluster metadata for downstream labeling and planning
 
 ### 🆕 v3.0.3 — Reliability Hardening
 

@@ -29,14 +29,14 @@ jobs:
       - name: EvalGate gate
         env:
           EVALGATE_API_KEY: ${{ secrets.EVALGATE_API_KEY }}
-        run: npx -y @evalgate/sdk@^2 check --format github --onFail import
+        run: npx -y @evalgate/sdk@3.2.2 check --format github --onFail import
 ```
 
 **Required:** Add `EVALGATE_API_KEY` to your repo secrets (Settings → Secrets and variables → Actions). Create an API key in the [EvalGate dashboard](https://evalgate.com) with `runs:read` scope.
 
 ## Setup
 
-1. Run `npx -y @evalgate/sdk@^2 init` to create `evalgate.config.json`
+1. Run `npx -y @evalgate/sdk@3.2.2 init` to create `evalgate.config.json`
 2. Create an evaluation in the dashboard and add test cases
 3. Paste the evaluation ID into `evalgate.config.json`
 4. Add the workflow above

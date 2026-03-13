@@ -51,6 +51,7 @@ var __importStar = (this && this.__importStar) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.parseLabelArgs = parseLabelArgs;
+exports.buildLabelableCasesFromClusterSummary = buildLabelableCasesFromClusterSummary;
 exports.runLabel = runLabel;
 const fs = __importStar(require("node:fs"));
 const path = __importStar(require("node:path"));
@@ -71,13 +72,17 @@ const STANDARD_FAILURE_MODES = [
 ];
 function parseLabelArgs(args) {
     const result = {
+        clusterPath: null,
         runPath: null,
         outputPath: null,
         format: "human",
     };
     for (let i = 0; i < args.length; i++) {
         const arg = args[i];
-        if (arg === "--run" && args[i + 1]) {
+        if (arg === "--cluster" && args[i + 1]) {
+            result.clusterPath = args[++i];
+        }
+        else if (arg === "--run" && args[i + 1]) {
             result.runPath = args[++i];
         }
         else if (arg === "--output" && args[i + 1]) {
@@ -134,26 +139,76 @@ function loadExistingLabeledCases(outputPath) {
         throw new Error(`Failed to read existing labeled cases: ${error}`);
     }
 }
-function findNextIndex(runResult, existing) {
+function findNextIndex(cases, existing) {
     const existingCaseIds = new Set(existing.map((c) => c.caseId));
-    for (let i = 0; i < runResult.results.length; i++) {
-        if (!existingCaseIds.has(runResult.results[i].specId)) {
+    for (let i = 0; i < cases.length; i++) {
+        if (!existingCaseIds.has(cases[i].caseId)) {
             return i;
         }
     }
-    return runResult.results.length; // All cases already labeled
+    return cases.length;
 }
 // ── Core labeling logic ──
-function createLabeledCase(spec, label, failureMode) {
+function createLabeledCase(item, label, failureMode) {
     return {
-        caseId: spec.specId,
-        input: spec.input ?? "",
-        expected: spec.expected ?? "",
-        actual: spec.actual ?? "",
+        caseId: item.caseId,
+        input: item.input,
+        expected: item.expected,
+        actual: item.actual,
         label,
         failureMode,
         labeledAt: new Date().toISOString(),
+        clusterId: item.clusterId,
+        clusterLabel: item.clusterLabel,
     };
+}
+function buildLabelableCasesFromRunResult(runResult) {
+    return runResult.results.map((spec) => ({
+        caseId: spec.specId,
+        title: spec.name,
+        input: spec.input ?? "",
+        expected: spec.expected ?? "",
+        actual: spec.actual ?? "",
+        clusterId: null,
+        clusterLabel: null,
+    }));
+}
+function buildLabelableCasesFromClusterSummary(summary) {
+    const labelableCases = [];
+    for (const cluster of summary.clusters) {
+        if (!Array.isArray(cluster.cases)) {
+            throw new Error(`Cluster report is invalid: ${cluster.id} is missing cases`);
+        }
+        for (const clusterCase of cluster.cases) {
+            labelableCases.push({
+                caseId: clusterCase.caseId,
+                title: clusterCase.name,
+                input: clusterCase.input,
+                expected: clusterCase.expected,
+                actual: clusterCase.actual,
+                clusterId: cluster.id,
+                clusterLabel: cluster.clusterLabel,
+            });
+        }
+    }
+    return labelableCases;
+}
+function readClusterSummary(clusterPath) {
+    let parsed;
+    try {
+        parsed = JSON.parse(fs.readFileSync(clusterPath, "utf-8"));
+    }
+    catch {
+        throw new Error("Failed to read/parse cluster report");
+    }
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+        throw new Error("Cluster report must be a JSON object");
+    }
+    const candidate = parsed;
+    if (!Array.isArray(candidate.clusters)) {
+        throw new Error("Cluster report must include a clusters array");
+    }
+    return candidate;
 }
 async function promptUser(rl, question) {
     return new Promise((resolve) => {
@@ -192,32 +247,35 @@ function printSessionSummary(labeled) {
         console.log(`Failure modes: ${failureModesList}`);
     }
 }
-async function labelInteractive(runResult, outputPath) {
+async function labelInteractive(cases, outputPath, sessionTitle) {
     const rl = readline.createInterface({
         input: process.stdin,
         output: process.stdout,
     });
     // Resume support
     const existing = loadExistingLabeledCases(outputPath);
-    const startIndex = findNextIndex(runResult, existing);
-    const total = runResult.results.length;
+    const startIndex = findNextIndex(cases, existing);
+    const total = cases.length;
     if (startIndex > 0) {
         console.log(`\n🔄 Resuming from case ${startIndex + 1}/${total}`);
         console.log(`   Already labeled: ${existing.length} cases`);
     }
     else {
-        console.log(`\n🏷️  EvalGate Label — ${total} cases to label\n`);
+        console.log(`\n🏷️  ${sessionTitle} — ${total} cases to label\n`);
     }
     console.log("Controls: p=pass, f=fail, u=undo, q=quit, ?=help\n");
     const labeled = [...existing];
     let currentIndex = startIndex;
     while (currentIndex < total) {
-        const spec = runResult.results[currentIndex];
+        const spec = cases[currentIndex];
         const idx = (currentIndex + 1).toString().padStart(3, " ");
-        console.log(`\n🔍 Case ${idx}/${total}: ${spec.specId}`);
-        const specInput = spec.input ?? "";
-        const specExpected = spec.expected ?? "";
-        const specActual = spec.actual ?? "";
+        console.log(`\n🔍 Case ${idx}/${total}: ${spec.caseId}`);
+        if (spec.clusterId) {
+            console.log(`🧩 Cluster: ${spec.clusterId}${spec.clusterLabel ? ` — ${spec.clusterLabel}` : ""}`);
+        }
+        const specInput = spec.input;
+        const specExpected = spec.expected;
+        const specActual = spec.actual;
         console.log(`📝 Input: ${specInput.slice(0, 200)}${specInput.length > 200 ? "..." : ""}`);
         console.log(`✅ Expected: ${specExpected.slice(0, 200)}${specExpected.length > 200 ? "..." : ""}`);
         console.log(`🤖 Actual: ${specActual.slice(0, 200) || "(none)"}${specActual.length > 200 ? "..." : ""}`);
@@ -281,6 +339,53 @@ function writeLabeledJsonl(cases, outputPath) {
 async function runLabel(args) {
     const parsed = parseLabelArgs(args);
     const cwd = process.cwd();
+    if (parsed.clusterPath && parsed.runPath) {
+        console.error("  ✖ Use either --run or --cluster, not both.");
+        return 1;
+    }
+    const outputPath = parsed.outputPath ?? path.join(cwd, ".evalgate", "golden", "labeled.jsonl");
+    const outputDir = path.dirname(outputPath);
+    if (!fs.existsSync(outputDir)) {
+        fs.mkdirSync(outputDir, { recursive: true });
+    }
+    if (parsed.clusterPath) {
+        const clusterPath = path.isAbsolute(parsed.clusterPath)
+            ? parsed.clusterPath
+            : path.join(cwd, parsed.clusterPath);
+        if (!fs.existsSync(clusterPath)) {
+            console.error("  ✖ Cluster report not found.");
+            console.error("    Run evalgate cluster --output <path> first, or specify --cluster <path>");
+            return 1;
+        }
+        let clusterSummary;
+        try {
+            clusterSummary = readClusterSummary(clusterPath);
+        }
+        catch (error) {
+            console.error(`  ✖ ${error instanceof Error ? error.message : String(error)}`);
+            return 1;
+        }
+        const clusterCases = buildLabelableCasesFromClusterSummary(clusterSummary);
+        if (clusterCases.length === 0) {
+            console.error("  ✖ Cluster report does not contain any cases to label.");
+            return 1;
+        }
+        console.log(`📂 Cluster report: ${path.relative(cwd, clusterPath)}`);
+        console.log(`📄 Output: ${path.relative(cwd, outputPath)}`);
+        const labeled = await labelInteractive(clusterCases, outputPath, "EvalGate Label (cluster mode)");
+        try {
+            writeLabeledJsonl(labeled, outputPath);
+        }
+        catch (error) {
+            console.error("  ✖ Failed to write output:", error);
+            return 2;
+        }
+        if (parsed.format === "json") {
+            console.log("\n📋 Summary (JSON):");
+            console.log(JSON.stringify({ total: labeled.length, output: outputPath }, null, 2));
+        }
+        return 0;
+    }
     const runPath = findRunResult(cwd, parsed.runPath);
     if (!runPath) {
         console.error("  ✖ Run result not found.");
@@ -300,14 +405,9 @@ async function runLabel(args) {
         console.error(`  ✖ Unsupported run result schema version: ${runResult?.schemaVersion ?? "missing"}`);
         return 1;
     }
-    const outputPath = parsed.outputPath ?? path.join(cwd, ".evalgate", "golden", "labeled.jsonl");
-    const outputDir = path.dirname(outputPath);
-    if (!fs.existsSync(outputDir)) {
-        fs.mkdirSync(outputDir, { recursive: true });
-    }
     console.log(`📂 Run result: ${path.relative(cwd, runPath)}`);
     console.log(`📄 Output: ${path.relative(cwd, outputPath)}`);
-    const labeled = await labelInteractive(runResult, outputPath);
+    const labeled = await labelInteractive(buildLabelableCasesFromRunResult(runResult), outputPath, "EvalGate Label");
     try {
         writeLabeledJsonl(labeled, outputPath);
     }

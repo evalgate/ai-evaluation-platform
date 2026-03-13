@@ -6,7 +6,7 @@ Minimal example that gates CI on EvalGate quality score using `evalai check`.
 
 1. Copy this folder to your project or use it as reference.
 2. Create an evaluation in the [EvalGate dashboard](https://evalgate.com) and add test cases.
-3. Run `npx -y @evalgate/sdk@^2 init` (or copy `evalgate.config.json`) and paste your evaluation ID.
+3. Run `npx -y @evalgate/sdk@3.2.2 init` (or copy `evalgate.config.json`) and paste your evaluation ID.
 4. Create an API key at EvalGate (owner/admin role) with `runs:read` scope.
 
 ## Run Locally
@@ -25,7 +25,7 @@ Add a workflow step:
 - name: EvalGate gate
   env:
     EVALAI_API_KEY: ${{ secrets.EVALAI_API_KEY }}
-  run: npx -y @evalgate/sdk@^2 check --format github --onFail import
+  run: npx -y @evalgate/sdk@3.2.2 check --format github --onFail import
 ```
 
 Or run `npm run ci` if the SDK is a dependency (uses local `evalai check`).

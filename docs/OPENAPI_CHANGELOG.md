@@ -4,6 +4,12 @@ When you change `docs/openapi.json`, add an entry here before running `pnpm open
 
 Format: `## X.Y.Z` or `## [X.Y.Z]` with a short description.
 
+## 3.2.2
+
+- Bump spec version to align with TypeScript SDK `3.2.2`
+- Document EvalGate artifact, auto-session, analyze, cluster, and dataset routes added during the hardening pass
+- Keep release metadata, request headers, and spec hash tracking in sync for the `3.2.2` release
+
 ## 3.1.0
 
 - Bump spec version to align with TypeScript SDK `3.1.0`

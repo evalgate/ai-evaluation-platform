@@ -1,4 +1,4 @@
-import { type RunResult } from "./run";
+import { type RunResult, type SpecResult } from "./run";
 export type ClusterFormat = "human" | "json";
 export interface ClusterFlags {
     runPath: string | null;
@@ -11,9 +11,23 @@ export interface ClusterSample {
     caseId: string;
     name: string;
 }
+export interface ClusterCase {
+    caseId: string;
+    name: string;
+    filePath: string;
+    status: SpecResult["result"]["status"];
+    input: string;
+    expected: string;
+    actual: string;
+}
 export interface TraceCluster {
     id: string;
-    label: string;
+    clusterLabel: string;
+    dominantPattern: string;
+    suggestedFailureMode: string | null;
+    similarityThreshold: number;
+    traceIds: string[];
+    traceCount: number;
     keywords: string[];
     memberIds: string[];
     memberCount: number;
@@ -24,6 +38,7 @@ export interface TraceCluster {
         skipped: number;
     };
     samples: ClusterSample[];
+    cases: ClusterCase[];
 }
 export interface ClusterSummary {
     runId: string;
@@ -38,6 +53,6 @@ export declare function parseClusterArgs(args: string[]): ClusterFlags;
 export declare function clusterRunResult(runResult: RunResult, options?: {
     clusters?: number | null;
     includePassed?: boolean;
-}): ClusterSummary;
+}): Promise<ClusterSummary>;
 export declare function formatClusterHuman(summary: ClusterSummary): string;
 export declare function runCluster(args: string[]): Promise<number>;

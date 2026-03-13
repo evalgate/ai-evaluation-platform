@@ -12,6 +12,7 @@ describe("SCOPES constants", () => {
 		expect(SCOPES.RUNS_WRITE).toBe("runs:write");
 		expect(SCOPES.TRACES_READ).toBe("traces:read");
 		expect(SCOPES.TRACES_WRITE).toBe("traces:write");
+		expect(SCOPES.EXPORTS_DOWNLOAD).toBe("exports:download");
 		expect(SCOPES.REPORTS_WRITE).toBe("reports:write");
 		expect(SCOPES.ADMIN_KEYS).toBe("admin:keys");
 		expect(SCOPES.ADMIN_ORG).toBe("admin:org");
@@ -32,6 +33,7 @@ describe("ALL_SCOPES", () => {
 		expect(ALL_SCOPES).toContain(SCOPES.RUNS_WRITE);
 		expect(ALL_SCOPES).toContain(SCOPES.TRACES_READ);
 		expect(ALL_SCOPES).toContain(SCOPES.TRACES_WRITE);
+		expect(ALL_SCOPES).toContain(SCOPES.EXPORTS_DOWNLOAD);
 		expect(ALL_SCOPES).toContain(SCOPES.REPORTS_WRITE);
 		expect(ALL_SCOPES).toContain(SCOPES.ADMIN_KEYS);
 		expect(ALL_SCOPES).toContain(SCOPES.ADMIN_ORG);
@@ -53,11 +55,12 @@ describe("scopesForRole", () => {
 			SCOPES.RUNS_WRITE,
 			SCOPES.TRACES_READ,
 			SCOPES.TRACES_WRITE,
+			SCOPES.EXPORTS_DOWNLOAD,
 			SCOPES.REPORTS_WRITE,
 			SCOPES.ADMIN_KEYS,
 			SCOPES.ADMIN_ORG,
 		]);
-		expect(scopes).toHaveLength(9);
+		expect(scopes).toHaveLength(10);
 	});
 
 	it("should return all scopes except admin:org for admin role", () => {
@@ -69,10 +72,11 @@ describe("scopesForRole", () => {
 			SCOPES.RUNS_WRITE,
 			SCOPES.TRACES_READ,
 			SCOPES.TRACES_WRITE,
+			SCOPES.EXPORTS_DOWNLOAD,
 			SCOPES.REPORTS_WRITE,
 			SCOPES.ADMIN_KEYS,
 		]);
-		expect(scopes).toHaveLength(8);
+		expect(scopes).toHaveLength(9);
 		expect(scopes).not.toContain(SCOPES.ADMIN_ORG);
 	});
 
@@ -85,9 +89,10 @@ describe("scopesForRole", () => {
 			SCOPES.RUNS_WRITE,
 			SCOPES.TRACES_READ,
 			SCOPES.TRACES_WRITE,
+			SCOPES.EXPORTS_DOWNLOAD,
 			SCOPES.REPORTS_WRITE,
 		]);
-		expect(scopes).toHaveLength(7);
+		expect(scopes).toHaveLength(8);
 		expect(scopes).not.toContain(SCOPES.ADMIN_KEYS);
 		expect(scopes).not.toContain(SCOPES.ADMIN_ORG);
 	});

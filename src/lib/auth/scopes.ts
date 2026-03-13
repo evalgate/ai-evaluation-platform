@@ -13,6 +13,7 @@ export const SCOPES = {
 	RUNS_WRITE: "runs:write",
 	TRACES_READ: "traces:read",
 	TRACES_WRITE: "traces:write",
+	EXPORTS_DOWNLOAD: "exports:download",
 	REPORTS_WRITE: "reports:write",
 	ADMIN_KEYS: "admin:keys",
 	ADMIN_ORG: "admin:org",
@@ -42,6 +43,7 @@ export function scopesForRole(role: Role): string[] {
 				SCOPES.RUNS_WRITE,
 				SCOPES.TRACES_READ,
 				SCOPES.TRACES_WRITE,
+				SCOPES.EXPORTS_DOWNLOAD,
 				SCOPES.REPORTS_WRITE,
 				SCOPES.ADMIN_KEYS,
 				SCOPES.ADMIN_ORG,
@@ -54,6 +56,7 @@ export function scopesForRole(role: Role): string[] {
 				SCOPES.RUNS_WRITE,
 				SCOPES.TRACES_READ,
 				SCOPES.TRACES_WRITE,
+				SCOPES.EXPORTS_DOWNLOAD,
 				SCOPES.REPORTS_WRITE,
 				SCOPES.ADMIN_KEYS,
 			];
@@ -65,6 +68,7 @@ export function scopesForRole(role: Role): string[] {
 				SCOPES.RUNS_WRITE,
 				SCOPES.TRACES_READ,
 				SCOPES.TRACES_WRITE,
+				SCOPES.EXPORTS_DOWNLOAD,
 				SCOPES.REPORTS_WRITE,
 			];
 		default:

@@ -106,9 +106,9 @@ jobs:
       - run: npm ci
       - name: EvalGate Doctor (preflight)
         continue-on-error: true
-        run: npx -y @evalgate/sdk@^2 doctor
+        run: npx -y @evalgate/sdk@3.2.2 doctor
       - name: EvalGate Regression Gate
-        run: npx -y @evalgate/sdk@^2 gate --format github
+        run: npx -y @evalgate/sdk@3.2.2 gate --format github
       - name: Upload report
         if: always()
         uses: actions/upload-artifact@v4

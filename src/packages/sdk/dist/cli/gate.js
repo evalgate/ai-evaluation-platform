@@ -250,9 +250,9 @@ function evaluateGate(args, quality) {
         const alerts = (0, config_1.checkFailureModeAlerts)(judgeAlignment.failureModes, judgeAlignment.totalFailed || 0, args.failureModeAlerts);
         if (alerts.length > 0) {
             return {
-                exitCode: constants_1.EXIT.SCORE_BELOW,
+                exitCode: constants_1.EXIT.FAILURE_MODE_THRESHOLD,
                 passed: false,
-                reasonCode: reason_codes_1.REASON_CODES.POLICY_FAILED,
+                reasonCode: reason_codes_1.REASON_CODES.FAILURE_MODE_THRESHOLD,
                 reasonMessage: `Failure mode thresholds breached: ${alerts.join("; ")}`,
                 policyEvidence: {
                     failedCheck: "failure_mode_thresholds",

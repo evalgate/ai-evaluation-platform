@@ -107,7 +107,7 @@ Each tier is additive. You can use Tier 1 + Platform simultaneously.
 └─────────────────────────────────────────────────────┘
 ```
 
-## Data Flow: Production → CI Loop (v3.0.0)
+## Data Flow: Production → Golden Dataset → Regression Loop (v3.2.2)
 
 ```
 Production App
@@ -127,13 +127,13 @@ Candidate Eval Case (quarantined, quality-scored)
     ├─ auto_promote_eligible? ──→ Golden Regression Dataset (auto)
     │   (quality≥90 AND confidence≥0.8 AND detectors≥2)
     │
-    └─ manual review needed ──→ evalgate replay → developer approves
-                                       │ dedup check (input hash + title)
+    └─ manual review needed ──→ evalgate cluster / label / analyze / synthesize
+                                       │ replay + dedup check (input hash + title)
                                        ▼
-                              Golden Regression Dataset (manual)
+                              Golden Regression Dataset (manual or synthesized)
     │
     ▼ next PR
-evalgate gate → golden regression runs → regression blocked ✅
+evalgate gate / ci → golden regression runs → regression blocked ✅
     │
     ▼
 evalgate doctor → "AI Reliability Report"

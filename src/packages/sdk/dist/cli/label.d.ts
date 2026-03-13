@@ -15,6 +15,7 @@
  *   1 — Input file not found or invalid
  *   2 — Output write error
  */
+import type { ClusterSummary } from "./cluster";
 export interface LabeledGoldenCase {
     caseId: string;
     input: string;
@@ -23,15 +24,28 @@ export interface LabeledGoldenCase {
     label: LabeledOutcome;
     failureMode: string | null;
     labeledAt: string;
+    clusterId?: string | null;
+    clusterLabel?: string | null;
 }
 export type LabeledOutcome = "pass" | "fail";
 declare const STANDARD_FAILURE_MODES: readonly ["constraint_missing", "tone_mismatch", "hallucination", "invalid_tool_call", "retrieval_error", "format_error", "safety_violation", "logic_error", "incomplete_response", "other"];
 export type FailureMode = (typeof STANDARD_FAILURE_MODES)[number] | string;
 export interface LabelFlags {
+    clusterPath: string | null;
     runPath: string | null;
     outputPath: string | null;
     format: "human" | "json";
 }
+export interface LabelableCase {
+    caseId: string;
+    title: string;
+    input: string;
+    expected: string;
+    actual: string;
+    clusterId: string | null;
+    clusterLabel: string | null;
+}
 export declare function parseLabelArgs(args: string[]): LabelFlags;
+export declare function buildLabelableCasesFromClusterSummary(summary: ClusterSummary): LabelableCase[];
 export declare function runLabel(args: string[]): Promise<number>;
 export {};

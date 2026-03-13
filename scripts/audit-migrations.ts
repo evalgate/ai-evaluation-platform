@@ -67,6 +67,9 @@ async function main(): Promise<number> {
 			"organizations",
 			"evaluations",
 			"evaluation_runs",
+			"evalgate_artifacts",
+			"auto_sessions",
+			"auto_experiments",
 			"test_cases",
 			"shared_exports",
 		];

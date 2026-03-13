@@ -48,3 +48,11 @@ test("/api/health/deep returns 401 or 403 when unauthenticated", async ({
 	// Must be auth-gated — never 200 for anonymous callers
 	expect([401, 403]).toContain(response.status());
 });
+
+test("/api/evaluations/:id/artifacts returns 401 or 403 when unauthenticated", async ({
+	request,
+}) => {
+	const response = await request.get("/api/evaluations/1/artifacts");
+	// Must be auth-gated — anonymous callers cannot list persisted EvalGate artifacts
+	expect([401, 403]).toContain(response.status());
+});

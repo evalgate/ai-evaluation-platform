@@ -1,0 +1,34 @@
+{
+  "objective": "tone_mismatch",
+  "hypothesis": null,
+  "executionMode": "prompt-edit",
+  "dryRun": false,
+  "iterationBudget": 1,
+  "base": "baseline",
+  "head": null,
+  "promptPath": "prompts/support.md",
+  "impactedSpecIds": [
+    "spec-tone-1"
+  ],
+  "decision": "plan",
+  "rationale": [
+    "No candidate run artifact was provided, so EvalGate auto is operating in planning mode.",
+    "The loop can define candidate iterations and budget, but it cannot score keep/discard until a candidate run is available."
+  ],
+  "nextActions": [
+    "Generate or run one candidate change against the target objective.",
+    "Re-run evalgate auto with --head <candidate-run.json> or --prompt <path> to score the iteration."
+  ],
+  "executionBudget": null,
+  "diff": null,
+  "planSteps": [
+    {
+      "iteration": 1,
+      "action": "propose_change",
+      "goal": "Target objective 'tone_mismatch' with one focused candidate change"
+    }
+  ],
+  "iterations": [],
+  "generatedAt": "2026-03-12T23:00:46.250Z",
+  "outputPath": "C:\\Users\\PaulC\\Downloads\\development\\ai-evaluation-platform\\src\\packages\\sdk\\.evalgate\\auto\\latest.json"
+}

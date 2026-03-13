@@ -12,6 +12,7 @@ export declare const EXIT: {
     readonly WEAK_EVIDENCE: 7;
     /** Near-regression: score dropped within warn band (warnDrop ≤ drop < maxDrop) */
     readonly WARN_REGRESSION: 8;
+    readonly FAILURE_MODE_THRESHOLD: 9;
     /** Judge credibility is too weak to trust correction while judge thresholds are configured */
-    readonly JUDGE_CREDIBILITY_UNTRUSTWORTHY: 9;
+    readonly JUDGE_CREDIBILITY_UNTRUSTWORTHY: 10;
 };

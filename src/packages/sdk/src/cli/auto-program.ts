@@ -598,6 +598,17 @@ export function validateAutoProgram(
 		);
 	}
 
+	const daemon = programValue.daemon;
+	if (daemon !== undefined && !isRecord(daemon)) {
+		issues.push(
+			makeIssue(
+				"INVALID_SECTION_TYPE",
+				"daemon",
+				"Top-level section 'daemon' must be an object.",
+			),
+		);
+	}
+
 	validateNumericLeaves(programValue, "$", issues);
 	if (isRecord(programValue.utility)) {
 		validateUtilityWeights(programValue.utility, issues);

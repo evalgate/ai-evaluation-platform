@@ -2,6 +2,18 @@
 
 Platform and SDK releases. For detailed SDK changes, see [src/packages/sdk/CHANGELOG.md](src/packages/sdk/CHANGELOG.md).
 
+## [3.2.2] - 2026-03-13
+
+### Added — EvalGate Full-Suite Workflows, Artifacts & Auto Sessions
+
+- **Saved EvalGate artifacts across the golden workflow** — Added persisted dataset, analysis, cluster, synthesis, and diversity artifact flows to the evaluation detail page, including reopen, delete, and synthesis-accept actions.
+- **Auto-session orchestration for guided optimization** — Added EvalGate auto planner and auto-session APIs plus UI surfaces for creating, monitoring, running, and stopping guided optimization sessions.
+
+### Changed
+
+- **Full-suite documentation alignment** — Refreshed repo and SDK docs so golden datasets, automated regression, artifact persistence, and guided optimization are documented as one end-to-end workflow.
+- **Release metadata alignment** — Synchronized SDK/runtime version constants, changelog entries, stability documentation, and OpenAPI release metadata for version `3.2.2`.
+
 ## [3.1.0] - 2026-03-09
 
 ### Added — Autoresearch-Inspired CLI Loops & SDK Public Export Surface

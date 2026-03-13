@@ -5,7 +5,7 @@ export type GateVerdict = "pass" | "warn" | "fail";
 /** "neutral" = exit 0 but gate not applied (e.g. baseline missing with --baseline auto) */
 export type GateMode = "enforced" | "neutral";
 /** Canonical reason codes. Import REASON_CODES from ../reason-codes for constants. */
-export type FailureReasonCode = "PASS" | "WARN_REGRESSION" | "LOW_SAMPLE_SIZE" | "JUDGE_ALIGNMENT_MISSING" | "JUDGE_ALIGNMENT_LOW" | "JUDGE_CREDIBILITY_UNTRUSTWORTHY" | "BASELINE_MISSING" | "SCORE_TOO_LOW" | "DELTA_TOO_HIGH" | "COST_BUDGET_EXCEEDED" | "LATENCY_BUDGET_EXCEEDED" | "POLICY_FAILED" | "UNKNOWN" | "LOW_SCORE" | "LOW_PASS_RATE" | "SAFETY_RISK" | "LATENCY_RISK" | "COST_RISK" | "MAX_DROP_EXCEEDED" | "INSUFFICIENT_EVIDENCE" | "POLICY_VIOLATION";
+export type FailureReasonCode = "PASS" | "WARN_REGRESSION" | "LOW_SAMPLE_SIZE" | "JUDGE_ALIGNMENT_MISSING" | "JUDGE_ALIGNMENT_LOW" | "JUDGE_CREDIBILITY_UNTRUSTWORTHY" | "BASELINE_MISSING" | "SCORE_TOO_LOW" | "DELTA_TOO_HIGH" | "COST_BUDGET_EXCEEDED" | "LATENCY_BUDGET_EXCEEDED" | "FAILURE_MODE_THRESHOLD" | "POLICY_FAILED" | "UNKNOWN" | "LOW_SCORE" | "LOW_PASS_RATE" | "SAFETY_RISK" | "LATENCY_RISK" | "COST_RISK" | "MAX_DROP_EXCEEDED" | "INSUFFICIENT_EVIDENCE" | "POLICY_VIOLATION";
 export type ScoreBreakdown01 = {
     passRate?: number;
     safety?: number;

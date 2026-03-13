@@ -1,34 +1,37 @@
-# EvalGate — Evaluation Regression Guard
+# EvalGate — Golden Datasets, Regression Gates, and Guided Optimization
 
-EvalGate is a lightweight evaluation regression guard for AI applications. It detects behavioral changes between model versions, enforces quality thresholds, and helps you maintain confidence in production updates.
+EvalGate is a full AI quality suite for teams that want more than a single pass/fail gate. It helps you discover coverage overlap, cluster failures, build golden datasets, synthesize broader cases, run automated regression gates, and guide prompt optimization with explicit budgets.
 
 ## Quick Start
 
 ```bash
-# Zero-config starter (scaffolds + runs + baseline)
-npx evalgate start
-
-# Or step-by-step
+# Scaffold the project and baseline
 npx evalgate init --template chatbot
+npx evalgate discover --manifest
 npx evalgate run
 npx evalgate gate
 ```
 
 ## Documentation
 
-- **📖 Zero to Golden Dataset** - 30-minute onboarding guide
+- **📖 Zero to Golden Dataset** - `docs/ZERO_TO_GOLDEN_DATASET.md`
+- **🧪 Golden Path Demo** - `docs/GOLDEN_PATH.md`
+- **📉 Regression Gate** - `docs/REGRESSION_GATE.md`
 - **📊 Production Trace Collection** - reportTrace() guide with asymmetric sampling
 - **🔄 Replay Commands** - Candidate replay and automated decisions
 - **🏥 System Health** - evalgate doctor for configuration validation
 
 ## What EvalGate Does
 
-- **Behavioral Testing**: Run evaluation specs against your model and capture pass/fail outcomes
-- **Regression Detection**: Compare runs against a baseline to flag regressions and improvements
-- **Quality Gates**: Enforce minimum pass rates, scores, costs, and latency thresholds
-- **CI/CD Integration**: Native GitHub Actions workflow with PR comments and status checks
-- **Golden Dataset**: Label traces to build a golden dataset for failure mode analysis
-- **Root Cause Analysis**: Automated explanations for failures with suggested fixes
+- **Behavioral testing**: Run evaluation specs against your model and capture pass/fail outcomes
+- **Coverage discovery**: Find overlapping specs and redundant coverage before adding more evals
+- **Failure clustering**: Group similar failures so teams label and debug by pattern instead of by raw arrival order
+- **Golden datasets**: Label traces, analyze failure modes, and grow a canonical `.evalgate/golden/labeled.jsonl`
+- **Golden-case synthesis**: Expand repeated failure patterns into deterministic draft cases for review and promotion
+- **Automated regression**: Compare current behavior against a baseline and block merges when quality drops
+- **Guided optimization**: Run bounded prompt-improvement loops with explicit `keep`, `discard`, or `investigate` outcomes
+- **Artifact persistence**: Save datasets, analyses, diversity reports, clusters, and syntheses so work can be reopened later
+- **Root cause analysis**: Explain failures with actionable next steps and suggested fixes
 
 ## Core Concepts
 
@@ -66,17 +69,41 @@ npx evalgate run [--spec-ids <ids>] [--impacted-only] [--base <branch>] [--forma
 ```
 Runs evaluation specs and produces a run report.
 
+### `evalgate discover` — Coverage & Diversity
+```bash
+npx evalgate discover [--manifest]
+```
+Scans evaluation specs, regenerates the manifest, and reports diversity / redundant spec pairs so you can tighten coverage before shipping.
+
+### `evalgate cluster` — Failure Pattern Grouping
+```bash
+npx evalgate cluster [--run <path>] [--output <path>]
+```
+Groups similar failures from a saved run artifact so triage and labeling happen cluster-by-cluster.
+
 ### `evalgate gate` — Local Regression Gate
 ```bash
 npx evalgate gate [--format <fmt>] [--dry-run]
 ```
 Compares current run against baseline without requiring API access.
 
+### `evalgate ci` — Full CI Pipeline
+```bash
+npx evalgate ci [--base <branch>] [--impacted-only] [--format <fmt>] [--write-results]
+```
+Runs the complete CI-oriented workflow with discovery, impact analysis, execution, and regression reporting.
+
 ### `evalgate check` — API-Based Gate
 ```bash
 npx evalgate check [--evaluationId <id>] [--minScore <n>] [--maxDrop <n>] [--policy <name>]
 ```
 Cloud-based gate with advanced analytics and judge alignment.
+
+### `evalgate failure-modes` — Failure Taxonomy Setup
+```bash
+npx evalgate failure-modes
+```
+Defines the app-specific failure mode taxonomy used during labeling, analysis, alerting, and prioritization.
 
 ### `evalgate label` — Interactive Trace Labeling
 ```bash
@@ -89,6 +116,19 @@ Step through traces, label pass/fail, tag failure modes. Builds golden dataset f
 npx evalgate analyze [--dataset <path>] [--format <fmt>] [--top <n>]
 ```
 Analyzes labeled golden dataset to surface top failure modes and frequencies.
+
+### `evalgate synthesize` — Golden Dataset Expansion
+```bash
+npx evalgate synthesize [--dataset <path>] [--dimensions <path>] [--output <path>]
+```
+Turns repeated labeled failures into deterministic golden-case drafts that can be reviewed, accepted, and promoted.
+
+### `evalgate auto` — Guided Optimization Loop
+```bash
+npx evalgate auto [--objective <mode>] [--prompt <file>] [--budget <n>]
+npx evalgate auto daemon [--cycles <n>] [--once]
+```
+Runs a bounded prompt optimization loop and emits `keep`, `discard`, or `investigate` decisions instead of silently mutating your suite.
 
 ### `evalgate diff` — Run Comparison
 ```bash
@@ -154,13 +194,16 @@ jobs:
       - run: npx evalgate ci --base main
 ```
 
-## Golden Dataset Workflow
+## Full Suite Workflow
 
-1. **Run evaluations**: `npx evalgate run --write-results`
-2. **Label traces**: `npx evalgate label` (interactive pass/fail + failure modes)
-3. **Analyze patterns**: `npx evalgate analyze --top 10`
-4. **Improve prompts**: Address top failure modes
-5. **Repeat**: Grow dataset and improve quality
+1. **Discover overlap before adding more tests**: `npx evalgate discover --manifest`
+2. **Run evaluations and save artifacts**: `npx evalgate run --write-results`
+3. **Cluster failures by pattern**: `npx evalgate cluster --run .evalgate/runs/latest.json`
+4. **Label and analyze the golden dataset**: `npx evalgate label` then `npx evalgate analyze --top 10`
+5. **Draft broader golden cases**: `npx evalgate synthesize --dataset .evalgate/golden/labeled.jsonl --output .evalgate/golden/synthetic.jsonl`
+6. **Block regressions or try guided optimization**: `npx evalgate gate`, `npx evalgate ci`, `npx evalgate replay-decision`, or `npx evalgate auto`
+
+In the platform UI, saved artifacts and auto sessions mirror the same workflow so datasets, analyses, diversity reports, clusters, syntheses, and optimization runs can be reopened, reviewed, or promoted later.
 
 ## Advanced Features
 
@@ -219,8 +262,10 @@ npx evalgate explain         # Last failure analysis
 ## Next Steps
 
 - Explore templates: `npx evalgate init --list-templates`
-- Read [ONBOARDING.md](docs/ONBOARDING.md) for detailed setup
-- Check [LABELED_DATASET_SCHEMA.md](docs/LABELED_DATASET_SCHEMA.md) for golden dataset format
+- Read [ZERO_TO_GOLDEN_DATASET.md](docs/ZERO_TO_GOLDEN_DATASET.md) for the end-to-end onboarding flow
+- Read [REGRESSION_GATE.md](docs/REGRESSION_GATE.md) for automated regression setup and governance
+- Check [LABELED_DATASET_SCHEMA.md](docs/LABELED_DATASET_SCHEMA.md) for the canonical golden dataset format
+- Run the [GOLDEN_PATH.md](docs/GOLDEN_PATH.md) demo to validate the full loop locally
 - Join discussions in GitHub Issues
 
 ---

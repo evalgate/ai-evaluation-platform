@@ -2,6 +2,7 @@ import { sql } from "drizzle-orm";
 import {
 	bigint,
 	boolean,
+	doublePrecision,
 	index,
 	integer,
 	jsonb,
@@ -32,6 +33,9 @@ import type {
 	DecisionAlternative,
 	DecisionInputContext,
 	DriftAlertMetadata,
+	EvalgateArtifactMetadata,
+	EvalgateArtifactPayload,
+	EvalgateArtifactSummary,
 	ExecutionSettings,
 	ExecutorConfig,
 	ExportData,
@@ -301,47 +305,103 @@ export const annotationItems = pgTable("annotation_items", {
 	createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-// LLM Judge
-export const llmJudgeConfigs = pgTable(
-	"llm_judge_configs",
+export const evalgateArtifacts = pgTable(
+	"evalgate_artifacts",
 	{
 		id: serial("id").primaryKey(),
-		name: text("name").notNull(),
 		organizationId: integer("organization_id")
 			.references(() => organizations.id)
 			.notNull(),
-		model: text("model").notNull(),
-		promptTemplate: text("prompt_template").notNull(),
-		criteria: jsonb("criteria").$type<JudgeCriteria>(),
-		settings: jsonb("settings").$type<JudgeSettings>(),
+		evaluationId: integer("evaluation_id")
+			.references(() => evaluations.id)
+			.notNull(),
+		evaluationRunId: integer("evaluation_run_id").references(
+			() => evaluationRuns.id,
+		),
+		kind: text("kind").notNull(),
+		title: text("title").notNull(),
+		summary: jsonb("summary").$type<EvalgateArtifactSummary>().notNull(),
+		payload: jsonb("payload").$type<EvalgateArtifactPayload>().notNull(),
+		metadata: jsonb("metadata").$type<EvalgateArtifactMetadata>(),
 		createdBy: text("created_by")
 			.references(() => user.id)
 			.notNull(),
 		createdAt: timestamp("created_at").defaultNow().notNull(),
 		updatedAt: timestamp("updated_at").defaultNow().notNull(),
 	},
-	(table) => [index("idx_llm_judge_configs_org").on(table.organizationId)],
+	(table) => [
+		index("idx_evalgate_artifacts_org_kind_created").on(
+			table.organizationId,
+			table.kind,
+			table.createdAt,
+		),
+		index("idx_evalgate_artifacts_eval_created").on(
+			table.evaluationId,
+			table.createdAt,
+		),
+		index("idx_evalgate_artifacts_run_kind").on(
+			table.evaluationRunId,
+			table.kind,
+		),
+	],
 );
 
-export const llmJudgeResults = pgTable(
-	"llm_judge_results",
+export const autoSessions = pgTable(
+	"auto_sessions",
 	{
-		id: serial("id").primaryKey(),
-		configId: integer("config_id")
-			.references(() => llmJudgeConfigs.id)
+		id: text("id").primaryKey(),
+		organizationId: integer("organization_id")
+			.references(() => organizations.id)
 			.notNull(),
-		evaluationRunId: integer("evaluation_run_id").references(
-			() => evaluationRuns.id,
-		),
-		testCaseId: integer("test_case_id").references(() => testCases.id),
-		input: text("input").notNull(),
-		output: text("output").notNull(),
-		score: integer("score"),
-		reasoning: text("reasoning"),
-		metadata: jsonb("metadata").$type<JudgeResultMetadata>(),
+		evaluationId: integer("evaluation_id")
+			.references(() => evaluations.id)
+			.notNull(),
+		createdBy: text("created_by")
+			.references(() => user.id)
+			.notNull(),
+		name: text("name").notNull(),
+		objective: text("objective").notNull(),
+		targetPath: text("target_path").notNull(),
+		allowedFamilies: text("allowed_families").notNull().default("[]"),
+		maxIterations: integer("max_iterations").notNull().default(5),
+		maxCostUsd: doublePrecision("max_cost_usd"),
+		status: text("status").notNull().default("idle"),
+		jobId: integer("job_id"),
+		currentIteration: integer("current_iteration").notNull().default(0),
+		stopReason: text("stop_reason"),
+		error: text("error"),
+		startedAt: timestamp("started_at"),
+		completedAt: timestamp("completed_at"),
+		createdAt: timestamp("created_at").defaultNow().notNull(),
+		updatedAt: timestamp("updated_at").defaultNow().notNull(),
+	},
+	(table) => [
+		index("idx_auto_sessions_org").on(table.organizationId),
+		index("idx_auto_sessions_eval").on(table.evaluationId),
+	],
+);
+
+export const autoExperiments = pgTable(
+	"auto_experiments",
+	{
+		id: text("id").primaryKey(),
+		sessionId: text("session_id")
+			.references(() => autoSessions.id)
+			.notNull(),
+		iteration: integer("iteration").notNull(),
+		mutationFamily: text("mutation_family").notNull(),
+		candidatePatch: text("candidate_patch"),
+		utilityScore: doublePrecision("utility_score"),
+		objectiveReduction: doublePrecision("objective_reduction"),
+		regressions: integer("regressions"),
+		improvements: integer("improvements"),
+		decision: text("decision"),
+		hardVetoReason: text("hard_veto_reason"),
+		reflection: text("reflection"),
+		detailsJson: text("details_json"),
 		createdAt: timestamp("created_at").defaultNow().notNull(),
 	},
-	(table) => [index("idx_llm_judge_results_run").on(table.evaluationRunId)],
+	(table) => [index("idx_auto_experiments_session").on(table.sessionId)],
 );
 
 // Developer Experience Tables
@@ -455,6 +515,36 @@ export const apiUsageLogs = pgTable(
 	],
 );
 
+export const llmJudgeConfigs = pgTable(
+	"llm_judge_configs",
+	{
+		id: serial("id").primaryKey(),
+		organizationId: integer("organization_id")
+			.references(() => organizations.id)
+			.notNull(),
+		name: text("name").notNull(),
+		model: text("model").notNull(),
+		promptTemplate: text("prompt_template").notNull(),
+		criteria: jsonb("criteria").$type<JudgeCriteria>(),
+		settings: jsonb("settings").$type<JudgeSettings>(),
+		createdBy: text("created_by")
+			.references(() => user.id)
+			.notNull(),
+		createdAt: timestamp("created_at").defaultNow().notNull(),
+		updatedAt: timestamp("updated_at").defaultNow().notNull(),
+	},
+	(table) => [
+		index("idx_llm_judge_configs_org_created").on(
+			table.organizationId,
+			table.createdAt,
+		),
+		index("idx_llm_judge_configs_org_updated").on(
+			table.organizationId,
+			table.updatedAt,
+		),
+	],
+);
+
 export const humanAnnotations = pgTable("human_annotations", {
 	id: serial("id").primaryKey(),
 	evaluationRunId: integer("evaluation_run_id")
@@ -485,6 +575,37 @@ export const testCases = pgTable("test_cases", {
 	metadata: jsonb("metadata").$type<TestCaseMetadata>(),
 	createdAt: timestamp("created_at").defaultNow().notNull(),
 });
+
+export const llmJudgeResults = pgTable(
+	"llm_judge_results",
+	{
+		id: serial("id").primaryKey(),
+		configId: integer("config_id")
+			.references(() => llmJudgeConfigs.id)
+			.notNull(),
+		evaluationRunId: integer("evaluation_run_id").references(
+			() => evaluationRuns.id,
+		),
+		testCaseId: integer("test_case_id").references(() => testCases.id),
+		input: text("input").notNull(),
+		output: text("output").notNull(),
+		score: integer("score").notNull(),
+		reasoning: text("reasoning").notNull(),
+		metadata: jsonb("metadata").$type<JudgeResultMetadata>(),
+		createdAt: timestamp("created_at").defaultNow().notNull(),
+	},
+	(table) => [
+		index("idx_llm_judge_results_config_created").on(
+			table.configId,
+			table.createdAt,
+		),
+		index("idx_llm_judge_results_run_created").on(
+			table.evaluationRunId,
+			table.createdAt,
+		),
+		index("idx_llm_judge_results_test_case").on(table.testCaseId),
+	],
+);
 
 export const testResults = pgTable(
 	"test_results",

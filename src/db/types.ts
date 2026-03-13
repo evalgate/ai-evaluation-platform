@@ -303,6 +303,98 @@ export interface AgentConfig {
 
 export type BenchmarkCustomMetrics = Record<string, number>;
 
+// ── evalgate_artifacts ───────────────────────────────────────
+
+export type EvalgateArtifactKind =
+	| "labeled_dataset"
+	| "analysis"
+	| "cluster"
+	| "synthesis"
+	| "diversity";
+
+export type EvalgateArtifactSummary = Record<string, unknown>;
+export type EvalgateArtifactPayload = Record<string, unknown>;
+
+export interface EvalgateArtifactMetadata {
+	source?: "evaluation_run" | "dataset_content" | "spec_inventory";
+	generatedAt?: string;
+	evaluationId?: number;
+	evaluationRunId?: number | null;
+	includePassed?: boolean;
+	top?: number;
+	clusters?: number | null;
+	threshold?: number;
+	rowCount?: number;
+	artifactVersion?: string;
+	[key: string]: unknown;
+}
+
+// ── shared_exports ───────────────────────────────────────────
+
+export type ExportData = Record<string, unknown>;
+
+// ── failure_reports ───────────────────────────────────────────
+
+export interface FailureReportSuggestedFix {
+	type: string;
+	description: string;
+	confidence: number;
+}
+
+export interface FailureReportLineage {
+	causedByTraceIds: string[];
+	preventedRegressionIds: string[];
+	clusterId: string | null;
+	derivedTestCaseIds: string[];
+}
+
+export type FailureReportSecondaryCategories = string[];
+export type FailureReportSuggestedFixes = FailureReportSuggestedFix[];
+
+// ── candidate_eval_cases ─────────────────────────────────────
+
+export type CandidateEvalTags = string[];
+export type CandidateSourceTraceIds = string[];
+
+export interface CandidateExpectedConstraint {
+	type: string;
+	value: unknown;
+	required: boolean;
+	description?: string;
+}
+
+export type CandidateExpectedConstraints = CandidateExpectedConstraint[];
+
+export interface CandidateMinimizedInput {
+	userPrompt: string;
+	systemPrompt: string | null;
+	activeTools: string[];
+	conversationContext: Array<{ role: string; content: string }>;
+	failureSpanId: string | null;
+	failureOutput: string | null;
+	metadata: Record<string, unknown>;
+}
+
+// ── user_feedback ────────────────────────────────────────────
+
+export interface UserFeedbackValue {
+	score?: number;
+	comment?: string;
+	[key: string]: unknown;
+}
+
+// ── jobs ─────────────────────────────────────────────────────
+
+export interface JobPayload {
+	type?: string;
+	webhookId?: number;
+	organizationId?: number;
+	sessionId?: string;
+	eventType?: string;
+	data?: Record<string, unknown>;
+	[key: string]: unknown;
+}
+
 // ── golden_sets ──────────────────────────────────────────────
 
 export type GoldenSetTestCaseIds = number[];
@@ -368,69 +460,5 @@ export type VersionSnapshotJson = Record<string, unknown>;
 export interface DriftAlertMetadata {
 	historicalValues?: number[];
 	threshold?: number;
-	[key: string]: unknown;
-}
-
-// ── shared_exports ───────────────────────────────────────────
-
-export type ExportData = Record<string, unknown>;
-
-// ── failure_reports ───────────────────────────────────────────
-
-export interface FailureReportSuggestedFix {
-	type: string;
-	description: string;
-	confidence: number;
-}
-
-export interface FailureReportLineage {
-	causedByTraceIds: string[];
-	preventedRegressionIds: string[];
-	clusterId: string | null;
-	derivedTestCaseIds: string[];
-}
-
-export type FailureReportSecondaryCategories = string[];
-export type FailureReportSuggestedFixes = FailureReportSuggestedFix[];
-
-// ── candidate_eval_cases ─────────────────────────────────────
-
-export type CandidateEvalTags = string[];
-export type CandidateSourceTraceIds = string[];
-
-export interface CandidateExpectedConstraint {
-	type: string;
-	value: unknown;
-	required: boolean;
-	description?: string;
-}
-
-export type CandidateExpectedConstraints = CandidateExpectedConstraint[];
-
-export interface CandidateMinimizedInput {
-	userPrompt: string;
-	systemPrompt: string | null;
-	activeTools: string[];
-	conversationContext: Array<{ role: string; content: string }>;
-	failureSpanId: string | null;
-	failureOutput: string | null;
-	metadata: Record<string, unknown>;
-}
-
-// ── user_feedback ────────────────────────────────────────────
-
-export interface UserFeedbackValue {
-	score?: number;
-	comment?: string;
-	[key: string]: unknown;
-}
-
-// ── jobs ─────────────────────────────────────────────────────
-
-export interface JobPayload {
-	type?: string;
-	webhookId?: number;
-	eventType?: string;
-	data?: Record<string, unknown>;
 	[key: string]: unknown;
 }

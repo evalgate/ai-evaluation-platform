@@ -8,6 +8,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Remaining gap — autonomous search depth** — The first `evalgate auto` loop still relies on heuristic prompt-candidate templates and a fixed evaluation policy; it does not yet generate edits with a model, branch across multiple search trajectories, or refine future mutations from prior iteration outcomes.
 
+## [3.2.2] - 2026-03-13
+
+### Added
+
+- **EvalGate artifact workflows** — Added persisted dataset, analysis, cluster, synthesis, and diversity artifact flows so artifact previews can be saved, reopened, deleted, and promoted into evaluation test cases.
+- **Auto-session orchestration endpoints** — Added EvalGate auto planner and auto-session routes for creating, running, stopping, and tracking guided optimization sessions from the evaluation detail page.
+
+### Changed
+
+- **Full-suite documentation alignment** — Refreshed the SDK-facing docs to present golden datasets, automated regression, artifact persistence, and guided optimization as one end-to-end workflow.
+- **Release metadata alignment** — Synchronized the SDK runtime version constants, documentation references, and OpenAPI version metadata for the `3.2.2` release.
+
 ## [3.2.0] - 2026-03-11
 
 ### Autonomous Optimization Loop

@@ -47,6 +47,10 @@ export interface AutoDaemonOptions {
 	cycleArgs: string[];
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+	return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
 function readFlagValue(args: string[], flag: string): string | null {
 	const index = args.indexOf(flag);
 	return index >= 0 && args[index + 1] ? args[index + 1] : null;
@@ -139,6 +143,60 @@ function getProgramMutationTarget(program: AutoProgram): string | null {
 	return typeof value === "string" && value.trim().length > 0 ? value : null;
 }
 
+function getProgramDaemonDefaults(program: AutoProgram): {
+	intervalMs: number | null;
+	maxExperimentsPerCycle: number | null;
+} {
+	const daemon = isRecord(program.daemon) ? program.daemon : {};
+	const intervalSeconds = daemon.interval_seconds;
+	const maxExperimentsPerCycle = daemon.max_experiments_per_cycle;
+	return {
+		intervalMs:
+			typeof intervalSeconds === "number" &&
+			Number.isFinite(intervalSeconds) &&
+			intervalSeconds >= 0
+				? Math.round(intervalSeconds * 1000)
+				: null,
+		maxExperimentsPerCycle:
+			typeof maxExperimentsPerCycle === "number" &&
+			Number.isInteger(maxExperimentsPerCycle) &&
+			maxExperimentsPerCycle > 0
+				? maxExperimentsPerCycle
+				: null,
+	};
+}
+
+function buildAutoRunContext(
+	args: string[],
+	options: {
+		budgetOverride?: number | null;
+		program?: AutoProgram;
+	} = {},
+): {
+	enrichedArgs: string[];
+	program: AutoProgram;
+} {
+	const program = options.program ?? loadAutoProgramOrThrow();
+	parseAutoHoldoutConfig(program.holdout);
+	const enrichedArgs = [...args];
+	const objective = getProgramObjective(program);
+	if (!hasFlag(enrichedArgs, "--objective") && objective) {
+		enrichedArgs.push("--objective", objective);
+	}
+	const budget = options.budgetOverride ?? getProgramBudget(program);
+	if (!hasFlag(enrichedArgs, "--budget") && budget !== null) {
+		enrichedArgs.push("--budget", String(budget));
+	}
+	const promptTarget = getProgramMutationTarget(program);
+	if (!hasFlag(enrichedArgs, "--prompt") && promptTarget) {
+		enrichedArgs.push("--prompt", promptTarget);
+	}
+	return {
+		enrichedArgs,
+		program,
+	};
+}
+
 function ensureAutoInitScaffold(
 	projectRoot: string,
 	force: boolean,
@@ -184,21 +242,7 @@ export function runAutoInit(args: string[]): number {
 
 export async function runAutoRun(args: string[]): Promise<number> {
 	try {
-		const program = loadAutoProgramOrThrow();
-		parseAutoHoldoutConfig(program.holdout);
-		const enrichedArgs = [...args];
-		const objective = getProgramObjective(program);
-		if (!hasFlag(enrichedArgs, "--objective") && objective) {
-			enrichedArgs.push("--objective", objective);
-		}
-		const budget = getProgramBudget(program);
-		if (!hasFlag(enrichedArgs, "--budget") && budget !== null) {
-			enrichedArgs.push("--budget", String(budget));
-		}
-		const promptTarget = getProgramMutationTarget(program);
-		if (!hasFlag(enrichedArgs, "--prompt") && promptTarget) {
-			enrichedArgs.push("--prompt", promptTarget);
-		}
+		const { enrichedArgs, program } = buildAutoRunContext(args);
 		return await runLegacyAuto(enrichedArgs, program);
 	} catch (error) {
 		console.error(
@@ -210,14 +254,35 @@ export async function runAutoRun(args: string[]): Promise<number> {
 
 export async function runAutoDaemon(args: string[]): Promise<number> {
 	const options = parseAutoDaemonArgs(args);
+	const intervalWasExplicit = hasFlag(args, "--interval-ms");
 	const exitCodes: number[] = [];
+	let effectiveIntervalMs = options.intervalMs;
 
 	for (let cycle = 0; cycle < options.cycles; cycle++) {
+		let cycleArgs = options.cycleArgs;
+		try {
+			const program = loadAutoProgramOrThrow();
+			const daemonDefaults = getProgramDaemonDefaults(program);
+			if (!intervalWasExplicit && daemonDefaults.intervalMs !== null) {
+				effectiveIntervalMs = daemonDefaults.intervalMs;
+			}
+			const context = buildAutoRunContext(options.cycleArgs, {
+				budgetOverride: daemonDefaults.maxExperimentsPerCycle,
+				program,
+			});
+			cycleArgs = context.enrichedArgs;
+		} catch (error) {
+			console.error(
+				`EvalGate auto ERROR: ${error instanceof Error ? error.message : String(error)}`,
+			);
+			return 2;
+		}
+
 		if (options.format === "human") {
 			console.log(`EvalGate auto daemon cycle ${cycle + 1}/${options.cycles}`);
 		}
 
-		const exitCode = await runAutoRun(options.cycleArgs);
+		const exitCode = await runLegacyAuto(cycleArgs);
 		exitCodes.push(exitCode);
 		if (exitCode !== 0) {
 			if (options.format === "json") {
@@ -226,7 +291,7 @@ export async function runAutoDaemon(args: string[]): Promise<number> {
 						{
 							cyclesRequested: options.cycles,
 							cyclesCompleted: cycle + 1,
-							intervalMs: options.intervalMs,
+							intervalMs: effectiveIntervalMs,
 							exitCodes,
 							stoppedEarly: true,
 						},
@@ -239,7 +304,7 @@ export async function runAutoDaemon(args: string[]): Promise<number> {
 		}
 
 		if (cycle < options.cycles - 1) {
-			await sleep(options.intervalMs);
+			await sleep(effectiveIntervalMs);
 		}
 	}
 
@@ -249,7 +314,7 @@ export async function runAutoDaemon(args: string[]): Promise<number> {
 				{
 					cyclesRequested: options.cycles,
 					cyclesCompleted: options.cycles,
-					intervalMs: options.intervalMs,
+					intervalMs: effectiveIntervalMs,
 					exitCodes,
 					stoppedEarly: false,
 				},

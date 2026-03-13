@@ -105,6 +105,27 @@ describe("parseAutoProgramMarkdown", () => {
 		});
 	});
 
+	it("parses daemon settings when provided", () => {
+		const result = parseAutoProgramMarkdown(
+			buildValidProgramMarkdown(
+				[
+					"daemon:",
+					"  enabled: true",
+					"  interval_seconds: 30",
+					"  max_experiments_per_cycle: 2",
+				].join("\n"),
+			),
+			{ filePath: ".evalgate/auto/program.md" },
+		);
+
+		expect(result.passed).toBe(true);
+		expect(result.program?.daemon).toMatchObject({
+			enabled: true,
+			interval_seconds: 30,
+			max_experiments_per_cycle: 2,
+		});
+	});
+
 	it("fails in strict mode when an unknown top-level section exists", () => {
 		const result = parseAutoProgramMarkdown(
 			buildValidProgramMarkdown("surprise:\n  enabled: true\n"),
@@ -244,6 +265,31 @@ describe("validateAutoProgram", () => {
 		).toBeGreaterThanOrEqual(2);
 		expect(
 			result.issues.some((issue) => issue.code === "NON_NUMERIC_WEIGHT"),
+		).toBe(true);
+	});
+
+	it("rejects non-object daemon sections", () => {
+		const result = validateAutoProgram({
+			objective: {},
+			mutation: {
+				target: "prompt.md",
+				allowed_families: ["few-shot-examples"],
+			},
+			budget: {},
+			utility: {},
+			hard_vetoes: {},
+			promotion: {},
+			holdout: {},
+			stop_conditions: {},
+			daemon: true,
+		});
+
+		expect(result.passed).toBe(false);
+		expect(
+			result.issues.some(
+				(issue) =>
+					issue.code === "INVALID_SECTION_TYPE" && issue.fieldPath === "daemon",
+			),
 		).toBe(true);
 	});
 });

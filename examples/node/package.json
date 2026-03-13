@@ -9,7 +9,7 @@
 		"trace": "node trace-example.js"
 	},
 	"dependencies": {
-		"@evalgate/sdk": "^2.0.0",
+		"@evalgate/sdk": "^3.2.2",
 		"dotenv": "^16.3.1"
 	},
 	"keywords": [

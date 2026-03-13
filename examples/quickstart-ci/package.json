@@ -8,6 +8,6 @@
 		"ci:full": "node ci-eval.js"
 	},
 	"dependencies": {
-		"@evalgate/sdk": "^2.0.0"
+		"@evalgate/sdk": "^3.2.2"
 	}
 }

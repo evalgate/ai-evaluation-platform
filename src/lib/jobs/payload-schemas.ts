@@ -21,9 +21,15 @@ const traceFailureAnalysisSchema = z.object({
 	organizationId: z.number().int().positive(),
 });
 
+const autoSessionRunSchema = z.object({
+	sessionId: z.string().min(1),
+	organizationId: z.number().int().positive(),
+});
+
 const PAYLOAD_SCHEMAS: Record<JobType, z.ZodSchema> = {
 	webhook_delivery: webhookDeliverySchema,
 	trace_failure_analysis: traceFailureAnalysisSchema,
+	auto_session_run: autoSessionRunSchema,
 };
 
 export interface PayloadValidationResult {

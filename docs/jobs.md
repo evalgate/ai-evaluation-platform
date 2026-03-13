@@ -322,9 +322,9 @@ If the upstream returns `5xx`:
 | Type | Handler | Payload | Description |
 |------|---------|---------|-------------|
 | `webhook_delivery` | `handleWebhookDelivery` | `{ webhookId, eventType, payload }` | Deliver webhook events to external endpoints |
-| `trace_failure_analysis` | `handleTraceFailureAnalysis` | `{ traceDbId, organizationId }` | Async failure detection pipeline: detect → group → generate → score → auto-promote (v3.0.0) |
+| `trace_failure_analysis` | `handleTraceFailureAnalysis` | `{ traceDbId, organizationId }` | Async failure detection pipeline: detect → group → generate → score → auto-promote into the golden regression workflow |
 
-### `trace_failure_analysis` Pipeline (v3.0.0)
+### `trace_failure_analysis` Pipeline
 
 Enqueued by `POST /api/collector` when sampling decides to analyze a trace. Rate-limited by `canEnqueueAnalysis()` (sliding window, 200/min per org).
 

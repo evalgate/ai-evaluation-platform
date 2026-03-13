@@ -11,10 +11,12 @@ Canonical paths for all project documentation. If you're linking to a doc, use t
 | **Contributor Map** | [`docs/CONTRIBUTOR_MAP.md`](CONTRIBUTOR_MAP.md) | Contributors |
 | **Architecture** | [`docs/ARCHITECTURE.md`](ARCHITECTURE.md) | Contributors + evaluators |
 
-## Production → CI Loop (v3.0.0)
+## Full EvalGate Workflow (v3.2.2)
 
 | Doc | Path | Audience |
 |-----|------|----------|
+| **Zero to Golden Dataset** | [`docs/ZERO_TO_GOLDEN_DATASET.md`](ZERO_TO_GOLDEN_DATASET.md) | New users + evaluators |
+| **Golden Path Demo** | [`docs/GOLDEN_PATH.md`](GOLDEN_PATH.md) | Contributors + evaluators |
 | **Implementation Plan** | [`docs/PRODUCTION_TO_CI_PLAN.md`](PRODUCTION_TO_CI_PLAN.md) | Contributors + architects |
 | **Pre-Mortem & Test Plan** | [`docs/PRODUCTION_TO_CI_PREMORTEM.md`](PRODUCTION_TO_CI_PREMORTEM.md) | Contributors + QA |
 

@@ -1,93 +1,53 @@
 "use client";
 
-import {
-	ArrowLeft,
-	ChevronRight,
-	Copy,
-	Download,
-	FileText,
-	Play,
-	Plus,
-} from "lucide-react";
+import { ArrowLeft, Copy, Download, Play } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { use, useEffect, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { use, useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { AIQualityScoreCard } from "@/components/ai-quality-score-card";
 import { ExportModal, type ExportOptions } from "@/components/export-modal";
-import { RunDiffView } from "@/components/run-diff-view";
 import { Badge } from "@/components/ui/badge";
+import {
+	Breadcrumb,
+	BreadcrumbItem,
+	BreadcrumbLink,
+	BreadcrumbList,
+	BreadcrumbPage,
+	BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useOrganization } from "@/hooks/use-organization";
 import {
 	calculateQualityScore,
 	type EvaluationStats,
 	type QualityScore,
 } from "@/lib/ai-quality-score";
 import { useSession } from "@/lib/auth-client";
-import { logger } from "@/lib/logger";
-
-interface EvaluationRun {
-	id: number;
-	totalCases?: number;
-	total_cases?: number;
-	total_tests?: number;
-	passedCases?: number;
-	passed_cases?: number;
-	passed_tests?: number;
-	runId?: number;
-	variant_id?: string;
-	variant_name?: string;
-	average_latency?: number;
-	average_cost?: number;
-	quality_score?: number;
-	status?: string;
-	createdAt?: string;
-	completedAt?: string;
-	startedAt?: string;
-	started_at?: string;
-	traceLog?: unknown;
-}
-
-interface Evaluation {
-	id: number;
-	name: string;
-	type: EvaluationType;
-	description?: string;
-	category?: string;
-	created_at?: string;
-	human_eval_criteria?: Array<{
-		name: string;
-		description: string;
-		scale: string;
-	}>;
-	judge_prompt?: string;
-	judge_model?: string;
-	variants?: Array<{
-		id: string;
-		name: string;
-		description?: string;
-	}>;
-}
-
-interface TestCase {
-	id: number;
-	input: string;
-	expected?: string;
-	expectedOutput?: string;
-	actualOutput?: string;
-	passed?: boolean;
-	executionTimeMs?: number;
-	errorMessage?: string;
-	name?: string;
-}
-
 import {
 	type EvaluationType,
 	formatExportData,
 	generateExportFilename,
 	validateExportData,
 } from "@/lib/export-templates";
+import { logger } from "@/lib/logger";
+import {
+	hasPermission,
+	PERMISSION_DENIED_MESSAGE,
+	type Permission,
+} from "@/lib/permissions";
+import { AnalysisTab } from "./analysis-tab";
+import { AutoTab } from "./auto-tab";
+import { EvalgateArtifactDialog } from "./evalgate-artifact-dialog";
+import type { Evaluation, EvaluationRun, TestCase } from "./evalgate-types";
+import { EvaluationTestCasesSection } from "./evaluation-test-cases-section";
+import { SynthesizeTab } from "./synthesize-tab";
+import { TabErrorBoundary } from "./tab-error-boundary";
+import { useAutoExecutionState } from "./use-auto-execution-state";
+import { useAutoPlanState } from "./use-auto-plan-state";
+import { useEvalgateState } from "./use-evalgate-state";
 
 // Update type
 type PageProps = {
@@ -97,7 +57,10 @@ type PageProps = {
 export default function EvaluationDetailPage({ params }: PageProps) {
 	const { id } = use(params); // Unwrap Promise with use()
 	const { data: session, isPending } = useSession();
+	const { organization, isLoading: organizationLoading } = useOrganization();
 	const router = useRouter();
+	const pathname = usePathname();
+	const searchParams = useSearchParams();
 	const [evaluation, setEvaluation] = useState<Evaluation | null>(null);
 	const [testCases, setTestCases] = useState<TestCase[]>([]);
 	const [runs, setRuns] = useState<EvaluationRun[]>([]);
@@ -105,6 +68,185 @@ export default function EvaluationDetailPage({ params }: PageProps) {
 	const [qualityScore, setQualityScore] = useState<QualityScore | null>(null);
 	const [exportModalOpen, setExportModalOpen] = useState(false);
 	const [openDiffRunId, setOpenDiffRunId] = useState<number | null>(null);
+	const [activeTab, setActiveTab] = useState("analysis");
+	const requestedTab = searchParams.get("tab");
+	const requestedSessionId = searchParams.get("session");
+	const validTabs = useMemo(
+		() => new Set(["overview", "analysis", "synthesize", "auto"]),
+		[],
+	);
+
+	const updateQuery = useCallback(
+		(next: Record<string, string | null>) => {
+			const params = new URLSearchParams(searchParams.toString());
+			for (const [key, value] of Object.entries(next)) {
+				if (value === null || value.length === 0) {
+					params.delete(key);
+				} else {
+					params.set(key, value);
+				}
+			}
+			const query = params.toString();
+			router.replace(query ? `${pathname}?${query}` : pathname);
+		},
+		[pathname, router, searchParams],
+	);
+
+	const handleTabChange = useCallback(
+		(nextTab: string) => {
+			setActiveTab(nextTab);
+			updateQuery({ tab: nextTab });
+		},
+		[updateQuery],
+	);
+
+	const handleSessionIdChange = useCallback(
+		(sessionId: string | null) => {
+			if (sessionId === null && !requestedSessionId) {
+				return;
+			}
+			updateQuery({ session: sessionId });
+		},
+		[requestedSessionId, updateQuery],
+	);
+
+	useEffect(() => {
+		if (
+			requestedTab &&
+			validTabs.has(requestedTab) &&
+			requestedTab !== activeTab
+		) {
+			setActiveTab(requestedTab);
+		}
+	}, [activeTab, requestedTab, validTabs]);
+
+	const loadTestCases = useCallback(async () => {
+		const res = await fetch(`/api/evaluations/${id}/test-cases`, {
+			credentials: "include",
+		});
+		const data = (await res.json()) as { testCases?: TestCase[] };
+		setTestCases(data.testCases || []);
+	}, [id]);
+	const {
+		runInsights,
+		artifactsLoading,
+		evaluationArtifacts,
+		selectedArtifact,
+		artifactDialogOpen,
+		setArtifactDialogOpen,
+		synthesisDatasetContent,
+		synthesisDimensionsInput,
+		synthesisFailureModesInput,
+		synthesisCountInput,
+		synthesisPreview,
+		synthesisLoading,
+		synthesisSaving,
+		synthesisDatasetLoading,
+		diversitySpecsInput,
+		diversityThresholdInput,
+		diversityPreview,
+		diversityLoading,
+		diversitySaving,
+		setSynthesisDatasetContent,
+		setSynthesisDimensionsInput,
+		setSynthesisFailureModesInput,
+		setSynthesisCountInput,
+		setDiversitySpecsInput,
+		setDiversityThresholdInput,
+		loadEvaluationArtifacts,
+		loadRunArtifacts,
+		saveRunArtifact,
+		deleteArtifact,
+		acceptSynthesisArtifact,
+		deletingArtifactId,
+		acceptingArtifactId,
+		openArtifactDetail,
+		loadLatestRunDataset,
+		generateSynthesisPreview,
+		saveSynthesisArtifact,
+		generateDiversityPreview,
+		saveDiversityArtifact,
+		fetchRunInsight,
+	} = useEvalgateState({
+		evaluationId: id,
+		runs,
+		onSynthesisAccepted: loadTestCases,
+	});
+
+	const loadRuns = useCallback(async () => {
+		const res = await fetch(`/api/evaluations/${id}/runs`, {
+			credentials: "include",
+		});
+		const data = (await res.json()) as { runs?: EvaluationRun[] };
+		const fetchedRuns = data.runs || [];
+		setRuns(fetchedRuns);
+		void Promise.allSettled(
+			fetchedRuns.map((run: EvaluationRun) => loadRunArtifacts(run.id, true)),
+		);
+
+		if (fetchedRuns.length > 0) {
+			const latestRun = fetchedRuns[0];
+			const totalCases = latestRun.totalCases || latestRun.total_cases || 0;
+			const passedCases = latestRun.passedCases || latestRun.passed_cases || 0;
+			const failedCases = latestRun.failedCases || latestRun.failed_cases || 0;
+			const stats: EvaluationStats = {
+				totalEvaluations: totalCases,
+				passedEvaluations: passedCases,
+				failedEvaluations: failedCases,
+				averageLatency: 500,
+				averageCost: 0.01,
+				averageScore: totalCases > 0 ? (passedCases / totalCases) * 100 : 0,
+				consistencyScore: 85,
+			};
+			setQualityScore(calculateQualityScore(stats));
+		}
+	}, [id, loadRunArtifacts]);
+	const {
+		autoPlanObjectiveInput,
+		autoPlanTargetPathInput,
+		autoPlanTargetContentInput,
+		autoPlanAllowedFamiliesInput,
+		autoPlanHypothesisInput,
+		autoPlanForbiddenChangesInput,
+		autoPlanIterationInput,
+		autoPlanPreview,
+		autoPlanLoading,
+		setAutoPlanObjectiveInput,
+		setAutoPlanTargetPathInput,
+		setAutoPlanTargetContentInput,
+		setAutoPlanAllowedFamiliesInput,
+		setAutoPlanHypothesisInput,
+		setAutoPlanForbiddenChangesInput,
+		setAutoPlanIterationInput,
+		generateAutoPlanPreview,
+	} = useAutoPlanState();
+	const autoExecutionState = useAutoExecutionState(id, {
+		preferredSessionId: requestedSessionId,
+		onSessionIdChange: handleSessionIdChange,
+	});
+
+	const getPermissionDisabledReason = (permission: Permission) => {
+		if (organizationLoading) {
+			return "Checking permissions...";
+		}
+
+		if (!organization?.role) {
+			return PERMISSION_DENIED_MESSAGE;
+		}
+
+		return hasPermission(organization.role, permission)
+			? null
+			: PERMISSION_DENIED_MESSAGE;
+	};
+
+	const analysisActionDisabledReason =
+		getPermissionDisabledReason("analysis:run");
+	const clusterActionDisabledReason =
+		getPermissionDisabledReason("cluster:run");
+	const synthesisActionDisabledReason =
+		getPermissionDisabledReason("synthesis:generate");
+	const autoCreateDisabledReason = getPermissionDisabledReason("auto:create");
+	const autoRunDisabledReason = getPermissionDisabledReason("auto:run");
 
 	useEffect(() => {
 		if (!isPending && !session?.user) {
@@ -126,50 +268,21 @@ export default function EvaluationDetailPage({ params }: PageProps) {
 					}
 				});
 
-			// Fetch test cases
-			fetch(`/api/evaluations/${id}/test-cases`, {
-				credentials: "include",
-			})
-				.then((res) => res.json())
-				.then((data) => setTestCases(data.testCases || []));
+			void loadTestCases();
 
-			// Fetch runs
-			fetch(`/api/evaluations/${id}/runs`, {
-				credentials: "include",
-			})
-				.then((res) => res.json())
-				.then((data) => {
-					const fetchedRuns = data.runs || [];
-					setRuns(fetchedRuns);
+			void loadEvaluationArtifacts(true);
 
-					// Calculate quality score from runs
-					if (fetchedRuns.length > 0) {
-						const latestRun = fetchedRuns[0];
-						// Use correct Drizzle camelCase field names from schema
-						const totalCases =
-							latestRun.totalCases || latestRun.total_cases || 0;
-						const passedCases =
-							latestRun.passedCases || latestRun.passed_cases || 0;
-						const failedCases =
-							latestRun.failedCases || latestRun.failed_cases || 0;
-						const stats: EvaluationStats = {
-							totalEvaluations: totalCases,
-							passedEvaluations: passedCases,
-							failedEvaluations: failedCases,
-							averageLatency: 500, // Default — computed from testResults if available
-							averageCost: 0.01, // Default — computed from cost records if available
-							averageScore:
-								totalCases > 0 ? (passedCases / totalCases) * 100 : 0,
-							consistencyScore: 85, // Default — computed from multiple runs if available
-						};
-						const score = calculateQualityScore(stats);
-						setQualityScore(score);
-					}
-
-					setIsLoading(false);
-				});
+			void loadRuns().finally(() => setIsLoading(false));
 		}
-	}, [session, isPending, router, id]); // Changed from params.id to id
+	}, [
+		session,
+		isPending,
+		router,
+		id,
+		loadEvaluationArtifacts,
+		loadRuns,
+		loadTestCases,
+	]); // Changed from params.id to id
 
 	const handleCopyResults = () => {
 		if (!qualityScore || !evaluation) return;
@@ -195,10 +308,10 @@ Quality Metrics:
 - Consistency: ${qualityScore.metrics.consistency}/100
 
 Key Insights:
-${qualityScore.insights.map((i: string) => `- ${i}`).join("\n")}
+${qualityScore.insights.map((insight: string) => `- ${insight}`).join("\n")}
 
 Recommendations:
-${qualityScore.recommendations.map((r: string) => `- ${r}`).join("\n")}
+${qualityScore.recommendations.map((recommendation: string) => `- ${recommendation}`).join("\n")}
     `.trim();
 
 		navigator.clipboard.writeText(summary);
@@ -213,7 +326,6 @@ ${qualityScore.recommendations.map((r: string) => `- ${r}`).join("\n")}
 		const latestRun = runs[0];
 		const runId = latestRun?.id ?? latestRun?.runId;
 
-		// Prefer server-side export when we have a run (includes IAA for human_eval)
 		if (runId) {
 			try {
 				const res = await fetch(`/api/evaluations/${id}/runs/${runId}/export`, {
@@ -243,12 +355,11 @@ ${qualityScore.recommendations.map((r: string) => `- ${r}`).join("\n")}
 					downloadExportFile(exportData, evaluation);
 					return null;
 				}
-			} catch (e: unknown) {
-				console.warn("Server export failed, falling back to client:", e);
+			} catch (error: unknown) {
+				console.warn("Server export failed, falling back to client:", error);
 			}
 		}
 
-		// Fallback: client-side export
 		const baseData = {
 			evaluation: {
 				id: String(evaluation.id),
@@ -273,7 +384,6 @@ ${qualityScore.recommendations.map((r: string) => `- ${r}`).join("\n")}
 			qualityScore: qualityScore || undefined,
 		};
 
-		// Type-specific additional data
 		const additionalData = getAdditionalExportData(
 			evaluation.type,
 			testCases,
@@ -281,16 +391,13 @@ ${qualityScore.recommendations.map((r: string) => `- ${r}`).join("\n")}
 			latestRun,
 		);
 
-		// Format based on template type
 		const exportData = formatExportData(baseData, additionalData);
 
-		// Validate export data
 		const validation = validateExportData(exportData);
 		if (!validation.valid) {
 			console.warn("Export data incomplete:", validation.missingFields);
 		}
 
-		// If publishing as demo, call API
 		if (options.publishAsDemo) {
 			try {
 				const response = await fetch(`/api/evaluations/${id}/publish`, {
@@ -313,7 +420,6 @@ ${qualityScore.recommendations.map((r: string) => `- ${r}`).join("\n")}
 
 				const result = await response.json();
 
-				// Also download the file
 				downloadExportFile(exportData, evaluation);
 
 				return result.shareId;
@@ -322,7 +428,6 @@ ${qualityScore.recommendations.map((r: string) => `- ${r}`).join("\n")}
 				throw error;
 			}
 		} else {
-			// Just download the file
 			downloadExportFile(exportData, evaluation);
 			return null;
 		}
@@ -330,12 +435,12 @@ ${qualityScore.recommendations.map((r: string) => `- ${r}`).join("\n")}
 
 	const downloadExportFile = (
 		exportData: unknown,
-		evaluation: { name?: string; type?: string; category?: string },
+		evaluationDetails: { name?: string; type?: string; category?: string },
 	) => {
 		const filename = generateExportFilename(
-			evaluation.name || "evaluation",
-			evaluation.type as EvaluationType,
-			evaluation.category || "",
+			evaluationDetails.name || "evaluation",
+			evaluationDetails.type as EvaluationType,
+			evaluationDetails.category || "",
 		);
 
 		const blob = new Blob([JSON.stringify(exportData, null, 2)], {
@@ -354,51 +459,58 @@ ${qualityScore.recommendations.map((r: string) => `- ${r}`).join("\n")}
 	// Helper function to get type-specific export data
 	const getAdditionalExportData = (
 		type: string,
-		testCases: TestCase[],
-		runs: EvaluationRun[],
+		testCaseItems: TestCase[],
+		runItems: EvaluationRun[],
 		latestRun: EvaluationRun | undefined,
 	) => {
 		switch (type) {
 			case "unit_test":
 				return {
-					testResults: testCases.map((tc: TestCase) => ({
-						id: tc.id,
-						name: tc.name || "",
-						input: tc.input,
-						expected_output: tc.expectedOutput || tc.expected,
-						actual_output: tc.actualOutput,
-						passed: tc.passed ?? false,
-						execution_time_ms: tc.executionTimeMs,
-						error_message: tc.errorMessage,
+					testResults: testCaseItems.map((testCase: TestCase) => ({
+						id: testCase.id,
+						name: testCase.name || "",
+						input: testCase.input,
+						expected_output: testCase.expectedOutput || testCase.expected,
+						actual_output: testCase.actualOutput,
+						passed: testCase.passed ?? false,
+						execution_time_ms: testCase.executionTimeMs,
+						error_message: testCase.errorMessage,
 					})),
 					codeValidation: (latestRun as Record<string, unknown> | undefined)
 						?.code_validation,
 				};
 
 			case "human_eval": {
-				const lr = latestRun as Record<string, unknown> | undefined;
+				const latestRunRecord = latestRun as
+					| Record<string, unknown>
+					| undefined;
 				return {
-					evaluations: (lr?.human_evaluations as unknown[]) || [],
+					evaluations: (latestRunRecord?.human_evaluations as unknown[]) || [],
 					criteria: evaluation?.human_eval_criteria || [],
-					interRaterReliability: lr?.inter_rater_reliability,
+					interRaterReliability: latestRunRecord?.inter_rater_reliability,
 				};
 			}
 
 			case "model_eval": {
-				const lr = latestRun as Record<string, unknown> | undefined;
+				const latestRunRecord = latestRun as
+					| Record<string, unknown>
+					| undefined;
 				return {
-					judgeEvaluations: (lr?.judge_evaluations as unknown[]) || [],
+					judgeEvaluations:
+						(latestRunRecord?.judge_evaluations as unknown[]) || [],
 					judgePrompt: evaluation?.judge_prompt || "",
 					judgeModel: evaluation?.judge_model || "gpt-4",
-					aggregateMetrics: lr?.aggregate_metrics,
+					aggregateMetrics: latestRunRecord?.aggregate_metrics,
 				};
 			}
 
 			case "ab_test": {
-				const lr = latestRun as Record<string, unknown> | undefined;
+				const latestRunRecord = latestRun as
+					| Record<string, unknown>
+					| undefined;
 				return {
 					variants: evaluation?.variants || [],
-					results: runs.map((run: EvaluationRun) => ({
+					results: runItems.map((run: EvaluationRun) => ({
 						variant_id: run.variant_id,
 						variant_name: run.variant_name,
 						test_count: run.total_tests,
@@ -407,15 +519,15 @@ ${qualityScore.recommendations.map((r: string) => `- ${r}`).join("\n")}
 						average_cost: run.average_cost,
 						quality_score: run.quality_score,
 					})),
-					statisticalSignificance: lr?.statistical_significance,
-					comparison: lr?.comparison,
+					statisticalSignificance: latestRunRecord?.statistical_significance,
+					comparison: latestRunRecord?.comparison,
 				};
 			}
 
 			default:
 				return {
-					testResults: testCases,
-					recentRuns: runs.slice(0, 5),
+					testResults: testCaseItems,
+					recentRuns: runItems.slice(0, 5),
 				};
 		}
 	};
@@ -426,6 +538,19 @@ ${qualityScore.recommendations.map((r: string) => `- ${r}`).join("\n")}
 
 	return (
 		<div className="space-y-4 sm:space-y-6">
+			<Breadcrumb>
+				<BreadcrumbList>
+					<BreadcrumbItem>
+						<BreadcrumbLink asChild>
+							<Link href="/evaluations">Evaluations</Link>
+						</BreadcrumbLink>
+					</BreadcrumbItem>
+					<BreadcrumbSeparator />
+					<BreadcrumbItem>
+						<BreadcrumbPage>{evaluation.name}</BreadcrumbPage>
+					</BreadcrumbItem>
+				</BreadcrumbList>
+			</Breadcrumb>
 			<div className="flex items-center gap-3 sm:gap-4">
 				<Button variant="ghost" size="sm" asChild className="h-9">
 					<Link href="/evaluations">
@@ -438,10 +563,10 @@ ${qualityScore.recommendations.map((r: string) => `- ${r}`).join("\n")}
 
 			{/* Evaluation Header */}
 			<div>
-				<div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 sm:gap-4 mb-3 sm:mb-4">
+				<div className="mb-3 flex flex-col gap-3 sm:mb-4 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
 					<div className="flex-1">
-						<div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-2">
-							<h1 className="text-2xl sm:text-3xl font-bold">
+						<div className="mb-2 flex flex-wrap items-center gap-2 sm:gap-3">
+							<h1 className="text-2xl font-bold sm:text-3xl">
 								{evaluation.name}
 							</h1>
 							<Badge
@@ -459,12 +584,12 @@ ${qualityScore.recommendations.map((r: string) => `- ${r}`).join("\n")}
 								{evaluation.type.replace("_", " ")}
 							</Badge>
 						</div>
-						<p className="text-sm sm:text-base text-muted-foreground">
+						<p className="text-sm text-muted-foreground sm:text-base">
 							{evaluation.description || "No description provided"}
 						</p>
 					</div>
-					<div className="flex gap-2 w-full sm:w-auto">
-						{qualityScore && (
+					<div className="flex w-full gap-2 sm:w-auto">
+						{qualityScore ? (
 							<>
 								<Button
 									variant="outline"
@@ -485,7 +610,7 @@ ${qualityScore.recommendations.map((r: string) => `- ${r}`).join("\n")}
 									Export
 								</Button>
 							</>
-						)}
+						) : null}
 						<Button size="sm" className="flex-1 sm:flex-none">
 							<Play className="mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
 							Run
@@ -495,15 +620,15 @@ ${qualityScore.recommendations.map((r: string) => `- ${r}`).join("\n")}
 			</div>
 
 			{/* Stats */}
-			<div className="grid gap-3 sm:gap-4 grid-cols-3">
+			<div className="grid grid-cols-3 gap-3 sm:gap-4">
 				<Card>
 					<CardHeader className="pb-2 sm:pb-3">
-						<CardTitle className="text-xs sm:text-sm font-medium">
+						<CardTitle className="text-xs font-medium sm:text-sm">
 							Test Cases
 						</CardTitle>
 					</CardHeader>
 					<CardContent>
-						<div className="text-xl sm:text-2xl font-bold">
+						<div className="text-xl font-bold sm:text-2xl">
 							{testCases.length}
 						</div>
 					</CardContent>
@@ -511,18 +636,18 @@ ${qualityScore.recommendations.map((r: string) => `- ${r}`).join("\n")}
 
 				<Card>
 					<CardHeader className="pb-2 sm:pb-3">
-						<CardTitle className="text-xs sm:text-sm font-medium">
+						<CardTitle className="text-xs font-medium sm:text-sm">
 							Total Runs
 						</CardTitle>
 					</CardHeader>
 					<CardContent>
-						<div className="text-xl sm:text-2xl font-bold">{runs.length}</div>
+						<div className="text-xl font-bold sm:text-2xl">{runs.length}</div>
 					</CardContent>
 				</Card>
 
 				<Card>
 					<CardHeader className="pb-2 sm:pb-3">
-						<CardTitle className="text-xs sm:text-sm font-medium">
+						<CardTitle className="text-xs font-medium sm:text-sm">
 							Last Run
 						</CardTitle>
 					</CardHeader>
@@ -542,215 +667,161 @@ ${qualityScore.recommendations.map((r: string) => `- ${r}`).join("\n")}
 			</div>
 
 			{/* Quality Score Card */}
-			{qualityScore && <AIQualityScoreCard score={qualityScore} />}
+			{qualityScore ? <AIQualityScoreCard score={qualityScore} /> : null}
 
-			{/* Test Cases */}
-			<div>
-				<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 mb-3 sm:mb-4">
-					<h2 className="text-lg sm:text-xl font-semibold">Test Cases</h2>
-					<Button variant="outline" size="sm" className="w-full sm:w-auto">
-						<Plus className="mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
-						Add Test Case
-					</Button>
-				</div>
+			<Tabs
+				value={activeTab}
+				onValueChange={handleTabChange}
+				className="space-y-4"
+			>
+				<TabsList className="grid h-auto w-full grid-cols-4">
+					<TabsTrigger value="overview">Overview</TabsTrigger>
+					<TabsTrigger value="analysis">Analysis</TabsTrigger>
+					<TabsTrigger value="synthesize">Synthesize</TabsTrigger>
+					<TabsTrigger value="auto">Auto</TabsTrigger>
+				</TabsList>
 
-				{testCases.length > 0 ? (
-					<div className="space-y-2 sm:space-y-3">
-						{testCases.map((testCase: TestCase) => (
-							<Card key={testCase.id}>
-								<CardContent className="p-3 sm:p-4">
-									<div className="flex items-start justify-between">
-										<div className="flex-1">
-											<h3 className="text-sm sm:text-base font-semibold mb-2">
-												{testCase.name || `Test Case ${testCase.id}`}
-											</h3>
-											<div className="grid gap-2 sm:gap-3 md:grid-cols-2">
-												<div>
-													<p className="text-xs text-muted-foreground mb-1">
-														Input
-													</p>
-													<pre className="text-xs bg-muted rounded p-2 overflow-x-auto max-h-24">
-														{JSON.stringify(testCase.input, null, 2)}
-													</pre>
-												</div>
-												{testCase.expectedOutput && (
-													<div>
-														<p className="text-xs text-muted-foreground mb-1">
-															Expected Output
-														</p>
-														<pre className="text-xs bg-muted rounded p-2 overflow-x-auto max-h-24">
-															{JSON.stringify(testCase.expectedOutput, null, 2)}
-														</pre>
-													</div>
-												)}
-											</div>
-										</div>
-									</div>
-								</CardContent>
-							</Card>
-						))}
-					</div>
-				) : (
-					<Card>
-						<CardContent className="py-12 text-center">
-							<FileText className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-							<h3 className="text-lg font-semibold mb-2">No test cases yet</h3>
-							<p className="text-muted-foreground mb-4">
-								Add test cases to start evaluating your AI models
-							</p>
-							<Button>
-								<Plus className="mr-2 h-4 w-4" />
-								Add Test Case
-							</Button>
-						</CardContent>
-					</Card>
-				)}
-			</div>
+				<TabsContent value="overview" className="space-y-6">
+					<TabErrorBoundary
+						label="Overview"
+						resetKeys={[activeTab, id, testCases.length]}
+					>
+						<EvaluationTestCasesSection testCases={testCases} />
+					</TabErrorBoundary>
+				</TabsContent>
 
-			{/* Recent Runs */}
-			<div>
-				<h2 className="mb-4 text-xl font-semibold">Recent Runs</h2>
-				{runs.length > 0 ? (
-					<div className="space-y-3">
-						{runs.map((run: EvaluationRun) => (
-							<Card key={run.id} id={`run-${run.id}`}>
-								<CardContent className="p-4">
-									<div className="flex items-center justify-between">
-										<div>
-											<div className="flex items-center gap-3 mb-1">
-												<Badge
-													variant="outline"
-													className={`${
-														run.status === "completed"
-															? "bg-green-500/10 text-green-500 border-green-500/20"
-															: run.status === "running"
-																? "bg-blue-500/10 text-blue-500 border-blue-500/20"
-																: run.status === "failed"
-																	? "bg-red-500/10 text-red-500 border-red-500/20"
-																	: "bg-gray-500/10 text-gray-500 border-gray-500/20"
-													}`}
-												>
-													{run.status}
-												</Badge>
-												<span className="text-sm text-muted-foreground">
-													{new Date(
-														run.startedAt ||
-															run.started_at ||
-															run.createdAt ||
-															"",
-													).toLocaleString()}
-												</span>
-											</div>
-											{run.status === "completed" && (
-												<p className="text-sm">
-													{run.passedCases || run.passed_cases || 0} /{" "}
-													{run.totalCases || run.total_cases || 0} tests passed
-												</p>
-											)}
-											{(() => {
-												const tl =
-													typeof run.traceLog === "string"
-														? (() => {
-																try {
-																	return JSON.parse(run.traceLog);
-																} catch {
-																	return {};
-																}
-															})()
-														: (run.traceLog ?? {});
-												const checkReport = tl?.import?.checkReport;
-												if (!checkReport) return null;
-												return (
-													<details className="group mt-2 text-xs">
-														<summary className="cursor-pointer flex items-center gap-1 text-muted-foreground hover:text-foreground [&::-webkit-details-marker]:hidden">
-															<ChevronRight className="h-3 w-3 transition-transform group-open:rotate-90" />
-															CI Check Report
-														</summary>
-														<div className="mt-1 space-y-1">
-															{checkReport.baselineRunId && (
-																<p className="text-muted-foreground">
-																	Compares to baseline{" "}
-																	<Link
-																		href={`/evaluations/${id}#run-${checkReport.baselineRunId}`}
-																		className="text-primary hover:underline"
-																	>
-																		run #{checkReport.baselineRunId}
-																	</Link>
-																</p>
-															)}
-															{checkReport.ciRunUrl && (
-																<p className="text-muted-foreground">
-																	<a
-																		href={checkReport.ciRunUrl}
-																		target="_blank"
-																		rel="noopener noreferrer"
-																		className="text-primary hover:underline"
-																	>
-																		CI run
-																	</a>
-																</p>
-															)}
-															{checkReport.baselineRunId && (
-																<details
-																	className="group/diff mt-1"
-																	onToggle={(e) =>
-																		setOpenDiffRunId(
-																			(e.target as HTMLDetailsElement).open
-																				? run.id
-																				: null,
-																		)
-																	}
-																>
-																	<summary className="cursor-pointer flex items-center gap-1 text-muted-foreground hover:text-foreground [&::-webkit-details-marker]:hidden">
-																		<ChevronRight className="h-3 w-3 transition-transform group-open/diff:rotate-90" />
-																		View diff (baseline vs current)
-																	</summary>
-																	{openDiffRunId === run.id && (
-																		<div className="mt-1">
-																			<RunDiffView
-																				evaluationId={id}
-																				runId={run.id}
-																				compareRunId={checkReport.baselineRunId}
-																			/>
-																		</div>
-																	)}
-																</details>
-															)}
-															<pre className="p-2 rounded bg-muted overflow-x-auto max-h-32 overflow-y-auto">
-																{JSON.stringify(
-																	{
-																		verdict: checkReport.verdict,
-																		reasonCode: checkReport.reasonCode,
-																		reasonMessage: checkReport.reasonMessage,
-																		score: checkReport.score,
-																		baselineScore: checkReport.baselineScore,
-																		delta: checkReport.delta,
-																	},
-																	null,
-																	2,
-																)}
-															</pre>
-														</div>
-													</details>
-												);
-											})()}
-										</div>
-										<Button variant="outline" size="sm">
-											View Results
-										</Button>
-									</div>
-								</CardContent>
-							</Card>
-						))}
-					</div>
-				) : (
-					<Card>
-						<CardContent className="py-12 text-center">
-							<p className="text-muted-foreground">No runs yet</p>
-						</CardContent>
-					</Card>
-				)}
-			</div>
+				<TabsContent value="analysis" className="space-y-6">
+					<TabErrorBoundary
+						label="Analysis"
+						resetKeys={[activeTab, id, runs.length, evaluationArtifacts.length]}
+					>
+						<AnalysisTab
+							evaluationId={id}
+							artifacts={evaluationArtifacts}
+							artifactsLoading={artifactsLoading}
+							runs={runs}
+							runInsights={runInsights}
+							openDiffRunId={openDiffRunId}
+							onRefreshArtifacts={loadEvaluationArtifacts}
+							onOpenArtifact={openArtifactDetail}
+							onOpenDiffRunIdChange={setOpenDiffRunId}
+							onFetchRunInsight={fetchRunInsight}
+							onSaveRunArtifact={saveRunArtifact}
+							onLoadRunArtifacts={loadRunArtifacts}
+							analysisActionDisabledReason={analysisActionDisabledReason}
+							clusterActionDisabledReason={clusterActionDisabledReason}
+							onNavigateToTab={handleTabChange}
+							onDeleteArtifact={deleteArtifact}
+							onAcceptSynthesisArtifact={acceptSynthesisArtifact}
+							deletingArtifactId={deletingArtifactId}
+							acceptingArtifactId={acceptingArtifactId}
+						/>
+					</TabErrorBoundary>
+				</TabsContent>
+
+				<TabsContent value="synthesize" className="space-y-6">
+					<TabErrorBoundary
+						label="Synthesize"
+						resetKeys={[
+							activeTab,
+							id,
+							synthesisPreview?.generated ?? 0,
+							diversityPreview?.specCount ?? 0,
+						]}
+					>
+						<SynthesizeTab
+							hasRuns={runs.length > 0}
+							hasAnalysisSeed={runs.some((run) =>
+								Boolean(
+									runInsights[run.id]?.analysis || runInsights[run.id]?.dataset,
+								),
+							)}
+							onNavigateToTab={handleTabChange}
+							synthesisDatasetContent={synthesisDatasetContent}
+							synthesisDimensionsInput={synthesisDimensionsInput}
+							synthesisFailureModesInput={synthesisFailureModesInput}
+							synthesisCountInput={synthesisCountInput}
+							synthesisPreview={synthesisPreview}
+							synthesisLoading={synthesisLoading}
+							synthesisSaving={synthesisSaving}
+							synthesisDatasetLoading={synthesisDatasetLoading}
+							diversitySpecsInput={diversitySpecsInput}
+							diversityThresholdInput={diversityThresholdInput}
+							diversityPreview={diversityPreview}
+							diversityLoading={diversityLoading}
+							diversitySaving={diversitySaving}
+							onSynthesisDatasetContentChange={setSynthesisDatasetContent}
+							onSynthesisDimensionsInputChange={setSynthesisDimensionsInput}
+							onSynthesisFailureModesInputChange={setSynthesisFailureModesInput}
+							onSynthesisCountInputChange={setSynthesisCountInput}
+							onLoadLatestRunDataset={loadLatestRunDataset}
+							onGenerateSynthesisPreview={generateSynthesisPreview}
+							onSaveSynthesisArtifact={saveSynthesisArtifact}
+							onDiversitySpecsInputChange={setDiversitySpecsInput}
+							onDiversityThresholdInputChange={setDiversityThresholdInput}
+							onGenerateDiversityPreview={generateDiversityPreview}
+							onSaveDiversityArtifact={saveDiversityArtifact}
+							datasetActionDisabledReason={analysisActionDisabledReason}
+							synthesisActionDisabledReason={synthesisActionDisabledReason}
+							diversityActionDisabledReason={analysisActionDisabledReason}
+						/>
+					</TabErrorBoundary>
+				</TabsContent>
+
+				<TabsContent value="auto" className="space-y-6">
+					<TabErrorBoundary
+						label="Auto"
+						resetKeys={[
+							activeTab,
+							id,
+							requestedSessionId ?? "",
+							autoExecutionState.sessions.length,
+						]}
+					>
+						<AutoTab
+							hasEvaluationSummary={Boolean(evaluation && qualityScore)}
+							evaluationSummary={{
+								evaluationName: evaluation.name,
+								testCaseCount: testCases.length,
+								runCount: runs.length,
+								latestStatus: runs[0]?.status ?? null,
+								qualityGrade: qualityScore?.grade ?? null,
+							}}
+							autoPlanObjectiveInput={autoPlanObjectiveInput}
+							autoPlanTargetPathInput={autoPlanTargetPathInput}
+							autoPlanTargetContentInput={autoPlanTargetContentInput}
+							autoPlanAllowedFamiliesInput={autoPlanAllowedFamiliesInput}
+							autoPlanHypothesisInput={autoPlanHypothesisInput}
+							autoPlanForbiddenChangesInput={autoPlanForbiddenChangesInput}
+							autoPlanIterationInput={autoPlanIterationInput}
+							autoPlanPreview={autoPlanPreview}
+							autoPlanLoading={autoPlanLoading}
+							onAutoPlanObjectiveInputChange={setAutoPlanObjectiveInput}
+							onAutoPlanTargetPathInputChange={setAutoPlanTargetPathInput}
+							onAutoPlanTargetContentInputChange={setAutoPlanTargetContentInput}
+							onAutoPlanAllowedFamiliesInputChange={
+								setAutoPlanAllowedFamiliesInput
+							}
+							onAutoPlanHypothesisInputChange={setAutoPlanHypothesisInput}
+							onAutoPlanForbiddenChangesInputChange={
+								setAutoPlanForbiddenChangesInput
+							}
+							onAutoPlanIterationInputChange={setAutoPlanIterationInput}
+							onGenerateAutoPlanPreview={generateAutoPlanPreview}
+							executionState={autoExecutionState}
+							autoPlanDisabledReason={autoCreateDisabledReason}
+							createSessionDisabledReason={autoCreateDisabledReason}
+							runSessionDisabledReason={autoRunDisabledReason}
+						/>
+					</TabErrorBoundary>
+				</TabsContent>
+			</Tabs>
+
+			<EvalgateArtifactDialog
+				open={artifactDialogOpen}
+				onOpenChange={setArtifactDialogOpen}
+				artifact={selectedArtifact}
+			/>
 
 			{/* Export Modal */}
 			<ExportModal

@@ -181,25 +181,159 @@ export const importRunBodySchema = z
 		{ message: "Duplicate testCaseId in results" },
 	);
 
+export const createTestCaseBodySchema = z.object({
+	name: z.string().min(1).max(255),
+	input: z.string().min(1),
+	expectedOutput: z.string().optional().nullable(),
+	metadata: z.record(z.unknown()).optional(),
+});
+
 /** Body for POST /api/evaluations/:id/publish-run */
 export const publishRunBodySchema = z.object({
 	runId: z.coerce.number().int().positive(),
 });
+
+const labeledDatasetDimensionsSchema = z.record(
+	z.array(z.string().min(1)).min(1),
+);
+
+const discoverableSpecSchema = z.object({
+	id: z.string().min(1),
+	name: z.string().min(1),
+	file: z.string().min(1),
+	tags: z.array(z.string()).default([]),
+	hasAssertions: z.boolean(),
+	usesModels: z.boolean(),
+	usesTools: z.boolean(),
+	complexity: z.enum(["simple", "medium", "complex"]),
+	fingerprintText: z.string().optional(),
+});
+
+export const buildRunDatasetBodySchema = z
+	.object({
+		includePassed: z.boolean().optional().default(true),
+	})
+	.default({});
+
+export const analyzeRunDatasetBodySchema = z
+	.object({
+		includePassed: z.boolean().optional().default(true),
+		top: z.number().int().min(1).max(50).optional().default(5),
+	})
+	.default({});
+
+export const clusterRunBodySchema = z
+	.object({
+		clusters: z.number().int().min(1).max(50).nullable().optional(),
+		includePassed: z.boolean().optional().default(false),
+	})
+	.default({});
+
+export const analyzeDatasetBodySchema = z.object({
+	datasetContent: z.string().min(1),
+	top: z.number().int().min(1).max(50).optional().default(5),
+});
+
+export const synthesizeDatasetBodySchema = z.object({
+	datasetContent: z.string().min(1),
+	dimensions: labeledDatasetDimensionsSchema.optional(),
+	count: z.number().int().min(1).max(1000).nullable().optional(),
+	failureModes: z.array(z.string().min(1)).optional(),
+});
+
+export const discoverDiversityBodySchema = z.object({
+	specs: z.array(discoverableSpecSchema).min(1),
+	threshold: z.number().min(0).max(1).optional(),
+});
+
+export const autoPlanPreviewBodySchema = z.object({
+	iteration: z.number().int().min(1).max(100).optional().default(1),
+	objective: z.string().min(1),
+	targetPath: z.string().min(1),
+	targetContent: z.string().min(1),
+	allowedFamilies: z.array(z.string().min(1)).min(1),
+	hypothesis: z.string().min(1).optional(),
+	forbiddenChanges: z.array(z.string().min(1)).optional(),
+});
+
+export const evalgateExportBodySchema = z.object({
+	evaluationId: z.number().int().positive(),
+	runId: z.number().int().positive().optional(),
+	artifactLimit: z.number().int().min(1).max(250).optional(),
+});
+
+export const evalgateArtifactKindSchema = z.enum([
+	"labeled_dataset",
+	"analysis",
+	"cluster",
+	"synthesis",
+	"diversity",
+]);
+
+export const createEvalgateArtifactBodySchema = z
+	.object({
+		artifactType: evalgateArtifactKindSchema,
+		title: z.string().min(1).max(255).optional(),
+		runId: z.number().int().positive().optional(),
+		datasetContent: z.string().min(1).optional(),
+		includePassed: z.boolean().optional(),
+		top: z.number().int().min(1).max(50).optional(),
+		clusters: z.number().int().min(1).max(50).nullable().optional(),
+		dimensions: labeledDatasetDimensionsSchema.optional(),
+		count: z.number().int().min(1).max(1000).nullable().optional(),
+		failureModes: z.array(z.string().min(1)).optional(),
+		specs: z.array(discoverableSpecSchema).min(1).optional(),
+		threshold: z.number().min(0).max(1).optional(),
+	})
+	.superRefine((data, ctx) => {
+		if (
+			(data.artifactType === "labeled_dataset" ||
+				data.artifactType === "cluster") &&
+			!data.runId
+		) {
+			ctx.addIssue({
+				code: z.ZodIssueCode.custom,
+				message:
+					"runId is required for run-derived dataset and cluster artifacts",
+				path: ["runId"],
+			});
+		}
+
+		if (
+			data.artifactType === "analysis" &&
+			!data.runId &&
+			!data.datasetContent
+		) {
+			ctx.addIssue({
+				code: z.ZodIssueCode.custom,
+				message: "analysis artifacts require either runId or datasetContent",
+				path: ["runId"],
+			});
+		}
+
+		if (data.artifactType === "synthesis" && !data.datasetContent) {
+			ctx.addIssue({
+				code: z.ZodIssueCode.custom,
+				message: "datasetContent is required for synthesis artifacts",
+				path: ["datasetContent"],
+			});
+		}
+
+		if (data.artifactType === "diversity" && !data.specs) {
+			ctx.addIssue({
+				code: z.ZodIssueCode.custom,
+				message: "specs are required for diversity artifacts",
+				path: ["specs"],
+			});
+		}
+	});
 
 /** Body for POST /api/quality (recompute) */
 export const recomputeQualityBodySchema = z.object({
 	runId: z.coerce.number().int().positive(),
 });
 
-/** Body for POST /api/evaluations/:id/test-cases */
-export const createTestCaseBodySchema = z.object({
-	name: z.string().optional(),
-	input: z.union([z.string(), z.unknown()]),
-	expectedOutput: z.union([z.string(), z.unknown()]).optional(),
-	metadata: z.unknown().optional(),
-});
-
-/** Client-provided body for POST /api/traces (org added server-side). */
+/** Body for POST /api/traces (org added server-side). */
 export const createTraceBodySchema = z.object({
 	name: z.string().min(1).max(255),
 	traceId: z.string().min(1).max(255).optional(),

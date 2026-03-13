@@ -102,6 +102,7 @@ export declare function checkCiWiring(cwd: string): CheckResult & {
     ciInfo: DiagnosticBundle["ci"];
 };
 export declare function checkProviderEnv(): CheckResult;
+export declare function checkReplayDecisionBudgetConfig(config?: EvalAIConfig | null): CheckResult;
 export declare function checkReplayDecisionReadiness(cwd: string, config?: EvalAIConfig | null): CheckResult;
 export declare function runDoctor(argv: string[]): Promise<number>;
 export {};

@@ -28,8 +28,13 @@ vi.mock("@/lib/jobs/handlers/webhook-delivery", () => ({
 	handleWebhookDelivery: vi.fn(),
 }));
 
+vi.mock("@/lib/jobs/handlers/trace-failure-analysis", () => ({
+	handleTraceFailureAnalysis: vi.fn(),
+}));
+
 describe("jobs runner - no jobs", () => {
 	beforeEach(() => {
+		vi.resetModules();
 		vi.clearAllMocks();
 		process.env.DATABASE_URL =
 			process.env.DATABASE_URL ?? "postgresql://test:test@localhost:5432/test";
@@ -37,22 +42,8 @@ describe("jobs runner - no jobs", () => {
 
 	it("returns without error when no jobs are pending", async () => {
 		// ✅ Import runner after env + mocks are set
-		const mod = await import("@/lib/jobs/runner");
+		const { runDueJobs } = await import("@/lib/jobs/runner");
 
-		// Try common export names; pick the one that exists.
-		const run =
-			(mod as Record<string, () => unknown>).runJobsOnce ??
-			(mod as Record<string, () => unknown>).runOnce ??
-			(mod as Record<string, () => unknown>).runRunnerOnce ??
-			(mod as Record<string, () => unknown>).runJobs ??
-			(mod as Record<string, () => unknown>).runDueJobs;
-
-		if (!run) {
-			throw new Error(
-				`No runnable export found in "@/lib/jobs/runner". Found exports: ${Object.keys(mod).join(", ")}`,
-			);
-		}
-
-		await expect(run({ max: 5 })).resolves.toBeDefined();
+		await expect(runDueJobs("test-runner")).resolves.toBeDefined();
 	});
 });

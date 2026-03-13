@@ -1,6 +1,6 @@
 # Stability Matrix
 
-> Last updated: 2026-03-09
+> Last updated: 2026-03-13
 
 This document classifies every major feature by maturity level and provides API compatibility guarantees for each tier.
 
@@ -59,6 +59,19 @@ This document classifies every major feature by maturity level and provides API 
 | `--baseline` flag | **Stable** | v1.4 | `published`, `previous`, or `production` |
 | Standardized exit codes | **Stable** | v1.2 | 0-7 range, documented |
 
+### EvalGate Workflows
+
+| Feature | Tier | Since | Notes |
+|---------|------|-------|-------|
+| Labeled golden dataset workflow | **Stable** | v3.0.2 | `evalgate label`, `evalgate analyze`, and canonical `.evalgate/golden/labeled.jsonl` dataset flow |
+| Diversity discovery | **Stable** | v3.1 | `evalgate discover --manifest` reports diversity score, nearest-neighbor similarity, and redundant spec pairs |
+| Failure clustering | **Stable** | v3.1 | `evalgate cluster` groups similar failures for review and labeling |
+| Golden-case synthesis | **Stable** | v3.1 | `evalgate synthesize` drafts deterministic golden cases from repeated labeled failures |
+| Guided optimization loop | **Beta** | v3.1 | `evalgate auto` emits explicit `keep`, `discard`, or `investigate` decisions under budget |
+| Auto daemon | **Beta** | v3.2 | `evalgate auto daemon` runs bounded unattended cycles with explicit stop reasons |
+| Saved EvalGate artifacts | **Stable** | v3.2.1 | Persisted dataset, analysis, diversity, cluster, and synthesis artifacts in the evaluation detail UI |
+| Auto sessions | **Beta** | v3.2.1 | Guided optimization session orchestration, monitoring, run, and stop flows in the platform UI |
+
 ### Evaluation Executors
 
 | Feature | Tier | Since | Notes |
@@ -105,7 +118,7 @@ This document classifies every major feature by maturity level and provides API 
 | Cost Records | **Stable** | v1.0 | Per-call token + cost tracking |
 | LLM Judge | **Beta** | v1.0 | Meta-judge post-eval hook |
 
-### SDK (`@evalgate/sdk`) — v3.1.0
+### SDK (`@evalgate/sdk`) — v3.2.2
 
 | Feature | Tier | Since | Notes |
 |---------|------|-------|-------|
@@ -142,7 +155,7 @@ This document classifies every major feature by maturity level and provides API 
 | Regression gate exports | **Stable** | v1.6 | `@evalgate/sdk/regression` |
 | Behavioral spec discover/run/diff | **Beta** | v2.0 | `evalgate discover`, `run`, `diff`, `ci` pipeline |
 
-### EvalGate Intelligence Layer — v3.0.1
+### EvalGate Intelligence Layer — current in v3.2.2
 
 | Feature | Tier | Since | Notes |
 |---------|------|-------|-------|
@@ -166,7 +179,7 @@ This document classifies every major feature by maturity level and provides API 
 | **Replay Determinism** | **Beta** | v2.1 | SHA-256 input canonicalization for reproducible replay |
 | **Regression Attribution** | **Beta** | v2.1 | Scores diff signals (git, model, prompt, tool schema, dataset, judge) to rank regression causes |
 
-### EvalGate UX Components — v3.0.1
+### EvalGate UX Components — current in v3.2.2
 
 | Component | Tier | Since | Notes |
 |-----------|------|-------|-------|

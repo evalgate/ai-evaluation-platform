@@ -9,15 +9,31 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](https://opensource.org/licenses/MIT)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](https://github.com/evalgate/ai-evaluation-platform/pulls)
 
-Stop LLM regressions in CI in 2 minutes. 🚀
+Build a living golden suite for AI behavior. 🚀
 
 No infra. No lock-in. Remove anytime.
 
-**EvalGate = CI for AI behavior.** Block regressions before they reach production.
+**EvalGate = the full suite for AI quality.** Discover overlap, cluster failures, build golden datasets, run automated regression gates, and guide optimization before changes reach production.
 
 ## Why EvalGate?
 
 LLMs don't fail like traditional software — they drift silently. A prompt tweak or model swap can degrade quality by 15% and you won't notice until users complain. EvalGate turns evaluations into CI gates so regressions never reach production.
+
+## The Full EvalGate Workflow
+
+EvalGate is no longer just a pass/fail gate at the end of CI. The current workflow is a full loop:
+
+```text
+discover -> cluster -> label/analyze -> synthesize -> gate/auto
+```
+
+- **Discover overlap before adding more tests** with `npx @evalgate/sdk discover --manifest`
+- **Cluster failures by pattern** with `npx @evalgate/sdk cluster --run .evalgate/runs/latest.json`
+- **Build a labeled golden dataset** with `npx @evalgate/sdk label` and `npx @evalgate/sdk analyze`
+- **Draft broader golden cases** with `npx @evalgate/sdk synthesize --dataset .evalgate/golden/labeled.jsonl --output .evalgate/golden/synthetic.jsonl`
+- **Block regressions or run guided optimization** with `npx evalgate gate`, `npx @evalgate/sdk ci`, and `npx @evalgate/sdk auto`
+
+In the platform UI, the same loop now has persisted dataset, analysis, diversity, cluster, and synthesis artifacts plus guided auto sessions so teams can reopen prior work instead of rebuilding it from scratch.
 
 ## Quick Start
 
@@ -151,7 +167,10 @@ Open source. Production-ready. **1.4k+ npm downloads/month** · Used by develope
 | Capability                                                                                      | Status              |
 | ----------------------------------------------------------------------------------------------- | ------------------- |
 | CI regression gate (`evalgate ci`, `evalgate gate`)                                             | Production          |
-| TypeScript SDK ([`@evalgate/sdk`](https://www.npmjs.com/package/@evalgate/sdk))                | Production (v3.0.2) |
+| Golden dataset workflow (`label`, `analyze`, `.evalgate/golden/labeled.jsonl`)                 | Production          |
+| Guided optimization loops (`discover`, `cluster`, `synthesize`, `auto`)                         | Production          |
+| Saved EvalGate artifacts and auto sessions                                                       | Production          |
+| TypeScript SDK ([`@evalgate/sdk`](https://www.npmjs.com/package/@evalgate/sdk))                | Production (v3.2.2) |
 | Python SDK ([`pauly4010-evalgate-sdk`](https://pypi.org/project/pauly4010-evalgate-sdk/))           | Production          |
 | Multi-tenant auth & RBAC                                                                        | Production          |
 | Evaluation engine (template library across 17 categories, 4 types)                              | Production          |
@@ -199,13 +218,13 @@ jobs:
 - ✅ Posts rich summary in PR with regressions
 - ✅ Exits with proper codes (0=clean, 1=regressions, 2=config)
 
-**Docs:** [Features](FEATURES.md) · [CI Quickstart](docs/CI_QUICKSTART.md) · [Quickstart](docs/quickstart.md) · [Architecture](docs/ARCHITECTURE.md) · [Regression Gate](docs/REGRESSION_GATE.md) · [Baseline Contract](docs/BASELINE_CONTRACT.md) · [CI Artifacts](docs/CI_ARTIFACTS.md) · [AI Assistant Integration](docs/AI_ASSISTANT_INTEGRATION.md) · [Contributor Map](docs/CONTRIBUTOR_MAP.md) · [Releasing](docs/RELEASING.md) · [All Docs](docs/INDEX.md)
+**Docs:** [Features](FEATURES.md) · [CI Quickstart](docs/CI_QUICKSTART.md) · [Quickstart](docs/quickstart.md) · [Zero to Golden Dataset](docs/ZERO_TO_GOLDEN_DATASET.md) · [Golden Path Demo](docs/GOLDEN_PATH.md) · [Architecture](docs/ARCHITECTURE.md) · [Regression Gate](docs/REGRESSION_GATE.md) · [Baseline Contract](docs/BASELINE_CONTRACT.md) · [CI Artifacts](docs/CI_ARTIFACTS.md) · [AI Assistant Integration](docs/AI_ASSISTANT_INTEGRATION.md) · [Contributor Map](docs/CONTRIBUTOR_MAP.md) · [Releasing](docs/RELEASING.md) · [All Docs](docs/INDEX.md)
 
 ---
 
 ## Key Features
 
-> **EvalGate is CI for AI behavior.** Same gates, same quality checks — whether you use Node, Python, or the REST API.
+> **EvalGate is the full AI quality loop.** The same golden datasets, regression gates, and guided optimization workflows are available whether you use Node, Python, or the REST API.
 
 ### Judge Credibility (v3.0.2)
 

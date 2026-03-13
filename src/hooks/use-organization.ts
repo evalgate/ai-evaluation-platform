@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import { logger } from "@/lib/logger";
+import type { OrgRole } from "@/lib/permissions";
 
 interface Organization {
 	id: number;
 	name: string;
+	role: OrgRole;
 	createdAt: string;
 	updatedAt: string;
 }
